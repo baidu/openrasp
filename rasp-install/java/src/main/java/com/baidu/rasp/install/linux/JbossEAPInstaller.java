@@ -31,8 +31,7 @@ import static com.baidu.rasp.RaspError.E10001;
 public class JbossEAPInstaller extends BaseStandardInstaller {
     private static final String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
     private static final String OPENRASP_END_TAG = "### END OPENRASP ###\n";
-    private static final String OPENRASP_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${JBOSS_HOME}/rasp/rasp.jar " +
-            "-XX:OnError='sh \\\"${JBOSS_HOME}/rasp/crash.sh\\\" \\\"\\$(pwd)/hs_err_pid%p.log\\\"' ${JAVA_OPTS}\"\n";
+    private static final String OPENRASP_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${JBOSS_HOME}/rasp/rasp.jar\"\n";
 
     public JbossEAPInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);

@@ -44,15 +44,9 @@ public class ResinInstaller extends BaseStandardInstaller {
     public String getOpenRASPConfig() {
         String configStart = "\t<!-- BEGIN OPENRASP - DO NOT MODIFY -->";
         String configEnd = "\t<!-- END OPENRASP -->";
-        String path = BaseStandardInstaller.resinPath + File.separator + "rasp" + File.separator;
-        String script = "\t<jvm-arg>-javaagent:" + path + "rasp.jar </jvm-arg>\n";
-        if (System.getProperty("os.name").startsWith("Windows")) {
-            script += "\t<jvm-arg>-XX:OnError='cmd /c powershell -ep bypass -file \"" + path +
-                    "crash.ps1\" -crashFile \"%cd%\\hs_err_pid%p.log\"'</jvm-arg>";
-        } else {
-            script += "\t<jvm-arg>-XX:OnError='sh \"" + path + "crash.sh \"\\$(pwd)/hs_err_pid%p.log\" </jvm-arg>";
-        }
-        return configStart + LINE_SEP + script + LINE_SEP + configEnd + LINE_SEP;
+        String path = "\t<jvm-arg>-javaagent:" + BaseStandardInstaller.resinPath + File.separator + "rasp" + File.separator + "rasp.jar</jvm-arg>";
+
+        return configStart + LINE_SEP + path + LINE_SEP + configEnd + LINE_SEP;
     }
 
     public static int getVersion(String installPath) {

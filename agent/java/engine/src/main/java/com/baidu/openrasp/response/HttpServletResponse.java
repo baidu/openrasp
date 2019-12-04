@@ -22,6 +22,7 @@ import com.baidu.openrasp.hook.server.catalina.CatalinaXssHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
 /**
  * Created by tyy on 9/5/17.
@@ -182,7 +183,8 @@ public class HttpServletResponse {
                 } else {
                     script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 }
-                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)) {
+                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)
+                        && "tomcat".equals(ApplicationModel.getServerName())) {
                     CatalinaXssHook.handleXssBlockBuffer(parameter, script);
                 } else {
                     if (!isCommitted) {
