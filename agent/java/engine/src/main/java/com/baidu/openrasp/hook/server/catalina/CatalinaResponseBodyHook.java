@@ -17,7 +17,7 @@
 package com.baidu.openrasp.hook.server.catalina;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerXssHook;
+import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.response.HttpServletResponse;
@@ -39,7 +39,7 @@ import java.util.HashMap;
  * @date 2018/8/13 17:45
  */
 @HookAnnotation
-public class CatalinaXssHook extends ServerXssHook {
+public class CatalinaResponseBodyHook extends ServerResponseBodyHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -48,13 +48,15 @@ public class CatalinaXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(CatalinaXssHook.class, "getBuffer", "$0,$1", Object.class);
+        String src = getInvokeStaticSrc(CatalinaResponseBodyHook.class, "getBuffer", "$0,$1", Object.class);
         insertBefore(ctClass, "doWrite", "(Lorg/apache/tomcat/util/buf/ByteChunk;)V", src);
         insertBefore(ctClass, "doWrite", "(Ljava/nio/ByteBuffer;)V", src);
     }
 
     public static void getBuffer(Object response, Object trunk) {
-        if (HookHandler.isEnableXssHook() && isCheckXss() && trunk != null) {
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive) && trunk != null) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
@@ -68,12 +70,12 @@ public class CatalinaXssHook extends ServerXssHook {
                     params.put("content_length", Reflection.invokeMethod(response, "getContentLength", new Class[]{}));
                     params.put("encoding", enc);
                     if (trunk instanceof ByteBuffer) {
-                        params.put("html_body", getContentFromByteBuffer((ByteBuffer) trunk, enc));
+                        params.put("body", getContentFromByteBuffer((ByteBuffer) trunk, enc));
                     } else {
-                        params.put("html_body", getContentFromByteTrunk(trunk, enc));
+                        params.put("body", getContentFromByteTrunk(trunk, enc));
                     }
                     // 该处检测添加到 try catch 来捕捉拦截异常，XSS 检测不应该使用异常拦截，容易造成死循环
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                    checkBody(params, isCheckXss, isCheckSensitive);
                 }
             } catch (Exception e) {
                 LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
@@ -81,7 +83,6 @@ public class CatalinaXssHook extends ServerXssHook {
             } finally {
                 HookHandler.enableBodyXssHook();
             }
-
         }
     }
 

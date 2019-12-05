@@ -29,13 +29,13 @@ import java.util.List;
  *
  * 使用 js 插件检测
  */
-public class V8Checker extends AttackChecker {
+public class V8AttackChecker extends AttackChecker {
 
-    public V8Checker() {
+    public V8AttackChecker() {
         super();
     }
 
-    public V8Checker(boolean canBlock) {
+    public V8AttackChecker(boolean canBlock) {
         super(canBlock);
     }
 
