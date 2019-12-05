@@ -130,7 +130,7 @@ long LogCollectItem::get_active_file_inode()
     return 0;
 }
 
-void LogCollectItem::update_status_snapshot() const
+void LogCollectItem::update_status_snapshot()
 {
     ifs.clear();
     fpos = ifs.tellg();
@@ -197,12 +197,12 @@ bool LogCollectItem::log_content_qualified(const std::string &content)
 
 void LogCollectItem::refresh_cache_body()
 {
-    if (cached_count == 0)
+    if (0 == cached_count)
     {
         cached_body.push_back('[');
         std::string line;
         while (std::getline(ifs, line) &&
-               count < LogAgent::max_post_logs_account)
+               cached_count < LogAgent::max_post_logs_account)
         {
             if (log_content_qualified(line))
             {
@@ -217,6 +217,10 @@ void LogCollectItem::refresh_cache_body()
         }
         cached_body.pop_back();
         cached_body.push_back(']');
+        if (0 == cached_count)
+        {
+            cached_body.clear();
+        }
     }
 }
 

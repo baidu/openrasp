@@ -38,7 +38,7 @@ public:
   bool has_error() const;
   void update_collect_status();
   inline void update_curr_suffix();
-  void update_status_snapshot() const;
+  void update_status_snapshot();
 
   bool need_rotate() const;
   void handle_rotate(bool need_rotate);
