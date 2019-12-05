@@ -1110,16 +1110,19 @@ function check_ssrf(params, context) {
         var all_parameter = get_all_parameter(context)
         if (is_from_userinput(all_parameter, url))
         {
-            if (ip.length && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[0]))
-            {
-                return {
-                    action:     algorithmConfig.ssrf_userinput.action,
-                    message:    _("SSRF - Requesting intranet address: %1%", [ ip[0] ]),
-                    confidence: 100,
-                    algorithm:  'ssrf_userinput'
+            for (var i=0; i<ip.length; i++) {
+                if (/^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[i]))
+                {
+                    return {
+                        action:     algorithmConfig.ssrf_userinput.action,
+                        message:    _("SSRF - Requesting intranet address: %1%", [ ip[i] ]),
+                        confidence: 100,
+                        algorithm:  'ssrf_userinput'
+                    }
                 }
             }
-            else if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
+            
+            if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
             {
                 return {
                     action:     algorithmConfig.ssrf_userinput.action,
@@ -1552,9 +1555,10 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         return clean
     })
 
-    plugin.register('ssrf_redirect', function(params, context) {
-        params2 = {
-            url: params.url2,
+    plugin.register('ssrfRedirect', function(params, context) {
+        var params2 = {
+            // 使用原始url，用于检测用户输入
+            url: params.url,
             hostname: params.hostname2,
             ip: params.ip2,
             port: params.port2,
@@ -1564,7 +1568,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         if (ret2 !== false) {
             ret = check_ssrf(params, context)
             if (ret === false) {
-                return ret
+                return ret2
             }
         }
         return clean
