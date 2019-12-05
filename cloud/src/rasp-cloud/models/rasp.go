@@ -49,6 +49,11 @@ type Rasp struct {
 	Environ           map[string]string `json:"environ" bson:"environ,omitempty"`
 }
 
+type RecordCount struct {
+	Id                string            `json:"version" bson:"_id"`
+	Count             int64    			`json:"count" bson:"count"`
+}
+
 const (
 	raspCollectionName = "rasp"
 )

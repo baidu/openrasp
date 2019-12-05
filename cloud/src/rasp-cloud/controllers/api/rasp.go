@@ -59,6 +59,35 @@ func (o *RaspController) Search() {
 	o.Serve(result)
 }
 
+// @router /search/version [post]
+func (o *RaspController) SearchVersion() {
+	var param struct {
+		Data    *models.Rasp `json:"data" `
+		Page    int          `json:"page"`
+		Perpage int          `json:"perpage"`
+	}
+	o.UnmarshalJson(&param)
+	if param.Data == nil {
+		o.ServeError(http.StatusBadRequest, "search data can not be empty")
+	}
+	o.ValidPage(param.Page, param.Perpage)
+	records, err := models.FindRaspVersion(param.Data)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get rasp version", err)
+	}
+	if records == nil {
+		records = make([]*models.RecordCount, 0)
+	}
+	total := len(records)
+	var result = make(map[string]interface{})
+	result["total"] = total
+	result["total_page"] = math.Ceil(float64(total) / float64(param.Perpage))
+	result["page"] = param.Page
+	result["perpage"] = param.Perpage
+	result["data"] = records
+	o.Serve(result)
+}
+
 // @router /csv [get]
 func (o *RaspController) GeneralCsv() {
 	appId := o.GetString("app_id")
