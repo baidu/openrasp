@@ -182,7 +182,6 @@ export default {
       })
     },
     saveConfig() {
-
       if (this.key == 'sql_exception') {
         this.data.mysql.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
       }

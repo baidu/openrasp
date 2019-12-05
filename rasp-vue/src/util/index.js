@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookie from 'js-cookie'
 import router from '@/router'
 
-export var rasp_version = '1.2.2'
+export var rasp_version = '1.3'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -22,8 +22,19 @@ export var audit_types = {
   1015: '重置插件配置'
 }
 
-export var browser_headers = [
+export var browser_headers = [{
+  name: 'X-Protected-By',
+  descr: 'OpenRASP 特征信息展示',
+  options: [{
+    name: '不开启',
+    value: undefined
+  },
   {
+    name: '开启',
+    value: 'OpenRASP'
+  }
+  ]
+}, {
   name: 'X-Frame-Options',
   descr: '点击劫持防护',
   options: [{
@@ -133,9 +144,7 @@ export var attack_types = {
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
-  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门',
-  request: '请求起始',
-  requestEnd: '请求结束',
+  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门'
 }
 
 export var status_types = {
@@ -179,7 +188,7 @@ export function getDefaultConfig() {
       
     },
     general_alarm_conf: {
-      interval: 120
+      alarm_check_interval: 120
     }
   }
 }

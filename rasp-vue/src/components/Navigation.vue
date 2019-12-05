@@ -64,6 +64,10 @@
                   <i class="dropdown-icon fe fe-user-check" />
                   操作审计
                 </RouterLink>
+                <RouterLink class="dropdown-item" :to="{ name: 'doc' }">
+                  <i class="dropdown-icon fe fe-file-text" />
+                  帮助文档
+                </RouterLink>
                 <a class="dropdown-item" href="https://rasp.baidu.com/#section-support" target="_blank">
                   <i class="dropdown-icon fa fa-qq" /> 技术支持
                 </a>
@@ -116,6 +120,12 @@
                 </RouterLink>
               </li>
               <li class="nav-item">
+                <RouterLink :to="{ name: 'iast', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-camera" />
+                  扫描器
+                </RouterLink>
+              </li>
+              <li class="nav-item">
                 <RouterLink :to="{ name: 'plugins', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-zap" />
                   插件管理
@@ -132,12 +142,6 @@
                   <i class="fe fe-settings" />
                   系统设置
                 </RouterLink>
-              </li>
-              <li class="nav-item">
-                <a href="https://rasp.baidu.com/doc" target="_blank" class="nav-link">
-                  <i class="fe fe-file-text" />
-                  帮助文档
-                </a>
               </li>
               <!-- <li class="nav-item">
                 <a href="https://rasp.baidu.com/#section-support" target="_blank" class="nav-link">
