@@ -23,18 +23,6 @@ export var audit_types = {
 }
 
 export var browser_headers = [{
-  name: 'X-Protected-By',
-  descr: 'OpenRASP 特征信息展示',
-  options: [{
-    name: '不开启',
-    value: undefined
-  },
-  {
-    name: '开启',
-    value: 'OpenRASP'
-  }
-  ]
-}, {
   name: 'X-Frame-Options',
   descr: '点击劫持防护',
   options: [{
