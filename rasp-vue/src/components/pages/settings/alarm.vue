@@ -257,7 +257,7 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          Syslog 报警配置
+          Syslog 报警配置（Agent 推送）
         </h3>
       </div>
       <div class="card-body">
@@ -302,7 +302,7 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          Kafka 报警推送
+          Kafka 报警推送（后台推送）
         </h3>
       </div>
       <div class="card-body">

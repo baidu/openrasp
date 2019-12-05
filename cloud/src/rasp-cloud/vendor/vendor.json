@@ -81,6 +81,12 @@
 			"revisionTime": "2019-09-04T06:34:54Z"
 		},
 		{
+			"checksumSHA1": "ajAqUByI39Sfm99F/ZNOguPP3Mk=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "c3e18be99d19e6b3e8f1559eea2c161a665c4b6b",
+			"revisionTime": "2019-08-25T01:20:11Z"
+		},
+		{
 			"checksumSHA1": "P86sNm3HVOHNqwoPXePlZ5/mZG0=",
 			"path": "github.com/hashicorp/go-uuid",
 			"revision": "f32f5fe8d6a86bfd2a4f58998002f7b0b91cf78f",
