@@ -117,6 +117,7 @@ void LogCollectItem::determine_fpos()
     {
         ifs.clear();
     }
+    ifs.sync();
 }
 
 long LogCollectItem::get_active_file_inode()
