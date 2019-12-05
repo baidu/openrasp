@@ -116,6 +116,7 @@ void LogCollectItem::update_collect_status()
     if (!ifs.good())
     {
         ifs.clear();
+        ifs.sync();
     }
 }
 
