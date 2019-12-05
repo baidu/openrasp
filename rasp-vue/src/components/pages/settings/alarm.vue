@@ -70,7 +70,8 @@
           <label class="form-label">
             每隔多少秒发送一次报警（报警并非实时发送，而是每隔一段建检查ES里是否有新报警）
           </label>
-          <input v-model.trim="data.general_alarm_conf.interval" type="number" class="form-control" placeholder="120">
+          <input v-model.trim="data.general_alarm_conf.alarm_check_interval"
+                 type="number" class="form-control" placeholder=120>
         </div>
       </div>
       <div class="card-footer">
@@ -318,7 +319,7 @@
           <label class="form-label">
             Topic
           </label>
-          <b-form-input v-model="data.kafka_alarm_conf['topic']" type="number" class="form-control" />
+          <b-form-input v-model="data.kafka_alarm_conf['topic']" type="string" class="form-control" />
         </div>
         <div class="form-group">
           <label class="custom-switch">
