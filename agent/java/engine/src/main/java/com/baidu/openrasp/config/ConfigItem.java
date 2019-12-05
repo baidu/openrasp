@@ -667,6 +667,18 @@ public enum ConfigItem {
         }
     }),
 
+    IAST_ENABLE(new ConfigSetter<String>("iast.enable") {
+        @Override
+        public synchronized void setValue(String iastEnable) {
+            Config.getConfig().iastEnable = Boolean.parseBoolean(iastEnable);
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "false";
+        }
+    }),
+
     LRU_COMPARE_ENABLE(new ConfigSetter<String>("lru.compare_enable") {
         @Override
         public synchronized void setValue(String lruCompareEnable) {

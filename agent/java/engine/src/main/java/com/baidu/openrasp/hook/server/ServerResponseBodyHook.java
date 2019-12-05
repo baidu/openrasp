@@ -17,15 +17,19 @@
 package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.response.HttpServletResponse;
+
+import java.util.HashMap;
 
 /**
  * @author anyang
  * @Description: xss检测基类
  * @date 2018/8/15 15:37
  */
-public abstract class ServerXssHook extends AbstractClassHook {
+public abstract class ServerResponseBodyHook extends AbstractClassHook {
     @Override
     public String getType() {
         return "xss";
@@ -37,5 +41,25 @@ public abstract class ServerXssHook extends AbstractClassHook {
             return contentType == null || contentType.startsWith(HttpServletResponse.CONTENT_TYPE_HTML_VALUE);
         }
         return false;
+    }
+
+    protected static boolean isCheckSensitive() {
+        // iast 全量
+        if (Config.getConfig().isIastEnabled()) {
+            return true;
+        } else {
+            // TODO: 限速检测
+
+            return false;
+        }
+    }
+
+    protected static void checkBody(HashMap<String, Object> params, boolean isCheckXss, boolean isCheckSensitive) {
+        if (isCheckXss) {
+            HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+        }
+        if (isCheckSensitive) {
+            HookHandler.doCheck(CheckParameter.Type.POLICY_BODY_SENSITIVE, params);
+        }
     }
 }

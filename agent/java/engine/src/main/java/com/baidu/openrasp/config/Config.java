@@ -107,6 +107,7 @@ public class Config extends FileScanListener {
     Map<String, String> logSensitiveRegex;
     boolean lruCompareEnable;
     int lruCompareLimit;
+    boolean iastEnable;
     static Config instance;
 
 
@@ -538,6 +539,15 @@ public class Config extends FileScanListener {
      */
     public boolean isDebugEnabled() {
         return debugLevel > 0;
+    }
+
+    /**
+     * 是否开启 iast
+     *
+     * @return true 代表开启
+     */
+    public boolean isIastEnabled() {
+        return iastEnable;
     }
 
     /**

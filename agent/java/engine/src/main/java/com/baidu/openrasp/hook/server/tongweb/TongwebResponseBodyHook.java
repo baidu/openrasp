@@ -1,12 +1,11 @@
 /**
- * 
+ *
  */
 package com.baidu.openrasp.hook.server.tongweb;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerXssHook;
+import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
@@ -22,7 +21,7 @@ import java.util.HashMap;
  * @create: 2019/06/19
  */
 @HookAnnotation
-public class TongwebXssHook extends ServerXssHook {
+public class TongwebResponseBodyHook extends ServerResponseBodyHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -31,12 +30,14 @@ public class TongwebXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src1 = getInvokeStaticSrc(TongwebXssHook.class, "getBufferFromByteArray", "$1,$2,$3", byte[].class, int.class, int.class);
+        String src1 = getInvokeStaticSrc(TongwebResponseBodyHook.class, "getBufferFromByteArray", "$1,$2,$3", byte[].class, int.class, int.class);
         insertBefore(ctClass, "realWriteBytes", "([BII)V", src1);
     }
 
     public static void getBufferFromByteArray(byte[] buf, int off, int cnt) {
-        if (HookHandler.isEnableXssHook()) {
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive)) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             if (buf != null && cnt > 0) {
@@ -44,14 +45,14 @@ public class TongwebXssHook extends ServerXssHook {
                     byte[] temp = new byte[cnt + 1];
                     System.arraycopy(buf, off, temp, 0, cnt);
                     String content = new String(temp);
-                    params.put("html_body", content);
+                    params.put("body", content);
 
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);
                 }
                 if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                    checkBody(params, isCheckXss, isCheckSensitive);
                 }
             }
         }

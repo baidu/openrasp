@@ -18,10 +18,11 @@ package com.baidu.openrasp.response;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.hook.server.catalina.CatalinaXssHook;
+import com.baidu.openrasp.hook.server.catalina.CatalinaResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
 /**
  * Created by tyy on 9/5/17.
@@ -182,8 +183,9 @@ public class HttpServletResponse {
                 } else {
                     script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 }
-                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)) {
-                    CatalinaXssHook.handleXssBlockBuffer(parameter, script);
+                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)
+                        && "tomcat".equals(ApplicationModel.getServerName())) {
+                    CatalinaResponseBodyHook.handleXssBlockBuffer(parameter, script);
                 } else {
                     if (!isCommitted) {
                         resetBuffer();

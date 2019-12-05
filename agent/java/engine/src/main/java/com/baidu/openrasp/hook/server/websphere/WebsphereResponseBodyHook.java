@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.baidu.openrasp.hook.server.weblogic;
+package com.baidu.openrasp.hook.server.websphere;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerXssHook;
+import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
@@ -27,42 +27,47 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
-import java.nio.CharBuffer;
 import java.util.HashMap;
 
 /**
- * @description: weblogic的xss检测hook点
- * @author: anyang
- * @create: 2018/09/05 15:06
+ * @author anyang
+ * @Description: websphere的xss检测hook点
+ * @date 2018/8/15 14:18
  */
 @HookAnnotation
-public class WeblogicXssHook extends ServerXssHook {
+public class WebsphereResponseBodyHook extends ServerResponseBodyHook {
     @Override
     public boolean isClassMatched(String className) {
-        return "weblogic/servlet/internal/CharsetChunkOutput".equals(className);
+        return "com/ibm/wsspi/webcontainer/util/BufferedWriter".equals(className);
     }
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(WeblogicXssHook.class, "getWeblogicOutputBuffer", "$1", CharBuffer.class);
-        insertBefore(ctClass, "write", "(Ljava/nio/CharBuffer;)V", src);
+        String src = getInvokeStaticSrc(WebsphereResponseBodyHook.class, "getWebsphereOutputBuffer", "$0", Object.class);
+        insertBefore(ctClass, "flushChars", "()V", src);
     }
 
-    public static void getWeblogicOutputBuffer(CharBuffer buffer) {
-        if (HookHandler.isEnableXssHook() && isCheckXss()) {
+    public static void getWebsphereOutputBuffer(Object object) {
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive)) {
             HookHandler.disableBodyXssHook();
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
+                char[] buffer = (char[]) Reflection.getField(object, "buf");
+                int len = (Integer) Reflection.getField(object, "count");
+                char[] temp = new char[len];
                 if (buffer != null) {
-                    String content = buffer.toString();
-                    params.put("html_body", content);
+                    System.arraycopy(buffer, 0, temp, 0, len);
+                    String content = new String(temp);
+                    params.put("body", content);
                 }
             } catch (Exception e) {
                 LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                         e.getMessage(), e);
             }
             if (!params.isEmpty()) {
-                HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                checkBody(params, isCheckXss, isCheckSensitive);
             }
         }
     }

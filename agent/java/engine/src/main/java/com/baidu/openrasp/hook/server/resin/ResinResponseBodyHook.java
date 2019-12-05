@@ -17,9 +17,8 @@
 package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerXssHook;
+import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
@@ -35,7 +34,7 @@ import java.util.HashMap;
  * @date 2018/8/7 19:27
  */
 @HookAnnotation
-public class ResinXssHook extends ServerXssHook {
+public class ResinResponseBodyHook extends ServerResponseBodyHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -45,12 +44,14 @@ public class ResinXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(ResinXssHook.class, "getResinOutputBuffer", "_charBuffer,_charLength,_isOutputStreamOnly", char[].class, int.class, boolean.class);
+        String src = getInvokeStaticSrc(ResinResponseBodyHook.class, "getResinOutputBuffer", "_charBuffer,_charLength,_isOutputStreamOnly", char[].class, int.class, boolean.class);
         insertBefore(ctClass, "flushCharBuffer", "()V", src);
     }
 
     public static void getResinOutputBuffer(char[] buffer, int len, boolean isOutputStreamOnly) {
-        if (HookHandler.isEnableXssHook() && isCheckXss()) {
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive)) {
             HookHandler.disableBodyXssHook();
             if (len > 0 && !isOutputStreamOnly) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
@@ -58,13 +59,13 @@ public class ResinXssHook extends ServerXssHook {
                     char[] temp = new char[len];
                     System.arraycopy(buffer, 0, temp, 0, len);
                     String content = new String(temp);
-                    params.put("html_body", content);
+                    params.put("body", content);
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);
                 }
                 if (!params.isEmpty()) {
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                    checkBody(params, isCheckXss, isCheckSensitive);
                 }
             }
         }

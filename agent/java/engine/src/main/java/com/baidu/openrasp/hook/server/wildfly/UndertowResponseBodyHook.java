@@ -17,9 +17,8 @@
 package com.baidu.openrasp.hook.server.wildfly;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerXssHook;
+import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
@@ -36,7 +35,7 @@ import java.util.HashMap;
  * @create: 2019/02/22 11:27
  */
 @HookAnnotation
-public class UndertowXssHook extends ServerXssHook {
+public class UndertowResponseBodyHook extends ServerResponseBodyHook {
     @Override
     public boolean isClassMatched(String className) {
         return "io/undertow/servlet/spec/ServletPrintWriter".equals(className);
@@ -44,39 +43,43 @@ public class UndertowXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src1 = getInvokeStaticSrc(UndertowXssHook.class, "getUndertowOutputBuffer", "$1", CharBuffer.class);
-        String src2 = getInvokeStaticSrc(UndertowXssHook.class, "getUndertowOutputBuffer", "$1,$2,$3", String.class, int.class, int.class);
+        String src1 = getInvokeStaticSrc(UndertowResponseBodyHook.class, "getUndertowOutputBuffer", "$1", CharBuffer.class);
+        String src2 = getInvokeStaticSrc(UndertowResponseBodyHook.class, "getUndertowOutputBuffer", "$1,$2,$3", String.class, int.class, int.class);
         insertBefore(ctClass, "write", "(Ljava/nio/CharBuffer;)V", src1);
         insertBefore(ctClass, "write", "(Ljava/lang/String;II)V", src2);
     }
 
     public static void getUndertowOutputBuffer(CharBuffer buffer) {
-        if (HookHandler.isEnableXssHook()) {
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive)) {
             HookHandler.disableBodyXssHook();
             if (buffer != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 try {
                     String content = buffer.toString();
-                    params.put("html_body", content);
+                    params.put("body", content);
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);
                 }
                 if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                    checkBody(params, isCheckXss, isCheckSensitive);
                 }
             }
         }
     }
 
     public static void getUndertowOutputBuffer(String buffer, int off, int len) {
-        if (HookHandler.isEnableXssHook() && isCheckXss()) {
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive)) {
             HookHandler.disableBodyXssHook();
             if (buffer != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
-                params.put("html_body", buffer);
+                params.put("body", buffer);
                 if (!params.isEmpty()) {
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                    checkBody(params, isCheckXss, isCheckSensitive);
                 }
             }
         }

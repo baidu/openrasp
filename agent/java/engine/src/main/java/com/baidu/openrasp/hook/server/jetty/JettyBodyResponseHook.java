@@ -17,9 +17,8 @@
 package com.baidu.openrasp.hook.server.jetty;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.hook.server.ServerXssHook;
+import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
-import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -36,7 +35,7 @@ import java.util.HashMap;
  * @date 2018/8/1315:13
  */
 @HookAnnotation
-public class JettyXssHook extends ServerXssHook {
+public class JettyBodyResponseHook extends ServerResponseBodyHook {
 
     @Override
     public boolean isClassMatched(String className) {
@@ -48,32 +47,39 @@ public class JettyXssHook extends ServerXssHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src1 = getInvokeStaticSrc(JettyXssHook.class, "getJettyOutputBuffer", "_generator", Object.class);
+        String src1 = getInvokeStaticSrc(JettyBodyResponseHook.class, "getJettyOutputBuffer", "_generator", Object.class);
         insertBefore(ctClass, "completeResponse", "()V", src1);
-        String src2 = getInvokeStaticSrc(JettyXssHook.class, "getJetty9OutputBuffer", "$1,$2,$3", char[].class, int.class, int.class);
+        String src2 = getInvokeStaticSrc(JettyBodyResponseHook.class, "getJetty9OutputBuffer", "$1,$2,$3", char[].class, int.class, int.class);
         insertBefore(ctClass, "write", null, src2);
     }
 
 
     public static void getJettyOutputBuffer(Object object) {
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        try {
-            Object buffer = Reflection.getSuperField(object, "_buffer");
-            if (buffer != null) {
-                String content = new String(buffer.toString().getBytes(), "utf-8");
-                params.put("html_body", content);
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive)) {
+            HookHandler.disableBodyXssHook();
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            try {
+                Object buffer = Reflection.getSuperField(object, "_buffer");
+                if (buffer != null) {
+                    String content = new String(buffer.toString().getBytes(), "utf-8");
+                    params.put("body", content);
+                }
+            } catch (Exception e) {
+                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                        e.getMessage(), e);
             }
-        } catch (Exception e) {
-            LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
-                    e.getMessage(), e);
-        }
-        if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
-            HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+            if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
+                checkBody(params, isCheckXss, isCheckSensitive);
+            }
         }
     }
 
     public static void getJetty9OutputBuffer(char[] buffer, int offset, int length) {
-        if (HookHandler.isEnableXssHook() && isCheckXss()) {
+        boolean isCheckXss = isCheckXss();
+        boolean isCheckSensitive = isCheckSensitive();
+        if (HookHandler.isEnableXssHook() && (isCheckXss || isCheckSensitive)) {
             HookHandler.disableBodyXssHook();
             if (buffer != null && length > 0) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
@@ -81,13 +87,13 @@ public class JettyXssHook extends ServerXssHook {
                     char[] temp = new char[length];
                     System.arraycopy(buffer, offset, temp, 0, length);
                     String content = new String(temp);
-                    params.put("html_body", content);
+                    params.put("body", content);
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);
                 }
                 if (!params.isEmpty()) {
-                    HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
+                    checkBody(params, isCheckXss, isCheckSensitive);
                 }
             }
         }
