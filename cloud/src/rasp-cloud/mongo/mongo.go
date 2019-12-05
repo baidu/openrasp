@@ -131,6 +131,12 @@ func FindAllWithSelect(collection string, query interface{}, result interface{},
 	return
 }
 
+func FindSelectWithAggregation(collection string, query interface{}, result interface{}) (err error) {
+	newSession := NewSession()
+	defer newSession.Close()
+	return newSession.DB(DbName).C(collection).Pipe(query).All(result)
+}
+
 func FindId(collection string, id string, result interface{}) error {
 	newSession := NewSession()
 	defer newSession.Close()

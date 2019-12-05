@@ -15,7 +15,7 @@
             </option>
           </select>
         </div>
-        <div class="page-options d-flex">
+        <div class="page-options d-flex" style="margin-top: 5px; margin-left: 10px; ">
           <div>
             <b-dropdown :text="'主机状态' + toHostStatus()" class="">
               <div class="row px-2">
