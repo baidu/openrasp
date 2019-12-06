@@ -253,16 +253,19 @@ int set_signal_handler(int sig, sa_sigaction_t handler)
 
 void general_signal_hook()
 {
-    set_signal_handler(SIGSEGV, signal_handler);
-    set_signal_handler(SIGABRT, signal_handler);
-    set_signal_handler(SIGBUS, signal_handler);
-    set_signal_handler(SIGILL, signal_handler);
-    set_signal_handler(SIGFPE, signal_handler);
+    if (openrasp_ini.verify_crash_url())
+    {
+        set_signal_handler(SIGSEGV, signal_handler);
+        set_signal_handler(SIGABRT, signal_handler);
+        set_signal_handler(SIGBUS, signal_handler);
+        set_signal_handler(SIGILL, signal_handler);
+        set_signal_handler(SIGFPE, signal_handler);
+    }
 }
 
 PHP_RINIT_FUNCTION(openrasp_signal)
 {
-    if (openrasp_ini.verify_crash_url() && !is_set_handler)
+    if (!is_set_handler)
     {
         std::lock_guard<std::mutex> lock(mtx);
         if (!is_set_handler)

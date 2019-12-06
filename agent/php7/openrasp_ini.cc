@@ -89,7 +89,7 @@ bool Openrasp_ini::verify_crash_url()
             {
                 ch = std::tolower(ch);
             }
-            if ("http" != scheme || "https" != scheme)
+            if ("http" != scheme && "https" != scheme)
             {
                 return false;
             }
