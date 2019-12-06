@@ -302,7 +302,7 @@ export default {
     setComment: function(data) {
       var oldVal = data.description
       var newVal = prompt('输入新的备注', oldVal)
-      if (! newVal) {
+      if (newVal == null) {
         return
       }
 
