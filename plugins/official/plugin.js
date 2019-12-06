@@ -2267,7 +2267,6 @@ plugin.register('command', function (params, context) {
             if (raw_tokens[i+1] !== undefined &&
                 concat_char.indexOf(raw_tokens[i].text) != -1 &&
                 sensitive_cmd.indexOf(raw_tokens[i+1].text) != -1) {
-                console.log("2353")
                 return {
                     action:     algorithmConfig.command_error.action,
                     confidence: 70,
@@ -2283,7 +2282,6 @@ plugin.register('command', function (params, context) {
             }
         }
         if (double_quote % 2 != 0 || ticks % 2 != 0) {
-            console.log("2333")
             return {
                 action:     algorithmConfig.command_error.action,
                 confidence: 70,
