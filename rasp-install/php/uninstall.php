@@ -182,14 +182,6 @@ if (file_exists($snapshot) && is_file($snapshot)) {
         log_tips(INFO, "Fail to delete snapshot.dat, you can manually remove it.");
     }
 }
-$crashshell = realpath($root_dir).DIRECTORY_SEPARATOR."crash.sh";
-if (file_exists($crashshell) && is_file($crashshell)) {
-    if (is_writable($crashshell)) {
-        unlink($crashshell);
-    } else {
-        log_tips(INFO, "Fail to delete crash.sh, you can manually remove it.");
-    }
-}
 if (rmdir($root_dir)) {
     log_tips(INFO, "'$root_dir' removed");
 } else {
