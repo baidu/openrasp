@@ -69,7 +69,7 @@
               [帮助文档]
             </a>
           </label>
-          <input v-model.number="data['request.param_encoding']" min="0" class="form-control" placeholder="UTF-8">
+          <input type="text" v-model="data['request.param_encoding']" class="form-control" placeholder="UTF-8">
         </div>
         <div class="form-group">
           <label class="form-label">
