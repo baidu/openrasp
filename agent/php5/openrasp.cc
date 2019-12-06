@@ -74,6 +74,7 @@ PHP_INI_ENTRY1("openrasp.remote_management_enable", "0", PHP_INI_SYSTEM, OnUpdat
 PHP_INI_ENTRY1("openrasp.heartbeat_interval", "180", PHP_INI_SYSTEM, OnUpdateOpenraspHeartbeatInterval, &openrasp_ini.heartbeat_interval)
 PHP_INI_ENTRY1("openrasp.ssl_verifypeer", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.ssl_verifypeer)
 PHP_INI_ENTRY1("openrasp.iast_enable", "0", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.iast_enable)
+PHP_INI_ENTRY1("openrasp.crash_url", nullptr, PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.crash_url)
 PHP_INI_END()
 
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
@@ -165,6 +166,10 @@ PHP_MINIT_FUNCTION(openrasp)
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
         return SUCCESS;
+    }
+    if (!openrasp_ini.verify_crash_url())
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Crash reporting will be disabled, only the url with http(s) scheme is valid for openrasp.crash_url."));
     }
     if (PHP_MINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
@@ -263,7 +268,7 @@ PHP_RINIT_FUNCTION(openrasp)
             OPENRASP_G(request).set_method(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REQUEST_METHOD"));
             OPENRASP_G(request).set_remote_addr(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REMOTE_ADDR"));
             OPENRASP_G(request).set_document_root(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "DOCUMENT_ROOT"));
-            
+
             std::map<std::string, std::string> header;
             for (zend_hash_internal_pointer_reset(Z_ARRVAL_P(http_server));
                  zend_hash_has_more_elements(Z_ARRVAL_P(http_server)) == SUCCESS;
@@ -284,7 +289,6 @@ PHP_RINIT_FUNCTION(openrasp)
                 }
             }
             OPENRASP_G(request).set_header(header);
-
         }
         int result;
         long config_last_update = openrasp::scm->get_config_last_update();

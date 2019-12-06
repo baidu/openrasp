@@ -37,12 +37,14 @@ public:
   bool remote_management_enable = true;
   bool ssl_verifypeer = false;
   bool iast_enable = false;
+  char *crash_url;
 
   static const char *APPID_REGEX;
   static const char *APPSECRET_REGEX;
   static const char* RASPID_REGEX;
   bool verify_remote_management_ini(std::string &error);
   bool verify_rasp_id();
+  bool verify_crash_url();
 };
 
 extern Openrasp_ini openrasp_ini;

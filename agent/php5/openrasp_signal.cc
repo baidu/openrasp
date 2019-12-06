@@ -22,6 +22,7 @@ extern "C"
 {
 #include "php.h"
 }
+#include "utils/hostname.h"
 #include "openrasp.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
@@ -43,10 +44,8 @@ struct sigaction old_acts[SIGUSR2];
 bool is_set_handler = false;
 std::mutex mtx;
 
-int fork_and_exec(const char *cmd)
+int fork_and_exec(const char *path, char *const argv[])
 {
-    const char *argv[4] = {"sh", "-c", cmd, nullptr};
-
     pid_t pid = fork();
 
     if (pid < 0)
@@ -58,8 +57,7 @@ int fork_and_exec(const char *cmd)
     {
         // child process
 
-        execve("/bin/sh", (char *const *)argv, environ);
-
+        execvpe(path, argv, environ);
         // execve failed
         _exit(-1);
     }
@@ -156,9 +154,26 @@ void report_crash_log(int sig)
         }
         log << std::endl;
     }
-    char cmd[4 * 1024];
-    snprintf(cmd, 4 * 1024, "cd %s && sh crash.sh -l php -f %s", openrasp_ini.root_dir, log_path.c_str());
-    if (fork_and_exec(cmd) != 0)
+    char hostname_form[512];
+    snprintf(hostname_form, 512, "hostname=%s", openrasp::get_hostname().c_str());
+    char crash_log_form[MAXPATHLEN + 128];
+    snprintf(crash_log_form, MAXPATHLEN + 128, "crash_log=@%s", log_path.c_str());
+    char *const argv[] = {
+        "curl",
+        openrasp_ini.crash_url,
+        "--connect-timeout",
+        "5",
+        "-F",
+        "job=crash",
+        "-F",
+        "language=php",
+        "-F",
+        hostname_form,
+        "-F",
+        crash_log_form,
+        nullptr};
+
+    if (fork_and_exec("curl", argv) != 0)
     {
         log << "\nfailed to report crash log" << std::endl;
     }
@@ -247,7 +262,7 @@ void general_signal_hook()
 
 PHP_RINIT_FUNCTION(openrasp_signal)
 {
-    if (!is_set_handler)
+    if (openrasp_ini.verify_crash_url() && !is_set_handler)
     {
         std::lock_guard<std::mutex> lock(mtx);
         if (!is_set_handler)

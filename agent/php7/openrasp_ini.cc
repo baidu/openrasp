@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 #include <limits>
 #include "utils/string.h"
 #include "utils/regex.h"
@@ -67,6 +68,36 @@ bool Openrasp_ini::verify_rasp_id()
     if (!openrasp::empty(rasp_id))
     {
         return openrasp::regex_match(rasp_id, Openrasp_ini::RASPID_REGEX);
+    }
+    return true;
+}
+
+bool Openrasp_ini::verify_crash_url()
+{
+    if (openrasp::empty(crash_url))
+    {
+        return false;
+    }
+    else
+    {
+        std::string scheme;
+        std::string host;
+        std::string port;
+        if (openrasp_parse_url(openrasp_ini.crash_url, scheme, host, port))
+        {
+            for (auto &ch : scheme)
+            {
+                ch = std::tolower(ch);
+            }
+            if ("http" != scheme || "https" != scheme)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
     return true;
 }
