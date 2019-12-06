@@ -93,13 +93,19 @@
           <label class="form-label">
             [基线] [Web根目录敏感文件检查] 文件名正则，仅PHP支持，最长100字符
           </label>
-          <textarea v-model.trim="data['fileleak.name']" type="text" class="form-control" maxlen="100" placeholder="\.(git|svn|tar|gz|rar|zip|sql|log)$" />
+          <textarea v-model.trim="data['fileleak_scan.name']" type="text" class="form-control" maxlen="100" placeholder="\.(git|svn|tar|gz|rar|zip|sql|log)$" />
         </div>
         <div class="form-group">
           <label class="form-label">
             [基线] [Web根目录敏感文件检查] 扫描间隔（小时）
           </label>
-          <input v-model.trim="data['fileleak.scan_interval']" type="number" class="form-control" placeholder="3" min="1" />
+          <input v-model.trim="data['fileleak_scan.interval']" type="number" class="form-control" placeholder="3" min="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [基线] [Web根目录敏感文件检查] 最多检测多少个文件，写 0 关闭这个功能
+          </label>
+          <input v-model.trim="data['fileleak_scan.limit']" type="number" class="form-control" placeholder="3" min="1" />
         </div>
         <div class="form-group">
           <label class="form-label">
