@@ -41,11 +41,11 @@
               </div>
             </b-dropdown>
           </div>
-          <div class="input-icon ml-2">
+          <div class="input-icon ml-3">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadRaspList(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-20" placeholder="搜索主机\IP\备注" @keyup.enter="loadRaspList(1)">
           </div>
 
           <button class="btn btn-primary ml-2" @click="loadRaspList(1)">
@@ -302,9 +302,6 @@ export default {
     setComment: function(data) {
       var oldVal = data.description
       var newVal = prompt('输入新的备注', oldVal)
-      if (newVal == null) {
-        return
-      }
 
       this.request.post('v1/api/rasp/describe', {
         id: data.id,
