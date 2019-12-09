@@ -121,7 +121,7 @@
               </li>
               <li class="nav-item">
                 <RouterLink :to="{ name: 'iast', params: { app_id: current_app.id } }" class="nav-link">
-                  <i class="fe fe-camera" />
+                  <i class="fa fa-paper-plane-o" />
                   扫描器
                 </RouterLink>
               </li>
