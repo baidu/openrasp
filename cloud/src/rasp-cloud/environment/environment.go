@@ -45,6 +45,7 @@ var (
 	Version             = "1.3"
 	LogPath             = "logs/"
 	PidFileName         = LogPath + "pid.file"
+	OldPid              = ""
 )
 
 func init() {
@@ -60,7 +61,7 @@ func init() {
 		handleVersionFlag()
 	}
 	beego.Info("Version: " + Version)
-
+	OldPid = readPIDFILE(PidFileName)
 	if tools.BuildTime != "" {
 		beego.Info("Build Time: " + tools.BuildTime)
 	}
@@ -118,8 +119,7 @@ func HandleOperation(operation string)  {
 }
 
 func restart() {
-	oldPid := readPIDFILE(PidFileName)
-	pid, err := strconv.Atoi(oldPid)
+	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
 		log.Println("restarting........")
 		if err != nil {
@@ -132,14 +132,13 @@ func restart() {
 		time.Sleep(5 * time.Second)
 		log.Println("restart success!")
 	} else {
-		log.Printf("the process id:%s is not exists!", oldPid)
+		log.Printf("the process id:%s is not exists!", OldPid)
 	}
 	os.Exit(0)
 }
 
 func stop()  {
-	oldPid := readPIDFILE(PidFileName)
-	pid, err := strconv.Atoi(oldPid)
+	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
 		log.Println("stopping........")
 		if err != nil {
@@ -152,7 +151,7 @@ func stop()  {
 			log.Println("stop ok!")
 		}
 	} else {
-		log.Printf("the process id:%s is not exists!", oldPid)
+		log.Printf("the process id:%s is not exists!", OldPid)
 	}
 	os.Exit(0)
 }
@@ -215,11 +214,13 @@ func HandleDaemon() {
 		tools.Panic(tools.ErrCodeInitChildProcessFailed, "failed to launch child process, error", err)
 	}
 	if CheckPIDAlreadyRunning(PidFileName) {
+		RecoverPid(PidFileName, false)
 		log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
 	}else {
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
 		res := CheckPort(port)
 		if res == false {
+			RecoverPid(PidFileName, false)
 			log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
 		}
 		log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
@@ -368,4 +369,21 @@ func CheckPort(port int) bool {
 		return false
 	}
 	return true
+}
+
+func RecoverPid(path string, remove bool) (*PIDFile, bool) {
+	time.Sleep(1 * time.Second)
+	if ret := checkPIDAlreadyExists(path, remove); ret == false {
+		log.Println("start new pid file!")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
+		log.Println("Mkdir error:", err)
+		return nil, false
+	}
+	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%s", OldPid)), 0644); err != nil {
+		log.Println("WriteFile error:", err)
+		return nil, false
+	}
+	return &PIDFile{path: path}, true
 }
