@@ -186,10 +186,6 @@ func (o *RaspController) Describe() {
 		o.ServeError(http.StatusBadRequest, "the length of rasp id can not be greater than 256")
 	}
 
-	if param.Description == "" {
-		o.ServeError(http.StatusBadRequest, "description can not be empty")
-	}
-
 	if len(param.Description) > 1024 {
 		o.ServeError(http.StatusBadRequest, "the length of description can not be greater than 1024")
 	}

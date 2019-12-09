@@ -146,9 +146,6 @@ func (o *StrategyController) ConfigStrategy() {
 	}
 
 	o.UnmarshalJson(&param)
-	if param.StrategyId == "" {
-		o.ServeError(http.StatusBadRequest, "strategy_id can not be empty")
-	}
 	if param.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
