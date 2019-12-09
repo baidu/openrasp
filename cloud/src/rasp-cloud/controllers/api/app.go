@@ -147,7 +147,7 @@ func (o *AppController) RegenerateAppSecret() {
 // @router /general/config [post]
 func (o *AppController) UpdateAppGeneralConfig() {
 	var param struct {
-		StrategyId	string		           `json:"strategy_id"`
+		StrategyId	string		           `json:"strategy_id,omitempty"`
 		AppId       string                 `json:"app_id"`
 		Config      map[string]interface{} `json:"config"`
 	}
@@ -159,18 +159,15 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	if param.Config == nil {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
-	if param.StrategyId == "" {
-		o.ServeError(http.StatusBadRequest, "strategy_id can not be empty")
-	}
 	o.validateAppConfig(param.Config)
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
 	}
-	_, err = models.UpdateGeneralConfigForStrategy(param.StrategyId, param.AppId, param.Config)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update strategy general config", err)
-	}
+	//_, err = models.UpdateGeneralConfigForStrategy(param.StrategyId, param.AppId, param.Config)
+	//if err != nil {
+	//	o.ServeError(http.StatusBadRequest, "failed to update strategy general config", err)
+	//}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateGenerateConfig,
 		o.Ctx.Input.IP(), "Updated general config of "+param.AppId)
 	o.Serve(app)
@@ -179,7 +176,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 // @router /whitelist/config [post]
 func (o *AppController) UpdateAppWhiteListConfig() {
 	var param struct {
-		StrategyId	string					     `json:"strategy_id"`
+		StrategyId	string					     `json:"strategy_id,omitempty"`
 		AppId       string                       `json:"app_id"`
 		Config      []models.WhitelistConfigItem `json:"config"`
 	}
@@ -192,9 +189,6 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
 	o.validateWhiteListConfig(param.Config)
-	if param.StrategyId == ""{
-		o.ServeError(http.StatusBadRequest, "strategy_id can not be empty")
-	}
 	param.Config = o.RemoveDupWhitelistConfigItem(param.Config)
 	app, err := models.UpdateWhiteListConfig(param.AppId, param.Config)
 	if err != nil {
@@ -435,8 +429,11 @@ func (o *AppController) validAttackTypeAlarmConf(conf *map[string][]string) {
 }
 
 func (o *AppController) validKafkaConf(conf *kafka.Kafka) {
-	if len(conf.KafkaAddr) == 0 {
+	if conf.KafkaAddr == "" {
 		o.ServeError(http.StatusBadRequest, "the kafka addr cannot be empty")
+	}
+	if conf.KafkaTopic == "" {
+		o.ServeError(http.StatusBadRequest, "the kafka topic cannot be empty")
 	}
 }
 
@@ -507,6 +504,7 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 }
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) {
+	generalConfigTemplate := models.DefaultGeneralConfig
 	for key, value := range config {
 		if value == nil {
 			o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
@@ -520,11 +518,52 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				"the length of config key '"+key+"' must be less than 512")
 		}
 		if v, ok := value.(string); ok {
-			if len(v) >= 4096 {
+			maxBytes := generalConfigTemplate["body.maxbytes"]
+			if len(v) >= maxBytes.(int) {
 				o.ServeError(http.StatusBadRequest,
-					"the value's length of config item '"+key+"' must be less than 4096")
+					"the value's length of config item '"+key+"' must be less than" + v)
 			}
 		}
+
+		// 对类型进行检验
+		if key != "security.weak_password"{
+			switch reflect.TypeOf(generalConfigTemplate[key]).String(){
+			case "string":
+				if _, ok := value.(string); !ok {
+					o.ServeError(http.StatusBadRequest,
+						"the type of config key: "+key+"'s value must be send a string")
+				}
+			case "int64":
+				if _, ok := value.(int64); !ok {
+					o.ServeError(http.StatusBadRequest,
+						"the type of config key: "+key+"'s value must be send a int64")
+				}
+			case "bool":
+				if _, ok := value.(bool); !ok {
+					o.ServeError(http.StatusBadRequest,
+						"the type of config key: "+key+"'s value must be send a bool")
+				}
+			case "int", "float64":
+				if _, ok := value.(float64); !ok {
+					o.ServeError(http.StatusBadRequest,
+						"the type of config key: "+key+"'s value must be send a int")
+				}
+			}
+		} else {
+			if value != nil {
+				for idx, v := range value.([]interface{}) {
+					if len(v.(string)) > 16 {
+						o.ServeError(http.StatusBadRequest,
+							"the length of value:" + v.(string) + " exceeds max_len 16!")
+					}
+					if idx >= 200 {
+						o.ServeError(http.StatusBadRequest,
+							"the count of weak_password exceed 200!")
+					}
+				}
+			}
+		}
+
 		if key == "inject.custom_headers" {
 			for hk, hv := range value.(map[string]interface{}) {
 				if len(hk) >= 200 {
@@ -596,12 +635,13 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 // @router /alarm/config [post]
 func (o *AppController) ConfigAlarm() {
 	var param struct {
-		AppId               string                 `json:"app_id"`
-		AttackTypeAlarmConf *map[string][]string   `json:"attack_type_alarm_conf,omitempty"`
-		EmailAlarmConf      *models.EmailAlarmConf `json:"email_alarm_conf,omitempty"`
-		DingAlarmConf       *models.DingAlarmConf  `json:"ding_alarm_conf,omitempty"`
-		HttpAlarmConf       *models.HttpAlarmConf  `json:"http_alarm_conf,omitempty"`
-		KafkaConf           *kafka.Kafka           `json:"kafka_conf,omitempty"`
+		AppId               string                   `json:"app_id"`
+		AttackTypeAlarmConf *map[string][]string     `json:"attack_type_alarm_conf,omitempty"`
+		EmailAlarmConf      *models.EmailAlarmConf   `json:"email_alarm_conf,omitempty"`
+		DingAlarmConf       *models.DingAlarmConf    `json:"ding_alarm_conf,omitempty"`
+		HttpAlarmConf       *models.HttpAlarmConf    `json:"http_alarm_conf,omitempty"`
+		KafkaConf           *kafka.Kafka             `json:"kafka_alarm_conf,omitempty"`
+		GeneralAlarmConf    *models.GeneralAlarmConf `json:"general_alarm_conf"`
 	}
 	o.UnmarshalJson(&param)
 
