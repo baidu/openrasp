@@ -52,4 +52,13 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"],
+        beego.ControllerComments{
+            Method: "Get",
+            Router: `/`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
 }
