@@ -37,6 +37,8 @@ type RaspAppConfig struct {
 	KafkaAddr             string
 	KafkaUser             string
 	KafkaPwd              string
+	KafkaEnable           bool
+	KafkaTopic            string
 	MongoDBAddr           []string
 	MongoDBUser           string
 	MongoDBPwd            string
@@ -75,6 +77,8 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.KafkaAddr = beego.AppConfig.String("KafkaAddr")
 	AppConfig.KafkaUser = beego.AppConfig.DefaultString("KafkaUser", "")
 	AppConfig.KafkaPwd = beego.AppConfig.DefaultString("KafkaPwd", "")
+	AppConfig.KafkaEnable = beego.AppConfig.DefaultBool("KafkaEnable", false)
+	AppConfig.KafkaTopic = beego.AppConfig.DefaultString("KafkaTopic", "")
 	AppConfig.MongoDBAddr = initArrayConfig(strings.Split(beego.AppConfig.String("MongoDBAddr"), ","))
 	AppConfig.MongoDBPoolLimit = beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
 	AppConfig.MongoDBName = beego.AppConfig.DefaultString("MongoDBName", "openrasp")

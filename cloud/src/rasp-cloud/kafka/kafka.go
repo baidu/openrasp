@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/Shopify/sarama"
 	"github.com/astaxie/beego"
+	"rasp-cloud/conf"
 	"rasp-cloud/mongo"
 	"strings"
 )
@@ -109,11 +110,11 @@ func GetKafkaConfig() (kafka *Kafka, err error) {
 	err = mongo.FindId(kafkaAddrCollectionName, kafkaAddrId, &kafka)
 	if err != nil {
 		kafka = &Kafka{
-			KafkaAddr:   "",
-			KafkaUser:   "",
-			KafkaPwd:    "",
-			KafkaTopic:  "",
-			KafkaEnable: false,
+			KafkaAddr:   conf.AppConfig.KafkaAddr,
+			KafkaUser:   conf.AppConfig.KafkaUser,
+			KafkaPwd:    conf.AppConfig.KafkaPwd,
+			KafkaTopic:  conf.AppConfig.KafkaTopic,
+			KafkaEnable: conf.AppConfig.KafkaEnable,
 		}
 	}
 	return kafka, err
