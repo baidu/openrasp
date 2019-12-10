@@ -32,7 +32,7 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     private static String OPENRASP_START_TAG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n";
     private static String OPENRASP_END_TAG = "### END OPENRASP ###\n";
-    private static String JAVA_AGENT_CONFIG = "\tJAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n";
+    private static String JAVA_AGENT_CONFIG = "\tif [ \"$YP_RASP_DISABLE\"x != \"Y\"x ]; then JAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"; fi\n";
     private static String PREPEND_JAVA_AGENT_CONFIG = "\tJAVA_OPTS=\"${JAVA_OPTS} -javaagent:${CATALINA_HOME}/rasp/rasp.jar\"\n";
     private static String JDK_JAVA_OPTIONS =
             "JDK_JAVA_OPTIONS=\"$JDK_JAVA_OPTIONS --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"\n" +
