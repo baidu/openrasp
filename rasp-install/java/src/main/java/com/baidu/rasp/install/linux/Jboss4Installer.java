@@ -30,7 +30,7 @@ import static com.baidu.rasp.RaspError.E10001;
 public class Jboss4Installer extends BaseStandardInstaller {
 
     private static String OPENRASP_CONFIG = "### BEGIN OPENRASP - DO NOT MODIFY ###\n" +
-            "\tJAVA_OPTS=\"-javaagent:${JBOSS_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"\n" +
+            "\tif [ \"$YP_RASP_DISABLE\"x != \"Y\"x ]; then JAVA_OPTS=\"-javaagent:${CATALINA_HOME}/rasp/rasp.jar ${JAVA_OPTS}\"; fi\n" +
             "### END OPENRASP ###\n";
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*/rasp/).*");
 

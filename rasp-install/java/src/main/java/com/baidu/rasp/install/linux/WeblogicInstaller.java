@@ -33,7 +33,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
 
     private static String OPENRASP_CONFIG =
             "### BEGIN OPENRASP - DO NOT MODIFY ###\n" +
-                    "JAVA_OPTIONS=\"-javaagent:${DOMAIN_HOME}/rasp/rasp.jar ${JAVA_OPTIONS}\"\n" +
+                    "\tif [ \"$YP_RASP_DISABLE\"x != \"Y\"x ]; then JAVA_OPTIONS=\"-javaagent:${DOMAIN_HOME}/rasp/rasp.jar ${JAVA_OPTIONS}\"\n" +
                     "### END OPENRASP ###\n";
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTIONS.*/rasp/).*");
 
