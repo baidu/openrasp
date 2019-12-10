@@ -2247,8 +2247,8 @@ plugin.register('command', function (params, context) {
         if (raw_tokens.length == 0) {
             raw_tokens = RASP.cmd_tokenize(cmd)
         }
-        var concat_char = Array("&", "|", ";")
-        var sensitive_cmd = Array("curl", "bash", "cat")
+        var concat_char = Array("|", ";")
+        var sensitive_cmd = Array("curl", "bash", "cat", "sh")
         var alarm_token = Array("$IFS", "$9", "'")
         var double_quote = 0
         var ticks = 0
