@@ -141,6 +141,10 @@ public class TomcatInstaller extends BaseStandardInstaller {
         } else {
             sb.append(JAVA_AGENT_CONFIG);
         }
+        if (App.crashUrl != null) {
+            sb.append("\tJAVA_OPTS=\"-XX:OnError='sh \\\"${CATALINA_HOME}/rasp/crash.sh\\\" " +
+                    "-l java -f \\\"\\$(pwd)/hs_err_pid%p.log\\\" -u " + App.crashUrl + "' ${JAVA_OPTS}\"\n");
+        }
         //jdk版本8以上插入依赖包
         if (versionFlag) {
             sb.append(JDK_JAVA_OPTIONS);
