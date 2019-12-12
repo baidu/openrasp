@@ -19,6 +19,7 @@ package com.baidu.openrasp;
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
 import com.baidu.openrasp.plugin.js.JS;
@@ -26,6 +27,7 @@ import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
 import com.baidu.openrasp.v8.V8;
+import com.baidu.openrasp.v8.CrashReporter;
 import org.apache.log4j.Logger;
 
 import java.lang.instrument.Instrumentation;
@@ -59,6 +61,7 @@ public class EngineBoot implements Module {
         if (!loadConfig()) {
             return;
         }
+        CrashReporter.install(Config.getConfig().getCrashUrl());
         //缓存rasp的build信息
         Agent.readVersion();
         BuildRASPModel.initRaspInfo(Agent.projectVersion, Agent.buildTime, Agent.gitCommit);
