@@ -147,7 +147,18 @@ var algorithmConfig = {
 	            1367, // Illegal non geometric 'user()' value found during parsing
 	            1690  // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
 	        ]
-	    }
+        },
+        pgsql: {
+            error_code: [
+                "42601", // normal syntax error
+                "22P02", // ERROR:  invalid input syntax for type double precision: "DATABASE: test1"
+            ]
+        },
+        sqlite: {
+            error_code: [
+                1, // generic error, like syntax error、malformed MATCH expression: ["3.6.23.1] and other
+            ]
+        }
     },
 
     sql_regex: {
@@ -1585,11 +1596,15 @@ plugin.register('sql_exception', function(params, context) {
     var message    = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
 
     // 1062 Duplicated key 错误会有大量误报问题，仅当语句里包含 rand 字样报警
-    if (error_code == 1062)
-    {
+    if (error_code == 1062) {
         // 忽略大小写匹配
-        if ( !/rand/i.test(params.query))
-        {
+        if ( !/rand/i.test(params.query)) {
+            return clean
+        }
+    }
+    if (error_code == 1064) {
+        // mysql error 1064 detected: Invalid regular expression in '`normalized_query` REGEXP '*.xxx|*.xxx''
+        if (params.error_msg.indexOf("Invalid regular expression") != -1) {
             return clean
         }
     }
