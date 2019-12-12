@@ -156,6 +156,14 @@ public class ModuleLoader {
             } else if (major >= 9) {
                 return true;
             }
+        } else if (javaVersion.startsWith("9")) {
+            return true;
+        } else if (javaVersion.length() >= 2) {
+            char first = javaVersion.charAt(0);
+            char second = javaVersion.charAt(1);
+            if (first >= '1' && first <= '9' && second >= '0' && second <= '9') {
+                return true;
+            }
         }
         return false;
     }

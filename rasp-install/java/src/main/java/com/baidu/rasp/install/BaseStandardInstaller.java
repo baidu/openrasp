@@ -258,12 +258,20 @@ public abstract class BaseStandardInstaller implements Installer {
             try {
                 major = Integer.parseInt(version[0]);
                 minor = Integer.parseInt(version[1]);
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 return false;
             }
             if (major == 1) {
                 return minor >= 9;
             } else if (major >= 9) {
+                return true;
+            }
+        } else if (javaVersion.startsWith("9")) {
+            return true;
+        } else if (javaVersion.length() >= 2) {
+            char first = javaVersion.charAt(0);
+            char second = javaVersion.charAt(1);
+            if (first >= '1' && first <= '9' && second >= '0' && second <= '9') {
                 return true;
             }
         }
