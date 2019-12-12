@@ -3,7 +3,7 @@
     <div class="row" style="height: 100vh;">
       <div class="col col-login m-auto">
         <div class="text-center mb-6" v-if="logo">
-          <img :src="logo" class="h-6" alt="">
+          <img :src="logo" class="h-6" style="width: 100px;">
         </div>
         <form class="card" @submit="doLogin()">
           <div class="card-body p-6">
