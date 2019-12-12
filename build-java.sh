@@ -62,6 +62,10 @@ function copyConf {
 	cp $BASE_DIR/rasp-install/java/src/main/resources/openrasp.yml $OUTPUT_ROOT/rasp/conf/openrasp.yml || exit 1
 }
 
+function copyCrashReportingScript {
+	cp $BASE_DIR/rasp-install/script/* $OUTPUT_ROOT/rasp/ || exit 1
+}
+
 log "[1] build RaspInstall.jar" 
 buildRaspInstall
 
@@ -71,14 +75,17 @@ buildPlugin
 log "[3] copy rasp.yaml"
 copyConf
 
-log "[4] build openrasp-v8"
+log "[4] copy crash reporting script"
+copyCrashReportingScript
+
+log "[5] build openrasp-v8"
 if [[ ! -z $SKIP_V8 ]]; then
 	echo Skipped buildOpenraspV8
 else
 	buildOpenraspV8
 fi
 
-log "[5] build OpenRASP"
+log "[6] build OpenRASP"
 buildRasp
 
 cd $OUTPUT_ROOT/..

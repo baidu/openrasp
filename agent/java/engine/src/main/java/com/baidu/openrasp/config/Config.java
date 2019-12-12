@@ -91,7 +91,8 @@ public class Config extends FileScanListener {
         CPU_USAGE_INTERVAL("cpu.usage.interval", "5"),
         HTTPS_VERIFY_SSL("openrasp.ssl_verifypeer", "false"),
         LRU_COMPARE_ENABLE("lru.compare_enable", "false"),
-        LRU_COMPARE_LIMIT("lru.compare_limit", "10240");
+        LRU_COMPARE_LIMIT("lru.compare_limit", "10240"),
+        CRASH_URL("crash.url", "");
 
 
         Item(String key, String defaultValue) {
@@ -171,6 +172,7 @@ public class Config extends FileScanListener {
     private HashSet<Integer> sqlErrorCodes = new HashSet<Integer>();
     private boolean lruCompareEnable;
     private int lruCompareLimit;
+    private String crashUrl;
 
 
     static {
@@ -725,6 +727,14 @@ public class Config extends FileScanListener {
             commonLRUCache.clear();
         }
         this.lruCompareLimit = value;
+    }
+
+    public String getCrashUrl() {
+        return crashUrl;
+    }
+
+    public synchronized void setCrashUrl(String crashUrl) {
+        this.crashUrl = crashUrl;
     }
 
     /**
@@ -1517,6 +1527,9 @@ public class Config extends FileScanListener {
             } else if (Item.LRU_COMPARE_LIMIT.key.equals(key)) {
                 setLruCompareLimit(value);
                 currentValue = getLruCompareLimit();
+            } else if (Item.CRASH_URL.key.equals(key)) {
+                setCrashUrl(value);
+                currentValue = getCrashUrl();
             } else {
                 isHit = false;
             }
