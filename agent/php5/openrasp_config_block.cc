@@ -17,45 +17,19 @@
 #include "openrasp_config_block.h"
 #include "utils/regex.h"
 #include "openrasp_v8.h"
+#include "validator/int64/natural_number.h"
+#include "validator/int64/unsigned_integer.h"
+#include "validator/string/regex.h"
 
 namespace openrasp
 {
-
-void g_zero_filter(int64_t &value, const int64_t &dafault)
-{
-  if (value <= 0)
-  {
-    value = dafault;
-  }
-}
-
-void ge_zero_filter(int64_t &value, const int64_t &dafault)
-{
-  if (value < 0)
-  {
-    value = dafault;
-  }
-}
-
-void regex_filter(string &value, const string &regex, const string &dafault)
-{
-  if (!regex_match(value.c_str(), regex.c_str()))
-  {
-    value = dafault;
-  }
-}
-
 const int64_t PluginBlock::default_timeout_millis = 100;
 const int64_t PluginBlock::default_maxstack = 100;
 
 void PluginBlock::update(BaseReader *reader)
 {
-  timeout.millis = reader->fetch_int64({"plugin.timeout.millis"}, PluginBlock::default_timeout_millis);
-  g_zero_filter(timeout.millis, PluginBlock::default_timeout_millis);
-
+  timeout.millis = reader->fetch_int64({"plugin.timeout.millis"}, PluginBlock::default_timeout_millis, openrasp::validator::vint64::UnsignedInteger());
   maxstack = reader->fetch_int64({"plugin.maxstack"}, PluginBlock::default_maxstack);
-  ge_zero_filter(maxstack, PluginBlock::default_maxstack);
-
   filter = reader->fetch_bool({"plugin.filter"}, true);
 };
 
@@ -64,7 +38,6 @@ const int64_t LogBlock::default_maxburst = 100;
 void LogBlock::update(BaseReader *reader)
 {
   maxburst = reader->fetch_int64({"log.maxburst"}, LogBlock::default_maxburst);
-  ge_zero_filter(maxburst, LogBlock::default_maxburst);
 };
 
 const std::string SyslogBlock::default_tag = "OpenRASP";
@@ -75,23 +48,13 @@ const int64_t SyslogBlock::default_reconnect_interval = 300;
 
 void SyslogBlock::update(BaseReader *reader)
 {
-  tag = reader->fetch_string({"syslog.tag"}, SyslogBlock::default_tag);
-  regex_filter(tag, "^[0-9a-zA-Z]{1,32}$", SyslogBlock::default_tag);
-
+  tag = reader->fetch_string({"syslog.tag"}, SyslogBlock::default_tag, openrasp::validator::vstring::Regex("^[0-9a-zA-Z]{1,32}$", "should be number and alphabeta, and length between 1 and 32"));
   url = reader->fetch_string({"syslog.url"}, std::string(""));
   enable = reader->fetch_bool({"syslog.enable"}, false);
-
   facility = reader->fetch_int64({"syslog.facility"}, SyslogBlock::default_facility);
-  ge_zero_filter(facility, SyslogBlock::default_facility);
-
-  connection_timeout = reader->fetch_int64({"syslog.connection_timeout"}, SyslogBlock::default_connection_timeout);
-  g_zero_filter(connection_timeout, SyslogBlock::default_connection_timeout);
-
-  read_timeout = reader->fetch_int64({"syslog.read_timeout"}, SyslogBlock::default_read_timeout);
-  g_zero_filter(read_timeout, SyslogBlock::default_read_timeout);
-
-  reconnect_interval = reader->fetch_int64({"syslog.reconnect_interval"}, SyslogBlock::default_reconnect_interval);
-  g_zero_filter(reconnect_interval, SyslogBlock::default_reconnect_interval);
+  connection_timeout = reader->fetch_int64({"syslog.connection_timeout"}, SyslogBlock::default_connection_timeout, openrasp::validator::vint64::UnsignedInteger());
+  read_timeout = reader->fetch_int64({"syslog.read_timeout"}, SyslogBlock::default_read_timeout, openrasp::validator::vint64::UnsignedInteger());
+  reconnect_interval = reader->fetch_int64({"syslog.reconnect_interval"}, SyslogBlock::default_reconnect_interval, openrasp::validator::vint64::UnsignedInteger());
 };
 
 const int64_t BlockBlock::default_status_code = 302;
@@ -99,8 +62,6 @@ const int64_t BlockBlock::default_status_code = 302;
 void BlockBlock::update(BaseReader *reader)
 {
   status_code = reader->fetch_int64({"block.status_code"}, BlockBlock::default_status_code);
-  g_zero_filter(status_code, BlockBlock::default_status_code);
-
   redirect_url = reader->fetch_string({"block.redirect_url"}, std::string(R"(https://rasp.baidu.com/blocked/?request_id=%request_id%)"));
   content_json = reader->fetch_string({"block.content_json"}, std::string(R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})"));
   content_xml = reader->fetch_string({"block.content_xml"}, std::string(R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)"));
@@ -130,7 +91,6 @@ const int64_t BodyBlock::default_maxbytes = 4 * 1024;
 void BodyBlock::update(BaseReader *reader)
 {
   maxbytes = reader->fetch_int64({"body.maxbytes"}, BodyBlock::default_maxbytes);
-  ge_zero_filter(maxbytes, BodyBlock::default_maxbytes);
 };
 
 void ClientipBlock::update(BaseReader *reader)
@@ -143,7 +103,6 @@ const int64_t LruBlock::default_max_size = 1024;
 void LruBlock::update(BaseReader *reader)
 {
   max_size = reader->fetch_int64({"lru.max_size"}, LruBlock::default_max_size);
-  ge_zero_filter(max_size, LruBlock::default_max_size);
 };
 
 void DecompileBlock::update(BaseReader *reader)

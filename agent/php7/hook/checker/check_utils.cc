@@ -19,6 +19,13 @@
 #include "agent/shared_log_manager.h"
 #include <functional>
 
+extern "C"
+{
+#ifdef HAVE_LINE_COVERAGE
+    void __gcov_flush();
+#endif
+}
+
 namespace openrasp
 {
 

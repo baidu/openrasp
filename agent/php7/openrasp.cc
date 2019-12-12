@@ -144,10 +144,17 @@ PHP_MINIT_FUNCTION(openrasp)
         remote_active = true;
     }
 #endif
-    std::string unknown_yaml_keys;
+
+    if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
+    {
+        openrasp_status = "Unprotected (log module initialization failed)";
+        return SUCCESS;
+    }
+
     if (!remote_active)
     {
         openrasp::YamlReader yaml_reader(get_complete_config_content(ConfigHolder::FromType::kYaml));
+        yaml_reader.set_exception_report(true);
         if (yaml_reader.has_error())
         {
             openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Fail to parse config, cuz of %s."),
@@ -155,8 +162,12 @@ PHP_MINIT_FUNCTION(openrasp)
         }
         else
         {
-            unknown_yaml_keys = yaml_reader.detect_unknown_config_key({});
-
+            std::string unknown_yaml_keys = yaml_reader.detect_unknown_config_key();
+            if (!unknown_yaml_keys.empty())
+            {
+                openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unknown config key [%s] found in yml configuration."),
+                               unknown_yaml_keys.c_str());
+            }
             openrasp::scm->set_debug_level(&yaml_reader);
             openrasp::scm->build_check_type_white_array(&yaml_reader);
             openrasp::scm->build_weak_password_array(&yaml_reader);
@@ -164,16 +175,6 @@ PHP_MINIT_FUNCTION(openrasp)
         }
     }
 
-    if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
-    {
-        openrasp_status = "Unprotected (log module initialization failed)";
-        return SUCCESS;
-    }
-    if (!unknown_yaml_keys.empty())
-    {
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unknown config key [%s] found in yml configuration."),
-                       unknown_yaml_keys.c_str());
-    }
     if (PHP_MINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
         openrasp_status = "Unprotected (v8 module initialization failed)";

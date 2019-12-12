@@ -525,6 +525,10 @@ int main() {
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
     hook/openrasp_mongo.cc \
+    validator/int64/natural_number.cc \
+    validator/int64/unsigned_integer.cc \
+    validator/string/regex.cc \
+    validator/string/all_pass.cc \
     openrasp_output_detect.cc \
     hook/openrasp_echo.cc \
     hook/openrasp_putenv.cc \

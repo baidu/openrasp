@@ -103,6 +103,7 @@ void LogAgent::run()
 			sleep(1);
 			if (!pid_alive(std::to_string(oam->get_master_pid())) ||
 				!pid_alive(std::to_string(supervisor_pid)) ||
+				getpid() != get_pid_from_shm() ||
 				LogAgent::signal_received == SIGTERM)
 			{
 				exit(0);

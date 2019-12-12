@@ -25,6 +25,8 @@
 #include <algorithm>
 #include "shared_config_manager.h"
 #include "agent/utils/os.h"
+#include "openrasp_conf_holder.h"
+#include "validator/int64/unsigned_integer.h"
 
 namespace openrasp
 {
@@ -154,6 +156,7 @@ bool HeartBeatAgent::do_heartbeat()
 			if (!complete_config.empty())
 			{
 				openrasp::JsonReader config_reader(complete_config);
+				config_reader.set_exception_report(true);
 				/************************************shm config************************************/
 				scm->set_debug_level(&config_reader);
 				scm->build_weak_password_array(&config_reader);
@@ -161,8 +164,7 @@ bool HeartBeatAgent::do_heartbeat()
 
 				{
 					//update log_max_backup only its value greater than zero
-					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"});
-					scm->set_log_max_backup(log_max_backup > 0 ? log_max_backup : 30);
+					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::validator::vint64::UnsignedInteger());
 
 					//dependency check
 					int64_t dependency_interval = config_reader.fetch_int64({"dependency_check.interval"}, OpenraspCtrlBlock::default_dependency_interval);
@@ -184,7 +186,8 @@ bool HeartBeatAgent::do_heartbeat()
 					}
 					oam->set_webdir_scan_regex(scan_regex.c_str());
 				}
-
+				openrasp::ConfigHolder dummy;
+				dummy.update(&config_reader);
 				/************************************OPENRASP_G(config)************************************/
 				std::string cloud_config_file_path = std::string(openrasp_ini.root_dir) + "/conf/cloud-config.json";
 #ifndef _WIN32
