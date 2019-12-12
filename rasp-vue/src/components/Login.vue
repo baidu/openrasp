@@ -68,6 +68,8 @@ export default {
         } catch (e) {
           console.log(e)
         }
+      }).catch(function (error) {
+        // ignored
       })
     },
     doLogin: function() {
