@@ -2,13 +2,13 @@
   <div class="container">
     <div class="row" style="height: 100vh;">
       <div class="col col-login m-auto">
-        <!-- <div class="text-center mb-6">
-                    <img src="/static/images/openrasp.png" class="h-6" alt="">
-                </div> -->
+        <div class="text-center mb-6" v-if="logo">
+          <img :src="logo" class="h-6" alt="">
+        </div>
         <form class="card" @submit="doLogin()">
           <div class="card-body p-6">
-            <div class="card-title">
-              OpenRASP 管理后台登录
+            <div class="card-title text-center">
+              {{ title }}
             </div>
             <div class="form-group">
               <label class="form-label">
@@ -38,6 +38,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import { request } from '@/util'
 
 export default {
@@ -45,13 +46,29 @@ export default {
   data: function() {
     return {
       username: 'openrasp',
-      password: ''
+      password: '',
+      title:    'OpenRASP 管理后台登录',
+      logo:     ''
     }
   },
   mounted: function() {
-
+    this.updateLogo()
   },
   methods: {
+    updateLogo: function() {
+      var self = this
+      axios.get('static/frontend.json').then(function (res) {
+        try {
+          var data = res.data
+          if (data.enable) {
+            self.title = data.title
+            self.logo  = data.logo
+          }
+        } catch (e) {
+          console.log(e)
+        }
+      })
+    },
     doLogin: function() {
       return request.post('v1/user/login', {
         username: this.username,
