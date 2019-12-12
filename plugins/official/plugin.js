@@ -1602,12 +1602,6 @@ plugin.register('sql_exception', function(params, context) {
             return clean
         }
     }
-    if (error_code == 1064) {
-        // mysql error 1064 detected: Invalid regular expression in '`normalized_query` REGEXP '*.xxx|*.xxx''
-        if (params.error_msg.indexOf("Invalid regular expression") != -1) {
-            return clean
-        }
-    }
     
     return {
         action:     algorithmConfig.sql_exception.action,
