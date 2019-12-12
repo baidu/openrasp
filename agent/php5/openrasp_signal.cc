@@ -57,7 +57,7 @@ int fork_and_exec(const char *path, char *const argv[])
     {
         // child process
 
-        execvpe(path, argv, environ);
+        execvp(path, argv);
         // execve failed
         _exit(-1);
     }
