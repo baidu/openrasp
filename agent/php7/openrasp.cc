@@ -72,7 +72,6 @@ PHP_INI_ENTRY1("openrasp.remote_management_enable", "off", PHP_INI_SYSTEM, OnUpd
 PHP_INI_ENTRY1("openrasp.heartbeat_interval", "180", PHP_INI_SYSTEM, OnUpdateOpenraspHeartbeatInterval, &openrasp_ini.heartbeat_interval)
 PHP_INI_ENTRY1("openrasp.ssl_verifypeer", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.ssl_verifypeer)
 PHP_INI_ENTRY1("openrasp.iast_enable", "off", PHP_INI_SYSTEM, OnUpdateOpenraspBool, &openrasp_ini.iast_enable)
-PHP_INI_ENTRY1("openrasp.crash_url", "", PHP_INI_SYSTEM, OnUpdateOpenraspCString, &openrasp_ini.crash_url)
 PHP_INI_END()
 
 PHP_GINIT_FUNCTION(openrasp)
@@ -145,10 +144,6 @@ PHP_MINIT_FUNCTION(openrasp)
     if (PHP_MINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {
         return SUCCESS;
-    }
-    if (!openrasp_ini.verify_crash_url())
-    {
-        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Crash reporting will be disabled, only the url with http(s) scheme is valid for openrasp.crash_url."));
     }
     if (PHP_MINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU) == FAILURE)
     {

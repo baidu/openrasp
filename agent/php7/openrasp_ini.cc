@@ -72,36 +72,6 @@ bool Openrasp_ini::verify_rasp_id()
     return true;
 }
 
-bool Openrasp_ini::verify_crash_url()
-{
-    if (openrasp::empty(crash_url))
-    {
-        return false;
-    }
-    else
-    {
-        std::string scheme;
-        std::string host;
-        std::string port;
-        if (openrasp_parse_url(openrasp_ini.crash_url, scheme, host, port))
-        {
-            for (auto &ch : scheme)
-            {
-                ch = std::tolower(ch);
-            }
-            if ("http" != scheme && "https" != scheme)
-            {
-                return false;
-            }
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 ZEND_INI_MH(OnUpdateOpenraspCString)
 {
     *reinterpret_cast<char **>(mh_arg1) = new_value->val;

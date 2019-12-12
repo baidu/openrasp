@@ -119,7 +119,6 @@ class IniConfig
 	var $remote_management_enable;
 	var $iast_enable;
 	var $heartbeat_interval;
-	var $crash_url;
 
 	function __construct($extension)
 	{
@@ -156,25 +155,6 @@ class IniConfig
 			}
 		} else {
 			log_tips(ERROR, "backend-url option cannot be empty.");
-		}
-	}
-
-	public function setCrashUrl($crash_url)
-	{
-		if (!empty($crash_url)) {
-			$components = parse_url($crash_url);
-			if ($components) {
-				if (in_array(strtolower($components['scheme']), array('http', 'https'))) {
-					log_tips(INFO, "openrasp.crash_url => " . $crash_url);
-					$this->crash_url = $crash_url;
-				} else {
-					log_tips(ERROR, "crash-url only support http or https scheme.");
-				}
-			} else {
-				log_tips(ERROR, "crash-url option is an illegal URL.");
-			}
-		} else {
-			log_tips(ERROR, "crash-url option cannot be empty.");
 		}
 	}
 
@@ -295,9 +275,6 @@ openrasp.remote_management_enable=$this->remote_management_enable
 
 ;心跳时间间隔
 openrasp.heartbeat_interval=$this->heartbeat_interval
-
-;崩溃上报地址
-openrasp.crash_url=$this->crash_url
 
 ;SSL证书验证开关
 openrasp.ssl_verifypeer=0
@@ -478,8 +455,6 @@ Options:
 
     --heartbeat             Value of heartbeat interval (10 - 1800)
 
-    --crash-url <url>       Value of crash reporting url
-
     --keep-ini              Do not update PHP ini entries
 
     --keep-plugin           Do not update the official javascript plugin (higher priority than --without-plugin)
@@ -508,7 +483,6 @@ $raspOption->addLongOption('app-secret', RaspOption::REQUIRED);
 $raspOption->addLongOption('rasp-id', RaspOption::REQUIRED);
 $raspOption->addLongOption('backend-url', RaspOption::REQUIRED);
 $raspOption->addLongOption('heartbeat', RaspOption::REQUIRED);
-$raspOption->addLongOption('crash-url', RaspOption::REQUIRED);
 
 $invalidOption = $raspOption->checkOptions();
 if ($invalidOption) {
@@ -551,10 +525,6 @@ if (array_key_exists("rasp-id", $options)) {
 
 if (array_key_exists("heartbeat", $options)) {
 	$iniConfig->setHeartbeatInterval($options["heartbeat"]);
-}
-
-if (array_key_exists("crash-url", $options)) {
-	$iniConfig->setCrashUrl($options["crash-url"]);
 }
 
 if (array_key_exists("iast", $options)) {

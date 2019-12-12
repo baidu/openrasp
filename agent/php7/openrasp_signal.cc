@@ -156,23 +156,27 @@ void report_crash_log(int sig)
         }
         log << std::endl;
     }
-    char hostname_form[512];
-    snprintf(hostname_form, 512, "hostname=%s", openrasp::get_hostname().c_str());
-    char crash_log_form[MAXPATHLEN + 128];
-    snprintf(crash_log_form, MAXPATHLEN + 128, "crash_log=@%s", log_path.c_str());
+    std::string app_id_header = "X-OpenRASP-AppID: " + std::string(openrasp_ini.app_id);
+    std::string app_secret_header = "X-OpenRASP-AppSecret: " + std::string(openrasp_ini.app_secret);
+    std::string crash_reporting_url = std::string(openrasp_ini.backend_url) + "/v1/rasp/crash/report";
+    std::string rasp_id_form = "rasp_id=" + std::string(openrasp_ini.rasp_id);
+    std::string hostname_form = "hostname=" + openrasp::get_hostname();
+    std::string crash_log_form = "crash_log=@" + log_path;
     char *const argv[] = {
         "curl",
-        openrasp_ini.crash_url,
+        (char *)(crash_reporting_url.c_str()),
         "--connect-timeout",
         "5",
+        "-H",
+        (char *)(app_id_header.c_str()),
+        "-H",
+        (char *)(app_secret_header.c_str()),
         "-F",
-        "job=crash",
+        (char *)(rasp_id_form.c_str()),
         "-F",
-        "language=php",
+        (char *)(hostname_form.c_str()),
         "-F",
-        hostname_form,
-        "-F",
-        crash_log_form,
+        (char *)(crash_log_form.c_str()),
         nullptr};
 
     if (fork_and_exec("curl", argv) != 0)
@@ -255,7 +259,7 @@ int set_signal_handler(int sig, sa_sigaction_t handler)
 
 void general_signal_hook()
 {
-    if (openrasp_ini.verify_crash_url())
+    if (nullptr != openrasp_ini.backend_url)
     {
         set_signal_handler(SIGSEGV, signal_handler);
         set_signal_handler(SIGABRT, signal_handler);
