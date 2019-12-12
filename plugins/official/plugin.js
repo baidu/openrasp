@@ -418,7 +418,10 @@ var algorithmConfig = {
     // 命令执行 - 语法错误和敏感操作
     command_error: {
         name:   '算法4 - 查找语法错误和敏感操作',
-        action: 'log'
+        action: 'log',
+        concat_char: ["|", ";"],
+        sensitive_cmd: ["curl", "bash", "cat", "sh"],
+        alarm_token: ["$IFS", "${IFS}", "'"]
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
@@ -2247,9 +2250,10 @@ plugin.register('command', function (params, context) {
         if (raw_tokens.length == 0) {
             raw_tokens = RASP.cmd_tokenize(cmd)
         }
-        var concat_char = Array("&", "|", ";")
-        var sensitive_cmd = Array("curl", "bash", "cat")
-        var alarm_token = Array("$IFS", "$9", "'")
+        var concat_char = algorithmConfig.command_error.concat_char
+        var sensitive_cmd = algorithmConfig.command_error.sensitive_cmd
+        var alarm_token = algorithmConfig.command_error.alarm_token
+
         var double_quote = 0
         var ticks = 0
         for (var i=0; i<raw_tokens.length; i++) {
@@ -2281,11 +2285,19 @@ plugin.register('command', function (params, context) {
                 ticks ++
             }
         }
-        if (double_quote % 2 != 0 || ticks % 2 != 0) {
+        if (double_quote % 2 != 0) {
             return {
                 action:     algorithmConfig.command_error.action,
                 confidence: 70,
-                message:    _("Command execution - Syntax error found in command!"),
+                message:    _("Command execution - Detected unbalanced double quote!"),
+                algorithm:  'command_error'
+            }
+        }
+        if (ticks % 2 != 0) {
+            return {
+                action:     algorithmConfig.command_error.action,
+                confidence: 70,
+                message:    _("Command execution - Detected unbalanced backtick!"),
                 algorithm:  'command_error'
             }
         }
