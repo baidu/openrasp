@@ -61,8 +61,9 @@ export default {
         try {
           var data = res.data
           if (data.enable) {
-            self.title = data.title
-            self.logo  = data.logo
+            self.title     = data.title
+            self.logo      = data.logo
+            document.title = data.title
           }
         } catch (e) {
           console.log(e)
