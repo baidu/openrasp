@@ -150,12 +150,11 @@ public abstract class BaseStandardInstaller implements Installer {
             // 配置云控
             setCloudConf();
             // 配置其它选项
-            Map<String, Object> ymlData = new HashMap<String, Object>();
             if (App.raspId != null) {
-                ymlData.put("rasp.id", App.raspId);
+                setRaspConfItem("rasp.id", App.raspId, "# <rasp id>");
             }
-            if (!ymlData.isEmpty()) {
-                setRaspConf(ymlData, "# <rasp id>");
+            if (App.crashUrl != null) {
+                setRaspConfItem("crash.url", App.crashUrl, "# <crash reporting url>");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -163,6 +162,12 @@ public abstract class BaseStandardInstaller implements Installer {
         }
         return true;
 
+    }
+
+    private void setRaspConfItem(String key, String value, String comment) {
+        Map<String, Object> ymlData = new HashMap<String, Object>();
+        ymlData.put(key, value);
+        setRaspConf(ymlData, comment);
     }
 
     public static String read(File file) throws IOException {
