@@ -525,7 +525,22 @@ var algorithmConfig = {
     loadLibrary_other: {
         name:   '算法2 - 记录或者拦截所有类库加载',
         action: 'ignore'
-    }    
+    },
+
+    response_dataLeak: {
+        name:   '算法1 - 检查响应里是否有敏感数据泄露',
+        action: 'log',
+
+        // 检查类型
+        kind: {
+            phone:         true,
+            identity_card: true,
+            bank_card:     true
+        },
+
+        // Content-Type 过滤
+        content_type: '.*'
+    }   
 }
 
 // END ALGORITHM CONFIG //
@@ -2605,6 +2620,7 @@ function checkBankCard(data) {
         }
     }
 }
+
 
 
 plugin.register('sensitiveOutput', function (params, context) {
