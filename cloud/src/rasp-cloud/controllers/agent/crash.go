@@ -29,10 +29,20 @@ import (
 	"html/template"
 	"encoding/base64"
 	"errors"
+	"time"
 )
 
 type CrashController struct {
 	controllers.BaseController
+}
+
+type crashTemplateParam struct {
+	Version  string
+	Language string
+	Hostname string
+	AppName  string
+	Time     string
+	Ip       string
 }
 
 // @router /report [post]
@@ -40,6 +50,24 @@ func (o *CrashController) Post() {
 	appId := o.Ctx.Input.Header("X-OpenRASP-AppID")
 	app, err := models.GetAppById(appId)
 	if !app.EmailAlarmConf.Enable {
+		o.ServeWithEmptyData()
+		return
+	}
+	isCrashReportEnable := false
+	if app.AttackTypeAlarmConf != nil {
+		if _, ok := (*app.AttackTypeAlarmConf)["crash"]; !ok {
+			isCrashReportEnable = true
+		} else {
+			for _, t := range (*app.AttackTypeAlarmConf)["crash"] {
+				if t == "email" {
+					isCrashReportEnable = true
+				}
+			}
+		}
+	} else {
+		isCrashReportEnable = true
+	}
+	if !isCrashReportEnable {
 		o.ServeWithEmptyData()
 		return
 	}
@@ -84,7 +112,6 @@ func sendCrashEmailAlarm(crashLogContent []byte, fileName string, app *models.Ap
 	var emailConf = app.EmailAlarmConf
 	if len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
 		var (
-			subject   string
 			msg       string
 			emailAddr = &mail.Address{Address: emailConf.UserName}
 		)
@@ -98,11 +125,7 @@ func sendCrashEmailAlarm(crashLogContent []byte, fileName string, app *models.Ap
 				emailAddr.Name = "OpenRASP"
 			}
 		}
-		if emailConf.Subject == "" {
-			subject = "OpenRASP alarm"
-		} else {
-			subject = emailConf.Subject
-		}
+		subject := "OpenRASP Java agent crashed on HOSTNAME"
 		boundary := "OpenRASPCrashLogData"
 		head := map[string]string{
 			"From":              emailAddr.String(),
@@ -121,7 +144,15 @@ func sendCrashEmailAlarm(crashLogContent []byte, fileName string, app *models.Ap
 			return err
 		}
 		crashData := new(bytes.Buffer)
-		err = t.Execute(crashData, rasp)
+		templateData := &crashTemplateParam{
+			Hostname: rasp.HostName,
+			Language: rasp.Language,
+			Time:     time.Now().Format("2006-01-01 15:06:05"),
+			Version:  rasp.Version,
+			AppName:  app.Name,
+			Ip:       rasp.RegisterIp,
+		}
+		err = t.Execute(crashData, templateData)
 		if err != nil {
 			beego.Error("failed to execute email template: " + err.Error())
 			return err
