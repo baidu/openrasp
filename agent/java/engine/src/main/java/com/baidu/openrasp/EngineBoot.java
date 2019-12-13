@@ -70,9 +70,11 @@ public class EngineBoot implements Module {
         }
         CheckerManager.init();
         initTransformer(inst);
-        CrashReporter.install(Config.getConfig().getCloudAddress() + "/v1/agent/crash/report",
-                Config.getConfig().getCloudAppId(), Config.getConfig().getCloudAppSecret(),
-                CloudCacheModel.getInstance().getRaspId());
+        if (CloudUtils.checkCloudControlEnter()) {
+            CrashReporter.install(Config.getConfig().getCloudAddress() + "/v1/agent/crash/report",
+            Config.getConfig().getCloudAppId(), Config.getConfig().getCloudAppSecret(),
+            CloudCacheModel.getInstance().getRaspId());
+        }
         String message = "[OpenRASP] Engine Initialized [" + Agent.projectVersion + " (build: GitCommit="
                 + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
         System.out.println(message);
