@@ -2621,19 +2621,38 @@ function checkBankCard(data) {
     }
 }
 
+if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
+    plugin.register('response', function (params, context) {
+        var items = []
 
-plugin.register('sensitiveOutput', function (params, context) {
-    const id = checkChineseId(params.body)
-    const phone = checkChinesePhone(params.body)
-    const card = checkBankCard(params.body)
-    if (id || phone || card) {
-        return {
-            action: 'log',
-            message: JSON.stringify({id, phone, card})
+        const id_card   = checkChineseId(params.body)
+        const phone     = checkChinesePhone(params.body)
+        const bank_card = checkBankCard(params.body)
+
+        if (id_card) {
+            items.push(id_card + '(身份证)')
         }
-    }
-});
+
+        if (phone) {
+            items.push(phone + '(手机号)')
+        }
+
+        if (bank_card) {
+            items.push(phone + '(银行卡)')
+        }
+
+        if (items.length) {
+            return {
+                action:      'log',
+                message:     '检测到敏感数据泄露: ' + items.join('; '),
+                confidence:  80,
+                algorithm:   'response_dataLeak'
+            }
+        }
+    })
+
+}
 
 plugin.log('OpenRASP official plugin: Initialized, version', plugin_version)
 
