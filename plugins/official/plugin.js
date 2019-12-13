@@ -152,6 +152,10 @@ var algorithmConfig = {
             error_code: [
                 "42601", // normal syntax error
                 "22P02", // ERROR:  invalid input syntax for type double precision: "DATABASE: test1"
+            ],
+            status: [
+                "42601", // normal syntax error
+                "22P02", // ERROR:  invalid input syntax for type double precision: "DATABASE: test1"
             ]
         },
         sqlite: {
@@ -1599,6 +1603,12 @@ plugin.register('sql_exception', function(params, context) {
     if (error_code == 1062) {
         // 忽略大小写匹配
         if ( !/rand/i.test(params.query)) {
+            return clean
+        }
+    }
+
+    else if (error_code == 1064) {
+        if ( /in\s*\(\s*\)/i.test(params.query)) {
             return clean
         }
     }
