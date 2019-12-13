@@ -279,6 +279,15 @@ func init() {
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"],
         beego.ControllerComments{
+            Method: "ClearLogs",
+            Router: `/clear_logs`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"],
+        beego.ControllerComments{
             Method: "PutUrl",
             Router: `/url`,
             AllowHTTPMethods: []string{"post"},
@@ -290,15 +299,6 @@ func init() {
         beego.ControllerComments{
             Method: "GetUrl",
             Router: `/url/get`,
-            AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:ServerController"],
-        beego.ControllerComments{
-            Method: "ClearLogs",
-            Router: `/clear_logs`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
