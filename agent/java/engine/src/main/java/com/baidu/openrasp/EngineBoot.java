@@ -26,7 +26,7 @@ import com.baidu.openrasp.plugin.js.JS;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
-import com.baidu.openrasp.v8.V8;
+import com.baidu.openrasp.v8.Loader;
 import com.baidu.openrasp.v8.CrashReporter;
 import org.apache.log4j.Logger;
 
@@ -52,16 +52,15 @@ public class EngineBoot implements Module {
                 "\\____/ .___/\\___/_/ /_/_/ |_/_/  |_/____/_/      \n" +
                 "    /_/                                          \n\n");
         try {
-            V8.Load();
+            Loader.load();
         } catch (Exception e) {
-            System.out.println("[OpenRASP] Failed to load V8 library, please refer to https://rasp.baidu.com/doc/install/software.html#faq-v8-load for possible solutions.");
+            System.out.println("[OpenRASP] Failed to load native library, please refer to https://rasp.baidu.com/doc/install/software.html#faq-v8-load for possible solutions.");
             e.printStackTrace();
             return;
         }
         if (!loadConfig()) {
             return;
         }
-        CrashReporter.install(Config.getConfig().getCrashUrl());
         //缓存rasp的build信息
         Agent.readVersion();
         BuildRASPModel.initRaspInfo(Agent.projectVersion, Agent.buildTime, Agent.gitCommit);
@@ -71,6 +70,9 @@ public class EngineBoot implements Module {
         }
         CheckerManager.init();
         initTransformer(inst);
+        CrashReporter.install(Config.getConfig().getCloudAddress() + "/v1/agent/crash/report",
+                Config.getConfig().getCloudAppId(), Config.getConfig().getCloudAppSecret(),
+                CloudCacheModel.getInstance().getRaspId());
         String message = "[OpenRASP] Engine Initialized [" + Agent.projectVersion + " (build: GitCommit="
                 + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
         System.out.println(message);

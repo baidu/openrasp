@@ -153,9 +153,6 @@ public abstract class BaseStandardInstaller implements Installer {
             if (App.raspId != null) {
                 setRaspConfItem("rasp.id", App.raspId, "# <rasp id>");
             }
-            if (App.crashUrl != null) {
-                setRaspConfItem("crash.url", App.crashUrl, "# <crash reporting url>");
-            }
         } catch (IOException e) {
             e.printStackTrace();
             return false;
