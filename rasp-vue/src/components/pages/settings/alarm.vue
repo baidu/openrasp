@@ -42,6 +42,23 @@
             </div>
           </div>
         </div>
+
+        <div>
+          <div class="row" style="margin-top: 3px">
+            <div class="col">
+              <label style="min-width: 220px;">客户端崩溃（v1.2.3 新增功能）</label>
+            </div>
+            <div class="col">
+              <label class="custom-switch m-0">
+                <input type="checkbox" value="1" class="custom-switch-input" v-model="sendMethods['crash'].email">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">邮件报警</span>
+              </label>
+            </div>
+            <div class="col"></div>
+            <div class="col"></div>
+          </div>
+        </div>
       </div>
       
       <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
@@ -49,8 +66,11 @@
           保存
         </button>
 
-        <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true, true);">
-          重置
+        <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(false, true);">
+          全部关闭
+        </button>
+        <button type="submit" class="btn btn-info pull-right" @click="resetAlarmMethods(true, true);" style="margin-right: 5px; ">
+          全部打开
         </button>
       </div>
     </div>
@@ -318,6 +338,8 @@ export default {
       }
 
       // 转换
+      self.sendMethods['crash'] = {}
+
       Object.keys(conf).forEach(function (name) {
         self.sendMethods[name] = {
           ding: false,
@@ -332,6 +354,10 @@ export default {
     },
     resetAlarmMethods: function(value, save) {
       var self = this
+      self.sendMethods['crash'] = {
+        email: true
+      }
+
       Object.keys(this.attack_types).forEach(function (name) {
         if (! self.sendMethods[name]) {
           self.sendMethods[name] = {}
