@@ -2551,5 +2551,71 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     })
 }
 
+function checkChineseId(data) {
+    const regexChineseId = /(?<!\d)\d{10}(?:[01]\d)(?:[0123]\d)\d{3}(?:\d|x|X)(?!\d)/;
+    const W = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+    const m = regexChineseId.exec(data)
+    if (m) {
+        const id = m[0]
+        let sum = 0;
+        for (let i = 0; i < W.length; i++) {
+            sum += (id[i] - '0') * W[i];
+        }
+        if (id[17] == 'X' || id[17] == 'x') {
+            sum += 10;
+        } else {
+            sum += id[17] - '0';
+        }
+        if (sum % 11 == 1) {
+            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+        }
+    }
+}
+
+function checkChinesePhone(data) {
+    const regexChinesePhone = /(?<!\d)(?:(?:00|\+)?86 ?)?(1\d{2})(?:[ -]?\d){8}(?!\d)/;
+    const prefixs = new Set([133, 149, 153, 173, 174, 177, 180,
+        181, 189, 199, 130, 131, 132, 145, 146, 155, 156, 166, 175, 176, 185, 186, 134, 135, 136, 137, 138, 139,
+        147, 148, 150, 151, 152, 157, 158, 159, 165, 178, 182, 183, 184, 187, 188, 198, 170
+    ]);
+    let m = regexChinesePhone.exec(data)
+    if (m) {
+        if (prefixs.has(parseInt(m[1]))) {
+            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+        }
+    }
+}
+
+function checkBankCard(data) {
+    const regexBankCard = /(?<!\d)(?:62|3|5[1-5]|4\d)\d{2}(?:[ -]?\d{4}){3}(?!\d)/;
+    let m = regexBankCard.exec(data)
+    if (m) {
+        let card = m[0].replace(/ |-/g, "");
+        let len = card.length;
+        let sum = 0;
+        for (let i = len; i >= 1; i--) {
+            let t = card[len - i] - '0';
+            if (i % 2 == 0) {
+                t *= 2;
+            }
+            sum = sum + Math.floor(t / 10) + t % 10;
+        }
+        if (sum % 10 == 0) {
+            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+        }
+    }
+}
+
+
+plugin.register('sensitiveOutput', function (params, context) {
+    const id = checkChineseId(params.body)
+    const phone = checkChinesePhone(params.body)
+    const card = checkBankCard(params.body)
+    return {
+        action: 'log',
+        message: JSON.stringify({id, phone, card})
+    }
+});
+
 plugin.log('OpenRASP official plugin: Initialized, version', plugin_version)
 

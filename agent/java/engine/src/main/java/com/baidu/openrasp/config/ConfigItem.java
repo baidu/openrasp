@@ -712,6 +712,30 @@ public enum ConfigItem {
         public String getDefaultValue() {
             return "10240";
         }
+    }),
+
+    SENSITIVE_OUTPUT_INTERVAL(new ConfigSetter<String>("sensitive_output.sample_interval") {
+        @Override
+        public synchronized void setValue(String interval) {
+            Config.getConfig().sensitiveOutputInterval = Integer.parseInt(interval);
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "60";
+        }
+    }),
+
+    SENSITIVE_OUTPUT_BURST(new ConfigSetter<String>("sensitive_output.sample_burst") {
+        @Override
+        public synchronized void setValue(String burst) {
+            Config.getConfig().sensitiveOutputBurst = Integer.parseInt(burst);
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "10";
+        }
     });
 
     ConfigItem(ConfigSetter setter) {

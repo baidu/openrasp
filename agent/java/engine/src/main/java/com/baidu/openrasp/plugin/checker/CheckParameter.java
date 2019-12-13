@@ -57,7 +57,7 @@ public class CheckParameter {
         SQL_EXCEPTION("sql_exception", new V8AttackChecker(), 1 << 15),
         REQUESTEND("requestEnd", new V8AttackChecker(), 1 << 17),
         DELETEFILE("deleteFile", new V8AttackChecker(), 1 << 18),
-        MONGO("mongo", new V8AttackChecker(), 1 << 19),
+        MONGO("mongodb", new V8AttackChecker(), 1 << 19),
         LOADLIBRARY("loadLibrary", new V8AttackChecker(), 1 << 20),
         SSRF_REDIRECT("ssrfRedirect", new V8AttackChecker(), 1 << 21),
 
@@ -67,7 +67,7 @@ public class CheckParameter {
 
         // 安全基线检测
         POLICY_LOG("log", new V8PolicyChecker(false), 1 << 22),
-        POLICY_BODY_SENSITIVE("bodySensitive", new V8PolicyChecker(false), 1 << 23),
+        POLICY_SENSITIVE_OUTPUT("sensitiveOutput", new V8PolicyChecker(false), 1 << 23),
         POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(false), 0),
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(false), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
