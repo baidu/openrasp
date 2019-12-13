@@ -16,6 +16,19 @@ package agent
 
 import (
 	"rasp-cloud/controllers"
+	"net/http"
+	"rasp-cloud/models"
+	"io/ioutil"
+	"net/mail"
+	"os"
+	"strings"
+	"github.com/astaxie/beego"
+	"bytes"
+	"fmt"
+	"rasp-cloud/tools"
+	"html/template"
+	"encoding/base64"
+	"errors"
 )
 
 type CrashController struct {
@@ -24,5 +37,139 @@ type CrashController struct {
 
 // @router /report [post]
 func (o *CrashController) Post() {
+	appId := o.Ctx.Input.Header("X-OpenRASP-AppID")
+	app, err := models.GetAppById(appId)
+	if !app.EmailAlarmConf.Enable {
+		o.ServeWithEmptyData()
+		return
+	}
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get app")
+	}
+	raspId := o.GetString("rasp_id")
+	if raspId == "" {
+		o.ServeError(http.StatusBadRequest, "rasp_id can not be empty")
+	}
+	rasp, err := models.GetRaspById(raspId)
+	if err != nil {
+		hostname := o.GetString("hostname")
+		language := o.GetString("language")
+		rasp = &models.Rasp{
+			HostName: hostname,
+			Language: language,
+		}
+	}
 
+	crashLog, info, err := o.GetFile("crash_log")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "parse uploadFile error", err)
+	}
+	if crashLog == nil {
+		o.ServeError(http.StatusBadRequest, "must have the crash log parameter")
+	}
+	defer crashLog.Close()
+
+	crashLogContent, err := ioutil.ReadAll(crashLog)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to read crash log", err)
+	}
+	err = sendCrashEmailAlarm(crashLogContent, info.Filename, app, rasp)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "send email failed", err)
+	}
+	o.ServeWithEmptyData()
+}
+
+func sendCrashEmailAlarm(crashLogContent []byte, fileName string, app *models.App, rasp *models.Rasp) error {
+	var emailConf = app.EmailAlarmConf
+	if len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
+		var (
+			subject   string
+			msg       string
+			emailAddr = &mail.Address{Address: emailConf.UserName}
+		)
+		if emailConf.From != "" {
+			emailAddr.Name = emailConf.From
+		} else {
+			hostName, err := os.Hostname()
+			if err == nil {
+				emailAddr.Name = hostName
+			} else {
+				emailAddr.Name = "OpenRASP"
+			}
+		}
+		if emailConf.Subject == "" {
+			subject = "OpenRASP alarm"
+		} else {
+			subject = emailConf.Subject
+		}
+		boundary := "OpenRASPCrashLogData"
+		head := map[string]string{
+			"From":              emailAddr.String(),
+			"To":                strings.Join(emailConf.RecvAddr, ","),
+			"Subject":           subject,
+			"Content-Type":      "multipart/mixed; boundary=" + boundary,
+			"X-Priority":        "3",
+			"X-MSMail-Priority": "Normal",
+			"X-Mailer":          "Microsoft Outlook Express 6.00.2900.2869",
+			"X-MimeOLE":         "Produced By Microsoft MimeOLE V6.00.2900.2869",
+			"ReturnReceipt":     "1",
+		}
+		t, err := template.ParseFiles("views/crash.tpl")
+		if err != nil {
+			beego.Error("failed to render email template: " + err.Error())
+			return err
+		}
+		crashData := new(bytes.Buffer)
+		err = t.Execute(crashData, rasp)
+		if err != nil {
+			beego.Error("failed to execute email template: " + err.Error())
+			return err
+		}
+		for k, v := range head {
+			msg += fmt.Sprintf("%s: %s\r\n", k, v)
+		}
+		msg += "\r\n" + "--" + boundary + "\r\n"
+		msg += "Content-Type: text/html; charset=utf-8\r\n\r\n"
+		msg += crashData.String()
+		msg += "\r\n\r\n\r\n"
+		msg += "--" + boundary + "\r\n"
+		msg += "Content-Type: text/plain\r\n"
+		msg += "Content-Transfer-Encoding: base64\r\n"
+		msg += "Content-Disposition: attachment; filename=\"" + fileName + "\""
+		msg += "\r\n\r\n"
+
+		b := make([]byte, base64.StdEncoding.EncodedLen(len(crashLogContent)))
+		base64.StdEncoding.Encode(b, crashLogContent)
+		data := bytes.NewBuffer(nil)
+		data.WriteString(msg)
+		data.Write(b)
+		data.WriteString("\r\n")
+		data.WriteString("--" + boundary + "--")
+		if !strings.Contains(emailConf.ServerAddr, ":") {
+			if emailConf.TlsEnable {
+				emailConf.ServerAddr += ":465"
+			} else {
+				emailConf.ServerAddr += ":25"
+			}
+		}
+		//host, _, err := net.SplitHostPort(emailConf.ServerAddr)
+		//if err != nil {
+		//	return handleError("failed to get email serve host: " + err.Error())
+		//}
+		auth := tools.LoginAuth(emailConf.UserName, emailConf.Password)
+		//auth := smtp.PlainAuth("", emailConf.UserName, emailConf.Password, host)
+		//auth := smtp.CRAMMD5Auth(emailConf.UserName, emailConf.Password)
+		if emailConf.Password == "" {
+			auth = nil
+		}
+		if emailConf.TlsEnable {
+			return models.SendEmailWithTls(emailConf, auth, data.Bytes())
+		}
+		return models.SendNormalEmail(emailConf, auth, data.Bytes())
+	} else {
+		beego.Error(
+			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)
+		return errors.New("the email receiving address and email server address can not be empty")
+	}
 }

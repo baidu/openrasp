@@ -59,6 +59,11 @@ func InitRouter() {
 				&agent.ReportController{},
 			),
 		),
+		beego.NSNamespace("/crash",
+			beego.NSInclude(
+				&agent.CrashController{},
+			),
+		),
 	)
 	foregroudNS := beego.NewNamespace("/api",
 
