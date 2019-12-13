@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "agent/shared_config_manager.h"
 
 namespace openrasp
 {
@@ -99,9 +100,9 @@ CrashReporter::~CrashReporter()
 {
     std::string app_id_header = "X-OpenRASP-AppID: " + std::string(openrasp_ini.app_id);
     std::string app_secret_header = "X-OpenRASP-AppSecret: " + std::string(openrasp_ini.app_secret);
-    std::string crash_reporting_url = std::string(openrasp_ini.backend_url) + "/v1/rasp/crash/report";
-    std::string rasp_id_form = "rasp_id=" + std::string(openrasp_ini.rasp_id);
-    std::string hostname_form = "hostname=" + openrasp::get_hostname();
+    std::string crash_reporting_url = std::string(openrasp_ini.backend_url) + "/v1/agent/crash/report";
+    std::string rasp_id_form = "rasp_id=" + scm->get_rasp_id();
+    std::string hostname_form = "hostname=" + get_hostname();
     std::string crash_log_form = "crash_log=@" + crash_file_path;
     char *const argv[] = {
         "curl",
