@@ -153,7 +153,7 @@ var algorithmConfig = {
                 "42601", // normal syntax error
                 "22P02", // ERROR:  invalid input syntax for type double precision: "DATABASE: test1"
             ],
-            status: [
+            error_state: [
                 "42601", // normal syntax error
                 "22P02", // ERROR:  invalid input syntax for type double precision: "DATABASE: test1"
             ]
@@ -161,6 +161,17 @@ var algorithmConfig = {
         sqlite: {
             error_code: [
                 1, // generic error, like syntax error、malformed MATCH expression: ["3.6.23.1] and other
+            ]
+        },
+        oracle: {
+            error_code: [
+                "ORA-29257", // host string unknown
+                "ORA-20000", // Oracle Text error
+                "ORA-00904", // invalid identifier
+                "ORA-19202", // Error occurred in XML processing
+                "ORA-01756", // quoted string not properly terminated
+                "ORA-01740", // missing double quote in identifier
+                "ORA-00920", // invalid relational operator
             ]
         }
     },
