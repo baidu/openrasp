@@ -26,7 +26,7 @@
             {{if .AppName}}
             <th>{{.AppName}}</th>
             {{end}}
-            <td>{{.HostName}}</td>
+            <td>{{.Hostname}}</td>
             <td>{{.Language}}</td>
             {{if .Ip}}
             <td>{{.Ip}}</td>
