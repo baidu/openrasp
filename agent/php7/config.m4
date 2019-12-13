@@ -92,7 +92,8 @@ if test "$PHP_OPENRASP" != "no"; then
         agent/log_collect_item.cc \
         agent/plugin_update_pkg.cc \
         agent/backend_request.cc \
-        agent/backend_response.cc"
+        agent/backend_response.cc \
+        agent/crash_reporter.cc"
         AC_DEFINE([HAVE_OPENRASP_REMOTE_MANAGER], [1], [Have openrasp remote manager support])
         ;;
     esac
@@ -508,7 +509,7 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
-    openrasp_signal.cc \
+    utils/signal_interceptor.cc \
     utils/read_write_lock.cc \
     utils/double_array_trie.cc \
     utils/string.cc \

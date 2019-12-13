@@ -20,6 +20,7 @@
 #include "openrasp.h"
 #include "openrasp_ini.h"
 #include "openrasp_utils.h"
+#include "utils/signal_interceptor.h"
 
 extern "C"
 {
@@ -37,7 +38,6 @@ extern "C"
 #include "openrasp_security_policy.h"
 #include "openrasp_output_detect.h"
 #include "openrasp_check_type.h"
-#include "openrasp_signal.h"
 #ifdef HAVE_FSWATCH
 #include "openrasp_fswatch.h"
 #endif
@@ -298,10 +298,10 @@ PHP_RINIT_FUNCTION(openrasp)
         // openrasp_inject must be called before openrasp_log cuz of request_id
         result = PHP_RINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);
+        openrasp::general_signal_hook();
         result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);
-        result = PHP_RINIT(openrasp_signal)(INIT_FUNC_ARGS_PASSTHRU);
         hook_without_params(REQUEST TSRMLS_CC);
     }
     return SUCCESS;

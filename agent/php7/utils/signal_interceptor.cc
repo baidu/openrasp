@@ -24,88 +24,25 @@ extern "C"
 }
 #include "utils/hostname.h"
 #include "openrasp.h"
-#include "openrasp_ini.h"
-#include "openrasp_utils.h"
-#include "agent/shared_config_manager.h"
+#include "php/header.h"
+#include "signal_interceptor.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
+#include "agent/crash_reporter.h"
 #include "agent/openrasp_agent_manager.h"
 #endif
 #include <execinfo.h>
 #include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
 
+namespace openrasp
+{
 typedef void (*sa_handler_t)(int);
 typedef void (*sa_sigaction_t)(int, siginfo_t *, void *);
 struct sigaction old_acts[SIGUSR2];
 bool is_set_handler = false;
 std::mutex mtx;
-
-int fork_and_exec(const char *path, char *const argv[])
-{
-
-    pid_t pid = fork();
-
-    if (pid < 0)
-    {
-        // fork failed
-        return -1;
-    }
-    else if (pid == 0)
-    {
-        // child process
-
-        execvp(path, argv);
-
-        // execve failed
-        _exit(-1);
-    }
-    else
-    {
-        // copied from J2SE ..._waitForProcessExit() in UNIXProcess_md.c; we don't
-        // care about the actual exit code, for now.
-
-        int status;
-
-        // Wait for the child process to exit.  This returns immediately if
-        // the child has already exited. */
-        while (waitpid(pid, &status, 0) < 0)
-        {
-            switch (errno)
-            {
-            case ECHILD:
-                return 0;
-            case EINTR:
-                break;
-            default:
-                return -1;
-            }
-        }
-
-        if (WIFEXITED(status))
-        {
-            // The child exited normally; get its exit code.
-            return WEXITSTATUS(status);
-        }
-        else if (WIFSIGNALED(status))
-        {
-            // The child exited because of a signal
-            // The best value to return is 0x80 + signal number,
-            // because that is what all Unix shells do, and because
-            // it allows callers to distinguish between process exit and
-            // process death by signal.
-            return 0x80 + WTERMSIG(status);
-        }
-        else
-        {
-            // Unknown exit code; pass it through
-            return status;
-        }
-    }
-}
 
 void report_crash_log(int sig)
 {
@@ -127,15 +64,6 @@ void report_crash_log(int sig)
 #ifdef OPENRASP_COMMIT_ID
     log << "Commit ID: " << OPENRASP_COMMIT_ID << std::endl;
 #endif
-#ifdef HAVE_OPENRASP_REMOTE_MANAGER
-    if (openrasp::oam)
-    {
-        const char *plugin_version = openrasp::oam->get_plugin_version();
-        log << "Plugin version: " << std::string(plugin_version ? plugin_version : "") << std::endl;
-    }
-#endif
-    log << "RASP ID: " << openrasp::scm->get_rasp_id() << std::endl;
-    log << "APP ID: " << std::string(openrasp_ini.app_id ? openrasp_ini.app_id : "") << std::endl;
     log << std::endl;
     {
         void *buf[100] = {0};
@@ -156,33 +84,12 @@ void report_crash_log(int sig)
         }
         log << std::endl;
     }
-    std::string app_id_header = "X-OpenRASP-AppID: " + std::string(openrasp_ini.app_id);
-    std::string app_secret_header = "X-OpenRASP-AppSecret: " + std::string(openrasp_ini.app_secret);
-    std::string crash_reporting_url = std::string(openrasp_ini.backend_url) + "/v1/rasp/crash/report";
-    std::string rasp_id_form = "rasp_id=" + std::string(openrasp_ini.rasp_id);
-    std::string hostname_form = "hostname=" + openrasp::get_hostname();
-    std::string crash_log_form = "crash_log=@" + log_path;
-    char *const argv[] = {
-        "curl",
-        (char *)(crash_reporting_url.c_str()),
-        "--connect-timeout",
-        "5",
-        "-H",
-        (char *)(app_id_header.c_str()),
-        "-H",
-        (char *)(app_secret_header.c_str()),
-        "-F",
-        (char *)(rasp_id_form.c_str()),
-        "-F",
-        (char *)(hostname_form.c_str()),
-        "-F",
-        (char *)(crash_log_form.c_str()),
-        nullptr};
-
-    if (fork_and_exec("curl", argv) != 0)
+#ifdef HAVE_OPENRASP_REMOTE_MANAGER
+    if (openrasp::oam)
     {
-        log << "\nfailed to report crash log" << std::endl;
+        CrashReporter cr(log_path);
     }
+#endif
 }
 
 void call_old_signal_handler(struct sigaction *old_act, int sig, siginfo_t *info, void *ctx)
@@ -259,26 +166,19 @@ int set_signal_handler(int sig, sa_sigaction_t handler)
 
 void general_signal_hook()
 {
-    if (nullptr != openrasp_ini.backend_url)
-    {
-        set_signal_handler(SIGSEGV, signal_handler);
-        set_signal_handler(SIGABRT, signal_handler);
-        set_signal_handler(SIGBUS, signal_handler);
-        set_signal_handler(SIGILL, signal_handler);
-        set_signal_handler(SIGFPE, signal_handler);
-    }
-}
-
-PHP_RINIT_FUNCTION(openrasp_signal)
-{
     if (!is_set_handler)
     {
         std::lock_guard<std::mutex> lock(mtx);
         if (!is_set_handler)
         {
             is_set_handler = true;
-            general_signal_hook();
+            set_signal_handler(SIGSEGV, signal_handler);
+            set_signal_handler(SIGABRT, signal_handler);
+            set_signal_handler(SIGBUS, signal_handler);
+            set_signal_handler(SIGILL, signal_handler);
+            set_signal_handler(SIGFPE, signal_handler);
         }
     }
-    return SUCCESS;
 }
+
+} // namespace openrasp

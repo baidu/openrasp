@@ -62,4 +62,15 @@ bool write_string_to_file(const char *file, std::ios_base::openmode mode, const 
     return false;
 }
 
+bool read_entire_content(const std::string &file, std::string &content)
+{
+    std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
+    if (ifs.is_open() && ifs.good())
+    {
+        content = {std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+        return true;
+    }
+    return false;
+}
+
 } // namespace openrasp

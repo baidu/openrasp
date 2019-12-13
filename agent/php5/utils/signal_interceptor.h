@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-#ifndef OPENRASP_SIGNAL_H
-#define OPENRASP_SIGNAL_H
+#pragma once
 
-#include "openrasp.h"
-#include "php/header.h"
-
-PHP_RINIT_FUNCTION(openrasp_signal);
-
+namespace openrasp
+{
 void general_signal_hook();
-
-#endif /* OPENRASP_signal_H */
-
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * End:
- * vim600: noet sw=4 ts=4 fdm=marker
- * vim<600: noet sw=4 ts=4
- */
+} // namespace openrasp

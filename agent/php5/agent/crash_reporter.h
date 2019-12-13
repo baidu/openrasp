@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_UTILS_FILE_H_
-#define _OPENRASP_UTILS_FILE_H_
+#pragma once
 
 #include <string>
-#include <fstream>
 
 namespace openrasp
 {
+class CrashReporter
+{
+private:
+    const std::string crash_file_path;
+    int fork_and_exec(const char *path, char *const argv[]); 
 
-bool file_exists(const std::string &file_path);
-bool file_readable(const std::string &file_path);
-std::string get_line_content(const std::string &file_path, long num);
-bool write_string_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len);
-bool read_entire_content(const std::string &file, std::string &content);
-
+public:
+    CrashReporter(const std::string &crash_file_path);
+    ~CrashReporter();
+};
 } // namespace openrasp
-
-#endif
