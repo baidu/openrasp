@@ -372,7 +372,7 @@ export default {
 
       // 重置时保存
       if (save) {
-        self.saveAlarmMethods()
+        setTimeout(() => (self.saveAlarmMethods()), 500)
       }
     },
     saveAlarmMethods: function(data) {
