@@ -32,6 +32,8 @@ func init() {
 	}))
 	beego.InsertFilter("/v1/agent/*", beego.BeforeRouter, authAgent)
 	beego.InsertFilter("/v1/api/*", beego.BeforeRouter, authApi)
+	beego.InsertFilter("/v1/iast/auth", beego.BeforeRouter, authAgent)
+	beego.InsertFilter("/v1/iast/version", beego.BeforeRouter, authAgent)
 	beego.InsertFilter("/v1/user/islogin", beego.BeforeRouter, authApi)
 	beego.InsertFilter("/v1/user/default", beego.BeforeRouter, authApi)
 }

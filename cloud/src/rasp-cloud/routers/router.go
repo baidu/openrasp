@@ -20,6 +20,7 @@ import (
 	"rasp-cloud/controllers/agent/agent_logs"
 	"rasp-cloud/controllers/api"
 	"rasp-cloud/controllers/api/fore_logs"
+	"rasp-cloud/controllers/iast"
 	"rasp-cloud/tools"
 	"rasp-cloud/conf"
 	"rasp-cloud/controllers"
@@ -52,11 +53,6 @@ func InitRouter() {
 		beego.NSNamespace("/rasp",
 			beego.NSInclude(
 				&agent.RaspController{},
-			),
-		),
-		beego.NSNamespace("/iast",
-			beego.NSInclude(
-				&agent.WebsocketController{},
 			),
 		),
 		beego.NSNamespace("/report",
@@ -99,11 +95,6 @@ func InitRouter() {
 				&api.AppController{},
 			),
 		),
-		beego.NSNamespace("/iast",
-			beego.NSInclude(
-				&api.IastController{},
-			),
-		),
 		beego.NSNamespace("/rasp",
 			beego.NSInclude(
 				&api.RaspController{},
@@ -140,17 +131,25 @@ func InitRouter() {
 			),
 		),
 	)
+	iastNS := beego.NewNamespace("/iast",
+		beego.NSInclude(
+			&iast.WebsocketController{},
+		),
+		beego.NSInclude(
+			&iast.IastController{},
+		),
+	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	pingNS := beego.NewNamespace("/ping", beego.NSInclude(&controllers.PingController{}))
 	ns := beego.NewNamespace("/v1")
 	ns.Namespace(pingNS)
 	startType := *conf.AppConfig.Flag.StartType
 	if startType == conf.StartTypeForeground {
-		ns.Namespace(foregroudNS, userNS)
+		ns.Namespace(foregroudNS, userNS, iastNS)
 	} else if startType == conf.StartTypeAgent {
-		ns.Namespace(agentNS)
+		ns.Namespace(agentNS, iastNS)
 	} else if startType == conf.StartTypeDefault {
-		ns.Namespace(foregroudNS, agentNS, userNS)
+		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
 	} else {
 		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
 	}
