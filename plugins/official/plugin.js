@@ -2611,9 +2611,11 @@ plugin.register('sensitiveOutput', function (params, context) {
     const id = checkChineseId(params.body)
     const phone = checkChinesePhone(params.body)
     const card = checkBankCard(params.body)
-    return {
-        action: 'log',
-        message: JSON.stringify({id, phone, card})
+    if (id || phone || card) {
+        return {
+            action: 'log',
+            message: JSON.stringify({id, phone, card})
+        }
     }
 });
 
