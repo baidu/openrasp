@@ -120,7 +120,6 @@ export default {
     showModal(data) {
       this.data = data
       $('#setConfigModal').modal()
-      console.log("this.data:", this.data)
     },
     validateRegex,
     getRequest(url, order, data) {
