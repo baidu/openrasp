@@ -147,7 +147,7 @@ func InitRouter() {
 	if startType == conf.StartTypeForeground {
 		ns.Namespace(foregroudNS, userNS, iastNS)
 	} else if startType == conf.StartTypeAgent {
-		ns.Namespace(agentNS, iastNS)
+		ns.Namespace(agentNS)
 	} else if startType == conf.StartTypeDefault {
 		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
 	} else {

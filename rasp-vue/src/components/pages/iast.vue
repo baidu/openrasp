@@ -119,7 +119,9 @@
             </tbody>
           </table>
 
-          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
+          <p v-if="! loading && register == 0" class="text-center" v-model="register">扫描器未连接/已离线</p>
+          <p v-if="! loading && total == 0 && register == 1" class="text-center" v-model="register">连接中</p>
+          <p v-if="! loading && total == 0 && register == 2" class="text-center" v-model="register">扫描器已连接，暂无数据</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -166,7 +168,8 @@ export default {
       hostname: '',
       key_word: '',
       total: 0,
-      baseUrl: 'v1/api/iast',
+      register: 0,
+      baseUrl: 'v1/iast',
       running: "运行中",
       cancel: "终止",
       pause: "暂停",
@@ -205,19 +208,27 @@ export default {
     fetchData(page) {
       const body = {
           order: "getAllTasks",
-          data: {"page": this.currentPage},
+          data: {"page": this.currentPage, "app_id": this.current_app.id},
           headers: {'Content-Type': 'application/json'}
       }
       return this.request.post(this.baseUrl, body)
         .then(res => {
           this.page = page
-          this.status = res.data.status
-          this.data = res.data.result
-          this.total = res.data.total
+          if (res.data == undefined) {
+              this.status = res.status
+              this.data = []
+              this.total = 0
+          } else {
+            this.status = res.data.status
+            this.data = res.data.result
+            this.total = res.data.total
+          }
+          this.register = res.register
           this.loading = false
         })
     },
     getRequest(url, order, data) {
+        data["app_id"] = this.current_app.id
         const body = {
             order: order,
             data: data,

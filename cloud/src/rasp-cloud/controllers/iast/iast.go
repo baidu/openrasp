@@ -85,6 +85,7 @@ func (o *IastController) Post() {
 
 	appId := param.Data.AppId
 	result["register"] = models.IastRegister[appId]
+	result["status"] = 0
 	if models.IastAppId[appId] {
 		wsConn = IastConnection[appId]
 		if err := wsConn.wsWrite(websocket.TextMessage, o.Ctx.Input.RequestBody); err != nil {
@@ -260,7 +261,6 @@ closed:
 func (wsConn *wsConnection) procLoop(appId string) {
 	go func() {
 		for {
-			models.IastRegister[appId] = 2
 			time.Sleep(3 * time.Second)
 			if err := wsConn.wsWrite(websocket.TextMessage, []byte("heartbeat from OpenRASP cloud")); err != nil {
 				beego.Error("heartbeat error:", err)
@@ -272,6 +272,7 @@ func (wsConn *wsConnection) procLoop(appId string) {
 
 	for {
 		msg, err := wsConn.wsRead()
+		models.IastRegister[appId] = 2
 		if err != nil {
 			beego.Error("read error:" , err)
 			break
