@@ -133,6 +133,7 @@ export default {
     },
     validateRegex,
     getRequest(url, order, data) {
+        data["app_id"] = this.current_app.id
         const body = {
             order: order,
             data: data,
