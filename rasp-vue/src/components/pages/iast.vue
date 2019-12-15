@@ -88,31 +88,32 @@
               </td>
               <td align="left">
                 <div class="" style="vertical-align:middle">
-                  <button type="button" class="btn btn-primary" v-model="taskObject[i]"
-                          @click="stopTask(i)" :disabled="taskObject[i] == unscanned || loadIcon[i]"
-                          v-show="taskObject[i] != unscanned">
+                  <!--<button type="button" class="btn btn-primary" v-model="taskObject[i]"-->
+                          <!--@click="stopTask(i)" :disabled="taskObject[i] == unscanned || loadIcon[i]"-->
+                          <!--v-show="taskObject[i] != unscanned">-->
+                    <!--<i class="fas fa-spinner fa-spin" v-show="loadIcon[i]"></i>-->
+                    <!--停止扫描-->
+                  <!--</button>-->
+                  <a href="javascript:" @click="stopTask(i)" v-model="taskObject[i]"
+                     :disabled="taskObject[i] == unscanned || loadIcon[i]"
+                     v-show="taskObject[i] != unscanned">
                     <i class="fas fa-spinner fa-spin" v-show="loadIcon[i]"></i>
                     停止扫描
-                  </button>
-                  <button type="button" class="btn btn-primary"
-                          @click="startTask(i)" :disabled="taskObject[i] == running || loadIcon[i]"
-                          v-show="taskObject[i] ==  unscanned">
+                  </a>
+                  <a href="javascript:" @click="startTask(i)" :disabled="taskObject[i] == running || loadIcon[i]"
+                     v-show="taskObject[i] ==  unscanned">
                     <i class="fas fa-spinner fa-spin" v-show="loadIcon[i]"></i>
                     启动扫描
-                  </button>
-                  <button type="button" class="btn btn-default" data-toggle="modal" @click="getConfig(row)">
+                  </a>
+                  <a href="javascript:" @click="getConfig(row)">
                     设置
-                  </button>
-                  <button type="button" class="btn btn-danger" ng-model="status"
-                          @click="cleanTask(i, true)"
-                          v-show="taskObject[i] == unscanned">
+                  </a>
+                  <a href="javascript:" @click="cleanTask(i, true)" v-model="status" v-show="taskObject[i] == unscanned">
                     清空队列
-                  </button>
-                  <button type="button" class="btn btn-danger" ng-model="status"
-                          @click="cleanTask(i, false)"
-                          v-show="taskObject[i] == unscanned">
+                  </a>
+                  <a href="javascript:" @click="cleanTask(i, false)" v-model="status" v-show="taskObject[i] == unscanned">
                     删除任务
-                  </button>
+                  </a>
                 </div>
               </td>
             </tr>

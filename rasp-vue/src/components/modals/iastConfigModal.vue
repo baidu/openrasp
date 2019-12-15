@@ -11,8 +11,10 @@
         <div class="modal-body">
             <form class="form-horizontal" id>
               <div class="form-group">
-                <div class="col">
-                  <label>请选择插件</label>
+                <div class="row">
+                  <div class="col">
+                    <label>请选择插件</label>
+                  </div>
                 </div>
                 <div class="row" style="margin-top: 3px;">
                   <template v-for="(value, key, index) in data.scan_plugin_status">
@@ -27,32 +29,38 @@
                 </div>
               </div>
               <div class="form-group">
-                <div class="col">
-                  <label>url白名单正则（被正则命中的url不会被扫描, 正则会匹配request_uri部分,
-                    例如 http://test.com/path/eg?p=1&b=2会匹配 /path/eg?p=1&b=2, 当不希望扫描</label>
-                  <input type="text" class="form-control" v-model="data.white_url_reg">
-                  <label v-show="byurl_regex_error" style="color:#ff0000">*白名单正则非法</label>
+                <div class="row" style="margin-top: 3px;">
+                  <div class="col">
+                    <label>url白名单正则（被正则命中的url不会被扫描, 正则会匹配request_uri部分,
+                      例如 http://test.com/path/eg?p=1&b=2会匹配 /path/eg?p=1&b=2, 当不希望扫描</label>
+                    <input type="text" class="form-control" v-model="data.white_url_reg">
+                    <label v-show="byurl_regex_error" style="color:#ff0000">*白名单正则非法</label>
+                  </div>
                 </div>
               </div>
               <div class="form-group">
-                <div class="col">
-                  <label for="concurrent" align="center">最大并发请求数</label>
-                  <input type="number" class="form-control" id="concurrent"
-                         v-model="data.scan_rate.concurrent" placeholder="20">
-                  <label v-show="data.scan_rate.concurrent <= 0" style="color:#F00">*最大并发数应大于0</label>
+                <div class="row" style="margin-top: 3px;">
+                  <div class="col">
+                    <label for="concurrent" align="center">最大并发请求数</label>
+                    <input type="number" class="form-control" id="concurrent"
+                           v-model="data.scan_rate.concurrent" placeholder="20">
+                    <label v-show="data.scan_rate.concurrent <= 0" style="color:#F00">*最大并发数应大于0</label>
+                  </div>
                 </div>
               </div>
               <div class="form-group">
-                <div class="col">
-                  <label for="minInterval" align="center">请求间隔(ms)</label>
+                <div class="row" style="margin-top: 3px;">
+                  <div class="col">
+                    <label for="minInterval" align="center">请求间隔(ms)</label>
+                  </div>
                 </div>
-                <div class="row">
+                <div class="row" style="margin-top: 3px;">
                   <div class="col">
                     <input type="number" class="form-control" id="minInterval"
                            v-model="data.scan_rate.minInterval" placeholder="0">
                     <label v-show="data.scan_rate.minInterval < 0" style="color:#F00">*最小间隔应大于等于0</label>
                   </div>
-                  <div class="col" align="center">
+                  <div class="col" align="middle">
                     <h5>～</h5>
                   </div>
                   <div class="col">
@@ -63,10 +71,12 @@
                 </div>
               </div>
               <div class="form-group">
-                <div class="col">
-                    <label>扫描请求使用的http代理</label>
-                  <input type="text" class="form-control"
-                         id="scanProxy" v-model="data.scan_proxy">
+                <div class="row" style="margin-top: 3px;">
+                  <div class="col">
+                      <label>扫描请求使用的http代理</label>
+                    <input type="text" class="form-control"
+                           id="scanProxy" v-model="data.scan_proxy">
+                  </div>
                 </div>
               </div>
             </form>
