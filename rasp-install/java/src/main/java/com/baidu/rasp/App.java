@@ -47,7 +47,6 @@ public class App {
     public static String raspId;
     public static String baseDir;
     public static String url;
-    public static String crashUrl;
     public static int pid;
     public static boolean isAttach = false;
     public static boolean keepConfig = false;
@@ -95,7 +94,6 @@ public class App {
         options.addOption("nodetect", false, "Install without updating startup scripts, " +
                 "useful for standalone Java servers like SpringBoot");
         options.addOption("prepend", false, "Prepend the origin java options");
-        options.addOption("crashurl", true, "Value of crash reporting url, only support tomcat 7~9");
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
@@ -121,13 +119,6 @@ public class App {
                 if (cmd.hasOption("pid")) {
                     isAttach = true;
                     pid = getIntegerParam(cmd, "pid");
-                }
-            }
-
-            if (cmd.hasOption("crashurl")) {
-                crashUrl = cmd.getOptionValue("crashurl");
-                if (crashUrl == null || crashUrl.equals("")) {
-                    throw new RaspError(E10005 + "Value of -crashurl can not be empty");
                 }
             }
 
@@ -231,10 +222,6 @@ public class App {
             InstallerFactory factory = newInstallerFactory();
             Installer installer = factory.getInstaller(serverRoot, noDetect);
             if (installer != null) {
-                if (crashUrl != null
-                        && !(installer instanceof com.baidu.rasp.install.linux.TomcatInstaller)) {
-                    throw new RaspError(E10005 + "-crashurl only support tomcat7~9");
-                }
                 installer.install();
             } else {
                 throw new RaspError(E10007);
