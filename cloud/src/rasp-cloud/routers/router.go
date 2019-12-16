@@ -63,6 +63,9 @@ func InitRouter() {
 		beego.NSNamespace("/dependency",
 			beego.NSInclude(
 				&agent.DependencyController{},
+		beego.NSNamespace("/crash",
+			beego.NSInclude(
+				&agent.CrashController{},
 			),
 		),
 	)

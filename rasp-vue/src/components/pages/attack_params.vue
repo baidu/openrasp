@@ -228,7 +228,7 @@
                 XSS 利用代码
             </div>
             <p v-if="data.attack_params.value">
-                {{ data.attack_params.value }}
+                {{ data.attack_params.value.length > 10000 ? data.attack_params.value + ' ...' : data.attack_params.value }}   
             </p>            
         </div>        
 

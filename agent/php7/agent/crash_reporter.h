@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-#include "openrasp_agent.h"
+#pragma once
+
+#include <string>
 
 namespace openrasp
 {
-
-BaseAgent::BaseAgent(std::string name)
-	: default_slash(1, DEFAULT_SLASH)
+class CrashReporter
 {
-	this->name = name;
-}
+private:
+    const std::string crash_file_path;
+    int fork_and_exec(const char *path, char *const argv[]); 
 
-void BaseAgent::install_sigterm_handler(sighandler_t signal_handler)
-{
-	struct sigaction sa_usr = {0};
-	sa_usr.sa_flags = 0;
-	sa_usr.sa_handler = signal_handler;
-	sigaction(SIGTERM, &sa_usr, NULL);
-}
+public:
+    CrashReporter(const std::string &crash_file_path);
+    ~CrashReporter();
+};
 } // namespace openrasp

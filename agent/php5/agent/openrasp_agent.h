@@ -28,6 +28,11 @@
 
 namespace openrasp
 {
+
+#ifndef sighandler_t
+typedef void (*sighandler_t)(int);
+#endif
+
 class LogCollectItem;
 
 class BaseAgent
@@ -38,7 +43,7 @@ public:
   virtual void run() = 0;
   virtual void write_pid_to_shm(pid_t agent_pid) = 0;
   virtual pid_t get_pid_from_shm() = 0;
-  virtual void install_signal_handler(__sighandler_t signal_handler);
+  virtual void install_sigterm_handler(sighandler_t signal_handler);
 
 protected:
   std::string name;

@@ -150,12 +150,8 @@ public abstract class BaseStandardInstaller implements Installer {
             // 配置云控
             setCloudConf();
             // 配置其它选项
-            Map<String, Object> ymlData = new HashMap<String, Object>();
             if (App.raspId != null) {
-                ymlData.put("rasp.id", App.raspId);
-            }
-            if (!ymlData.isEmpty()) {
-                setRaspConf(ymlData, "# <rasp id>");
+                setRaspConfItem("rasp.id", App.raspId, "# <rasp id>");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -163,6 +159,12 @@ public abstract class BaseStandardInstaller implements Installer {
         }
         return true;
 
+    }
+
+    private void setRaspConfItem(String key, String value, String comment) {
+        Map<String, Object> ymlData = new HashMap<String, Object>();
+        ymlData.put(key, value);
+        setRaspConf(ymlData, comment);
     }
 
     public static String read(File file) throws IOException {
@@ -253,12 +255,20 @@ public abstract class BaseStandardInstaller implements Installer {
             try {
                 major = Integer.parseInt(version[0]);
                 minor = Integer.parseInt(version[1]);
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 return false;
             }
             if (major == 1) {
                 return minor >= 9;
             } else if (major >= 9) {
+                return true;
+            }
+        } else if (javaVersion.startsWith("9")) {
+            return true;
+        } else if (javaVersion.length() >= 2) {
+            char first = javaVersion.charAt(0);
+            char second = javaVersion.charAt(1);
+            if (first >= '1' && first <= '9' && second >= '0' && second <= '9') {
                 return true;
             }
         }

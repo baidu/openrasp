@@ -17,6 +17,7 @@
 #include "file.h"
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fstream>
 #include <limits>
 #include <dirent.h>
 #include <set>
