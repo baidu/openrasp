@@ -11,6 +11,10 @@ func init() {
         beego.ControllerComments{
             Method: "Post",
             Router: `/`,
+    beego.GlobalControllerRouter["rasp-cloud/controllers/agent:CrashController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/agent:CrashController"],
+        beego.ControllerComments{
+            Method: "Post",
+            Router: `/report`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,

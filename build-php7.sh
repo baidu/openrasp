@@ -46,8 +46,10 @@ phpize
 
 if [[ $php_os == "macos" ]]; then
 	./configure --with-openrasp-v8=${script_base}/openrasp-v8/ --with-gettext=/usr/local/homebrew/opt/gettext -q ${extra_config_opt}
+	make
 else
 	./configure --with-openrasp-v8=${script_base}/openrasp-v8/ --with-gettext --enable-openrasp-remote-manager -q ${extra_config_opt}
+	make -j$(nproc)
 fi
 
 make

@@ -185,7 +185,7 @@ if (file_exists($snapshot) && is_file($snapshot)) {
 if (rmdir($root_dir)) {
     log_tips(INFO, "'$root_dir' removed");
 } else {
-    log_tips(INFO, 'non-openrasp file found in '.$root_dir.', fail to remove it.');
+    log_tips(INFO, 'non-openrasp file found in '.$root_dir.', you can manually remove it.');
 }
 
 

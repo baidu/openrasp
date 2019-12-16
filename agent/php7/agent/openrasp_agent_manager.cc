@@ -36,6 +36,7 @@
 #include "agent/utils/os.h"
 #include "openrasp_utils.h"
 #include "agent/webdir/webdir_agent.h"
+#include "utils/signal_interceptor.h"
 
 #ifdef HAVE_LINE_COVERAGE
 #define SIGNAL_KILL_AGENT SIGTERM
@@ -179,10 +180,14 @@ bool OpenraspAgentManager::supervisor_startup()
 	else if (pid == 0)
 	{
 		int fd = 0;
-		if (-1 != (fd = open("/dev/null", O_RDONLY)))
+		if (-1 != (fd = open("/dev/null", O_RDWR)))
 		{
 			close(STDIN_FILENO);
+			close(STDERR_FILENO);
+			close(STDOUT_FILENO);
 			dup2(fd, STDIN_FILENO);
+			dup2(fd, STDERR_FILENO);
+			dup2(fd, STDOUT_FILENO);
 			close(fd);
 		}
 		setsid();
@@ -215,6 +220,8 @@ void OpenraspAgentManager::supervisor_run()
 	sigaction(SIGCHLD, &sa_usr, NULL);
 
 	super_install_signal_handler();
+	general_signal_hook();
+
 	int second_remain_to_register = 0;
 	int second_remain_to_check_work_process = 0;
 	while (true)

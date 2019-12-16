@@ -15,6 +15,7 @@
  */
 
 #include "openrasp_ini.h"
+#include "openrasp_utils.h"
 #include <limits>
 #include "utils/string.h"
 #include "utils/regex.h"

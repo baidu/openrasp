@@ -329,7 +329,7 @@ func init() {
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
-            Params: nil})
+            Params: nil})              
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"],
         beego.ControllerComments{
@@ -374,7 +374,7 @@ func init() {
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
-            Params: nil})
+            Params: nil})   
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:TokenController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:TokenController"],
         beego.ControllerComments{

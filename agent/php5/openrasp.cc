@@ -23,6 +23,7 @@
 #include "openrasp_utils.h"
 #include "hook/checker/v8_detector.h"
 #include "hook/data/no_params_object.h"
+#include "utils/signal_interceptor.h"
 
 extern "C"
 {
@@ -53,7 +54,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
-const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.2";
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.2.3";
 bool is_initialized = false;
 bool remote_active = false;
 std::string openrasp_status = "Protected";
@@ -311,6 +312,7 @@ PHP_RINIT_FUNCTION(openrasp)
         // openrasp_inject must be called before openrasp_log cuz of request_id
         result = PHP_RINIT(openrasp_inject)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_log)(INIT_FUNC_ARGS_PASSTHRU);
+        openrasp::general_signal_hook();
         result = PHP_RINIT(openrasp_hook)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_v8)(INIT_FUNC_ARGS_PASSTHRU);
         result = PHP_RINIT(openrasp_output_detect)(INIT_FUNC_ARGS_PASSTHRU);

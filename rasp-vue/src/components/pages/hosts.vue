@@ -6,16 +6,15 @@
           Agent 管理
         </h1>
         <div class="page-options d-flex" style="margin-top: 5px;">
-            <select v-model="currentVersion" class="form-control">
-              <option value="">
-                客户端版本: 全部
-              </option>
-              <option :value="v.version" v-for="v in agent_versions" :key="v.version">
-                客户端版本: {{v.version}} ({{ v.count }})
-              </option>
-            </select>
+          <select v-model="currentVersion" class="form-control">
+            <option value="">
+              客户端版本: 全部
+            </option>
+            <option :value="v.version" v-for="v in agent_versions" :key="v.version">
+              客户端版本: {{v.version}} ({{ v.count }})
+            </option>
+          </select>
         </div>
-
         <div class="page-options d-flex" style="margin-top: 5px; margin-left: 10px; ">
           <div>
             <b-dropdown :text="'主机状态' + toHostStatus()" class="">
@@ -195,7 +194,11 @@ export default {
       this.loadRaspList(1) 
     },
     currentVersion() {
+<<<<<<< HEAD
       this.loadRaspList(1)
+=======
+        this.loadRaspList(1)
+>>>>>>> 1.2.3
     },
     filter: {
       handler() {
@@ -228,6 +231,7 @@ export default {
     ceil: Math.ceil,
     enumAgentVersion() {
       this.request.post('v1/api/rasp/search/version', {
+<<<<<<< HEAD
         data: {
           app_id: this.current_app.id
         },
@@ -235,6 +239,15 @@ export default {
         perpage: 100
       }).then(res => {
         this.agent_versions = res.data
+=======
+          data: {
+              app_id: this.current_app.id
+          },
+          page: 1,
+          perpage: 100
+      }).then(res => {
+          this.agent_versions = res.data
+>>>>>>> 1.2.3
       })
     },
     toHostStatus() {
@@ -275,7 +288,11 @@ export default {
       }
 
       if (this.currentVersion) {
+<<<<<<< HEAD
         body.data.version = this.currentVersion
+=======
+          body.data.version = this.currentVersion
+>>>>>>> 1.2.3
       }
 
       if (this.hostname) {

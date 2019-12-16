@@ -14,22 +14,9 @@
  * limitations under the License.
  */
 
-#include "openrasp_agent.h"
+#pragma once
 
 namespace openrasp
 {
-
-BaseAgent::BaseAgent(std::string name)
-	: default_slash(1, DEFAULT_SLASH)
-{
-	this->name = name;
-}
-
-void BaseAgent::install_sigterm_handler(sighandler_t signal_handler)
-{
-	struct sigaction sa_usr = {0};
-	sa_usr.sa_flags = 0;
-	sa_usr.sa_handler = signal_handler;
-	sigaction(SIGTERM, &sa_usr, NULL);
-}
+void general_signal_hook();
 } // namespace openrasp

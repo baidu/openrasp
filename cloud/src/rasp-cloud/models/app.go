@@ -132,11 +132,11 @@ var (
 			"</reason><request_id>%request_id%</request_id></doc>",
 		"block.content_html": "</script><script>" +
 			"location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>",
-		"block.content_json":        `{"error":true,"reason": "Request blocked by OpenRASP","request_id": "%request_id%"}`,
-		"plugin.timeout.millis":     100,
-		"body.maxbytes":             12288,
-		"inject.custom_headers":     map[string]interface{}{
-			"X-Protected-By":        "OpenRASP",
+		"block.content_json":    `{"error":true,"reason": "Request blocked by OpenRASP","request_id": "%request_id%"}`,
+		"plugin.timeout.millis": 100,
+		"body.maxbytes":         12288,
+		"inject.custom_headers": map[string]interface{}{
+			"X-Protected-By": "OpenRASP",
 		},
 		"plugin.filter":             true,
 		"plugin.maxstack":           100,
@@ -518,7 +518,7 @@ func UpdateWhiteListConfig(appId string, config []WhitelistConfigItem) (app *App
 	return UpdateAppById(appId, bson.M{"whitelist_config": config, "config_time": time.Now().UnixNano()})
 }
 
-func UpdateAppConfig(version string) error{
+func UpdateAppConfig(version string) error {
 	if version == "121to122" {
 		page := 1
 		perPage := 10
@@ -545,7 +545,7 @@ func UpdateAppConfig(version string) error{
 					}
 				}
 				app.GeneralConfig["inject.custom_headers"] = map[string]interface{}{
-					"X-Protected-By":     "OpenRASP",
+					"X-Protected-By": "OpenRASP",
 				}
 				_, err := UpdateGeneralConfig(appId, app.GeneralConfig)
 				if err != nil {
@@ -592,14 +592,14 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 func getTestAlarmData() []map[string]interface{} {
 	return []map[string]interface{}{
 		{
-			"event_time":      time.Now().Format("2006-01-01 15:06:05"),
+			"event_time":      time.Now().Format("2006-01-02 15:04:05"),
 			"attack_source":   "220.181.57.191",
 			"attack_type":     "sql",
 			"intercept_state": "block",
 			"url":             "http://www.example.com/article.php?id=1",
 		},
 		{
-			"event_time":      time.Now().Format("2006-01-01 15:03:01"),
+			"event_time":      time.Now().Format("2006-01-02 15:04:05"),
 			"attack_source":   "220.23.38.115",
 			"attack_type":     "command",
 			"intercept_state": "log",
@@ -689,9 +689,9 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 			auth = nil
 		}
 		if emailConf.TlsEnable {
-			return sendEmailWithTls(emailConf, auth, msg)
+			return SendEmailWithTls(emailConf, auth, []byte(msg))
 		}
-		return sendNormalEmail(emailConf, auth, msg)
+		return SendNormalEmail(emailConf, auth, []byte(msg))
 	} else {
 		beego.Error(
 			"failed to send email alarm: the email receiving address and email server address can not be empty", emailConf)
@@ -742,8 +742,8 @@ func getPanelServerUrl() (string, int) {
 	return serverUrl.PanelUrl, port
 }
 
-func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err error) {
-	err = smtp.SendMail(emailConf.ServerAddr, auth, emailConf.UserName, emailConf.RecvAddr, []byte(msg))
+func SendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg []byte) (err error) {
+	err = smtp.SendMail(emailConf.ServerAddr, auth, emailConf.UserName, emailConf.RecvAddr, msg)
 	if err != nil {
 		beego.Error("failed to push email alarms: " + err.Error())
 		return
@@ -751,7 +751,7 @@ func sendNormalEmail(emailConf EmailAlarmConf, auth smtp.Auth, msg string) (err 
 	return
 }
 
-func sendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg string) error {
+func SendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg []byte) error {
 	client, err := smtpTlsDial(emailConf.ServerAddr)
 	if err != nil && !strings.Contains(err.Error(), "timeout") {
 		conn, err := net.DialTimeout("tcp", emailConf.ServerAddr, time.Second*5)
@@ -793,7 +793,7 @@ func sendEmailWithTls(emailConf EmailAlarmConf, auth smtp.Auth, msg string) erro
 	}
 	defer writer.Close()
 
-	_, err = writer.Write([]byte(msg))
+	_, err = writer.Write(msg)
 	if err != nil {
 		return handleError("failed to write msg with tls: " + err.Error())
 	}
