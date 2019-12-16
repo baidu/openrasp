@@ -19,6 +19,7 @@ package com.baidu.openrasp.plugin.checker;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
+import com.baidu.openrasp.plugin.checker.policy.LogChecker;
 import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
@@ -66,8 +67,8 @@ public class CheckParameter {
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
 
         // 安全基线检测
-        POLICY_LOG("log", new V8PolicyChecker(false), 1 << 22),
-        POLICY_SENSITIVE_OUTPUT("sensitiveOutput", new V8PolicyChecker(false), 1 << 23),
+        POLICY_LOG("log", new LogChecker(false), 1 << 22),
+        POLICY_RESPONSE("response", new V8PolicyChecker(false), 1 << 23),
         POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(false), 0),
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(false), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),

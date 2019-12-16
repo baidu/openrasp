@@ -49,12 +49,12 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
     protected static boolean isCheckSensitive() {
         Config config = Config.getConfig();
         // iast 全量
-        if (config.isIastEnabled() || config.getSensitiveOutputInterval() <= 0
-                || config.getSensitiveOutputBurst() <= 0) {
+        if (config.isIastEnabled() || config.getResponseInterval() <= 0
+                || config.getResponseBurst() <= 0) {
             return true;
         }
         if (sampler == null) {
-            sampler = new Sampler(config.getSensitiveOutputInterval(), config.getSensitiveOutputBurst());
+            sampler = new Sampler(config.getResponseInterval(), config.getResponseBurst());
         }
         // 限速检测
         return sampler.check();
@@ -67,7 +67,7 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
         }
         if (isCheckSensitive) {
             params.remove("buffer");
-            HookHandler.doCheck(CheckParameter.Type.POLICY_SENSITIVE_OUTPUT, params);
+            HookHandler.doCheck(CheckParameter.Type.POLICY_RESPONSE, params);
         }
         HookHandler.disableCurrThreadHook();
     }

@@ -717,7 +717,7 @@ public enum ConfigItem {
     SENSITIVE_OUTPUT_INTERVAL(new ConfigSetter<String>("sensitive_output.sample_interval") {
         @Override
         public synchronized void setValue(String interval) {
-            Config.getConfig().sensitiveOutputInterval = Integer.parseInt(interval);
+            Config.getConfig().responseInterval = Integer.parseInt(interval);
         }
 
         @Override
@@ -729,7 +729,7 @@ public enum ConfigItem {
     SENSITIVE_OUTPUT_BURST(new ConfigSetter<String>("sensitive_output.sample_burst") {
         @Override
         public synchronized void setValue(String burst) {
-            Config.getConfig().sensitiveOutputBurst = Integer.parseInt(burst);
+            Config.getConfig().responseBurst = Integer.parseInt(burst);
         }
 
         @Override

@@ -45,7 +45,7 @@ public class V8PolicyChecker extends PolicyChecker {
         byte[] results = null;
         try {
             results = V8.Check(checkParameter.getType().getName(), out.getByteArray(), out.size(),
-                    new Context(checkParameter.getRequest()), -1, (int) Config.getConfig().getPluginTimeout());
+                    new Context(checkParameter.getRequest()), false, (int) Config.getConfig().getPluginTimeout());
         } catch (Exception e) {
             LogTool.error(ErrorType.PLUGIN_ERROR, e.getMessage(), e);
             return null;
