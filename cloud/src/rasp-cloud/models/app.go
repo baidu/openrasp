@@ -578,14 +578,14 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 func getTestAlarmData() []map[string]interface{} {
 	return []map[string]interface{}{
 		{
-			"event_time":      time.Now().Format("2006-01-01 15:06:05"),
+			"event_time":      time.Now().Format("2006-01-02 15:04:05"),
 			"attack_source":   "220.181.57.191",
 			"attack_type":     "sql",
 			"intercept_state": "block",
 			"url":             "http://www.example.com/article.php?id=1",
 		},
 		{
-			"event_time":      time.Now().Format("2006-01-01 15:03:01"),
+			"event_time":      time.Now().Format("2006-01-02 15:04:05"),
 			"attack_source":   "220.23.38.115",
 			"attack_type":     "command",
 			"intercept_state": "log",

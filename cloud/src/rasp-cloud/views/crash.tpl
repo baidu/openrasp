@@ -1,4 +1,3 @@
-<h>error information</h>
 <table border="1" cellspacing="5" cellpadding="5">
     <thead>
         <tr>
@@ -11,7 +10,7 @@
             <th>hostname</th>
             <th>language</th>
             {{if .Ip}}
-            <th>Ip</th>
+            <th>ip</th>
             {{end}}
             {{if .Version}}
             <th>rasp version</th>

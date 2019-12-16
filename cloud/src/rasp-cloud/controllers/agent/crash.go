@@ -147,7 +147,7 @@ func sendCrashEmailAlarm(crashLogContent []byte, fileName string, app *models.Ap
 		templateData := &crashTemplateParam{
 			Hostname: rasp.HostName,
 			Language: rasp.Language,
-			Time:     time.Now().Format("2006-01-01 15:06:05"),
+			Time:     time.Now().Format("2006-01-02 15:04:05"),
 			Version:  rasp.Version,
 			AppName:  app.Name,
 			Ip:       rasp.RegisterIp,
