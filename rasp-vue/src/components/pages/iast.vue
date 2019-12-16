@@ -120,7 +120,7 @@
             </tbody>
           </table>
 
-          <p v-if="! loading && register == 0" class="text-center" v-model="register">扫描器未连接/已离线</p>
+          <p v-if="! loading && register == 0" class="text-center" v-model="register">扫描器未连接或已离线</p>
           <p v-if="! loading && total == 0 && register == 1" class="text-center" v-model="register">连接中</p>
           <p v-if="! loading && total == 0 && register == 2" class="text-center" v-model="register">扫描器已连接，暂无数据</p>
 
@@ -354,6 +354,7 @@ export default {
                 showData['host'] = host
                 showData['port'] = port
                 showData['baseUrl'] = this.baseUrl
+                showData['app_id'] = this.current_app.id
                 this.showIastConfigDetail(showData)
             })
     }
