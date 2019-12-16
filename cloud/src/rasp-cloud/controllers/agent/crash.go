@@ -125,7 +125,7 @@ func sendCrashEmailAlarm(crashLogContent []byte, fileName string, app *models.Ap
 				emailAddr.Name = "OpenRASP"
 			}
 		}
-		subject := "OpenRASP Java agent crashed on HOSTNAME"
+		subject := "OpenRASP Java agent crashed on " + rasp.HostName
 		boundary := "OpenRASPCrashLogData"
 		head := map[string]string{
 			"From":              emailAddr.String(),
