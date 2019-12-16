@@ -32,7 +32,7 @@ import java.io.IOException;
 public abstract class ServerPreRequestHook extends AbstractClassHook {
 
     public ServerPreRequestHook() {
-        isNecessary = false;
+        isNecessary = true;
     }
 
     /**

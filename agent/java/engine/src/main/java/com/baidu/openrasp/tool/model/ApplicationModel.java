@@ -76,7 +76,7 @@ public class ApplicationModel {
         applicationInfo.put("extra", extra);
         extraVersion = (extraVersion == null ? "" : extraVersion);
         applicationInfo.put("extraVersion", extraVersion);
-        HookHandler.LOGGER.info("detect extra server info: " + extra);
+        HookHandler.LOGGER.info("detect extra server info: " + extra + "/" + extraVersion);
     }
 
     public static synchronized void setStartUpInfo(String startUpInfo) {
@@ -106,7 +106,6 @@ public class ApplicationModel {
         }
         return result;
     }
-
 
     public static boolean getStartUpInfo() {
         String result = applicationInfo.get("StandardStart");

@@ -56,11 +56,6 @@ type RecordCount struct {
 	Count             int64    			`json:"count" bson:"count"`
 }
 
-type RecordCount struct {
-	Id                string            `json:"version" bson:"_id"`
-	Count             int64    			`json:"count" bson:"count"`
-}
-
 const (
 	raspCollectionName = "rasp"
 )
