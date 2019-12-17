@@ -63,7 +63,7 @@ public class JettyBodyResponseHook extends ServerResponseBodyHook {
             try {
                 Object buffer = Reflection.getSuperField(object, "_buffer");
                 if (buffer != null) {
-                    String content = new String(buffer.toString().getBytes(), "utf-8");
+                    String content = buffer.toString();
                     params.put("body", content);
                 }
             } catch (Exception e) {
