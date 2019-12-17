@@ -22,9 +22,9 @@ import com.baidu.openrasp.plugin.checker.local.XssChecker;
 import com.baidu.openrasp.plugin.checker.policy.LogChecker;
 import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
+import com.baidu.openrasp.plugin.checker.policy.V8ResponseChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
 import com.baidu.openrasp.plugin.checker.v8.V8AttackChecker;
-import com.baidu.openrasp.plugin.checker.v8.V8PolicyChecker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -68,7 +68,7 @@ public class CheckParameter {
 
         // 安全基线检测
         POLICY_LOG("log", new LogChecker(false), 1 << 22),
-        POLICY_RESPONSE("response", new V8PolicyChecker(false), 1 << 23),
+        POLICY_RESPONSE("response", new V8ResponseChecker(false), 1 << 23),
         POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(false), 0),
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(false), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
