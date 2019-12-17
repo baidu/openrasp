@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server.weblogic;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
+import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -57,6 +58,10 @@ public class WeblogicResponseBodyHook extends ServerResponseBodyHook {
                 if (buffer != null) {
                     String content = buffer.toString();
                     params.put("body", content);
+                    HttpServletResponse res = HookHandler.responseCache.get();
+                    if (res != null) {
+                        params.put("content-type", res.getContentType());
+                    }
                 }
             } catch (Exception e) {
                 LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +

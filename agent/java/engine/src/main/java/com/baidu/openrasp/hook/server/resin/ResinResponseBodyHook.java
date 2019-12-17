@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server.resin;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
+import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -60,6 +61,10 @@ public class ResinResponseBodyHook extends ServerResponseBodyHook {
                     System.arraycopy(buffer, 0, temp, 0, len);
                     String content = new String(temp);
                     params.put("body", content);
+                    HttpServletResponse res = HookHandler.responseCache.get();
+                    if (res != null) {
+                        params.put("content-type", res.getContentType());
+                    }
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);

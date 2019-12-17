@@ -49,8 +49,7 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
     protected static boolean isCheckSensitive() {
         Config config = Config.getConfig();
         // iast 全量
-        if (config.isIastEnabled() || config.getResponseInterval() <= 0
-                || config.getResponseBurst() <= 0) {
+        if (config.isIastEnabled() || config.getResponseInterval() <= 0 || config.getResponseBurst() <= 0) {
             return true;
         }
         if (sampler == null) {
@@ -61,14 +60,19 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
     }
 
     protected static void checkBody(HashMap<String, Object> params, boolean isCheckXss, boolean isCheckSensitive) {
-        HookHandler.enableCurrThreadHook();
         if (isCheckXss) {
             HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
         }
         if (isCheckSensitive) {
+            // String contentType = (String) params.get("content_type");
+            // if (contentType.contains("text") || contentType.contains("json") ||
+            // contentType.contains("json") || contentType.contains("json") ||
+            // contentType.contains("json")) {
             params.remove("buffer");
+            params.remove("encoding");
+            params.remove("content_length");
             HookHandler.doCheck(CheckParameter.Type.POLICY_RESPONSE, params);
+            // }
         }
-        HookHandler.disableCurrThreadHook();
     }
 }

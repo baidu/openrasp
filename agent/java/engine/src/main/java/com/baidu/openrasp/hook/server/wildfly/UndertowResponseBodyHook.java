@@ -18,6 +18,7 @@ package com.baidu.openrasp.hook.server.wildfly;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
+import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -59,6 +60,10 @@ public class UndertowResponseBodyHook extends ServerResponseBodyHook {
                 try {
                     String content = buffer.toString();
                     params.put("body", content);
+                    HttpServletResponse res = HookHandler.responseCache.get();
+                    if (res != null) {
+                        params.put("content-type", res.getContentType());
+                    }
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);
@@ -78,6 +83,10 @@ public class UndertowResponseBodyHook extends ServerResponseBodyHook {
             if (buffer != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 params.put("body", buffer);
+                HttpServletResponse res = HookHandler.responseCache.get();
+                if (res != null) {
+                    params.put("content-type", res.getContentType());
+                }
                 if (!params.isEmpty()) {
                     checkBody(params, isCheckXss, isCheckSensitive);
                 }
