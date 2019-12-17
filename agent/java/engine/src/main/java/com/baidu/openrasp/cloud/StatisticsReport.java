@@ -70,7 +70,12 @@ public class StatisticsReport extends CloudTimerTask {
 
     @Override
     public void handleError(Throwable t) {
-        LogTool.warn(ErrorType.STATISTICSREPORT_ERROR, t.getMessage(), t);
+        try {
+            LogTool.warn(ErrorType.STATISTICSREPORT_ERROR, t.getMessage(), t);
+        } catch (Throwable e) {
+            System.out.println("OpenRASP timer logger failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 }
