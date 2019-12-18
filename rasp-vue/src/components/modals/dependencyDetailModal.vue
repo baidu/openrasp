@@ -14,6 +14,7 @@
               <tr>
                 <th>主机名</th>
                 <th>网络信息</th>
+                <th>最后上报</th>
                 <th>路径列表</th>
               </tr>
             </thead>
@@ -21,6 +22,7 @@
               <tr v-for="row in data" :key="row.id">
                 <td nowrap>{{ row.hostname }}</td>
                 <td nowrap>{{ row.register_ip }}</td>
+                <td nowrap>{{ moment(row['@timestamp']).format('YYYY-MM-DD HH:mm:ss') }}</td>
                 <td>
                   {{ row.path.join(', ') }}
                 </td>
