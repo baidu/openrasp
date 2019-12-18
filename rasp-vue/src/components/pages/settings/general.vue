@@ -85,6 +85,12 @@
         </div>
         <div class="form-group">
           <label class="form-label">
+            LRU 原始字符串上限 [若开启原始字符串比较，超过上限直接进入插件检测；默认只存储哈希]
+          </label>
+          <input v-model.number="data['lru.compare_limit']" type="number" min="0" class="form-control" placeholder="10240">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
             [基线] 弱口令列表，适用于数据库、Tomcat管理后台等等；上限200个，单个最长16，逗号分隔
           </label>
           <textarea v-model.trim="weak_password_list" type="text" class="form-control" placeholder="111111,123,123123,123456,123456a,a123456,admin,both,manager,mysql,root,rootweblogic,tomcat,user,weblogic1,weblogic123,welcome1" />
@@ -106,12 +112,6 @@
             [基线] [Web根目录敏感文件检查] 最多检测多少个文件，写 0 关闭这个功能
           </label>
           <input v-model.trim="data['fileleak_scan.limit']" type="number" class="form-control" placeholder="100" min="0" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">
-            LRU 原始字符串上限 [若开启原始字符串比较，超过上限直接进入插件检测；默认只存储哈希]
-          </label>
-          <input v-model.number="data['lru.compare_limit']" type="number" min="0" class="form-control" placeholder="10240">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -149,6 +149,12 @@
             [熔断] 单核CPU占用率阈值（百分比），范围 30-100
           </label>
           <input v-model.number="data['cpu.usage.percent']" type="number" min="30" max="100" class="form-control" placeholder="90">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [类库信息] 采集任务间隔（秒），范围 60-86400
+          </label>
+          <input v-model.number="data['dependency_check.interval']" type="number" min="60" max="86400" class="form-control" placeholder="6">        
         </div>
 
         <div class="form-group">
