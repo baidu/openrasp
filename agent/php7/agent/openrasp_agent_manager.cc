@@ -298,6 +298,7 @@ void OpenraspAgentManager::agent_remote_register()
 	json_reader.write_string({"id"}, scm->get_rasp_id());
 	json_reader.write_string({"hostname"}, get_hostname());
 	json_reader.write_string({"language"}, "php");
+	json_reader.write_string({"os"}, PHP_OS);
 	json_reader.write_string({"language_version"}, php_version);
 	json_reader.write_string({"server_type"}, sapi_module.name);
 	json_reader.write_string({"server_version"}, php_version);
