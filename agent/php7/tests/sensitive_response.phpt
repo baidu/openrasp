@@ -25,7 +25,7 @@ display_errors=false
 echo "1234567890";
 flush();
 include(__DIR__.'/timezone.inc');
-passthru('tail -n 1 /tmp/openrasp/logs/policy/policy.log.'.date("Y-m-d"));
+passthru('tail -n 3 /tmp/openrasp/logs/policy/policy.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
 .*sensitive.*

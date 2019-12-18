@@ -36,9 +36,9 @@ std::mutex mtx;
 
 static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionType action TSRMLS_DC);
 static bool _gpc_parameter_filter(const zval *param TSRMLS_DC);
-static const char *get_content_type();
+static const char *get_content_type(TSRMLS_D);
 static int check_xss(const char *content, size_t content_length, const char *content_type TSRMLS_DC);
-static void check_sensitive_content(const char *content, size_t content_length, const char *content_type);
+static void check_sensitive_content(const char *content, size_t content_length, const char *content_type TSRMLS_DC);
 
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
 
@@ -53,8 +53,8 @@ void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
     {
         RETVAL_FALSE;
     }
-    auto content_type = get_content_type();
-    check_sensitice_content(content, content_length, content_type);
+    auto content_type = get_content_type(TSRMLS_C);
+    check_sensitice_content(content, content_length, content_type TSRMLS_CC);
     int status = check_xss(content, content_length, content_type, TSRMLS_CC)
     if (status == SUCCESS)
     {
@@ -79,9 +79,9 @@ static int openrasp_output_handler(void **nothing, php_output_context *output_co
     {
         auto content = output_context->in.data;
         auto content_length = strnlen(output_context->in.data, output_context->in.size);
-        auto content_type = get_content_type();
-        check_sensitive_content(content, content_length, content_type);
-        status = check_xss(content, content_length, content_type);
+        auto content_type = get_content_type(TSRMLS_C);
+        check_sensitive_content(content, content_length, content_type TSRMLS_CC);
+        status = check_xss(content, content_length, content_type TSRMLS_CC);
     }
     return status;
 }
@@ -175,7 +175,7 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
     return status;
 }
 
-static const char *get_content_type()
+static const char *get_content_type(TSRMLS_D)
 {
     for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
     {
@@ -209,12 +209,12 @@ static int check_xss(const char *content, size_t content_length, const char *con
     return status;
 }
 
-static void check_sensitive_content(const char *content, size_t content_length, const char *content_type)
+static void check_sensitive_content(const char *content, size_t content_length, const char *content_type TSRMLS_DC)
 {
     sampler.update(OPENRASP_G(config).response.sampler_interval, OPENRASP_G(config).response.sampler_burst);
     if (sampler.check())
     {
-        data::ResponseObject data(content, content_length, content_type);
+        data::ResponseObject data(OPENRASP_V8_G(isolate), content, content_length, content_type, OPENRASP_CONFIG(plugin.timeout.millis));
         checker::PolicyDetector checker(data);
         checker.run();
     }

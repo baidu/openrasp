@@ -28,18 +28,19 @@ namespace data
 class ResponseObject : public PolicyMaterial
 {
 private:
+    openrasp_v8::Isolate *isolate;
     const char *content;
     size_t length;
     const char *type;
+    int timeout;
 
 public:
-    ResponseObject(const char *content, size_t length, const char *type) : content(content), length(length), type(type) {}
+    ResponseObject(openrasp_v8::Isolate *isolate, const char *content, size_t length, const char *type, int timeout) : isolate(isolate), content(content), length(length), type(type), timeout(timeout) {}
     virtual bool is_valid() const { return true; };
     virtual ulong hash() const { return 0; };
     virtual void fill_json_with_params(JsonReader &j) const {};
     virtual bool policy_check(JsonReader &j) const
     {
-        auto isolate = OPENRASP_V8_G(isolate);
         v8::HandleScope handle_scope(isolate);
         auto context = isolate->GetCurrentContext();
         auto params = v8::Object::New(isolate);
@@ -57,7 +58,7 @@ public:
         {
             request_context = data->request_context.Get(isolate);
         }
-        auto rst = isolate->Check(openrasp_v8::NewV8String(isolate, "response"), params, request_context, OPENRASP_CONFIG(plugin.timeout.millis));
+        auto rst = isolate->Check(openrasp_v8::NewV8String(isolate, "response"), params, request_context, timeout);
         auto len = rst->Length();
         bool ret = false;
         for (int i = 0; i < len; i++)

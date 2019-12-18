@@ -175,7 +175,7 @@ static void check_sensitive_content(const char *content, size_t content_length, 
     sampler.update(OPENRASP_G(config).response.sampler_interval, OPENRASP_G(config).response.sampler_burst);
     if (sampler.check())
     {
-        data::ResponseObject data(content, content_length, content_type);
+        data::ResponseObject data(OPENRASP_V8_G(isolate), content, content_length, content_type, OPENRASP_CONFIG(plugin.timeout.millis));
         checker::PolicyDetector checker(data);
         checker.run();
     }
