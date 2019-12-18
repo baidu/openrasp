@@ -3,7 +3,7 @@
     <div class="container">
       <div class="page-header">
         <h1 class="page-title">
-          依赖库信息
+          类库信息
         </h1>
         <div class="page-options d-flex">
           <!--
