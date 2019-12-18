@@ -20,43 +20,47 @@
 #include "agent/shared_config_manager.h"
 #include "utils/regex.h"
 #include "hook/checker/builtin_detector.h"
+#include "hook/checker/policy_detector.h"
 #include "hook/data/xss_userinput_object.h"
+#include "hook/data/response_object.h"
+#include "openrasp_content_type.h"
+#include "utils/sampler.h"
+#include <mutex>
+
+using namespace openrasp;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp_output_detect)
 
-static void _check_header_content_type_if_html(void *data, void *arg TSRMLS_DC);
+Sampler sampler;
+std::mutex mtx;
+
 static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionType action TSRMLS_DC);
 static bool _gpc_parameter_filter(const zval *param TSRMLS_DC);
-static bool _is_content_type_html(TSRMLS_D);
+static const char *get_content_type();
+static int check_xss(const char *content, size_t content_length, const char *content_type TSRMLS_DC);
+static void check_sensitive_content(const char *content, size_t content_length, const char *content_type);
 
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION <= 3)
 
 void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
 {
     OUTPUT_G(output_detect) = true;
-    char *input;
-    int input_len;
+    char *content;
+    int content_length;
     long mode;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &input, &input_len, &mode) == FAILURE)
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &content, &content_length, &mode) == FAILURE)
     {
         RETVAL_FALSE;
     }
-    if (_is_content_type_html(TSRMLS_C))
+    auto content_type = get_content_type();
+    check_sensitice_content(content, content_length, content_type);
+    int status = check_xss(content, content_length, content_type, TSRMLS_CC)
+    if (status == SUCCESS)
     {
-        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_USER_INPUT);
-        int status = _detect_param_occur_in_html_output(input, action TSRMLS_CC);
-        if (status == SUCCESS)
-        {
-            status = (AC_BLOCK == action) ? SUCCESS : FAILURE;
-        }
-        if (status == SUCCESS)
-        {
-            reset_response(TSRMLS_C);
-            RETVAL_STRING("", 1);
-        }
+        RETVAL_STRING("", 1);
     }
-    RETVAL_STRINGL(input, input_len, 1);
+    RETVAL_STRINGL(content, content_length, 1);
 }
 
 #else
@@ -70,20 +74,14 @@ static int openrasp_output_handler(void **nothing, php_output_context *output_co
     PHP_OUTPUT_TSRMLS(output_context);
     OUTPUT_G(output_detect) = true;
     int status = FAILURE;
-    if (_is_content_type_html(TSRMLS_C) &&
-        (output_context->op & PHP_OUTPUT_HANDLER_START) &&
+    if ((output_context->op & PHP_OUTPUT_HANDLER_START) &&
         (output_context->op & PHP_OUTPUT_HANDLER_FINAL))
     {
-        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_USER_INPUT);
-        status = _detect_param_occur_in_html_output(output_context->in.data, action TSRMLS_CC);
-        if (status == SUCCESS)
-        {
-            status = (AC_BLOCK == action) ? SUCCESS : FAILURE;
-        }
-        if (status == SUCCESS)
-        {
-            reset_response(TSRMLS_C);
-        }
+        auto content = output_context->in.data;
+        auto content_length = strnlen(output_context->in.data, output_context->in.size);
+        auto content_type = get_content_type();
+        check_sensitive_content(content, content_length, content_type);
+        status = check_xss(content, content_length, content_type);
     }
     return status;
 }
@@ -108,25 +106,6 @@ static void openrasp_clean_output_start(const char *name, size_t name_len TSRMLS
 }
 
 #endif
-
-static void _check_header_content_type_if_html(void *data, void *arg TSRMLS_DC)
-{
-    bool *is_html = static_cast<bool *>(arg);
-    if (*is_html)
-    {
-        sapi_header_struct *sapi_header = (sapi_header_struct *)data;
-        static const char *suffix = "Content-type";
-        char *header = (char *)(sapi_header->header);
-        size_t header_len = strlen(header);
-        size_t suffix_len = strlen(suffix);
-        if (header_len > suffix_len &&
-            strncmp(suffix, header, suffix_len) == 0 &&
-            NULL == strstr(header, "text/html"))
-        {
-            *is_html = false;
-        }
-    }
-}
 
 static bool _gpc_parameter_filter(const zval *param TSRMLS_DC)
 {
@@ -196,11 +175,49 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
     return status;
 }
 
-static bool _is_content_type_html(TSRMLS_D)
+static const char *get_content_type()
 {
-    bool is_html = true;
-    zend_llist_apply_with_argument(&SG(sapi_headers).headers, _check_header_content_type_if_html, &is_html TSRMLS_CC);
-    return is_html;
+    for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
+    {
+        sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
+        if (sapi_header->header_len > sizeof("content-type:") - 1 &&
+            strncasecmp(sapi_header->header, "content-type:", sizeof("content-type:") - 1) == 0)
+        {
+            return sapi_header->header + sizeof("content-type:") - 1;
+        }
+    }
+    return "";
+}
+
+static int check_xss(const char *content, size_t content_length, const char *content_type TSRMLS_DC)
+{
+    int status = FAILURE;
+    auto type = OpenRASPContentType::classify_content_type(content_type);
+    if (OpenRASPContentType::cTextHtml == type || OpenRASPContentType::cNull == type)
+    {
+        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(XSS_USER_INPUT);
+        status = _detect_param_occur_in_html_output(content, action TSRMLS_CC);
+        if (status == SUCCESS)
+        {
+            status = (AC_BLOCK == action) ? SUCCESS : FAILURE;
+        }
+        if (status == SUCCESS)
+        {
+            reset_response(TSRMLS_C);
+        }
+    }
+    return status;
+}
+
+static void check_sensitive_content(const char *content, size_t content_length, const char *content_type)
+{
+    sampler.update(OPENRASP_G(config).response.sampler_interval, OPENRASP_G(config).response.sampler_burst);
+    if (sampler.check())
+    {
+        data::ResponseObject data(content, content_length, content_type);
+        checker::PolicyDetector checker(data);
+        checker.run();
+    }
 }
 
 PHP_GINIT_FUNCTION(openrasp_output_detect)

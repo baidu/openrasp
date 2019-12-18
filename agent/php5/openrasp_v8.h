@@ -28,7 +28,7 @@ class openrasp_v8_process_globals
 public:
   Snapshot *snapshot_blob = nullptr;
   std::mutex mtx;
-  std::string plugin_config = "global.checkPoints=['command','directory','fileUpload','readFile','request','requestEnd','sql','sql_exception','writeFile','xxe','ognl','deserialization','reflection','webdav','ssrf','include','eval','copy','rename','loadLibrary','ssrfRedirect','deleteFile','mongodb'];";
+  std::string plugin_config = "global.checkPoints=['command','directory','fileUpload','readFile','request','requestEnd','sql','sql_exception','writeFile','xxe','ognl','deserialization','reflection','webdav','ssrf','include','eval','copy','rename','loadLibrary','ssrfRedirect','deleteFile','mongodb','response'];";
   std::vector<PluginFile> plugin_src_list;
   std::once_flag init_v8_once;
 };

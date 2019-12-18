@@ -35,6 +35,7 @@ bool ConfigHolder::update(BaseReader *reader)
   clientip.update(reader);
   lru.update(reader);
   decompile.update(reader);
+  response.update(reader);
   return true;
 }
 

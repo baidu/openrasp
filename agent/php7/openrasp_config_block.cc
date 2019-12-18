@@ -110,4 +110,10 @@ void DecompileBlock::update(BaseReader *reader)
   enable = reader->fetch_bool({"decompile.enable"}, false);
 };
 
+void ResponseBlock::update(BaseReader *reader)
+{
+  sampler_interval = reader->fetch_int64({"response.sampler_interval"}, 600);
+  sampler_burst = reader->fetch_int64({"response.sampler_burst"}, 6);
+};
+
 } // namespace openrasp
