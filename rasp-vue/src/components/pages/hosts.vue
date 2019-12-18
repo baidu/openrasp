@@ -226,13 +226,20 @@ export default {
   methods: {
     ceil: Math.ceil,
     enumAgentVersion() {
-      this.request.post('v1/api/rasp/search/version', {
-        data: {
-          app_id: this.current_app.id
-        },
-        page: 1,
-        perpage: 100
-      }).then(res => {
+      const body = {
+          data: {
+              app_id: this.current_app.id
+          },
+          page: 1,
+          perpage: 10
+      }
+
+      if (this.filter.online && !this.filter.offline) {
+          body.data.online = true
+      } else if (!this.filter.online && this.filter.offline) {
+          body.data.online = false
+      }
+      this.request.post('v1/api/rasp/search/version', body).then(res => {
         this.agent_versions = res.data
       })
     },

@@ -90,6 +90,7 @@ public class Register {
         params.put("id", CloudCacheModel.getInstance().getRaspId());
         params.put("version", BuildRASPModel.getRaspVersion());
         params.put("hostname", OSUtil.getHostName());
+        params.put("os", OSUtil.getOs());
         params.put("language", "java");
         params.put("language_version", System.getProperty("java.version"));
         params.put("server_type", ApplicationModel.getServerName());
