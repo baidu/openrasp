@@ -73,9 +73,9 @@ public class CatalinaResponseBodyHook extends ServerResponseBodyHook {
                     params.put("encoding", enc);
                     params.put("content_type", contentType);
                     if (trunk instanceof ByteBuffer) {
-                        params.put("body", getContentFromByteBuffer((ByteBuffer) trunk, enc));
+                        params.put("content", getContentFromByteBuffer((ByteBuffer) trunk, enc));
                     } else {
-                        params.put("body", getContentFromByteTrunk(trunk, enc));
+                        params.put("content", getContentFromByteTrunk(trunk, enc));
                     }
                     // 该处检测添加到 try catch 来捕捉拦截异常，XSS 检测不应该使用异常拦截，容易造成死循环
                     checkBody(params, isCheckXss, isCheckSensitive);

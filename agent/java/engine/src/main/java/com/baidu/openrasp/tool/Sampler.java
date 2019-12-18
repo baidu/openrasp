@@ -27,12 +27,31 @@ public class Sampler {
     private int interval;
     private int burst;
 
-    public Sampler(int _interval, int _burst) {
-        interval = _interval * 1000;
-        burst = _burst;
+    public Sampler() {
+        update(0, 0);
+    }
+
+    public Sampler(int interval, int burst) {
+        update(interval, burst);
+    }
+
+    public void update(int interval, int burst) {
+        if (this.interval != interval || this.burst != burst) {
+            lock.lock();
+            if (this.interval != interval || this.burst != burst) {
+                this.interval = interval;
+                this.burst = burst;
+                this.nextClearTime = 0;
+                this.count = 0;
+            }
+            lock.unlock();
+        }
     }
 
     public boolean check() {
+        if (interval == 0 || burst == 0) {
+            return false;
+        }
         long time = System.currentTimeMillis();
         if (time >= nextClearTime) {
             lock.lock();

@@ -60,7 +60,7 @@ public class ResinResponseBodyHook extends ServerResponseBodyHook {
                     char[] temp = new char[len];
                     System.arraycopy(buffer, 0, temp, 0, len);
                     String content = new String(temp);
-                    params.put("body", content);
+                    params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
                         params.put("content-type", res.getContentType());

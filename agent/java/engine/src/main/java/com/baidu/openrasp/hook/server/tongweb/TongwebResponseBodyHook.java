@@ -46,7 +46,7 @@ public class TongwebResponseBodyHook extends ServerResponseBodyHook {
                     byte[] temp = new byte[cnt + 1];
                     System.arraycopy(buf, off, temp, 0, cnt);
                     String content = new String(temp);
-                    params.put("body", content);
+                    params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
                         params.put("content-type", res.getContentType());
