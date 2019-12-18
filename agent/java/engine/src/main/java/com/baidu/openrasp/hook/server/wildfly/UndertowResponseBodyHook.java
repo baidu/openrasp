@@ -59,7 +59,7 @@ public class UndertowResponseBodyHook extends ServerResponseBodyHook {
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 try {
                     String content = buffer.toString();
-                    params.put("body", content);
+                    params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
                         params.put("content-type", res.getContentType());
@@ -82,7 +82,7 @@ public class UndertowResponseBodyHook extends ServerResponseBodyHook {
             HookHandler.disableBodyXssHook();
             if (buffer != null) {
                 HashMap<String, Object> params = new HashMap<String, Object>();
-                params.put("body", buffer);
+                params.put("content", buffer);
                 HttpServletResponse res = HookHandler.responseCache.get();
                 if (res != null) {
                     params.put("content-type", res.getContentType());

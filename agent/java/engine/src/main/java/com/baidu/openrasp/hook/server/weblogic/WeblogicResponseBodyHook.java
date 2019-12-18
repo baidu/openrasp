@@ -57,7 +57,7 @@ public class WeblogicResponseBodyHook extends ServerResponseBodyHook {
             try {
                 if (buffer != null) {
                     String content = buffer.toString();
-                    params.put("body", content);
+                    params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
                         params.put("content-type", res.getContentType());

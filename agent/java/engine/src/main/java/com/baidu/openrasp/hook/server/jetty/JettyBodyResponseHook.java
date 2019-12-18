@@ -65,7 +65,7 @@ public class JettyBodyResponseHook extends ServerResponseBodyHook {
                 Object buffer = Reflection.getSuperField(object, "_buffer");
                 if (buffer != null) {
                     String content = buffer.toString();
-                    params.put("body", content);
+                    params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
                         params.put("content-type", res.getContentType());
@@ -92,7 +92,7 @@ public class JettyBodyResponseHook extends ServerResponseBodyHook {
                     char[] temp = new char[length];
                     System.arraycopy(buffer, offset, temp, 0, length);
                     String content = new String(temp);
-                    params.put("body", content);
+                    params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
                         params.put("content-type", res.getContentType());

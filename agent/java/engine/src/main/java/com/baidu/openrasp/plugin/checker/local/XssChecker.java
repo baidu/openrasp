@@ -45,7 +45,7 @@ public class XssChecker extends ConfigurableChecker {
         JsonObject config = Config.getConfig().getAlgorithmConfig();
         String action = getActionElement(config, CONFIG_KEY_XSS_USER_INPUT);
         LinkedList<EventInfo> result = new LinkedList<EventInfo>();
-        String content = String.valueOf(checkParameter.getParam("body"));
+        String content = String.valueOf(checkParameter.getParam("content"));
         if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
             if (HookHandler.requestCache.get() != null && content != null) {
                 Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
@@ -77,7 +77,7 @@ public class XssChecker extends ConfigurableChecker {
                                     }
                                     String message = "Reflected XSS attack detected, parameter name: " + entry.getKey();
                                     Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
-                                    params.remove("body");
+                                    params.remove("content");
                                     params.put("name", entry.getKey());
                                     params.put("value", value);
                                     result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));

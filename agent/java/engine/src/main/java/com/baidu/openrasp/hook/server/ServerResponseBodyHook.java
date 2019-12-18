@@ -31,7 +31,7 @@ import com.baidu.openrasp.tool.Sampler;
  * @date 2018/8/15 15:37
  */
 public abstract class ServerResponseBodyHook extends AbstractClassHook {
-    private static Sampler sampler = null;
+    private static Sampler sampler = new Sampler();
 
     @Override
     public String getType() {
@@ -52,9 +52,7 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
         if (config.isIastEnabled() || config.getResponseInterval() <= 0 || config.getResponseBurst() <= 0) {
             return true;
         }
-        if (sampler == null) {
-            sampler = new Sampler(config.getResponseInterval(), config.getResponseBurst());
-        }
+        sampler.update(config.getResponseInterval(), config.getResponseBurst());
         // 限速检测
         return sampler.check();
     }

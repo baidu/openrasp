@@ -2626,9 +2626,9 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
     plugin.register('response', function (params, context) {
         var items = []
 
-        const id_card   = checkChineseId(params.body)
-        const phone     = checkChinesePhone(params.body)
-        const bank_card = checkBankCard(params.body)
+        const id_card   = checkChineseId(params.content)
+        const phone     = checkChinesePhone(params.content)
+        const bank_card = checkBankCard(params.content)
 
         if (id_card) {
             items.push(id_card + '(身份证)')
