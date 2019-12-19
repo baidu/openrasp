@@ -2689,9 +2689,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
                 confidence: 80,
                 algorithm:  'response_dataLeak',
                 params: {
-                    parts,
-                    url:     context.url,
-                    referer: header['referer']
+                    parts
                 }
             }
         }

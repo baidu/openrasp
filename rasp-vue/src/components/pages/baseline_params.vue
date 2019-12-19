@@ -186,33 +186,7 @@
                 当存在SQL注入漏洞，使用高权限账号连接数据库会带来更大风险，泄露更多的数据。
                 <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3004" target="_blank">点击这里</a>了解更多。
             </p>
-        </div>
-
-        <div v-if="data.policy_id == '3009'">
-            <div class="h6">
-                问题描述
-            </div>
-            <div>
-                <p>页面存在没有打码的敏感信息，每种类型的信息只展示一条，详情如下:</p>
-
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>类型</th>
-                            <th>内容</th>
-                            <th>原始内容（片段）</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(row, index) in data.policy_params.parts" :key="index">
-                            <td>{{ row.type }}</td>
-                            <td>{{ row.match }}</td>
-                            <td>{{ row.parts }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>            
-        </div>  
+        </div>        
 
         <!-- 4000 - 4999 PHP 相关 -->
         <div v-if="data.policy_id == '4001'">
