@@ -193,7 +193,7 @@
                 问题描述
             </div>
             <p>
-                Web 根目录下存在压缩包文件（e.g wwwroot.rar），若这些文件被外界下载，可能造成源代码、网站备份泄露，加大网站被入侵的风险。
+                Web 根目录下存在压缩包或者其他敏感文件。若被外界下载，可能造成源代码、网站备份泄露，加大网站被入侵的风险。
                 <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3009" target="_blank">点击这里</a>了解更多。
             </p>
 
