@@ -192,14 +192,26 @@
             <div class="h6">
                 问题描述
             </div>
-            <p>
-                页面存在没有打码的敏感信息，如身份证、信用卡、手机号:
+            <div>
+                <p>页面存在没有打码的敏感信息，每种类型的信息只展示一条，详情如下:</p>
 
-                <div v-for="(row, index) in data.parts" :key="index">
-                    {{ row.type }} {{ row.match }} <br/>
-                    {{ row.parts }}
-                </div>
-            </p>            
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>内容</th>
+                            <th>原始内容（片段）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, index) in data.policy_params.parts" :key="index">
+                            <td>{{ row.type }}</td>
+                            <td>{{ row.match }}</td>
+                            <td>{{ row.parts }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>            
         </div>  
 
         <!-- 4000 - 4999 PHP 相关 -->

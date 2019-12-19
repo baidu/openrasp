@@ -1,4 +1,4 @@
-const plugin_version = '2019-1219-1300'
+const plugin_version = '2019-1219-1730'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2587,6 +2587,7 @@ function findFirstIdentityCard(data) {
         }
         if (sum % 11 == 1) {
             return {
+                type:  '身份证',
                 match: m[0],
                 parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
             }
@@ -2605,6 +2606,7 @@ function findFirstMobileNumber(data) {
     if (m) {
         if (prefixs.has(parseInt(m[1]))) {
             return {
+                type:  '手机号',
                 match: m[0],
                 parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
             }
@@ -2629,6 +2631,7 @@ function findFirstBankCard(data) {
         }
         if (sum % 10 == 0) {
             return {
+                type:  '银行卡',
                 match: m[0],
                 parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
             }
@@ -2643,6 +2646,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         const content_type = params.content_type
         const content      = params.content
         const kind         = algorithmConfig.response_dataLeak.kind
+
         var items = [], parts = []
 
         // content-type 过滤
@@ -2654,8 +2658,8 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         if (kind.identity_card) {
             const data = findFirstIdentityCard(content)
             if (data) {
-                items.push(id_card.match + '(身份证)')
-                parts.push(id_card)
+                items.push(data.match + '(身份证)')
+                parts.push(data)
             }
         }
 
@@ -2663,8 +2667,8 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         if (kind.phone) {
             const data = findFirstMobileNumber(content)
             if (data) {
-                items.push(phone.match + '(手机号)')
-                parts.push(phone)
+                items.push(data.match + '(手机号)')
+                parts.push(data)
             }
         }
 
@@ -2672,15 +2676,15 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         if (kind.bank_card) {
             const data = findFirstBankCard(content)
             if (data) {
-                items.push(phone.match + '(银行卡)')
-                parts.push(bank_card)
+                items.push(data.match + '(银行卡)')
+                parts.push(data)
             }
         }
 
         if (items.length) {
             return {
                 action:        algorithmConfig.response_dataLeak.action,
-                message:       '检测到敏感数据泄露: ' + items.join('; '),
+                message:       '检测到敏感数据泄露: ' + items.join('、 '),
                 confidence:    80,
                 algorithm:     'response_dataLeak',
                 policy_params: {
