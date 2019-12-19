@@ -186,7 +186,33 @@
                 当存在SQL注入漏洞，使用高权限账号连接数据库会带来更大风险，泄露更多的数据。
                 <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3004" target="_blank">点击这里</a>了解更多。
             </p>
-        </div>        
+        </div>
+
+        <div v-if="data.policy_id == '3009'">
+            <div class="h6">
+                问题描述
+            </div>
+            <p>
+                Web 根目录下存在压缩包或者其他敏感文件。若被外界下载，可能造成源代码、网站备份泄露，加大网站被入侵的风险。
+                <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3009" target="_blank">点击这里</a>了解更多。
+            </p>
+
+            <div class="h6">
+                Web 根目录
+            </div>
+            <p>
+                {{ data.policy_params.webroot }}
+            </p>
+
+            <div class="h6">
+                敏感文件列表
+            </div>
+            <ul>
+                <li v-for="(file, index) in data.policy_params.files" :key="index">
+                    {{ file }}
+                </li>
+            </ul>
+        </div>
 
         <!-- 4000 - 4999 PHP 相关 -->
         <div v-if="data.policy_id == '4001'">

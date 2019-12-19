@@ -61,8 +61,6 @@ func SendMessage(topic string, key string, val map[string]interface{}) error {
 		} else {
 			beego.Info("send ok!")
 		}
-	} else {
-		beego.Info("asldfjalkjfalksdjf")
 	}
 	return nil
 }
