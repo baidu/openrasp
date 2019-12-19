@@ -2589,7 +2589,7 @@ function findFirstIdentityCard(data) {
             return {
                 type:  '身份证',
                 match: m[0],
-                parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
             }
         }
     }
@@ -2608,7 +2608,7 @@ function findFirstMobileNumber(data) {
             return {
                 type:  '手机号',
                 match: m[0],
-                parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
             }
         }
     }
@@ -2633,7 +2633,7 @@ function findFirstBankCard(data) {
             return {
                 type:  '银行卡',
                 match: m[0],
-                parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
             }
         }
     }
@@ -2646,6 +2646,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         const content_type = params.content_type
         const content      = params.content
         const kind         = algorithmConfig.response_dataLeak.kind
+        const header       = context.header || {}
 
         var items = [], parts = []
 
@@ -2683,12 +2684,14 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
         if (items.length) {
             return {
-                action:        algorithmConfig.response_dataLeak.action,
-                message:       '检测到敏感数据泄露: ' + items.join('、 '),
-                confidence:    80,
-                algorithm:     'response_dataLeak',
-                policy_params: {
-                    parts
+                action:     algorithmConfig.response_dataLeak.action,
+                message:    '检测到敏感数据泄露: ' + items.join('、 '),
+                confidence: 80,
+                algorithm:  'response_dataLeak',
+                params: {
+                    parts,
+                    url:     context.url,
+                    referer: header['referer']
                 }
             }
         }
