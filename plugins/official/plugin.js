@@ -2671,7 +2671,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
         if (items.length) {
             return {
-                action:        'log',
+                action:        algorithmConfig.response_dataLeak.action,
                 message:       '检测到敏感数据泄露: ' + items.join('; '),
                 confidence:    80,
                 algorithm:     'response_dataLeak',
