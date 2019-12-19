@@ -346,12 +346,18 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 				if err != nil {
 					return 0, nil, err
 				}
-				if typeIndex == "attack"{
+				if typeIndex == "attack" {
 					requestId := result[index]["request_id"].(string)
 					stackMd5 := result[index]["stack_md5"].(string)
 					attackType := result[index]["attack_type"].(string)
 					filterId := requestId + stackMd5 + attackType
 					result[index]["filter_id"] = filterId
+				} else if typeIndex == "policy" {
+					policy_id := result[index]["policy_id"].(string)
+					url := result[index]["url"].(string)
+					if policy_id == "3009" {
+						result[index]["filter_id"] = url
+					}
 				}
 				es.HandleSearchResult(result[index], item.Id)
 			}

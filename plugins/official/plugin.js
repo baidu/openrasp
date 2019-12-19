@@ -172,6 +172,26 @@ var algorithmConfig = {
                 "ORA-01756", // quoted string not properly terminated
                 "ORA-01740", // missing double quote in identifier
                 "ORA-00920", // invalid relational operator
+                "ORA-00907", // missing right parenthesis
+                "ORA-00911", // invalid character
+            ]
+        },
+        hsql: {
+            error_code: [
+                -5583, // malformed quoted identifier
+                -5584, // malformed string
+                -5590, // unexpected end of statement
+            ],
+            error_state: [
+                "42583", // malformed quoted identifier
+                "42584", // malformed string
+                "42590", // unexpected end of statement
+            ]
+        },
+        mssql: {
+            error_code: [
+                105, // Unclosed quotation mark after the character string '%.*ls'.
+                245, // Conversion failed when converting the %ls value '%.*ls' to data type %ls.
             ]
         }
     },
