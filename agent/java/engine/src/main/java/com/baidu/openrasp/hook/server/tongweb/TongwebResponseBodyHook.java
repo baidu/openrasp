@@ -5,6 +5,7 @@ package com.baidu.openrasp.hook.server.tongweb;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
+import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -45,8 +46,11 @@ public class TongwebResponseBodyHook extends ServerResponseBodyHook {
                     byte[] temp = new byte[cnt + 1];
                     System.arraycopy(buf, off, temp, 0, cnt);
                     String content = new String(temp);
-                    params.put("body", content);
-
+                    params.put("content", content);
+                    HttpServletResponse res = HookHandler.responseCache.get();
+                    if (res != null) {
+                        params.put("content-type", res.getContentType());
+                    }
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);

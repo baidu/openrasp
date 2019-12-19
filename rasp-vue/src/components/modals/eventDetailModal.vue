@@ -104,7 +104,7 @@
                 </div>
                 <pre>{{mergeHeaders(data.header)}}</pre>
 
-                <div v-if="data.parameter && data.parameter.multipart != '{}'">
+                <div v-if="data.parameter && data.parameter.multipart != '[]' && data.parameter.multipart != '{}'">
                   <div class="h6">
                     Multipart 文件参数
                   </div>
@@ -200,6 +200,7 @@ export default {
       tabs: ['漏洞详情', '请求信息', '资产信息', '修复建议'],
       data: {
         url: '',
+        stack_md5: '',
         attack_location: {},
         source_code: [],
         stack_trace: '',

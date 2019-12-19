@@ -36,7 +36,8 @@ public class SecurityPolicyInfo extends EventInfo {
         DIRECTORY_LISTING(3005),
         SQL_CONNECTION(3006),
         JBOSS_JMX_CONSOLE(3007),
-        SENSITIVE_LOG(3008);
+        SENSITIVE_LOG(3008),
+        SENSITIVE_OUTOUT(3009);
 
 
         private int id;

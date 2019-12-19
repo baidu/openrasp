@@ -186,7 +186,7 @@
                 当存在SQL注入漏洞，使用高权限账号连接数据库会带来更大风险，泄露更多的数据。
                 <a href="https://rasp.baidu.com/doc/usage/security_policy.html#3004" target="_blank">点击这里</a>了解更多。
             </p>
-        </div>
+        </div>        
 
         <!-- 4000 - 4999 PHP 相关 -->
         <div v-if="data.policy_id == '4001'">

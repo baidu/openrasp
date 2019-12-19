@@ -25,7 +25,7 @@ BaseAgent::BaseAgent(std::string name)
 	this->name = name;
 }
 
-void BaseAgent::install_signal_handler(sighandler_t signal_handler)
+void BaseAgent::install_sigterm_handler(sighandler_t signal_handler)
 {
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;

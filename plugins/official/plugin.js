@@ -1,4 +1,4 @@
-const plugin_version = '2019-1203-1800'
+const plugin_version = '2019-1219-1730'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -542,10 +542,25 @@ var algorithmConfig = {
         action: 'block'
     },
 
-    loadLibrary_other: {
-        name:   '算法2 - 记录或者拦截所有类库加载',
-        action: 'ignore'
-    }    
+    // loadLibrary_other: {
+    //     name:   '算法2 - 记录或者拦截所有类库加载',
+    //     action: 'ignore'
+    // },
+
+    response_dataLeak: {
+        name:   '算法1 - 检查响应里是否有身份证等敏感信息',
+        action: 'log',
+
+        // 检查类型
+        kind: {
+            phone:         true,
+            identity_card: true,
+            bank_card:     true
+        },
+
+        // Content-Type 过滤
+        content_type: 'html|json|xml'
+    }
 }
 
 // END ALGORITHM CONFIG //
@@ -638,6 +653,9 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
+
+// 敏感信息泄露 - Content Type 正则
+var dataLeakContentType = new RegExp(algorithmConfig.response_dataLeak.content_type, 'i')
 
 if (! RASP.is_unittest)
 {
@@ -2486,15 +2504,14 @@ plugin.register('loadLibrary', function(params, context) {
         
     }
 
-    if (algorithmConfig.loadLibrary_other.action != 'ignore') {
-        return {
-            action:     algorithmConfig.loadLibrary_other.action,
-            confidence: 60,
-            message:    _("Load library - logging all by default, library path is %1%", [params.path]),
-            algorithm:  'loadLibrary_other'
-        }     
-    }
-
+    // if (algorithmConfig.loadLibrary_other.action != 'ignore') {
+    //     return {
+    //         action:     algorithmConfig.loadLibrary_other.action,
+    //         confidence: 60,
+    //         message:    _("Load library - logging all by default, library path is %1%", [params.path]),
+    //         algorithm:  'loadLibrary_other'
+    //     }     
+    // }
 
     return clean
 })
@@ -2569,6 +2586,135 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
         }
         return clean
     })
+}
+
+
+// 匹配身份证
+function findFirstIdentityCard(data) {
+    const regexChineseId = /(?<!\d)\d{10}(?:[01]\d)(?:[0123]\d)\d{3}(?:\d|x|X)(?!\d)/;
+    const W = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+    const m = regexChineseId.exec(data)
+    if (m) {
+        const id = m[0]
+        let sum = 0;
+        for (let i = 0; i < W.length; i++) {
+            sum += (id[i] - '0') * W[i];
+        }
+        if (id[17] == 'X' || id[17] == 'x') {
+            sum += 10;
+        } else {
+            sum += id[17] - '0';
+        }
+        if (sum % 11 == 1) {
+            return {
+                type:  '身份证',
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
+            }
+        }
+    }
+}
+
+// 匹配手机号
+function findFirstMobileNumber(data) {
+    const regexChinesePhone = /(?<!\d)(?:(?:00|\+)?86 ?)?(1\d{2})(?:[ -]?\d){8}(?!\d)/;
+    const prefixs = new Set([133, 149, 153, 173, 174, 177, 180,
+        181, 189, 199, 130, 131, 132, 145, 146, 155, 156, 166, 175, 176, 185, 186, 134, 135, 136, 137, 138, 139,
+        147, 148, 150, 151, 152, 157, 158, 159, 165, 178, 182, 183, 184, 187, 188, 198, 170
+    ]);
+    let m = regexChinesePhone.exec(data)
+    if (m) {
+        if (prefixs.has(parseInt(m[1]))) {
+            return {
+                type:  '手机号',
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
+            }
+        }
+    }
+}
+
+// 匹配银行卡、信用卡
+function findFirstBankCard(data) {
+    const regexBankCard = /(?<!\d)(?:62|3|5[1-5]|4\d)\d{2}(?:[ -]?\d{4}){3}(?!\d)/;
+    let m = regexBankCard.exec(data)
+    if (m) {
+        let card = m[0].replace(/ |-/g, "");
+        let len = card.length;
+        let sum = 0;
+        for (let i = len; i >= 1; i--) {
+            let t = card[len - i] - '0';
+            if (i % 2 == 0) {
+                t *= 2;
+            }
+            sum = sum + Math.floor(t / 10) + t % 10;
+        }
+        if (sum % 10 == 0) {
+            return {
+                type:  '银行卡',
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
+            }
+        }
+    }
+}
+
+if (algorithmConfig.response_dataLeak.action != 'ignore') {
+
+    // response 所有检测点都会抽样
+    plugin.register('response', function (params, context) {
+        const content_type = params.content_type
+        const content      = params.content
+        const kind         = algorithmConfig.response_dataLeak.kind
+        const header       = context.header || {}
+
+        var items = [], parts = []
+
+        // content-type 过滤
+        if (! dataLeakContentType.test(content_type)) {
+            return clean
+        }
+
+        // 是否检查身份证泄露
+        if (kind.identity_card) {
+            const data = findFirstIdentityCard(content)
+            if (data) {
+                items.push(data.match + '(身份证)')
+                parts.push(data)
+            }
+        }
+
+        // 是否检查手机号泄露
+        if (kind.phone) {
+            const data = findFirstMobileNumber(content)
+            if (data) {
+                items.push(data.match + '(手机号)')
+                parts.push(data)
+            }
+        }
+
+        // 是否检查银行卡泄露
+        if (kind.bank_card) {
+            const data = findFirstBankCard(content)
+            if (data) {
+                items.push(data.match + '(银行卡)')
+                parts.push(data)
+            }
+        }
+
+        if (items.length) {
+            return {
+                action:     algorithmConfig.response_dataLeak.action,
+                message:    '检测到敏感数据泄露: ' + items.join('、 '),
+                confidence: 80,
+                algorithm:  'response_dataLeak',
+                params: {
+                    parts
+                }
+            }
+        }
+    })
+
 }
 
 plugin.log('OpenRASP official plugin: Initialized, version', plugin_version)

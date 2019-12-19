@@ -76,7 +76,12 @@ public class KeepAlive extends CloudTimerTask {
 
     @Override
     public void handleError(Throwable t) {
-        LogTool.warn(ErrorType.HEARTBEAT_ERROR, t.getMessage(), t);
+        try {
+            LogTool.warn(ErrorType.HEARTBEAT_ERROR, t.getMessage(), t);
+        } catch (Throwable e) {
+            System.out.println("OpenRASP timer logger failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public static Map<String, Object> generateParameters() {

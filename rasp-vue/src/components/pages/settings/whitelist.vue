@@ -42,7 +42,7 @@
 
     <b-modal id="whitelistEditModal" ref="modal" no-fade title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()" @shown="$refs.focus.focus()">
       <div class="form-group">
-        <label>URL - 不区分 http/https，格式如 <span class="text-danger">rasp.baidu.com/phpmyadmin/</span></label>
+        <label>URL - 不区分 http/https，格式如 <span class="text-danger">rasp.baidu.com/phpmyadmin/</span>；若要匹配全部URL，请写 <strong>*</strong></label>
         <input ref="focus" v-model.trim="modalData.url" maxlength="200" type="text" class="form-control" maxlen="200">
       </div>
       <div class="form-group">

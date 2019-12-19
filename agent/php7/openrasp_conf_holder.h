@@ -51,6 +51,7 @@ public:
   ClientipBlock clientip;
   LruBlock lru;
   DecompileBlock decompile;
+  ResponseBlock response;
 
 private:
   long latestUpdateTime = 0;

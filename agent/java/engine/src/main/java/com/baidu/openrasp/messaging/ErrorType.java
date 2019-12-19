@@ -29,9 +29,9 @@ public enum ErrorType {
     HTTPAPPENDER_ERROR(20011, "Cloud Control Log Upload Failed"),
     DETECT_SERVER_ERROR(20012, "Detect Server Error"),
     REFLECTION_ERROR(20013, "Reflex Failed"),
-    DEPENDENCY_ERROR(20014,"Find Dependency Information Failed"),
-    DEPENDENCY_REPORT_ERROR(20015,"Dependency Report Failed"),
-    CPU_ERROR(20014, "Count Cpu Usage Failed");
+    CPU_ERROR(20014, "Count Cpu Usage Failed"),
+    DEPENDENCY_ERROR(20015, "Find Dependency Information Failed"),
+    DEPENDENCY_REPORT_ERROR(20016, "Dependency Report Failed");
     private int code;
     private String message;
 

@@ -19,6 +19,7 @@ package com.baidu.openrasp.hook.server.jetty;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.server.ServerResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.model.ApplicationModel;
@@ -63,8 +64,12 @@ public class JettyBodyResponseHook extends ServerResponseBodyHook {
             try {
                 Object buffer = Reflection.getSuperField(object, "_buffer");
                 if (buffer != null) {
-                    String content = new String(buffer.toString().getBytes(), "utf-8");
-                    params.put("body", content);
+                    String content = buffer.toString();
+                    params.put("content", content);
+                    HttpServletResponse res = HookHandler.responseCache.get();
+                    if (res != null) {
+                        params.put("content-type", res.getContentType());
+                    }
                 }
             } catch (Exception e) {
                 LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
@@ -87,7 +92,11 @@ public class JettyBodyResponseHook extends ServerResponseBodyHook {
                     char[] temp = new char[length];
                     System.arraycopy(buffer, offset, temp, 0, length);
                     String content = new String(temp);
-                    params.put("body", content);
+                    params.put("content", content);
+                    HttpServletResponse res = HookHandler.responseCache.get();
+                    if (res != null) {
+                        params.put("content-type", res.getContentType());
+                    }
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
                             e.getMessage(), e);

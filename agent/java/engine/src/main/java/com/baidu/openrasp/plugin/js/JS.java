@@ -51,7 +51,7 @@ public class JS {
     public static final Logger LOGGER = Logger.getLogger(JS.class.getPackage().getName());
     public static Integer watchId = null;
 
-    private static String pluginConfig = "global.checkPoints=['command','directory','fileUpload','readFile','request','requestEnd','sql','sql_exception','writeFile','xxe','ognl','deserialization','reflection','webdav','ssrf','include','eval','copy','rename','loadLibrary','ssrfRedirect','deleteFile','mongodb'];";
+    private static String pluginConfig = "global.checkPoints=['command','directory','fileUpload','readFile','request','requestEnd','sql','sql_exception','writeFile','xxe','ognl','deserialization','reflection','webdav','ssrf','include','eval','copy','rename','loadLibrary','ssrfRedirect','deleteFile','mongodb','response'];";
 
     static {
         Base64Support.enable();
@@ -59,7 +59,6 @@ public class JS {
 
     public synchronized static boolean Initialize() {
         try {
-            V8.Load();
             if (!V8.Initialize()) {
                 throw new Exception("[OpenRASP] Failed to initialize V8 worker threads");
             }
@@ -125,7 +124,7 @@ public class JS {
         byte[] results = null;
         try {
             results = V8.Check(type.getName(), params.getByteArray(), params.size(),
-                    new Context(checkParameter.getRequest()), type == Type.REQUEST, (int) Config.getConfig().getPluginTimeout());
+                    new Context(checkParameter.getRequest()), (int) Config.getConfig().getPluginTimeout());
         } catch (Exception e) {
             LogTool.error(ErrorType.PLUGIN_ERROR, e.getMessage(), e);
             return null;

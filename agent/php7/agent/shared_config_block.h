@@ -209,7 +209,7 @@ private:
   long config_update_time = 0;
   long log_max_backup = 0;
   long debug_level = 0;
-  OpenRASPActionType actions[ALL_TYPE] = {AC_LOG};
+  OpenRASPActionType actions[ALL_TYPE] = {AC_IGNORE};
 
   size_t white_array_size;
   openrasp::DoubleArrayTrie::unit_t check_type_white_array[white_array_max_size + 1];

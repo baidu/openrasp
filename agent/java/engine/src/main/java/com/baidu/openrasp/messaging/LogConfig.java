@@ -42,6 +42,7 @@ public class LogConfig {
      * 管理syslog
      */
     public static void syslogManager() {
+        DynamicConfigAppender.removeSyslogAppender();
         if (Config.getConfig().getSyslogSwitch()) {
             String syslogUrl = Config.getConfig().getSyslogUrl();
             try {
@@ -57,9 +58,6 @@ public class LogConfig {
                 LogTool.warn(ErrorType.CONFIG_ERROR, "syslog url: " +
                         syslogUrl + " is invalid: " + t.getMessage(), t);
             }
-
-        } else {
-            DynamicConfigAppender.removeSyslogAppender();
         }
     }
 }

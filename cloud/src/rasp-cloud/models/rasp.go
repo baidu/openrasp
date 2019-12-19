@@ -32,6 +32,7 @@ type Rasp struct {
 	AppId             string            `json:"app_id" bson:"app_id,omitempty"`
 	StrategyId		  string			`json:"strategy_id" bson:"strategy_id,omitempty"`
 	Version           string            `json:"version" bson:"version,omitempty"`
+	Os                string            `json:"os" bson:"os,omitempty"`
 	HostName          string            `json:"hostname" bson:"hostname,omitempty"`
 	RegisterIp        string            `json:"register_ip" bson:"register_ip,omitempty"`
 	Language          string            `json:"language" bson:"language,omitempty"`
@@ -142,6 +143,12 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 					"$options": "$i",
 				},
 			},
+			{
+				"os": bson.M{
+					"$regex":   realHostname,
+					"$options": "$i",
+				},
+			},
 		}
 		delete(bsonModel, "hostname")
 	}
@@ -182,9 +189,29 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 	}
 	if bsonModel["app_id"] != nil {
 		app_id := strings.TrimSpace(fmt.Sprint(bsonModel["app_id"]))
-		Operations := []bson.M{
+		onlineFlag := bson.M{"$gt": 0}
+		if selector.Online != nil {
+			if *selector.Online {
+				onlineFlag = bson.M{"$gt": time.Now().Unix() - 180}
+			} else {
+				onlineFlag = bson.M{"$lt": time.Now().Unix() - 180}
+			}
+		}
+		Operations := []bson.M {
+			{
+				"$project": bson.M {
+					"app_id": 1,
+					"version": 1,
+					"last_heartbeat_time": 1,
+					"heartbeat_interval": 1,
+					"onlineTime": bson.M {
+						"$add": []string{"$last_heartbeat_time", "$heartbeat_interval"}}},
+			},
 			{
 				"$match": bson.M{"app_id": app_id},
+			},
+			{
+				"$match": bson.M{"onlineTime": onlineFlag},
 			},
 			{
 				"$group": bson.M{

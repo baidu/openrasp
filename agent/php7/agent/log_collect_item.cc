@@ -118,6 +118,7 @@ void LogCollectItem::update_collect_status()
         ifs.clear();
         ifs.sync();
     }
+    ifs.sync();
 }
 
 long LogCollectItem::get_active_file_inode()

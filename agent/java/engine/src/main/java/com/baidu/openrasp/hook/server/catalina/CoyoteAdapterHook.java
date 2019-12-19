@@ -26,6 +26,7 @@ import javassist.NotFoundException;
  * Created by zhuming01 on 6/23/17.
  * All rights reserved
  */
+@HookAnnotation
 public class CoyoteAdapterHook extends ServerPreRequestHook {
 
     public CoyoteAdapterHook() {

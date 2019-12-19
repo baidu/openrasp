@@ -125,4 +125,12 @@ public:
   void update(BaseReader *reader);
 };
 
+class ResponseBlock
+{
+public:
+  int sampler_interval;
+  int sampler_burst;
+  void update(BaseReader *reader);
+};
+
 } // namespace openrasp

@@ -23,6 +23,7 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.response.HttpServletResponse;
 
 import java.util.HashMap;
+import com.baidu.openrasp.tool.Sampler;
 
 /**
  * @author anyang
@@ -30,6 +31,8 @@ import java.util.HashMap;
  * @date 2018/8/15 15:37
  */
 public abstract class ServerResponseBodyHook extends AbstractClassHook {
+    private static Sampler sampler = new Sampler();
+
     @Override
     public String getType() {
         return "xss";
@@ -44,14 +47,14 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
     }
 
     protected static boolean isCheckSensitive() {
+        Config config = Config.getConfig();
         // iast 全量
-        if (Config.getConfig().isIastEnabled()) {
+        if (config.isIastEnabled() || config.getResponseInterval() <= 0 || config.getResponseBurst() <= 0) {
             return true;
-        } else {
-            // TODO: 限速检测
-
-            return false;
         }
+        sampler.update(config.getResponseInterval(), config.getResponseBurst());
+        // 限速检测
+        return sampler.check();
     }
 
     protected static void checkBody(HashMap<String, Object> params, boolean isCheckXss, boolean isCheckSensitive) {
@@ -59,7 +62,15 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
             HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
         }
         if (isCheckSensitive) {
-            HookHandler.doCheck(CheckParameter.Type.POLICY_BODY_SENSITIVE, params);
+            // String contentType = (String) params.get("content_type");
+            // if (contentType.contains("text") || contentType.contains("json") ||
+            // contentType.contains("json") || contentType.contains("json") ||
+            // contentType.contains("json")) {
+            params.remove("buffer");
+            params.remove("encoding");
+            params.remove("content_length");
+            HookHandler.doCheck(CheckParameter.Type.POLICY_RESPONSE, params);
+            // }
         }
     }
 }

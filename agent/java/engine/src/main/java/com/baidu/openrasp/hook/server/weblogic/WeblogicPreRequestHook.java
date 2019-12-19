@@ -27,6 +27,7 @@ import javassist.NotFoundException;
  * @Description: TODO
  * @date 2018/8/27 20:09
  */
+@HookAnnotation
 public class WeblogicPreRequestHook extends ServerPreRequestHook {
 
     @Override

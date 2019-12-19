@@ -14,7 +14,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">
-          Agent 服务器列表 [用于生成 "添加主机" 里的安装命令，一行一个]
+          若开启<a href="https://rasp.baidu.com/doc/install/panel.html#load-balance" target="_blank">负载均衡</a>，请填写 Agent 服务器列表 [用于生成 "添加主机" 里的安装命令，一行一个]
         </label>
         <textarea
           type="text"

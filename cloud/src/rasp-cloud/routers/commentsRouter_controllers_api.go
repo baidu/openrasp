@@ -329,7 +329,7 @@ func init() {
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
-            Params: nil})
+            Params: nil})              
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:StrategyController"],
         beego.ControllerComments{
@@ -374,7 +374,7 @@ func init() {
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
-            Params: nil})
+            Params: nil})   
 
     beego.GlobalControllerRouter["rasp-cloud/controllers/api:TokenController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:TokenController"],
         beego.ControllerComments{
@@ -443,15 +443,6 @@ func init() {
         beego.ControllerComments{
             Method: "Update",
             Router: `/update`,
-            AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api:WebsocketController"],
-        beego.ControllerComments{
-            Method: "Post",
-            Router: `/`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,

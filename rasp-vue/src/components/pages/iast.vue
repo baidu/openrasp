@@ -88,38 +88,41 @@
               </td>
               <td align="left">
                 <div class="" style="vertical-align:middle">
-                  <button type="button" class="btn btn-primary" v-model="taskObject[i]"
-                          @click="stopTask(i)" :disabled="taskObject[i] == unscanned || loadIcon[i]"
-                          v-show="taskObject[i] != unscanned">
+                  <!--<button type="button" class="btn btn-primary" v-model="taskObject[i]"-->
+                          <!--@click="stopTask(i)" :disabled="taskObject[i] == unscanned || loadIcon[i]"-->
+                          <!--v-show="taskObject[i] != unscanned">-->
+                    <!--<i class="fas fa-spinner fa-spin" v-show="loadIcon[i]"></i>-->
+                    <!--停止扫描-->
+                  <!--</button>-->
+                  <a href="javascript:" @click="stopTask(i)" v-model="taskObject[i]"
+                     :disabled="taskObject[i] == unscanned || loadIcon[i]"
+                     v-show="taskObject[i] != unscanned">
                     <i class="fas fa-spinner fa-spin" v-show="loadIcon[i]"></i>
                     停止扫描
-                  </button>
-                  <button type="button" class="btn btn-primary"
-                          @click="startTask(i)" :disabled="taskObject[i] == running || loadIcon[i]"
-                          v-show="taskObject[i] ==  unscanned">
+                  </a>
+                  <a href="javascript:" @click="startTask(i)" :disabled="taskObject[i] == running || loadIcon[i]"
+                     v-show="taskObject[i] ==  unscanned">
                     <i class="fas fa-spinner fa-spin" v-show="loadIcon[i]"></i>
                     启动扫描
-                  </button>
-                  <button type="button" class="btn btn-default" data-toggle="modal" @click="getConfig(row)">
+                  </a>
+                  <a href="javascript:" @click="getConfig(row)">
                     设置
-                  </button>
-                  <button type="button" class="btn btn-danger" ng-model="status"
-                          @click="cleanTask(i, true)"
-                          v-show="taskObject[i] == unscanned">
+                  </a>
+                  <a href="javascript:" @click="cleanTask(i, true)" v-model="status" v-show="taskObject[i] == unscanned">
                     清空队列
-                  </button>
-                  <button type="button" class="btn btn-danger" ng-model="status"
-                          @click="cleanTask(i, false)"
-                          v-show="taskObject[i] == unscanned">
+                  </a>
+                  <a href="javascript:" @click="cleanTask(i, false)" v-model="status" v-show="taskObject[i] == unscanned">
                     删除任务
-                  </button>
+                  </a>
                 </div>
               </td>
             </tr>
             </tbody>
           </table>
 
-          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
+          <p v-if="! loading && register == 0" class="text-center" v-model="register">扫描器未连接或已离线</p>
+          <p v-if="! loading && total == 0 && register == 1" class="text-center" v-model="register">连接中</p>
+          <p v-if="! loading && total == 0 && register == 2" class="text-center" v-model="register">扫描器已连接，暂无数据</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -166,7 +169,8 @@ export default {
       hostname: '',
       key_word: '',
       total: 0,
-      baseUrl: 'v1/api/iast',
+      register: 0,
+      baseUrl: 'v1/iast',
       running: "运行中",
       cancel: "终止",
       pause: "暂停",
@@ -205,19 +209,27 @@ export default {
     fetchData(page) {
       const body = {
           order: "getAllTasks",
-          data: {"page": this.currentPage},
+          data: {"page": this.currentPage, "app_id": this.current_app.id},
           headers: {'Content-Type': 'application/json'}
       }
       return this.request.post(this.baseUrl, body)
         .then(res => {
           this.page = page
-          this.status = res.data.status
-          this.data = res.data.result
-          this.total = res.data.total
+          if (res.data == undefined) {
+              this.status = res.status
+              this.data = []
+              this.total = 0
+          } else {
+            this.status = res.data.status
+            this.data = res.data.result
+            this.total = res.data.total
+          }
+          this.register = res.register
           this.loading = false
         })
     },
     getRequest(url, order, data) {
+        data["app_id"] = this.current_app.id
         const body = {
             order: order,
             data: data,
@@ -342,6 +354,7 @@ export default {
                 showData['host'] = host
                 showData['port'] = port
                 showData['baseUrl'] = this.baseUrl
+                showData['app_id'] = this.current_app.id
                 this.showIastConfigDetail(showData)
             })
     }

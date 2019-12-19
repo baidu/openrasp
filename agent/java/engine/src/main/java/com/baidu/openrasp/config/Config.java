@@ -107,6 +107,8 @@ public class Config extends FileScanListener {
     Map<String, String> logSensitiveRegex;
     boolean lruCompareEnable;
     int lruCompareLimit;
+    int responseInterval;
+    int responseBurst;
     boolean iastEnable;
     static Config instance;
 
@@ -851,6 +853,15 @@ public class Config extends FileScanListener {
     public boolean isHttpsVerifyPeer() {
         return isHttpsVerifyPeer;
     }
+
+    public int getResponseInterval() {
+        return responseInterval;
+    }
+
+    public int getResponseBurst() {
+        return responseBurst;
+    }
+    
     //--------------------------统一的配置处理------------------------------------
 
     /**

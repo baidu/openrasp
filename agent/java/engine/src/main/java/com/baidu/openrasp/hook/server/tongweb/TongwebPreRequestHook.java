@@ -12,6 +12,7 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
  * @author: Baimo
  * @create: 2019/06/18
  */
+@HookAnnotation
 public class TongwebPreRequestHook extends ServerPreRequestHook {
 
     /**

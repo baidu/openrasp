@@ -70,9 +70,6 @@ func (o *RaspController) Post() {
 	if len(rasp.ServerType) >= 256 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server type must be less than 256")
 	}
-	if rasp.ServerVersion == "" {
-		o.ServeError(http.StatusBadRequest, "the server version can not be empty")
-	}
 	if len(rasp.ServerVersion) >= 50 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server version must be less than 50")
 	}

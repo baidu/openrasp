@@ -19,11 +19,12 @@ package com.baidu.openrasp.plugin.checker;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
+import com.baidu.openrasp.plugin.checker.policy.LogChecker;
 import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
+import com.baidu.openrasp.plugin.checker.policy.V8ResponseChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
 import com.baidu.openrasp.plugin.checker.v8.V8AttackChecker;
-import com.baidu.openrasp.plugin.checker.v8.V8PolicyChecker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -57,7 +58,7 @@ public class CheckParameter {
         SQL_EXCEPTION("sql_exception", new V8AttackChecker(), 1 << 15),
         REQUESTEND("requestEnd", new V8AttackChecker(), 1 << 17),
         DELETEFILE("deleteFile", new V8AttackChecker(), 1 << 18),
-        MONGO("mongo", new V8AttackChecker(), 1 << 19),
+        MONGO("mongodb", new V8AttackChecker(), 1 << 19),
         LOADLIBRARY("loadLibrary", new V8AttackChecker(), 1 << 20),
         SSRF_REDIRECT("ssrfRedirect", new V8AttackChecker(), 1 << 21),
 
@@ -66,8 +67,8 @@ public class CheckParameter {
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
 
         // 安全基线检测
-        POLICY_LOG("log", new V8PolicyChecker(false), 1 << 22),
-        POLICY_BODY_SENSITIVE("bodySensitive", new V8PolicyChecker(false), 1 << 23),
+        POLICY_LOG("log", new LogChecker(false), 1 << 22),
+        POLICY_RESPONSE("response", new V8ResponseChecker(false), 1 << 23),
         POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(false), 0),
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(false), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
