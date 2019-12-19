@@ -49,10 +49,10 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
     protected static boolean isCheckSensitive() {
         Config config = Config.getConfig();
         // iast 全量
-        if (config.isIastEnabled() || config.getResponseInterval() <= 0 || config.getResponseBurst() <= 0) {
+        if (config.isIastEnabled() || config.getResponseSamplerInterval() <= 0 || config.getResponseSamplerBurst() <= 0) {
             return true;
         }
-        sampler.update(config.getResponseInterval(), config.getResponseBurst());
+        sampler.update(config.getResponseSamplerInterval(), config.getResponseSamplerBurst());
         // 限速检测
         return sampler.check();
     }

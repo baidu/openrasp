@@ -714,10 +714,14 @@ public enum ConfigItem {
         }
     }),
 
-    SENSITIVE_OUTPUT_INTERVAL(new ConfigSetter<String>("sensitive_output.sample_interval") {
+    RESPONSE_SAMPLER_INTERVAL(new ConfigSetter<String>("response.sampler_interval") {
         @Override
         public synchronized void setValue(String interval) {
-            Config.getConfig().responseInterval = Integer.parseInt(interval);
+            int responseSamplerInterval = Integer.parseInt(interval);
+            if (responseSamplerInterval < 60) {
+                throw new ConfigLoadException(itemName + " must be between [60,+∞)");
+            }
+            Config.getConfig().responseSamplerInterval = responseSamplerInterval;
         }
 
         @Override
@@ -726,15 +730,19 @@ public enum ConfigItem {
         }
     }),
 
-    SENSITIVE_OUTPUT_BURST(new ConfigSetter<String>("sensitive_output.sample_burst") {
+    RESPONSE_SAMPLER_BURST(new ConfigSetter<String>("response.sampler_burst") {
         @Override
         public synchronized void setValue(String burst) {
-            Config.getConfig().responseBurst = Integer.parseInt(burst);
+            int responseSamplerBurst = Integer.parseInt(burst);
+            if (responseSamplerBurst < 0) {
+                throw new ConfigLoadException(itemName + " must not be negative");
+            }
+            Config.getConfig().responseSamplerBurst = responseSamplerBurst;
         }
 
         @Override
         public String getDefaultValue() {
-            return "10";
+            return "5";
         }
     });
 
