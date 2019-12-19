@@ -209,7 +209,7 @@
             </div>
             <ul>
                 <li v-for="(file, index) in data.policy_params.files" :key="index">
-                    {{ row }}
+                    {{ file }}
                 </li>
             </ul>
         </div>
