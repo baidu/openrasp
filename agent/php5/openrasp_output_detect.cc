@@ -55,7 +55,7 @@ void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
     }
     auto content_type = get_content_type(TSRMLS_C);
     check_sensitice_content(content, content_length, content_type TSRMLS_CC);
-    int status = check_xss(content, content_length, content_type, TSRMLS_CC)
+    int status = check_xss(content, content_length, content_type, TSRMLS_CC);
     if (status == SUCCESS)
     {
         RETVAL_STRING("", 1);
@@ -211,6 +211,11 @@ static int check_xss(const char *content, size_t content_length, const char *con
 
 static void check_sensitive_content(const char *content, size_t content_length, const char *content_type TSRMLS_DC)
 {
+    if (strlen(content_type) > 0 &&
+        (strstr(content_type, "video") != nullptr || strstr(content_type, "audio") != nullptr || strstr(content_type, "image") != nullptr))
+    {
+        return;
+    }
     sampler.update(OPENRASP_G(config).response.sampler_interval, OPENRASP_G(config).response.sampler_burst);
     if (sampler.check())
     {

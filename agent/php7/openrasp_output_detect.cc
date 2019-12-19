@@ -172,6 +172,11 @@ static int check_xss(const char *content, size_t content_length, const char *con
 
 static void check_sensitive_content(const char *content, size_t content_length, const char *content_type)
 {
+    if (strlen(content_type) > 0 &&
+        (strstr(content_type, "video") != nullptr || strstr(content_type, "audio") != nullptr || strstr(content_type, "image") != nullptr))
+    {
+        return;
+    }
     sampler.update(OPENRASP_G(config).response.sampler_interval, OPENRASP_G(config).response.sampler_burst);
     if (sampler.check())
     {

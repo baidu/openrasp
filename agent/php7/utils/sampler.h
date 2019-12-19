@@ -46,7 +46,7 @@ public:
 
   bool check()
   {
-    if (interval == 0 || burst == 0)
+    if (interval <= 0 || burst <= 0)
     {
       return false;
     }
