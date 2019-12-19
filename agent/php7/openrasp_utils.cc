@@ -495,7 +495,7 @@ bool maybe_ssrf_vulnerability(zval *file)
         {
             ch = std::tolower(ch);
         }
-        if (protocol == "http" || protocol == "ftp")
+        if (protocol == "http" || protocol == "https" || protocol == "ftp")
         {
             return true;
         }

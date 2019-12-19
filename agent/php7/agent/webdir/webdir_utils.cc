@@ -24,11 +24,11 @@ void sensitive_files_policy_alarm(std::map<std::string, std::vector<std::string>
     for (auto &it : sensitive_file_map)
     {
         openrasp::JsonReader j;
-        j.write_int64({"policy_id"}, 3008);
+        j.write_int64({"policy_id"}, 3009);
         j.write_string({"policy_params", "webroot"}, it.first);
-        j.write_vector({"policy_params", "sensitive_files"}, it.second);
-        j.write_string({"message"}, "Sensitive files found in webroot path:" + it.first);
-        LOG_G(alarm_logger).log(LEVEL_INFO, j TSRMLS_CC);
+        j.write_vector({"policy_params", "files"}, it.second);
+        j.write_string({"message"}, "Multiple sensitive files found in " + it.first);
+        LOG_G(policy_logger).log(LEVEL_INFO, j TSRMLS_CC);
     }
 }
 
