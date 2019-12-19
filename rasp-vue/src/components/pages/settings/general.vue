@@ -156,6 +156,18 @@
           </label>
           <input v-model.number="data['dependency_check.interval']" type="number" min="60" max="86400" class="form-control" placeholder="6">        
         </div>
+        <div class="form-group">
+          <label class="form-label">
+            [响应检测] 采样周期（秒），设置为 0 关闭
+          </label>
+          <input v-model.number="data['response.sampler_interval']" type="number" min="60" class="form-control" placeholder="60">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            [响应检测] 在采样周期里，最多检测多少次
+          </label>
+          <input v-model.number="data['response.sampler_burst']" type="number" min="0" class="form-control" placeholder="5">
+        </div>
 
         <div class="form-group">
           <label class="custom-switch">
