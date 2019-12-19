@@ -1,20 +1,20 @@
 --TEST--
-policy response
+policy sensitive response
 --SKIPIF--
 <?php
 $plugin = <<<EOF
 plugin.register('response', params => {
-  console.log(params)
+  assert(params.content.indexOf('1234567890') != -1)
   return {
     action: 'log',
     message: 'sensitive',
     policy_params: {
-      a:1
+      a: 1
     }
   }
 })
 EOF;
-include(__DIR__.'/skipif.inc');
+include(__DIR__.'/../skipif.inc');
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
@@ -23,9 +23,6 @@ display_errors=false
 --FILE--
 <?php
 echo "1234567890";
-flush();
-include(__DIR__.'/timezone.inc');
-passthru('tail -n 3 /tmp/openrasp/logs/policy/policy.log.'.date("Y-m-d"));
 ?>
---EXPECTREGEX--
-.*sensitive.*
+--EXPECT--
+1234567890
