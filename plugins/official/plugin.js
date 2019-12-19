@@ -522,13 +522,13 @@ var algorithmConfig = {
         action: 'block'
     },
 
-    loadLibrary_other: {
-        name:   '算法2 - 记录或者拦截所有类库加载',
-        action: 'ignore'
-    },
+    // loadLibrary_other: {
+    //     name:   '算法2 - 记录或者拦截所有类库加载',
+    //     action: 'ignore'
+    // },
 
     response_dataLeak: {
-        name:   '算法1 - 检查响应里是否有敏感数据泄露',
+        name:   '算法1 - 检查响应里是否有身份证等敏感信息',
         action: 'log',
 
         // 检查类型
@@ -539,8 +539,8 @@ var algorithmConfig = {
         },
 
         // Content-Type 过滤
-        content_type: '.*'
-    }   
+        content_type: 'html|json|xml'
+    }
 }
 
 // END ALGORITHM CONFIG //
@@ -633,6 +633,9 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
+
+// 敏感信息泄露 - Content Type 正则
+var dataLeakContentType = new RegExp(algorithmConfig.response_dataLeak.content_type, 'i')
 
 if (! RASP.is_unittest)
 {
@@ -2481,15 +2484,14 @@ plugin.register('loadLibrary', function(params, context) {
         
     }
 
-    if (algorithmConfig.loadLibrary_other.action != 'ignore') {
-        return {
-            action:     algorithmConfig.loadLibrary_other.action,
-            confidence: 60,
-            message:    _("Load library - logging all by default, library path is %1%", [params.path]),
-            algorithm:  'loadLibrary_other'
-        }     
-    }
-
+    // if (algorithmConfig.loadLibrary_other.action != 'ignore') {
+    //     return {
+    //         action:     algorithmConfig.loadLibrary_other.action,
+    //         confidence: 60,
+    //         message:    _("Load library - logging all by default, library path is %1%", [params.path]),
+    //         algorithm:  'loadLibrary_other'
+    //     }     
+    // }
 
     return clean
 })
@@ -2638,11 +2640,19 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
     // response 所有检测点都会抽样
     plugin.register('response', function (params, context) {
+        const content_type = params.content_type
+        const content      = params.content
+
+        // content-type 过滤
+        if (! dataLeakContentType.test(content_type)) {
+            return clean
+        }
+
         var items = [], parts = []
 
-        const id_card   = findFirstIdentityCard(params.content)
-        const phone     = findFirstMobileNumber(params.content)
-        const bank_card = findFirstBankCard(params.content)
+        const id_card   = findFirstIdentityCard(content)
+        const phone     = findFirstMobileNumber(content)
+        const bank_card = findFirstBankCard(content)
 
         if (id_card) {
             items.push(id_card.match + '(身份证)')
