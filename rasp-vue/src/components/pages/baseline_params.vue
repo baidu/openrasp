@@ -188,6 +188,20 @@
             </p>
         </div>
 
+        <div v-if="data.policy_id == '3009'">
+            <div class="h6">
+                问题描述
+            </div>
+            <p>
+                页面存在没有打码的敏感信息，如身份证、信用卡、手机号:
+
+                <div v-for="(row, index) in data.parts" :key="index">
+                    {{ row.type }} {{ row.match }} <br/>
+                    {{ row.parts }}
+                </div>
+            </p>            
+        </div>  
+
         <!-- 4000 - 4999 PHP 相关 -->
         <div v-if="data.policy_id == '4001'">
             <div class="h6">

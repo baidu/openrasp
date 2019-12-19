@@ -2642,31 +2642,39 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
     plugin.register('response', function (params, context) {
         const content_type = params.content_type
         const content      = params.content
+        const kind         = algorithmConfig.response_dataLeak.kind
+        var items = [], parts = []
 
         // content-type 过滤
         if (! dataLeakContentType.test(content_type)) {
             return clean
         }
 
-        var items = [], parts = []
-
-        const id_card   = findFirstIdentityCard(content)
-        const phone     = findFirstMobileNumber(content)
-        const bank_card = findFirstBankCard(content)
-
-        if (id_card) {
-            items.push(id_card.match + '(身份证)')
-            parts.push(id_card)
+        // 是否检查身份证泄露
+        if (kind.identity_card) {
+            const data = findFirstIdentityCard(content)
+            if (data) {
+                items.push(id_card.match + '(身份证)')
+                parts.push(id_card)
+            }
         }
 
-        if (phone) {
-            items.push(phone.match + '(手机号)')
-            parts.push(phone)
+        // 是否检查手机号泄露
+        if (kind.phone) {
+            const data = findFirstMobileNumber(content)
+            if (data) {
+                items.push(phone.match + '(手机号)')
+                parts.push(phone)
+            }
         }
 
-        if (bank_card) {
-            items.push(phone.match + '(银行卡)')
-            parts.push(bank_card)
+        // 是否检查银行卡泄露
+        if (kind.bank_card) {
+            const data = findFirstBankCard(content)
+            if (data) {
+                items.push(phone.match + '(银行卡)')
+                parts.push(bank_card)
+            }
         }
 
         if (items.length) {
