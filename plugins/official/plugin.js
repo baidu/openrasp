@@ -1,4 +1,4 @@
-const plugin_version = '2019-1203-1800'
+const plugin_version = '2019-1219-1300'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2566,7 +2566,9 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     })
 }
 
-function checkChineseId(data) {
+
+// 匹配身份证
+function findFirstIdentityCard(data) {
     const regexChineseId = /(?<!\d)\d{10}(?:[01]\d)(?:[0123]\d)\d{3}(?:\d|x|X)(?!\d)/;
     const W = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
     const m = regexChineseId.exec(data)
@@ -2582,12 +2584,16 @@ function checkChineseId(data) {
             sum += id[17] - '0';
         }
         if (sum % 11 == 1) {
-            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            return {
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            }
         }
     }
 }
 
-function checkChinesePhone(data) {
+// 匹配手机号
+function findFirstMobileNumber(data) {
     const regexChinesePhone = /(?<!\d)(?:(?:00|\+)?86 ?)?(1\d{2})(?:[ -]?\d){8}(?!\d)/;
     const prefixs = new Set([133, 149, 153, 173, 174, 177, 180,
         181, 189, 199, 130, 131, 132, 145, 146, 155, 156, 166, 175, 176, 185, 186, 134, 135, 136, 137, 138, 139,
@@ -2596,12 +2602,16 @@ function checkChinesePhone(data) {
     let m = regexChinesePhone.exec(data)
     if (m) {
         if (prefixs.has(parseInt(m[1]))) {
-            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            return {
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            }
         }
     }
 }
 
-function checkBankCard(data) {
+// 匹配银行卡、信用卡
+function findFirstBankCard(data) {
     const regexBankCard = /(?<!\d)(?:62|3|5[1-5]|4\d)\d{2}(?:[ -]?\d{4}){3}(?!\d)/;
     let m = regexBankCard.exec(data)
     if (m) {
@@ -2616,38 +2626,48 @@ function checkBankCard(data) {
             sum = sum + Math.floor(t / 10) + t % 10;
         }
         if (sum % 10 == 0) {
-            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            return {
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            }
         }
     }
 }
 
 if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
+    // response 所有检测点都会抽样
     plugin.register('response', function (params, context) {
-        var items = []
+        var items = [], parts = []
 
-        const id_card   = checkChineseId(params.content)
-        const phone     = checkChinesePhone(params.content)
-        const bank_card = checkBankCard(params.content)
+        const id_card   = findFirstIdentityCard(params.content)
+        const phone     = findFirstMobileNumber(params.content)
+        const bank_card = findFirstBankCard(params.content)
 
         if (id_card) {
-            items.push(id_card + '(身份证)')
+            items.push(id_card.match + '(身份证)')
+            parts.push(id_card)
         }
 
         if (phone) {
-            items.push(phone + '(手机号)')
+            items.push(phone.match + '(手机号)')
+            parts.push(phone)
         }
 
         if (bank_card) {
-            items.push(phone + '(银行卡)')
+            items.push(phone.match + '(银行卡)')
+            parts.push(bank_card)
         }
 
         if (items.length) {
             return {
-                action:      'log',
-                message:     '检测到敏感数据泄露: ' + items.join('; '),
-                confidence:  80,
-                algorithm:   'response_dataLeak'
+                action:        'log',
+                message:       '检测到敏感数据泄露: ' + items.join('; '),
+                confidence:    80,
+                algorithm:     'response_dataLeak',
+                policy_params: {
+                    parts
+                }
             }
         }
     })
