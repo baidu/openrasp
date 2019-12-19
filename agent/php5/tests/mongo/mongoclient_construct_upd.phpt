@@ -4,7 +4,7 @@ hook MongoClient::__construct username password database
 <?php
 if (PHP_MAJOR_VERSION >= 7) die('Skipped: no mongo extension in PHP7.');
 include(__DIR__.'/../skipif.inc');
-if (!extension_loaded("mongodb")) die("Skipped: mongo extension required.");
+if (!extension_loaded("mongo")) die("Skipped: mongo extension required.");
 ?>
 --INI--
 openrasp.root_dir=/tmp/openrasp
