@@ -342,6 +342,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			result = make([]map[string]interface{}, len(hits))
 			for index, item := range hits {
 				result[index] = make(map[string]interface{})
+				var filterId string
 				err := json.Unmarshal(*item.Source, &result[index])
 				if err != nil {
 					return 0, nil, err
@@ -350,17 +351,14 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 					requestId := result[index]["request_id"].(string)
 					stackMd5 := result[index]["stack_md5"].(string)
 					attackType := result[index]["attack_type"].(string)
-					filterId := requestId + stackMd5 + attackType
-					result[index]["filter_id"] = filterId
-				} else if typeIndex == "policy" {
-					policy_id := result[index]["policy_id"].(string)
-					policy_alarm := result[index]["policy_alarm"].(string)
+					pluginAlgorithm := result[index]["plugin_algorithm"].(string)
 					url := result[index]["url"].(string)
-					if policy_id == "3009" {
-						result[index]["filter_id"] = url
-						result[index]["alarm"] = policy_alarm
-						delete(result[index], "policy_alarm")
+					if pluginAlgorithm == "response_dataLeak" {
+						filterId = url
+					} else {
+						filterId = requestId + stackMd5 + attackType
 					}
+					result[index]["filter_id"] = filterId
 				}
 				es.HandleSearchResult(result[index], item.Id)
 			}
