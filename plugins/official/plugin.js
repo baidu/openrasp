@@ -193,6 +193,11 @@ var algorithmConfig = {
                 105, // Unclosed quotation mark after the character string '%.*ls'.
                 245, // Conversion failed when converting the %ls value '%.*ls' to data type %ls.
             ]
+        },
+        db2: {
+            error_state: [
+                "42603", // The string constant beginning with "'xxx" does not have an ending string
+            ]
         }
     },
 
