@@ -1,4 +1,4 @@
-const plugin_version = '2019-1202-1840'
+const plugin_version = '2019-1220-1800'
 const plugin_name    = 'iast'
 const plugin_desc    = 'IAST Fuzz 插件'
 
@@ -47,13 +47,85 @@ function bufferToHex (buffer) {
     return Array.from (new Uint8Array (buffer)).map (b => b.toString (16).padStart (2, "0")).join ("");
 }
 
+function get_stack_hash (stack) {
+    var s = stack.join(",")
+    var hashes = Array(4);
+    hashes.fill(0)
+
+    for (let i = 0; i < s.length; i += 1) {
+        hashes[i%4] = hashes[i%4] ^ s.charCodeAt(i);
+        hashes[i%4] = ((hashes[i%4] >> 24 ) | (hashes[i%4] << 8))
+    }
+
+    var ret = ""
+    for (let i = 0; i < hashes.length; i += 1) {
+        ret += (hashes[i] >>> 0).toString(16).padStart(8, "0")
+    }
+
+    return ret;
+}
+
 function add_hook(hook_type, params, context) {
+    if ( context.header["scan-request-id"] != undefined) {
+        if (is_scanning_hook(hook_type, params, context)) {
+            params.stack = params.stack
+        }
+        else {
+            return
+        }
+    }
+    else {
+        params.stack = get_stack_hash(params.stack)
+    }
+
     if (context.hook_info == undefined) {
         context.hook_info = []
     }
     params.hook_type = hook_type
-    params.stack = params.stack
     context.hook_info.push(params)
+}
+
+function is_scanning_hook(hook_type, params, context) {
+    /*
+    [
+        {
+            "type": "sql", 
+            "filter": [
+                {
+                    "query": "openrasp"
+                },
+                ...
+            ]
+        },
+        ...
+    ]
+    */
+
+    if (context.filter === undefined) {
+        try {
+            filter_ascii = context.header["x-iast-filter"]
+            context.filter = JSON.parse(atob(filter_ascii))
+        }
+        catch (e) {
+            context.filter = false
+            return true
+        }
+    }
+
+    if (context.filter == false) {
+        return true
+    }
+
+    for (let item of Object.values(context.filter)) {
+        if (item.type == hook_type) {
+            for (let [key, value] of Object.entries(item.filter)) {
+                if (params[key] !== undefined && params[key].indexOf(value) != -1) {
+                    return true
+                }
+            }
+        }
+    }
+    return false
 }
 
 function send_rasp_result(context) {
@@ -122,7 +194,6 @@ function send_rasp_result(context) {
             else {
                 web_server.port = parseInt(server_host[1]) || default_port
             }
-            
         }
     }
 
