@@ -18,78 +18,40 @@
 
 #include "php_openrasp.h"
 #include "openrasp_v8.h"
-#include "policy_material.h"
+#include "v8_material.h"
 
 namespace openrasp
 {
 namespace data
 {
 
-class ResponseObject : public PolicyMaterial
+class ResponseObject : public V8Material
 {
 private:
-    openrasp_v8::Isolate *isolate;
     const char *content;
-    size_t length;
-    const char *type;
-    int timeout;
+    size_t content_length;
+    const char *content_type;
 
 public:
-    ResponseObject(openrasp_v8::Isolate *isolate, const char *content, size_t length, const char *type, int timeout) : isolate(isolate), content(content), length(length), type(type), timeout(timeout) {}
-    virtual bool is_valid() const { return true; };
-    virtual ulong hash() const { return 0; };
-    virtual void fill_json_with_params(JsonReader &j) const {};
-    virtual bool policy_check(JsonReader &j) const
+    ResponseObject(const char *content, size_t content_length, const char *content_type) : content(content), content_length(content_length), content_type(content_type) {}
+    virtual bool is_valid() const
+    {
+        if (strlen(content_type) > 0 &&
+            (strstr(content_type, "video") != nullptr || strstr(content_type, "audio") != nullptr || strstr(content_type, "image") != nullptr))
+        {
+            return false;
+        }
+        return true;
+    };
+    virtual std::string build_lru_key() const { return ""; };
+    virtual OpenRASPCheckType get_v8_check_type() const { return OpenRASPCheckType::RESPONSE; };
+    virtual void fill_object_2b_checked(Isolate *isolate, v8::Local<v8::Object> params) const
     {
         v8::HandleScope handle_scope(isolate);
         auto context = isolate->GetCurrentContext();
-        auto params = v8::Object::New(isolate);
-        params->Set(context, openrasp_v8::NewV8String(isolate, "content"), openrasp_v8::NewV8String(isolate, content, length)).IsJust();
-        params->Set(context, openrasp_v8::NewV8String(isolate, "content_type"), openrasp_v8::NewV8String(isolate, type)).IsJust();
+        params->Set(context, openrasp_v8::NewV8String(isolate, "content"), openrasp_v8::NewV8String(isolate, content, content_length)).IsJust();
+        params->Set(context, openrasp_v8::NewV8String(isolate, "content_type"), openrasp_v8::NewV8String(isolate, content_type)).IsJust();
         params->Set(context, openrasp_v8::NewV8String(isolate, "stack"), v8::Array::New(isolate)).IsJust();
-        auto data = isolate->GetData();
-        v8::Local<v8::Object> request_context;
-        if (data->request_context.IsEmpty())
-        {
-            request_context = data->request_context_templ.Get(isolate)->NewInstance(context).ToLocalChecked();
-            data->request_context.Reset(isolate, request_context);
-        }
-        else
-        {
-            request_context = data->request_context.Get(isolate);
-        }
-        auto rst = isolate->Check(openrasp_v8::NewV8String(isolate, "response"), params, request_context, timeout);
-        auto len = rst->Length();
-        bool ret = false;
-        for (int i = 0; i < len; i++)
-        {
-            v8::HandleScope handle_scope(isolate);
-            v8::Local<v8::Value> val;
-            if (!rst->Get(context, i).ToLocal(&val) || !val->IsObject())
-            {
-                continue;
-            }
-            auto obj = val.As<v8::Object>();
-            if (!obj->Get(context, NewV8String(isolate, "message")).ToLocal(&val) || !val->IsString())
-            {
-                continue;
-            }
-            ret = true;
-            j.write_string({"policy_id"}, "3009");
-            j.write_string({"message"}, *v8::String::Utf8Value(isolate, val));
-            v8::Local<v8::String> str;
-            if (obj->Get(context, NewV8String(isolate, "policy_params")).ToLocal(&val) &&
-                val->IsObject() &&
-                v8::JSON::Stringify(context, val).ToLocal(&str))
-            {
-                j.write_json_string({"policy_params"}, *v8::String::Utf8Value(isolate, str));
-            }
-            else
-            {
-                j.write_map({"policy_params"}, std::map<std::string, std::string>());
-            }
-        }
-        return ret;
     };
 };
 

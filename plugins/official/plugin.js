@@ -1,4 +1,4 @@
-const plugin_version = '2019-1219-1730'
+const plugin_version = '2019-1220-1700'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2705,7 +2705,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         if (items.length) {
             return {
                 action:     algorithmConfig.response_dataLeak.action,
-                message:    '检测到敏感数据泄露: ' + items.join('、 '),
+                message:    'PII leak detected: ' + items.join('、 '),
                 confidence: 80,
                 algorithm:  'response_dataLeak',
                 params: {

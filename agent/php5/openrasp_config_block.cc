@@ -112,8 +112,9 @@ void DecompileBlock::update(BaseReader *reader)
 
 void ResponseBlock::update(BaseReader *reader)
 {
-  sampler_interval = reader->fetch_int64({"response.sampler_interval"}, 600);
-  sampler_burst = reader->fetch_int64({"response.sampler_burst"}, 6);
+  sampler_interval = reader->fetch_int64({"response.sampler_interval"}, 60);
+  sampler_burst = reader->fetch_int64({"response.sampler_burst"}, 5);
+  if (sampler_interval < 60) sampler_interval = 60;
 };
 
 } // namespace openrasp

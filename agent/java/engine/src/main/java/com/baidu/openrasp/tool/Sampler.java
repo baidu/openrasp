@@ -52,7 +52,7 @@ public class Sampler {
         if (interval == 0 || burst == 0) {
             return false;
         }
-        long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis() / 1000;
         if (time >= nextClearTime) {
             lock.lock();
             if (time >= nextClearTime) {

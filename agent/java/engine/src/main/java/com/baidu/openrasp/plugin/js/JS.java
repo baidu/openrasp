@@ -36,6 +36,8 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
 import com.jsoniter.extra.Base64Support;
 import com.jsoniter.output.JsonStream;
+import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.ValueType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
@@ -45,6 +47,7 @@ import java.io.FileFilter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class JS {
     public static final Logger PLUGIN_LOGGER = Logger.getLogger(JS.class.getPackage().getName() + ".log");
@@ -105,12 +108,13 @@ public class JS {
 
     public static List<EventInfo> Check(CheckParameter checkParameter) {
         Type type = checkParameter.getType();
-        ByteArrayOutputStream params = new ByteArrayOutputStream();
-        JsonStream.serialize(checkParameter.getParams(), params);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        JsonStream.serialize(checkParameter.getParams(), out);
+        out.write(0);
 
         Object hashData = null;
         if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL || type == Type.SSRF) {
-            byte[] paramData = params.getByteArray();
+            byte[] paramData = out.getByteArray();
             if (!Config.getConfig().getLruCompareEnable()) {
                 hashData = ByteBuffer.wrap(paramData).hashCode();
             } else if (paramData.length <= Config.getConfig().getLruCompareLimit()) {
@@ -123,7 +127,7 @@ public class JS {
 
         byte[] results = null;
         try {
-            results = V8.Check(type.getName(), params.getByteArray(), params.size(),
+            results = V8.Check(type.getName(), out.getByteArray(), out.size(),
                     new Context(checkParameter.getRequest()), (int) Config.getConfig().getPluginTimeout());
         } catch (Exception e) {
             LogTool.error(ErrorType.PLUGIN_ERROR, e.getMessage(), e);
@@ -147,8 +151,14 @@ public class JS {
                 if (rst.toString("action").equals("exception")) {
                     PLUGIN_LOGGER.info(rst.toString("message"));
                 } else {
+                    // TODO: js add default params
+                    Map<String, Object> params = null;
+                    if (rst.get("params").valueType() == ValueType.OBJECT) {
+                        params = rst.get("params").as(new TypeLiteral<Map<String, Object>>() {
+                        });
+                    }
                     attackInfos.add(new AttackInfo(checkParameter, rst.toString("action"), rst.toString("message"),
-                            rst.toString("name"), rst.toString("algorithm"), rst.toInt("confidence")));
+                            rst.toString("name"), rst.toString("algorithm"), rst.toInt("confidence"), params));
                 }
             }
             return attackInfos;

@@ -48,11 +48,17 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
 
     protected static boolean isCheckSensitive() {
         Config config = Config.getConfig();
-        // iast 全量
-        if (config.isIastEnabled() || config.getResponseInterval() <= 0 || config.getResponseBurst() <= 0) {
-            return true;
+        if (config.getResponseSamplerInterval() <= 0 || config.getResponseSamplerBurst() <= 0) {
+            return false;
         }
-        sampler.update(config.getResponseInterval(), config.getResponseBurst());
+        if (HookHandler.responseCache.get() != null) {
+            String contentType = HookHandler.responseCache.get().getContentType();
+            if (contentType != null && (contentType.contains("video") || contentType.contains("audio")
+                    || contentType.contains("image"))) {
+                return false;
+            }
+        }
+        sampler.update(config.getResponseSamplerInterval(), config.getResponseSamplerBurst());
         // 限速检测
         return sampler.check();
     }
@@ -62,15 +68,10 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
             HookHandler.doCheck(CheckParameter.Type.XSS_USERINPUT, params);
         }
         if (isCheckSensitive) {
-            // String contentType = (String) params.get("content_type");
-            // if (contentType.contains("text") || contentType.contains("json") ||
-            // contentType.contains("json") || contentType.contains("json") ||
-            // contentType.contains("json")) {
             params.remove("buffer");
             params.remove("encoding");
             params.remove("content_length");
-            HookHandler.doCheck(CheckParameter.Type.POLICY_RESPONSE, params);
-            // }
+            HookHandler.doCheck(CheckParameter.Type.RESPONSE, params);
         }
     }
 }
