@@ -232,23 +232,23 @@
             </p>            
         </div>
 
-        <div v-if="data.attack_type == 'response_dataLeak'">
+        <div v-if="data.attack_type == 'response' && data.plugin_algorithm == 'response_dataLeak'">
             <div class="h6">
-                泄露的敏感信息（每种类型仅打印一条）
+                泄露的敏感信息样例
             </div>
             <div>
                 <table class="table table-bordered">
                     <thead>
                         <tr>
                             <th>类型</th>
-                            <th>内容</th>
+                            <th>未打码信息</th>
                             <th>原始内容（片段）</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(row, index) in data.attack_params.parts" :key="index">
-                            <td>{{ row.type }}</td>
-                            <td>{{ row.match }}</td>
+                            <td nowrap>{{ row.type }}</td>
+                            <td nowrap>{{ row.match }}</td>
                             <td>{{ row.parts }}</td>
                         </tr>
                     </tbody>
