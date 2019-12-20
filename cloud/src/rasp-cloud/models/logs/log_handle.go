@@ -354,9 +354,12 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 					result[index]["filter_id"] = filterId
 				} else if typeIndex == "policy" {
 					policy_id := result[index]["policy_id"].(string)
+					policy_alarm := result[index]["policy_alarm"].(string)
 					url := result[index]["url"].(string)
 					if policy_id == "3009" {
 						result[index]["filter_id"] = url
+						result[index]["alarm"] = policy_alarm
+						delete(result[index], "policy_alarm")
 					}
 				}
 				es.HandleSearchResult(result[index], item.Id)
