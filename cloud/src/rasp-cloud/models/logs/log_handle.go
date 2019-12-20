@@ -21,6 +21,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/olivere/elastic"
+	"net/url"
 	"os"
 	"path"
 	"rasp-cloud/es"
@@ -352,9 +353,13 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 					stackMd5 := result[index]["stack_md5"].(string)
 					attackType := result[index]["attack_type"].(string)
 					pluginAlgorithm := result[index]["plugin_algorithm"].(string)
-					url := result[index]["url"].(string)
+					urlString := result[index]["url"].(string)
 					if pluginAlgorithm == "response_dataLeak" {
-						filterId = url
+						urlParse, err := url.Parse(urlString)
+						if err != nil {
+							return 0, nil, err
+						}
+						filterId = urlParse.Scheme + "://" + urlParse.Host + urlParse.Path
 					} else {
 						filterId = requestId + stackMd5 + attackType
 					}
