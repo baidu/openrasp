@@ -91,10 +91,14 @@ func AddAttackAlarm(alarm map[string]interface{}) error {
 	putStackMd5(alarm, "attack_params")
 	setAlarmLocation(alarm)
 	idContent := ""
-	idContent += fmt.Sprint(alarm["rasp_id"])
-	idContent += fmt.Sprint(alarm["request_id"])
-	idContent += fmt.Sprint(alarm["attack_type"])
-	idContent += fmt.Sprint(alarm["stack_md5"])
+	if alarm["plugin_algorithm"] == "response_dataLeak" {
+		idContent += fmt.Sprint(alarm["url"])
+	} else {
+		idContent += fmt.Sprint(alarm["rasp_id"])
+		idContent += fmt.Sprint(alarm["request_id"])
+		idContent += fmt.Sprint(alarm["attack_type"])
+		idContent += fmt.Sprint(alarm["stack_md5"])
+	}
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
 	err := AddLogWithKafka(AttackAlarmInfo.EsType, alarm)
 	if err != nil {
