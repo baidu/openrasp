@@ -25,10 +25,7 @@ import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by tyy on 19-10-22.
@@ -602,7 +599,10 @@ public enum ConfigItem {
 
         @Override
         public List<String> getDefaultValue() {
-            return null;
+            return Arrays.asList("111111", "123", "123123", "123456", "123456a",
+                    "a123456", "admin", "both", "manager", "mysql",
+                    "root", "rootweblogic", "tomcat", "user",
+                    "weblogic1", "weblogic123", "welcome1");
         }
     }),
 
