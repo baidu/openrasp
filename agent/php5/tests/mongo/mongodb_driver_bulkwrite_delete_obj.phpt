@@ -4,7 +4,7 @@ hook MongoDB\Driver\BulkWrite::delete object
 <?php
 if (PHP_VERSION_ID < 50500) die('Skipped: not supported (version < 5.5.0)');
 $plugin = <<<EOF
-plugin.register('mongo', params => {
+plugin.register('mongodb', params => {
     assert(params.query == '{ "_id" : { "\$oid" : "5a2493c33c95a1281836eb6a" } }')
     assert(params.server == 'mongodb')
     assert(params.class.endsWith('Bulkwrite'))

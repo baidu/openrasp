@@ -226,6 +226,10 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
     obj->Set(context, NewV8String(isolate, "plugin_confidence"), result->Get(context, NewV8String(isolate, "confidence")).ToLocalChecked()).IsJust();
     obj->Set(context, NewV8String(isolate, "plugin_algorithm"), result->Get(context, NewV8String(isolate, "algorithm")).ToLocalChecked()).IsJust();
     obj->Set(context, NewV8String(isolate, "plugin_name"), result->Get(context, NewV8String(isolate, "name")).ToLocalChecked()).IsJust();
+    if (result->Has(context, NewV8String(isolate, "params")).FromMaybe(false))
+    {
+        obj->Set(context, NewV8String(isolate, "attack_params"), result->Get(context, NewV8String(isolate, "params")).ToLocalChecked()).IsJust();
+    }
 
     v8::Local<v8::String> val;
     if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))

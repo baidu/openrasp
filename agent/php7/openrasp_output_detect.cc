@@ -20,7 +20,7 @@
 #include "agent/shared_config_manager.h"
 #include "utils/regex.h"
 #include "hook/checker/builtin_detector.h"
-#include "hook/checker/policy_detector.h"
+#include "hook/checker/v8_detector.h"
 #include "hook/data/xss_userinput_object.h"
 #include "hook/data/response_object.h"
 #include "openrasp_content_type.h"
@@ -175,8 +175,8 @@ static void check_sensitive_content(const char *content, size_t content_length, 
     sampler.update(OPENRASP_G(config).response.sampler_interval, OPENRASP_G(config).response.sampler_burst);
     if (sampler.check())
     {
-        data::ResponseObject data(OPENRASP_V8_G(isolate), content, content_length, content_type, OPENRASP_CONFIG(plugin.timeout.millis));
-        checker::PolicyDetector checker(data);
+        data::ResponseObject data(content, content_length, content_type);
+        checker::V8Detector checker(data, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
         checker.run();
     }
 }

@@ -29,7 +29,7 @@ void sensitive_files_policy_alarm(std::map<std::string, std::vector<std::string>
         j.write_vector({"policy_params", "files"}, it.second);
         j.write_string({"message"}, "Multiple sensitive files found in " + it.first);
         TSRMLS_FETCH();
-        LOG_G(alarm_logger).log(LEVEL_INFO, j TSRMLS_CC);
+        LOG_G(policy_logger).log(LEVEL_INFO, j TSRMLS_CC);
     }
 }
 
