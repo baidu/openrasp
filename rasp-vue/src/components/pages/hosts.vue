@@ -44,7 +44,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model.trim="hostname" type="text" class="form-control w-20" placeholder="搜索主机\ip\备注\os" @keyup.enter="loadRaspList(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-20" placeholder="主机名称/备注/IP/OS" @keyup.enter="loadRaspList(1)">
           </div>
 
           <button class="btn btn-primary ml-2" @click="loadRaspList(1)">
@@ -226,13 +226,20 @@ export default {
   methods: {
     ceil: Math.ceil,
     enumAgentVersion() {
-      this.request.post('v1/api/rasp/search/version', {
-        data: {
-          app_id: this.current_app.id
-        },
-        page: 1,
-        perpage: 100
-      }).then(res => {
+      const body = {
+          data: {
+              app_id: this.current_app.id
+          },
+          page: 1,
+          perpage: 10
+      }
+
+      if (this.filter.online && !this.filter.offline) {
+          body.data.online = true
+      } else if (!this.filter.online && this.filter.offline) {
+          body.data.online = false
+      }
+      this.request.post('v1/api/rasp/search/version', body).then(res => {
         this.agent_versions = res.data
       })
     },

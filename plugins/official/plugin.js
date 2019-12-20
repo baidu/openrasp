@@ -1,4 +1,4 @@
-const plugin_version = '2019-1203-1800'
+const plugin_version = '2019-1219-1730'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -172,6 +172,26 @@ var algorithmConfig = {
                 "ORA-01756", // quoted string not properly terminated
                 "ORA-01740", // missing double quote in identifier
                 "ORA-00920", // invalid relational operator
+                "ORA-00907", // missing right parenthesis
+                "ORA-00911", // invalid character
+            ]
+        },
+        hsql: {
+            error_code: [
+                -5583, // malformed quoted identifier
+                -5584, // malformed string
+                -5590, // unexpected end of statement
+            ],
+            error_state: [
+                "42583", // malformed quoted identifier
+                "42584", // malformed string
+                "42590", // unexpected end of statement
+            ]
+        },
+        mssql: {
+            error_code: [
+                105, // Unclosed quotation mark after the character string '%.*ls'.
+                245, // Conversion failed when converting the %ls value '%.*ls' to data type %ls.
             ]
         }
     },
@@ -522,13 +542,13 @@ var algorithmConfig = {
         action: 'block'
     },
 
-    loadLibrary_other: {
-        name:   '算法2 - 记录或者拦截所有类库加载',
-        action: 'ignore'
-    },
+    // loadLibrary_other: {
+    //     name:   '算法2 - 记录或者拦截所有类库加载',
+    //     action: 'ignore'
+    // },
 
     response_dataLeak: {
-        name:   '算法1 - 检查响应里是否有敏感数据泄露',
+        name:   '算法1 - 检查响应里是否有身份证等敏感信息',
         action: 'log',
 
         // 检查类型
@@ -539,8 +559,8 @@ var algorithmConfig = {
         },
 
         // Content-Type 过滤
-        content_type: '.*'
-    }   
+        content_type: 'html|json|xml'
+    }
 }
 
 // END ALGORITHM CONFIG //
@@ -633,6 +653,9 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
+
+// 敏感信息泄露 - Content Type 正则
+var dataLeakContentType = new RegExp(algorithmConfig.response_dataLeak.content_type, 'i')
 
 if (! RASP.is_unittest)
 {
@@ -2481,15 +2504,14 @@ plugin.register('loadLibrary', function(params, context) {
         
     }
 
-    if (algorithmConfig.loadLibrary_other.action != 'ignore') {
-        return {
-            action:     algorithmConfig.loadLibrary_other.action,
-            confidence: 60,
-            message:    _("Load library - logging all by default, library path is %1%", [params.path]),
-            algorithm:  'loadLibrary_other'
-        }     
-    }
-
+    // if (algorithmConfig.loadLibrary_other.action != 'ignore') {
+    //     return {
+    //         action:     algorithmConfig.loadLibrary_other.action,
+    //         confidence: 60,
+    //         message:    _("Load library - logging all by default, library path is %1%", [params.path]),
+    //         algorithm:  'loadLibrary_other'
+    //     }     
+    // }
 
     return clean
 })
@@ -2566,7 +2588,9 @@ if (algorithmConfig.deserialization_transformer.action != 'ignore') {
     })
 }
 
-function checkChineseId(data) {
+
+// 匹配身份证
+function findFirstIdentityCard(data) {
     const regexChineseId = /(?<!\d)\d{10}(?:[01]\d)(?:[0123]\d)\d{3}(?:\d|x|X)(?!\d)/;
     const W = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
     const m = regexChineseId.exec(data)
@@ -2582,12 +2606,17 @@ function checkChineseId(data) {
             sum += id[17] - '0';
         }
         if (sum % 11 == 1) {
-            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            return {
+                type:  '身份证',
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
+            }
         }
     }
 }
 
-function checkChinesePhone(data) {
+// 匹配手机号
+function findFirstMobileNumber(data) {
     const regexChinesePhone = /(?<!\d)(?:(?:00|\+)?86 ?)?(1\d{2})(?:[ -]?\d){8}(?!\d)/;
     const prefixs = new Set([133, 149, 153, 173, 174, 177, 180,
         181, 189, 199, 130, 131, 132, 145, 146, 155, 156, 166, 175, 176, 185, 186, 134, 135, 136, 137, 138, 139,
@@ -2596,12 +2625,17 @@ function checkChinesePhone(data) {
     let m = regexChinesePhone.exec(data)
     if (m) {
         if (prefixs.has(parseInt(m[1]))) {
-            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            return {
+                type:  '手机号',
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
+            }
         }
     }
 }
 
-function checkBankCard(data) {
+// 匹配银行卡、信用卡
+function findFirstBankCard(data) {
     const regexBankCard = /(?<!\d)(?:62|3|5[1-5]|4\d)\d{2}(?:[ -]?\d{4}){3}(?!\d)/;
     let m = regexBankCard.exec(data)
     if (m) {
@@ -2616,38 +2650,67 @@ function checkBankCard(data) {
             sum = sum + Math.floor(t / 10) + t % 10;
         }
         if (sum % 10 == 0) {
-            return data.slice(Math.max(m.index - 20, 0), m.index + m[0].length + 20)
+            return {
+                type:  '银行卡',
+                match: m[0],
+                parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
+            }
         }
     }
 }
 
 if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
+    // response 所有检测点都会抽样
     plugin.register('response', function (params, context) {
-        var items = []
+        const content_type = params.content_type
+        const content      = params.content
+        const kind         = algorithmConfig.response_dataLeak.kind
+        const header       = context.header || {}
 
-        const id_card   = checkChineseId(params.content)
-        const phone     = checkChinesePhone(params.content)
-        const bank_card = checkBankCard(params.content)
+        var items = [], parts = []
 
-        if (id_card) {
-            items.push(id_card + '(身份证)')
+        // content-type 过滤
+        if (! dataLeakContentType.test(content_type)) {
+            return clean
         }
 
-        if (phone) {
-            items.push(phone + '(手机号)')
+        // 是否检查身份证泄露
+        if (kind.identity_card) {
+            const data = findFirstIdentityCard(content)
+            if (data) {
+                items.push(data.match + '(身份证)')
+                parts.push(data)
+            }
         }
 
-        if (bank_card) {
-            items.push(phone + '(银行卡)')
+        // 是否检查手机号泄露
+        if (kind.phone) {
+            const data = findFirstMobileNumber(content)
+            if (data) {
+                items.push(data.match + '(手机号)')
+                parts.push(data)
+            }
+        }
+
+        // 是否检查银行卡泄露
+        if (kind.bank_card) {
+            const data = findFirstBankCard(content)
+            if (data) {
+                items.push(data.match + '(银行卡)')
+                parts.push(data)
+            }
         }
 
         if (items.length) {
             return {
-                action:      'log',
-                message:     '检测到敏感数据泄露: ' + items.join('; '),
-                confidence:  80,
-                algorithm:   'response_dataLeak'
+                action:     algorithmConfig.response_dataLeak.action,
+                message:    '检测到敏感数据泄露: ' + items.join('、 '),
+                confidence: 80,
+                algorithm:  'response_dataLeak',
+                params: {
+                    parts
+                }
             }
         }
     })

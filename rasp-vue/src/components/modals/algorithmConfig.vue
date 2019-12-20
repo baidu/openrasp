@@ -62,7 +62,7 @@
             <div class="form-group">
               <input type="text" v-model.trim="error_code_concat" class="form-control">
             </div>
-          </div>          
+          </div>
 
           <div v-if="key == 'command_common'">
             <label>渗透命令探针 - 正则表达式</label>
@@ -70,6 +70,28 @@
               <input type="text" v-model.trim="data.pattern" class="form-control">
             </div>
             <span class="text-danger" v-if="command_common_error">{{command_common_error }}</span>
+          </div>
+
+          <div v-if="key == 'response_dataLeak'">
+            <label class="custom-switch m-0">
+              <input type="checkbox" v-model="data.kind.phone" class="custom-switch-input">
+              <span class="custom-switch-indicator" @click="data.kind.phone = !data.kind.phone"></span>
+              <span class="custom-switch-description">检测手机号泄露</span>              
+            </label>
+            <br/>
+
+            <label class="custom-switch m-0">
+              <input type="checkbox" v-model="data.kind.identity_card" class="custom-switch-input">
+              <span class="custom-switch-indicator" @click="data.kind.identity_card = !data.kind.identity_card"></span>
+              <span class="custom-switch-description">检测身份证泄露</span>              
+            </label>
+            <br/>
+
+            <label class="custom-switch m-0">
+              <input type="checkbox" v-model="data.kind.bank_card" class="custom-switch-input">
+              <span class="custom-switch-indicator" @click="data.kind.bank_card = !data.kind.bank_card"></span>
+              <span class="custom-switch-description">检测银行卡、信用卡泄露</span>              
+            </label>
           </div>
 
         </div>

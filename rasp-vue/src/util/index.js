@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookie from 'js-cookie'
 import router from '@/router'
 
-export var rasp_version = '1.3'
+export var rasp_version = '1.3.0'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -102,6 +102,8 @@ export var baseline_types = {
   3005: '开放目录检查',
   3006: '数据库连接账号审计',
   3007: 'JBoss 后台无认证检查',
+  // 3008: '日志泄露敏感信息',
+  3009: 'Web 根目录敏感文件泄露',
 
   4001: 'allow_url_include 配置审计',
   4002: 'expose_php 配置审计',
@@ -132,7 +134,8 @@ export var attack_types = {
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
-  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门'
+  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门',
+  response: 'HTTP 响应采样检测'
 }
 
 export var status_types = {

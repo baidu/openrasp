@@ -33,7 +33,6 @@ import java.util.HashMap;
  * @author: anyang
  * @create: 2019/06/12 14:11
  */
-@HookAnnotation
 public class LogHook extends AbstractClassHook {
     private static final String LOG4J = "log4j";
     private static final String LOG4J2 = "log4j2";
