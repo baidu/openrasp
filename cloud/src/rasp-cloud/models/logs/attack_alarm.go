@@ -15,6 +15,7 @@
 package logs
 
 import (
+	"net/url"
 	"rasp-cloud/es"
 	"github.com/olivere/elastic"
 	"time"
@@ -92,7 +93,11 @@ func AddAttackAlarm(alarm map[string]interface{}) error {
 	setAlarmLocation(alarm)
 	idContent := ""
 	if alarm["plugin_algorithm"] == "response_dataLeak" {
-		idContent += fmt.Sprint(alarm["url"])
+		urlParse, err := url.Parse(alarm["url"].(string))
+		if err != nil {
+			return err
+		}
+		idContent += fmt.Sprint(urlParse.Scheme + "://" + urlParse.Host + urlParse.Path)
 	} else {
 		idContent += fmt.Sprint(alarm["rasp_id"])
 		idContent += fmt.Sprint(alarm["request_id"])
