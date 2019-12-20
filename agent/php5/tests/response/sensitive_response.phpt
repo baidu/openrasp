@@ -8,7 +8,7 @@ plugin.register('response', params => {
   return {
     action: 'log',
     message: 'sensitive',
-    policy_params: {
+    params: {
       a: 1
     }
   }

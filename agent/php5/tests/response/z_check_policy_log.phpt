@@ -11,7 +11,7 @@ display_errors=false
 --FILE--
 <?php
 include(__DIR__.'/timezone.inc');
-passthru('tail -n 1 /tmp/openrasp/logs/policy/policy.log.'.date("Y-m-d"));
+passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
 .*sensitive.*

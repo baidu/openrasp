@@ -48,8 +48,7 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
 
     protected static boolean isCheckSensitive() {
         Config config = Config.getConfig();
-        if (!config.isIastEnabled() || config.getResponseSamplerInterval() <= 0
-                || config.getResponseSamplerBurst() <= 0) {
+        if (config.getResponseSamplerInterval() <= 0 || config.getResponseSamplerBurst() <= 0) {
             return false;
         }
         if (HookHandler.responseCache.get() != null) {
@@ -72,7 +71,7 @@ public abstract class ServerResponseBodyHook extends AbstractClassHook {
             params.remove("buffer");
             params.remove("encoding");
             params.remove("content_length");
-            HookHandler.doCheck(CheckParameter.Type.POLICY_RESPONSE, params);
+            HookHandler.doCheck(CheckParameter.Type.RESPONSE, params);
         }
     }
 }
