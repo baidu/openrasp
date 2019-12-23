@@ -84,11 +84,6 @@ public class CustomResponseHtml extends FileScanListener {
      * @param content 自定义页面内容
      */
     private CustomResponseHtml(String content) {
-        File assetsDir = new File(Config.getConfig().getBaseDirectory() + File.separator
-                + CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR);
-        if (!assetsDir.exists()) {
-            assetsDir.mkdir();
-        }
         this.content = content;
     }
 
