@@ -1,4 +1,4 @@
-const plugin_version = '2019-1220-1700'
+const plugin_version = '2019-1223-1000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2612,7 +2612,7 @@ function findFirstIdentityCard(data) {
         }
         if (sum % 11 == 1) {
             return {
-                type:  '身份证',
+                type:  'Identity Card',
                 match: m[0],
                 parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
             }
@@ -2631,7 +2631,7 @@ function findFirstMobileNumber(data) {
     if (m) {
         if (prefixs.has(parseInt(m[1]))) {
             return {
-                type:  '手机号',
+                type:  'Mobile Number',
                 match: m[0],
                 parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
             }
@@ -2656,7 +2656,7 @@ function findFirstBankCard(data) {
         }
         if (sum % 10 == 0) {
             return {
-                type:  '银行卡',
+                type:  'Bank Card',
                 match: m[0],
                 parts: data.slice(Math.max(m.index - 40, 0), m.index + m[0].length + 40)
             }
@@ -2684,7 +2684,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         if (kind.identity_card) {
             const data = findFirstIdentityCard(content)
             if (data) {
-                items.push(data.match + '(身份证)')
+                items.push(data.match + '(' + data.type + ')')
                 parts.push(data)
             }
         }
@@ -2693,7 +2693,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         if (kind.phone) {
             const data = findFirstMobileNumber(content)
             if (data) {
-                items.push(data.match + '(手机号)')
+                items.push(data.match + '(' + data.type + ')')
                 parts.push(data)
             }
         }
@@ -2702,7 +2702,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         if (kind.bank_card) {
             const data = findFirstBankCard(content)
             if (data) {
-                items.push(data.match + '(银行卡)')
+                items.push(data.match + '(' + data.type + ')')
                 parts.push(data)
             }
         }
