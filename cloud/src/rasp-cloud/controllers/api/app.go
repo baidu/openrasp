@@ -22,8 +22,8 @@ import (
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
-	"rasp-cloud/kafka"
 	"rasp-cloud/models"
+	"rasp-cloud/kafka"
 	"strconv"
 	"sync"
 	"time"
@@ -194,10 +194,10 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app whitelist config", err)
 	}
-	_, err = models.UpdateWhiteListConfigForStrategy(param.StrategyId, param.AppId, param.Config)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
-	}
+	//_, err = models.UpdateWhiteListConfigForStrategy(param.StrategyId, param.AppId, param.Config)
+	//if err != nil {
+	//	o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
+	//}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateWhitelistConfig,
 		o.Ctx.Input.IP(), "Updated whitelist config of "+param.AppId)
 	o.Serve(app)

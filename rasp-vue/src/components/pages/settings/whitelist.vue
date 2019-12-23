@@ -162,6 +162,13 @@ export default {
       this.data.splice(index, 1)
     },
     doSave() {
+      this.data.forEach(element=>{
+          for (let i in element.hook) {
+              if(!element.hook[i]) {
+                  delete element.hook[i]
+              }
+          }
+      })
       return this.request.post('v1/api/app/whitelist/config', {
         app_id: this.current_app.id,
         config: this.data
