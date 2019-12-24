@@ -96,8 +96,9 @@ public class HttpClientHook extends AbstractSSRFHook {
     }
 
     public static void exitCheck(Object uriValue, Object response) {
-        if (isChecking.get() && response != null) {
-            try {
+        try {
+            if (isChecking.get() && response != null) {
+
                 URI redirectUri = HttpClientRedirectHook.uriCache.get();
                 if (redirectUri != null) {
                     HashMap<String, Object> params = getSsrfParam(uriValue);
@@ -108,10 +109,10 @@ public class HttpClientHook extends AbstractSSRFHook {
                         }
                     }
                 }
-            } finally {
-                isChecking.set(false);
-                HttpClientRedirectHook.uriCache.set(null);
             }
+        } finally {
+            isChecking.set(false);
+            HttpClientRedirectHook.uriCache.set(null);
         }
     }
 

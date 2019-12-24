@@ -84,24 +84,24 @@ public class URLConnectionHook extends AbstractSSRFHook {
     }
 
     public static void onExit(Object urlConnection) {
-        if (isChecking.get() && !isExit.get() && URLConnectionRedirectHook.urlCache.get() != null) {
-            // 以下会继续调用 getinpustream isExit 避免死循环
-            isExit.set(true);
-            try {
+        try {
+            if (isChecking.get() && !isExit.get() && URLConnectionRedirectHook.urlCache.get() != null) {
+                // 以下会继续调用 getinpustream isExit 避免死循环
+                isExit.set(true);
                 HashMap<String, Object> cache = originCache.get();
                 HashMap<String, Object> redirectCache = getSsrfParamWithURL(URLConnectionRedirectHook.urlCache.get());
                 if (cache != null && redirectCache != null) {
                     AbstractRedirectHook.checkRedirect(cache, redirectCache,
                             ((HttpURLConnection) urlConnection).getResponseMessage(), ((HttpURLConnection) urlConnection).getResponseCode());
                 }
-            } catch (Exception e) {
-                // ignore
-            } finally {
-                isChecking.set(false);
-                originCache.set(null);
-                isExit.set(false);
-                URLConnectionRedirectHook.urlCache.set(null);
             }
+        } catch (Exception e) {
+            // ignore
+        } finally {
+            isChecking.set(false);
+            originCache.set(null);
+            isExit.set(false);
+            URLConnectionRedirectHook.urlCache.set(null);
         }
     }
 
