@@ -7,7 +7,7 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%
         try {
-            URL url = new URL("http://0x7f.0x0.0x0.0x1:8080/app");
+            URL url = new URL("http://127.0.0.1:8080/app");
             URLConnection urlConnection = url.openConnection();
             urlConnection.connect();
             InputStream inputStream = urlConnection.getInputStream();
@@ -20,6 +20,6 @@
             }
             out.println(content);
         } catch (Exception e) {
-            out.println(e.getMessage());
+	    out.println(e.getClass().getName()+":"+e.getMessage());
         }
 %>

@@ -13,7 +13,7 @@
             StringBuffer resultBuffer = null;
             HttpClient client = HttpClients.createDefault();
             BufferedReader br = null;
-            HttpGet httpGet = new HttpGet("http://0x7f.0x0.0x0.0x1:8080/app");
+            HttpGet httpGet = new HttpGet("http://127.0.0.1:8080/app");
             HttpResponse res = client.execute(httpGet);
             // 读取服务器响应数据
             br = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
@@ -24,7 +24,7 @@
             }
             out.println(resultBuffer);
         } catch (Exception e) {
-            out.println(e.getMessage());
+            out.println(e.getClass().getName()+":"+e.getMessage());
         }
 
 %>
