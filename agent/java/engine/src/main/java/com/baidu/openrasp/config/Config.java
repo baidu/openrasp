@@ -57,6 +57,7 @@ public class Config extends FileScanListener {
     public static String baseDirectory;
     static Integer watchId;
     //全局lru的缓存
+    private static boolean isInit = false;
     public static LRUCache<Object, String> commonLRUCache;
 
     String configFileDir;
@@ -120,6 +121,7 @@ public class Config extends FileScanListener {
         if (!instance.getCloudSwitch()) {
             CustomResponseHtml.load(baseDirectory);
         }
+        isInit = true;
         //初始化全局缓存
         commonLRUCache = new LRUCache<Object, String>(instance.getSqlCacheCapacity());
         LOGGER.info("baseDirectory: " + baseDirectory);
@@ -390,10 +392,12 @@ public class Config extends FileScanListener {
 
     private void reloadConfigDir(File directory) {
         try {
-            if (directory.getName().equals(CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR)) {
-                CustomResponseHtml.load(baseDirectory);
-            } else if (directory.getName().equals(CONFIG_DIR_NAME)) {
-                reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
+            if (isInit) {
+                if (directory.getName().equals(CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR)) {
+                    CustomResponseHtml.load(baseDirectory);
+                } else if (directory.getName().equals(CONFIG_DIR_NAME)) {
+                    reloadConfig(new File(configFileDir + File.separator + CONFIG_FILE_NAME));
+                }
             }
         } catch (Exception e) {
             LogTool.warn(ErrorType.CONFIG_ERROR, "update " + directory.getAbsolutePath() +
@@ -861,7 +865,7 @@ public class Config extends FileScanListener {
     public int getResponseSamplerBurst() {
         return responseSamplerBurst;
     }
-    
+
     //--------------------------统一的配置处理------------------------------------
 
     /**
