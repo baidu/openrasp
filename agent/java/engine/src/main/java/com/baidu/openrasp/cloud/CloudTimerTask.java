@@ -27,12 +27,16 @@ public abstract class CloudTimerTask implements Runnable {
 
     private boolean isAlive = true;
 
-    public CloudTimerTask(int sleepTime) {
+    private String name;
+
+    public CloudTimerTask(int sleepTime, String name) {
         this.sleepTime = sleepTime;
+        this.name = name;
     }
 
     public void start() {
         Thread taskThread = new Thread(this);
+        taskThread.setName(name);
         taskThread.setDaemon(true);
         taskThread.start();
     }
