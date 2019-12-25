@@ -103,8 +103,8 @@ function is_scanning_hook(hook_type, params, context) {
 
     if (context.filter === undefined) {
         try {
-            filter_ascii = context.header["x-iast-filter"]
-            context.filter = JSON.parse(atob(filter_ascii))
+            let filter_ascii = context.header["x-iast-filter"]
+            context.filter = JSON.parse(unescape(filter_ascii))
         }
         catch (e) {
             context.filter = false
@@ -112,7 +112,7 @@ function is_scanning_hook(hook_type, params, context) {
         }
     }
 
-    if (context.filter == false) {
+    if (context.filter === false) {
         return true
     }
 
