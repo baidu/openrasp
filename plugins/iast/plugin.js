@@ -285,6 +285,14 @@ plugin.register('eval', function (params, context) {
     add_hook('eval', params, context)
 })
 
+plugin.register('mongodb', function (params, context) {
+    add_hook('mongodb', params, context)
+})
+
+plugin.register('deleteFile', function (params, context) {
+    add_hook('deleteFile', params, context)
+})
+
 plugin.register('requestEnd', function (params, context) {
     send_rasp_result(context)
 })
