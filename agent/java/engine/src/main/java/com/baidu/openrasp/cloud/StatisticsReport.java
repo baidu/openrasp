@@ -37,7 +37,7 @@ public class StatisticsReport extends CloudTimerTask {
     private static final int STATISTICS_REPORT_INTERVAL = 3600;
 
     public StatisticsReport() {
-        super(STATISTICS_REPORT_INTERVAL);
+        super(STATISTICS_REPORT_INTERVAL, "OpenRASP Statistics Thread");
     }
 
     @Override

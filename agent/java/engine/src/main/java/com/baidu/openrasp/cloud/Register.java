@@ -43,6 +43,7 @@ public class Register {
     public Register(RegisterCallback callback) {
         this.callback = callback;
         Thread thread = new Thread(new RegisterThread());
+        thread.setName("OpenRASP Register Thread");
         thread.setDaemon(true);
         thread.start();
     }

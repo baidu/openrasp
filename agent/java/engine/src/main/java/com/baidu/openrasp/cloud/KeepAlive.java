@@ -42,7 +42,7 @@ import java.util.Map;
 public class KeepAlive extends CloudTimerTask {
 
     public KeepAlive() {
-        super(Config.getConfig().getHeartbeatInterval());
+        super(Config.getConfig().getHeartbeatInterval(), "OpenRASP Heartbeat Thread");
     }
 
     @Override
