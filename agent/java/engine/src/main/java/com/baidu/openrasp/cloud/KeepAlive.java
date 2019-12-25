@@ -23,6 +23,8 @@ import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.config.ConfigItem;
+import com.baidu.openrasp.dependency.DependencyReport;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.messaging.LogTool;
@@ -41,8 +43,16 @@ import java.util.Map;
  */
 public class KeepAlive extends CloudTimerTask {
 
+    private DependencyReport dependencyReport = new DependencyReport();
+
     public KeepAlive() {
-        super(Config.getConfig().getHeartbeatInterval(), "OpenRASP Heartbeat Thread");
+        super("OpenRASP Heartbeat Thread");
+        dependencyReport.start();
+    }
+
+    @Override
+    public long getSleepTime() {
+        return Config.getConfig().getHeartbeatInterval();
     }
 
     @Override
@@ -84,7 +94,7 @@ public class KeepAlive extends CloudTimerTask {
         }
     }
 
-    public static Map<String, Object> generateParameters() {
+    public Map<String, Object> generateParameters() {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
@@ -95,7 +105,7 @@ public class KeepAlive extends CloudTimerTask {
         return params;
     }
 
-    private static void handleResponse(GenericResponse response) {
+    private void handleResponse(GenericResponse response) {
         long oldConfigTime = CloudCacheModel.getInstance().getConfigTime();
         String oldPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         Long deliveryTime = null;
@@ -157,6 +167,10 @@ public class KeepAlive extends CloudTimerTask {
                     DynamicConfigAppender.setLogMaxBackup();
                     DynamicConfigAppender.fileAppenderAddBurstFilter();
                 }
+
+                if (configMap.get(ConfigItem.DEPENDENCY_CHECK_INTERVAL.toString()) != null) {
+                    dependencyReport.interrupt();
+                }
             } catch (Throwable e) {
                 LogTool.warn(ErrorType.CONFIG_ERROR, "config update failed: " + e.getMessage(), e);
             }
@@ -178,4 +192,5 @@ public class KeepAlive extends CloudTimerTask {
             new CloudHttp().commonRequest(url, content);
         }
     }
+
 }

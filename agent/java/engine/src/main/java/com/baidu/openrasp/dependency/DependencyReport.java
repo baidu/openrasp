@@ -39,7 +39,12 @@ import java.util.Map;
 public class DependencyReport extends CloudTimerTask {
 
     public DependencyReport() {
-        super(Config.getConfig().getDependencyCheckInterval(), "OpenRASP Dependency Report Thread");
+        super("OpenRASP Dependency Report Thread");
+    }
+
+    @Override
+    public long getSleepTime() {
+        return Config.getConfig().getDependencyCheckInterval();
     }
 
     @Override

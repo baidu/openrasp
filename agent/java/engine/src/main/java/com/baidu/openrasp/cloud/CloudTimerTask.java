@@ -23,22 +23,22 @@ package com.baidu.openrasp.cloud;
  */
 public abstract class CloudTimerTask implements Runnable {
 
-    private int sleepTime;
+    private Thread taskThread;
 
-    private boolean isAlive = true;
+    private volatile boolean isAlive = true;
 
-    private String name;
-
-    public CloudTimerTask(int sleepTime, String name) {
-        this.sleepTime = sleepTime;
-        this.name = name;
+    public CloudTimerTask(String name) {
+        taskThread = new Thread(this);
+        taskThread.setName(name);
+        taskThread.setDaemon(true);
     }
 
     public void start() {
-        Thread taskThread = new Thread(this);
-        taskThread.setName(name);
-        taskThread.setDaemon(true);
         taskThread.start();
+    }
+
+    public void interrupt() {
+        taskThread.interrupt();
     }
 
     public void stop() {
@@ -49,15 +49,21 @@ public abstract class CloudTimerTask implements Runnable {
         while (isAlive) {
             try {
                 try {
+                    if (taskThread.isInterrupted()) {
+                        Thread.interrupted();
+                    }
                     execute();
                 } catch (Throwable t) {
                     handleError(t);
                 }
                 try {
+                    Thread.interrupted();
                     // 和上面分开处理，避免心跳失败不走 sleep,不能放到 execute 之前，会导致第一次心跳不能马上运行
-                    Thread.sleep(sleepTime * 1000);
+                    Thread.sleep(getSleepTime() * 1000);
                 } catch (Throwable t) {
-                    handleError(t);
+                    if (!(t instanceof InterruptedException)) {
+                        handleError(t);
+                    }
                 }
             } catch (Throwable t) {
                 System.out.println("OpenRASP cloud task failed: " + t.getMessage());
@@ -65,6 +71,8 @@ public abstract class CloudTimerTask implements Runnable {
             }
         }
     }
+
+    abstract public long getSleepTime();
 
     abstract public void execute();
 
