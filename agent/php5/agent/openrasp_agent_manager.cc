@@ -51,17 +51,10 @@ std::unique_ptr<OpenraspAgentManager> oam = nullptr;
 std::vector<std::unique_ptr<BaseAgent>> agents;
 static const std::string register_url_path = "/v1/agent/rasp";
 
-static void super_signal_handler(int signal_no)
+static void suprevisor_sigterm_handler(int signal_no)
 {
+	openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("Supervisor process receive signal SIGTERM"));
 	exit(0);
-}
-
-static void super_install_signal_handler()
-{
-	struct sigaction sa_usr = {0};
-	sa_usr.sa_flags = 0;
-	sa_usr.sa_handler = super_signal_handler;
-	sigaction(SIGTERM, &sa_usr, NULL);
 }
 
 static void supervisor_sigchld_handler(int signal_no)
@@ -75,10 +68,24 @@ static void supervisor_sigchld_handler(int signal_no)
 			std::unique_ptr<BaseAgent> &agent_ptr = agents[i];
 			if (p == agent_ptr->get_pid_from_shm())
 			{
+				openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("%s exited unexpectedly"), agent_ptr->get_name().c_str());
 				agent_ptr->write_pid_to_shm(0);
 			}
 		}
 	}
+}
+
+static void super_install_signal_handler()
+{
+	struct sigaction sa_usr_chld = {0};
+	sa_usr_chld.sa_flags = 0;
+	sa_usr_chld.sa_handler = supervisor_sigchld_handler;
+	sigaction(SIGCHLD, &sa_usr_chld, NULL);
+
+	struct sigaction sa_usr_term = {0};
+	sa_usr_term.sa_flags = 0;
+	sa_usr_term.sa_handler = suprevisor_sigterm_handler;
+	sigaction(SIGTERM, &sa_usr_term, NULL);
 }
 
 OpenraspAgentManager::OpenraspAgentManager()
@@ -191,6 +198,7 @@ bool OpenraspAgentManager::supervisor_startup()
 			close(fd);
 		}
 		setsid();
+		openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("supervisor process starts, the pid is %d"), getpid());
 		supervisor_run();
 	}
 	else
@@ -214,11 +222,6 @@ void OpenraspAgentManager::supervisor_shutdown()
 void OpenraspAgentManager::supervisor_run()
 {
 	AGENT_SET_PROC_NAME("rasp-supervisor");
-	struct sigaction sa_usr = {0};
-	sa_usr.sa_flags = 0;
-	sa_usr.sa_handler = supervisor_sigchld_handler;
-	sigaction(SIGCHLD, &sa_usr, NULL);
-
 	super_install_signal_handler();
 	general_signal_hook();
 
@@ -246,6 +249,7 @@ void OpenraspAgentManager::supervisor_run()
 		sleep(1);
 		if (!pid_alive(std::to_string(get_master_pid())))
 		{
+			openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("supervisor process is going to exit, cuz of master process (%d) is not alive"), get_master_pid());
 			supervisor_shutdown();
 		}
 	}
@@ -261,6 +265,7 @@ void OpenraspAgentManager::ensure_agent_processes_survival()
 			pid_t pid = fork();
 			if (pid == 0)
 			{
+				openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("start %s process, the pid is %d"), agent_ptr->get_name().c_str(), getpid());
 				agent_ptr->run();
 			}
 			else if (pid > 0)
@@ -286,6 +291,7 @@ void OpenraspAgentManager::kill_agent_processes()
 
 void OpenraspAgentManager::agent_remote_register()
 {
+	openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("agent starts remote register"));
 	if (!fetch_source_in_ip_packets(local_ip, sizeof(local_ip), openrasp_ini.backend_url))
 	{
 		local_ip[0] = 0;
@@ -564,15 +570,15 @@ void OpenraspAgentManager::set_webdir_scan_regex(const char *webdir_scan_regex)
 		agent_ctrl_block->set_webdir_scan_regex(webdir_scan_regex);
 	}
 }
-  const char *OpenraspAgentManager::get_webdir_scan_regex()
-  {
+const char *OpenraspAgentManager::get_webdir_scan_regex()
+{
 	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_webdir_scan_regex();
 	}
 	return "";
-  }
+}
 
 long OpenraspAgentManager::get_plugin_update_timestamp()
 {

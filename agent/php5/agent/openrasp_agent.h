@@ -44,6 +44,7 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid) = 0;
   virtual pid_t get_pid_from_shm() = 0;
   virtual void install_sigterm_handler(sighandler_t signal_handler);
+  virtual std::string get_name() const;
 
 protected:
   std::string name;
