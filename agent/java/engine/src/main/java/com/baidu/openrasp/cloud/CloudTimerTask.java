@@ -9,7 +9,9 @@ public abstract class CloudTimerTask implements Runnable {
 
     private int sleepTime;
 
-    private boolean isAlive = true;
+    private volatile boolean isAlive = true;
+
+    private volatile boolean isSuspended = false;
 
     public CloudTimerTask(int sleepTime) {
         this.sleepTime = sleepTime;
@@ -25,19 +27,29 @@ public abstract class CloudTimerTask implements Runnable {
         this.isAlive = false;
     }
 
+    public void suspend() {
+        this.isSuspended = true;
+    }
+
+    public void resume() {
+        this.isSuspended = false;
+    }
+
     public void run() {
         while (isAlive) {
             try {
-                try {
-                    execute();
-                } catch (Throwable t) {
-                    handleError(t);
-                }
-                try {
-                    // 和上面分开处理，避免心跳失败不走 sleep,不能放到 execute 之前，会导致第一次心跳不能马上运行
-                    Thread.sleep(sleepTime * 1000);
-                } catch (Throwable t) {
-                    handleError(t);
+                if (!isSuspended) {
+                    try {
+                        execute();
+                    } catch (Throwable t) {
+                        handleError(t);
+                    }
+                    try {
+                        // 和上面分开处理，避免心跳失败不走 sleep,不能放到 execute 之前，会导致第一次心跳不能马上运行
+                        Thread.sleep(sleepTime * 1000);
+                    } catch (Throwable t) {
+                        handleError(t);
+                    }
                 }
             } catch (Throwable t) {
                 System.out.println("OpenRASP cloud task failed: " + t.getMessage());
