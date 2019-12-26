@@ -27,6 +27,8 @@ public abstract class CloudTimerTask implements Runnable {
 
     private volatile boolean isAlive = true;
 
+    private volatile boolean isSuspended = false;
+
     public CloudTimerTask(String name) {
         taskThread = new Thread(this);
         taskThread.setName(name);
@@ -45,16 +47,26 @@ public abstract class CloudTimerTask implements Runnable {
         this.isAlive = false;
     }
 
+    public void suspend() {
+        this.isSuspended = true;
+    }
+
+    public void resume() {
+        this.isSuspended = false;
+    }
+
     public void run() {
         while (isAlive) {
             try {
-                try {
-                    if (taskThread.isInterrupted()) {
-                        Thread.interrupted();
+                if (!isSuspended) {
+                    try {
+                        if (taskThread.isInterrupted()) {
+                            Thread.interrupted();
+                        }
+                        execute();
+                    } catch (Throwable t) {
+                        handleError(t);
                     }
-                    execute();
-                } catch (Throwable t) {
-                    handleError(t);
                 }
                 try {
                     Thread.interrupted();

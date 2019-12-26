@@ -72,14 +72,14 @@ public class KeepAlive extends CloudTimerTask {
     }
 
     private void handleRaspNotFound() {
-        // 关闭心跳和所有 hook 点，并且开始重新注册
-        stop();
+        // 暂停心跳和所有 hook 点，并且开始重新注册
+        suspend();
         HookHandler.enableHook.getAndSet(false);
         new Register(new Register.RegisterCallback() {
             @Override
             public void call() {
                 HookHandler.enableHook.getAndSet(true);
-                setAlive(true);
+                resume();
             }
         });
     }
