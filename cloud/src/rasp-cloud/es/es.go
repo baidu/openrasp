@@ -253,7 +253,7 @@ func DeleteIndex(indexName string) error {
 func DeleteByQuery(index string, docType string, query elastic.Query) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
-	res, err := ElasticClient.DeleteByQuery(index).Type(docType).Query(query).Do(ctx)
+	res, err := ElasticClient.DeleteByQuery(index).Type(docType).Query(query).ProceedOnVersionConflict().Do(ctx)
 	if err != nil {
 		beego.Error("failed to delete by query", res.Failures, err)
 		return err
