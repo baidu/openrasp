@@ -253,7 +253,7 @@ export default {
       // v1.2 之后，agent 删除 log.maxstack 配置
       // 为了让 v1.2 之后的后台兼容 v1.2 之前的 agent，前端来同步两个配置
       this.data['log.maxstack'] = this.data['plugin.maxstack']
-      this.data['security.weak_password'] = trimSplit(this.weak_password_list, ',')
+      this.data['security.weak_passwords'] = trimSplit(this.weak_password_list, ',')
 
       if (this.data['security.weak_password'].length > 200) {
         alert('为了降低内存占用，弱口令最多允许200条，当前数量 ' + this.data['security.weak_password'].length + '条')
