@@ -154,7 +154,7 @@
           <label class="form-label">
             [类库信息] 采集任务间隔（秒），范围 60-86400
           </label>
-          <input v-model.number="data['dependency_check.interval']" type="number" min="60" max="86400" class="form-control" placeholder="6">        
+          <input v-model.number="data['dependency_check.interval']" type="number" min="60" max="86400" class="form-control" placeholder="43200">
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -228,8 +228,12 @@ export default {
   data: function() {
     return {
       weak_password_list: '',
+      dependency_check: {
+        min_interval: 60,
+        max_interval: 86400,
+      },
       data: {
-        rasp_config: {}
+        rasp_config: {},
       }
     }
   },
@@ -254,6 +258,12 @@ export default {
       if (this.data['security.weak_password'].length > 200) {
         alert('为了降低内存占用，弱口令最多允许200条，当前数量 ' + this.data['security.weak_password'].length + '条')
         return
+      }
+
+      if (this.data['dependency_check.interval'] < this.dependency_check.min_interval ||
+          this.data['dependency_check.interval'] > this.dependency_check.max_interval) {
+          alert('采集任务间隔范围：' + this.dependency_check.min_interval + '~' + this.dependency_check.max_interval)
+          return
       }
 
       var body = {
