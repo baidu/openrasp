@@ -526,7 +526,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 		}
 
 		// 对类型进行检验
-		if key != "security.weak_password"{
+		if key != "security.weak_passwords" {
 			switch reflect.TypeOf(generalConfigTemplate[key]).String(){
 			case "string":
 				if _, ok := value.(string); !ok {
