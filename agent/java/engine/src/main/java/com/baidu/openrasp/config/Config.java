@@ -214,7 +214,7 @@ public class Config extends FileScanListener {
             ConfigItem item = getConfigItem(entry.getKey());
             if (item == null) {
                 LogTool.warn(ErrorType.CONFIG_ERROR,
-                        "Unknown config key [" + entry.getKey() + "] found in yml configuration");
+                        "Unknown config key [" + entry.getKey() + "] found in cloud configuration");
                 continue;
             }
             // 无法云控的参数
@@ -244,9 +244,9 @@ public class Config extends FileScanListener {
                 }
             } catch (Exception e) {
                 // 出现解析问题使用默认值
-                String message = "set config " + entry.getKey() + " from cloud failed with value "
-                        + entry.getValue() + ", use default value : " + item.setter.getDefaultValue();
-                LogTool.warn(ErrorType.CONFIG_ERROR, message + ", because: " + e.getMessage(), e);
+                String message = "Configuration item " + entry.getKey() + " has invalid value "
+                        + entry.getValue() + ", using default: " + item.setter.getDefaultValue();
+                LogTool.warn(ErrorType.CONFIG_ERROR, message + ", reason: " + e.getMessage(), e);
                 setDefaultValue(item);
             }
         }
