@@ -245,8 +245,8 @@ export default {
     setData: function(data) {
       this.data = data
 
-      if (this.data['security.weak_password']) {
-        this.weak_password_list = this.data['security.weak_password'].join(',')
+      if (this.data['security.weak_passwords']) {
+        this.weak_password_list = this.data['security.weak_passwords'].join(',')
       }
     },
     doSave: function() {
