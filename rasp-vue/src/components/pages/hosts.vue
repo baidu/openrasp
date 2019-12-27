@@ -252,6 +252,9 @@ export default {
       }
       this.request.post('v1/api/rasp/search/version', body).then(res => {
         this.agent_versions = res.data
+        if (this.agent_versions.length == 0 && this.currentVersion) {
+            this.agent_versions.push({"version": this.currentVersion, "count": 0})
+        }
       })
     },
     toHostStatus() {
