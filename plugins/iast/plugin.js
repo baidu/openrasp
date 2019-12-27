@@ -103,8 +103,8 @@ function is_scanning_hook(hook_type, params, context) {
 
     if (context.filter === undefined) {
         try {
-            filter_ascii = context.header["x-iast-filter"]
-            context.filter = JSON.parse(atob(filter_ascii))
+            let filter_ascii = context.header["x-iast-filter"]
+            context.filter = JSON.parse(unescape(filter_ascii))
         }
         catch (e) {
             context.filter = false
@@ -112,7 +112,7 @@ function is_scanning_hook(hook_type, params, context) {
         }
     }
 
-    if (context.filter == false) {
+    if (context.filter === false) {
         return true
     }
 
@@ -132,6 +132,7 @@ function send_rasp_result(context) {
 
     var hook_info  = context.hook_info || []
     delete context.hook_info
+    delete context.filter
 
     // 不检测不包含hook_info的请求, xml类型除外
     if (hook_info.length == 0 && 

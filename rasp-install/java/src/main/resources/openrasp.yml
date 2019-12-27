@@ -33,7 +33,7 @@ hooks.ignore: http_output
 #    - "sql"
 #    - "ssrf"
 inject.custom_headers:
-  X-Protectd-By: OpenRASP
+  X-Protected-By: OpenRASP
 #   X-Content-Type-Options: nosniff
 #   X-Frame-Options: deny
 #   X-XSS-Protection: 1; mode=block
