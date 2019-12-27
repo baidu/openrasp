@@ -199,7 +199,7 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 			}
 		}
 		var matchCase bson.M
-		if version != "" {
+		if version != "<nil>" {
 			matchCase = bson.M{"$and": []bson.M{
 				{"app_id": app_id},
 				{"version": version},
@@ -208,7 +208,6 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 		} else {
 			matchCase = bson.M{"$and": []bson.M{
 				{"app_id": app_id},
-				{"version": bson.M{"$gt": "0"}},
 				{"onlineTime": onlineFlag},
 			}}
 		}
