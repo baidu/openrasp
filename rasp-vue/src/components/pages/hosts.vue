@@ -196,14 +196,14 @@ export default {
     currentVersion() {
       this.loadRaspList(1)
     },
-    agent_versions: function(newVal, oldVal) {
-      if (newVal.length <= 0 && oldVal.length > 0) {
-          oldVal.forEach(element=>{
-              element["count"] = 0
-          })
-          this.agent_versions = oldVal
-      }
-    },
+    // agent_versions: function(newVal, oldVal) {
+    //   if (newVal.length <= 0 && oldVal.length > 0) {
+    //       oldVal.forEach(element=>{
+    //           element["count"] = 0
+    //       })
+    //       this.agent_versions = oldVal
+    //   }
+    // },
     filter: {
       handler() {
         if (!this.current_app.id) {
@@ -246,6 +246,9 @@ export default {
           body.data.online = true
       } else if (!this.filter.online && this.filter.offline) {
           body.data.online = false
+      }
+      if (this.currentVersion) {
+          body.data.version = this.currentVersion
       }
       this.request.post('v1/api/rasp/search/version', body).then(res => {
         this.agent_versions = res.data
