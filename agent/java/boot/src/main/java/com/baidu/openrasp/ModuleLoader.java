@@ -282,7 +282,7 @@ public class ModuleLoader {
     }
 
     public static boolean loadJar(File file) {
-        Boolean loadResult = true;
+        boolean loadResult = true;
         try {
             Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
             boolean accessible = method.isAccessible();
