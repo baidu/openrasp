@@ -74,10 +74,12 @@ function build_cloud()
     export PATH=$PATH:$GOPATH/bin
 
     if [[ -z "$NO_BEE_INSTALL" ]]; then
-        go get -u github.com/beego/bee
+        go get github.com/beego/bee
     fi
 
     cd src/rasp-cloud
+
+    go mod download
 
     commit=$(git rev-parse HEAD 2>/dev/null)
     build_time=$(date "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
