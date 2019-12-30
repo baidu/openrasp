@@ -84,9 +84,9 @@ func (o *IastController) Post() {
 	}
 
 	appId := param.Data.AppId
-	result["register"] = models.IastRegister[appId]
+	result["register"] = models.Register.GetIastRegister(appId)
 	result["status"] = 0
-	if models.IastAppId[appId] {
+	if models.IastApp.Data[appId] {
 		wsConn = IastConnection[appId]
 		if err := wsConn.wsWrite(websocket.TextMessage, o.Ctx.Input.RequestBody); err != nil {
 			beego.Error("send msg from web failed!")
@@ -140,12 +140,13 @@ func (o *WebsocketController) Get() {
 		appId:     appId,
 	}
 
-	if !models.IastAppId[appId] {
+	if !models.IastApp.GetIastAppId(appId) {
 		models.InChan = wsConn.inChan
 		models.OutChan = wsConn.outChan
 		models.CloseChan = wsConn.closeChan
 		models.IsClosed = wsConn.isClosed
-		models.IastAppId[appId] = true
+		models.IastApp.SetIastAppId(appId, true)
+		//models.IastApp.Data[appId] = true
 		IastConnection[appId] = wsConn
 		// 处理器
 		go wsConn.procLoop(appId)
@@ -211,9 +212,7 @@ func (wsConn *wsConnection) wsReadLoop(appId string) {
 		if len(dataStr) != 0 {
 			req := &models.WsMessage{}
 			if dataStr == "startup" {
-				wsConn.registerMutex.Lock()
-				defer wsConn.registerMutex.Lock()
-				models.IastRegister[appId] = 1
+				models.Register.SetIastRegister(appId, 1)
 				req = &models.WsMessage{
 					msgType,
 					[]byte("=== send heartbeat and building ws connections ==="),
@@ -272,7 +271,7 @@ func (wsConn *wsConnection) procLoop(appId string) {
 
 	for {
 		msg, err := wsConn.wsRead()
-		models.IastRegister[appId] = 2
+		models.Register.SetIastRegister(appId, 2)
 		if err != nil {
 			beego.Error("read error:" , err)
 			break
@@ -290,12 +289,10 @@ func (wsConn *wsConnection) procLoop(appId string) {
 }
 
 func (wsConn *wsConnection) wsClose() {
-	wsConn.mutex.Lock()
-	defer wsConn.mutex.Unlock()
 	appId := wsConn.appId
 	wsConn.wsCloseDup()
-	models.IastAppId[appId] = false
-	models.IastRegister[appId] = 0
+	models.IastApp.SetIastAppId(appId, false)
+	models.Register.SetIastRegister(appId, 0)
 }
 
 func (wsConn *wsConnection) wsCloseDup() {

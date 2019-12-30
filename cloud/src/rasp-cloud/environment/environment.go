@@ -335,7 +335,7 @@ func readPIDFILE(path string) string {
 
 func newPIDFile(path string, remove bool) (*PIDFile, bool) {
 	if ret := checkPIDAlreadyExists(path, remove); ret == false {
-		log.Println("start new pid file!")
+		beego.Info("start new pid file!")
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
@@ -374,7 +374,7 @@ func CheckPort(port int) bool {
 func RecoverPid(path string, remove bool) (*PIDFile, bool) {
 	time.Sleep(1 * time.Second)
 	if ret := checkPIDAlreadyExists(path, remove); ret == false {
-		log.Println("start new pid file!")
+		beego.Info("start new pid file!")
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
