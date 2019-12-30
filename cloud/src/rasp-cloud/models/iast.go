@@ -35,7 +35,7 @@ var (
 			appId: 0,
 		},
 	}
-	IastApp        = IastAppId{
+	IastApp        = &IastAppId{
 		Data: map[string]bool{
 			appId: false,
 		},
