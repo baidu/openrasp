@@ -263,7 +263,7 @@ export default {
                 if (status == 0) {
                     // alert('终止成功!');
                 } else {
-                    alert(res.status)
+                    alert(res.description)
                 }
                 this.loadIcon[i] = false;
             })
