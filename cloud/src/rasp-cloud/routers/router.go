@@ -150,7 +150,7 @@ func InitRouter() {
 	ns.Namespace(pingNS)
 	startType := *conf.AppConfig.Flag.StartType
 	if startType == conf.StartTypeForeground {
-		ns.Namespace(foregroudNS, userNS, iastNS)
+		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
 	} else if startType == conf.StartTypeAgent {
 		ns.Namespace(agentNS)
 	} else if startType == conf.StartTypeDefault {

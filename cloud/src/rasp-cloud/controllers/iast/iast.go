@@ -290,6 +290,8 @@ func (wsConn *wsConnection) procLoop(appId string) {
 }
 
 func (wsConn *wsConnection) wsClose() {
+	wsConn.mutex.Lock()
+	defer wsConn.mutex.Unlock()
 	appId := wsConn.appId
 	wsConn.wsCloseDup()
 	models.IastAppId[appId] = false
