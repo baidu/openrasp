@@ -259,6 +259,7 @@ export default {
         alert('为了降低内存占用，弱口令最多允许200条，当前数量 ' + this.data['security.weak_passwords'].length + '条')
         return
       }
+      delete this.data['security.weak_password']
 
       if (this.data['dependency_check.interval'] < this.dependency_check.min_interval ||
           this.data['dependency_check.interval'] > this.dependency_check.max_interval) {
