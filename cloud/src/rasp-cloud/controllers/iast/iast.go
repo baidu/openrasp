@@ -263,7 +263,7 @@ func (wsConn *wsConnection) procLoop(appId string) {
 			time.Sleep(3 * time.Second)
 			if err := wsConn.wsWrite(websocket.TextMessage, []byte("heartbeat from OpenRASP cloud")); err != nil {
 				beego.Error("heartbeat error:", err)
-				wsConn.wsClose()
+				//wsConn.wsClose()
 				break
 			}
 		}
