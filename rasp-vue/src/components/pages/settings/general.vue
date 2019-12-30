@@ -255,8 +255,8 @@ export default {
       this.data['log.maxstack'] = this.data['plugin.maxstack']
       this.data['security.weak_passwords'] = trimSplit(this.weak_password_list, ',')
 
-      if (this.data['security.weak_password'].length > 200) {
-        alert('为了降低内存占用，弱口令最多允许200条，当前数量 ' + this.data['security.weak_password'].length + '条')
+      if (this.data['security.weak_passwords'].length > 200) {
+        alert('为了降低内存占用，弱口令最多允许200条，当前数量 ' + this.data['security.weak_passwords'].length + '条')
         return
       }
 
