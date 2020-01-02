@@ -158,7 +158,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">
-            [响应检测] 采样周期（秒），设置为 0 关闭
+            [响应检测] 采样周期（秒），设置为 0 关闭，最低 60
           </label>
           <input v-model.number="data['response.sampler_interval']" type="number" min="60" class="form-control" placeholder="60">
         </div>
