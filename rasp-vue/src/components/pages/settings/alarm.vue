@@ -190,7 +190,7 @@
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">
-            HTTP/HTTPS URL
+            HTTP/HTTPS URL <a href="https://rasp.baidu.com/doc/setup/log/main.html#format" target="_blank">[推送数据格式说明]</a>
           </label>
           <input v-model.trim="data.http_alarm_conf.recv_addr" type="text" class="form-control" placeholder="http://myserver/myurl">
         </div>

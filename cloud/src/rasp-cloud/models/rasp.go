@@ -189,6 +189,7 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 	}
 	if bsonModel["app_id"] != nil {
 		app_id := strings.TrimSpace(fmt.Sprint(bsonModel["app_id"]))
+		version := strings.TrimSpace(fmt.Sprint(bsonModel["version"]))
 		onlineFlag := bson.M{"$gt": 0}
 		if selector.Online != nil {
 			if *selector.Online {
@@ -196,6 +197,19 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 			} else {
 				onlineFlag = bson.M{"$lt": time.Now().Unix() - 180}
 			}
+		}
+		var matchCase bson.M
+		if version != "<nil>" {
+			matchCase = bson.M{"$and": []bson.M{
+				{"app_id": app_id},
+				{"version": version},
+				{"onlineTime": onlineFlag},
+			}}
+		} else {
+			matchCase = bson.M{"$and": []bson.M{
+				{"app_id": app_id},
+				{"onlineTime": onlineFlag},
+			}}
 		}
 		Operations := []bson.M {
 			{
@@ -208,10 +222,7 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 						"$add": []string{"$last_heartbeat_time", "$heartbeat_interval"}}},
 			},
 			{
-				"$match": bson.M{"app_id": app_id},
-			},
-			{
-				"$match": bson.M{"onlineTime": onlineFlag},
+				"$match": matchCase,
 			},
 			{
 				"$group": bson.M{
