@@ -167,22 +167,22 @@ bool HeartBeatAgent::do_heartbeat()
 					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::validator::vint64::UnsignedInteger());
 
 					//dependency check
-					int64_t dependency_interval = config_reader.fetch_int64({"dependency_check.interval"}, OpenraspCtrlBlock::default_dependency_interval);
+					int64_t dependency_interval = config_reader.fetch_int64({"dependency_check.interval"}, WebdirCtrlBlock::default_dependency_interval);
 					oam->set_dependency_interval(dependency_interval);
 
 					//webdir scan check
-					int64_t webdir_scan_interval = config_reader.fetch_int64({"fileleak_scan.interval"}, OpenraspCtrlBlock::default_webdir_scan_interval);
+					int64_t webdir_scan_interval = config_reader.fetch_int64({"fileleak_scan.interval"}, WebdirCtrlBlock::default_webdir_scan_interval);
 					oam->set_webdir_scan_interval(webdir_scan_interval);
 
 					//webdir scan
-					int64_t scan_limit = config_reader.fetch_int64({"fileleak_scan.limit"}, OpenraspCtrlBlock::default_scan_limit);
+					int64_t scan_limit = config_reader.fetch_int64({"fileleak_scan.limit"}, WebdirCtrlBlock::default_scan_limit);
 					oam->set_scan_limit(scan_limit);
 
 					//webdir scan regex
 					std::string scan_regex = config_reader.fetch_string({"fileleak_scan.name"}, "");
 					if (scan_regex.empty() || scan_regex.length() > 100)
 					{
-						scan_regex = OpenraspCtrlBlock::default_scan_regex;
+						scan_regex = WebdirCtrlBlock::default_scan_regex;
 					}
 					oam->set_webdir_scan_regex(scan_regex.c_str());
 				}

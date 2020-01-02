@@ -22,36 +22,31 @@
 namespace openrasp
 {
 
-class OpenraspCtrlBlock
+class PluginInfoBlock
 {
 private:
-  /*agent block*/
-  pid_t supervisor_id = 0;
-  pid_t log_agent_id = 0;
-  pid_t master_pid = 0;
-  pid_t plugin_agent_id = 0;
-  pid_t webdir_agent_id = 0;
-  bool registered = false;
+  /*plugin info*/
+  static const int plugin_md5_size = 32;
+  static const int plugin_name_size = 50;
+  static const int plugin_version_size = 50;
+  long last_update_time = 0;
+  char plugin_md5[PluginInfoBlock::plugin_md5_size + 1] = {0};
+  char plugin_name[PluginInfoBlock::plugin_name_size + 1] = {0};
+  char plugin_version[PluginInfoBlock::plugin_version_size + 1] = {0};
+
 
 public:
-  /*agent block*/
-  void set_supervisor_id(pid_t supervisor_id);
-  pid_t get_supervisor_id();
+  /*plugin info*/
+  void set_plugin_version(const char *plugin_version);
+  const char *get_plugin_version();
 
-  void set_plugin_agent_id(pid_t plugin_agent_id);
-  pid_t get_plugin_agent_id();
+  void set_plugin_name(const char *plugin_name);
+  const char *get_plugin_name();
 
-  void set_webdir_agent_id(pid_t webdir_agent_id);
-  pid_t get_webdir_agent_id();
+  void set_plugin_md5(const char *plugin_md5);
+  const char *get_plugin_md5();
 
-  void set_log_agent_id(pid_t log_agent_id);
-  pid_t get_log_agent_id();
-
-  void set_master_pid(pid_t master_pid);
-  pid_t get_master_pid();
-
-  void set_registered(bool registered);
-  bool get_registered();
+  long get_last_update_time();
 };
 
 } // namespace openrasp

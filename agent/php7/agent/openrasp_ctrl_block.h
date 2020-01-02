@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _OPENRASP_CONTROL_BLOCK_
-#define _OPENRASP_CONTROL_BLOCK_
+#pragma once
 
 #include <string>
 #include "openrasp_hook.h"
@@ -26,20 +25,16 @@ namespace openrasp
 class OpenraspCtrlBlock
 {
 private:
-  static const int plugin_md5_size = 32;
-  static const int plugin_name_size = 50;
-  static const int plugin_version_size = 50;
-  static const int webdir_scan_regex_size = 100;
-  static const int webroot_max_size = 1 << 8;
-  static const int agent_min_interval = 60;
-  static const int agent_max_interval = 24 * 60 * 60;
+  /*agent block*/
+  pid_t supervisor_id = 0;
+  pid_t log_agent_id = 0;
+  pid_t master_pid = 0;
+  pid_t plugin_agent_id = 0;
+  pid_t webdir_agent_id = 0;
+  bool registered = false;
 
 public:
-  static const int default_dependency_interval = 6 * 60 * 60;
-  static const int default_webdir_scan_interval = 6 * 60 * 60;
-  static const long default_scan_limit;
-  static const std::string default_scan_regex;
-
+  /*agent block*/
   void set_supervisor_id(pid_t supervisor_id);
   pid_t get_supervisor_id();
 
@@ -55,63 +50,8 @@ public:
   void set_master_pid(pid_t master_pid);
   pid_t get_master_pid();
 
-  void set_plugin_version(const char *plugin_version);
-  const char *get_plugin_version();
-
-  void set_plugin_name(const char *plugin_name);
-  const char *get_plugin_name();
-
-  void set_plugin_md5(const char *plugin_md5);
-  const char *get_plugin_md5();
-
-  void set_webdir_scan_regex(const char *webdir_scan_regex);
-  const char *get_webdir_scan_regex();
-
-  long get_last_update_time();
-
-  int get_webroot_count();
-  void set_webroot_count(int webroot_count);
-
-  bool webroot_found(ulong hash);
-  void set_webroot_hash(int index, ulong hash);
-
-  void set_webroot_path(const char *webroot_path);
-  const char *get_webroot_path();
-
-  int get_dependency_interval();
-  void set_dependency_interval(int dependency_interval);
-
-  int get_webdir_scan_interval();
-  void set_webdir_scan_interval(int webdir_scan_interval);
-
-  long get_scan_limit();
-  void set_scan_limit(long scan_limit);
   void set_registered(bool registered);
   bool get_registered();
-
-private:
-  pid_t supervisor_id = 0;
-  pid_t log_agent_id = 0;
-  pid_t master_pid = 0;
-  pid_t plugin_agent_id = 0;
-  pid_t webdir_agent_id = 0;
-  bool registered = false;
-
-  long last_update_time = 0;
-
-  long scan_limit = OpenraspCtrlBlock::default_scan_limit;
-  int dependency_interval = OpenraspCtrlBlock::default_dependency_interval;
-  int webdir_scan_interval = OpenraspCtrlBlock::default_webdir_scan_interval;
-  int webroot_count = 0;
-  ulong webroot_hash[OpenraspCtrlBlock::webroot_max_size];
-  char webroot_path[MAXPATHLEN] = {0};
-
-  char plugin_md5[OpenraspCtrlBlock::plugin_md5_size + 1] = {0};
-  char plugin_name[OpenraspCtrlBlock::plugin_name_size + 1] = {0};
-  char plugin_version[OpenraspCtrlBlock::plugin_version_size + 1] = {0};
-  char webdir_scan_regex[OpenraspCtrlBlock::webdir_scan_regex_size + 1] = {0};
 };
 
 } // namespace openrasp
-
-#endif

@@ -20,6 +20,8 @@
 #include "openrasp.h"
 #include "base_manager.h"
 #include "openrasp_ctrl_block.h"
+#include "plugin_info_block.h"
+#include "webdir/webdir_ctrl_block.h"
 #include "openrasp_agent.h"
 #include "log_collect_item.h"
 #include <fstream>
@@ -49,10 +51,9 @@ public:
   virtual ~OpenraspAgentManager();
   bool startup();
   bool shutdown();
+
+  /*agent block*/
   void agent_remote_register();
-
-  long get_plugin_update_timestamp();
-
   void set_supervisor_id(pid_t supervisor_id);
   pid_t get_supervisor_id();
 
@@ -68,6 +69,11 @@ public:
   void set_master_pid(pid_t master_pid);
   pid_t get_master_pid();
 
+  void set_registered(bool registered);
+  bool get_registered();
+
+  /*plugin info*/
+  long get_plugin_update_timestamp();
   void set_plugin_version(const char *plugin_version);
   const char *get_plugin_version();
 
@@ -77,6 +83,7 @@ public:
   void set_plugin_md5(const char *plugin_md5);
   const char *get_plugin_md5();
 
+  /*webdir block*/
   void set_webdir_scan_regex(const char *webdir_scan_regex);
   const char *get_webdir_scan_regex();
 
@@ -93,8 +100,6 @@ public:
 
   long get_scan_limit();
   void set_scan_limit(long scan_limit);
-  void set_registered(bool registered);
-  bool get_registered();
 
 private:
   bool create_share_memory();
@@ -109,12 +114,19 @@ private:
   void kill_agent_processes();
 
 private:
-  int meta_size;
-  ReadWriteLock *rwlock;
-  OpenraspCtrlBlock *agent_ctrl_block;
+  int rwlock_size;
   static const int register_interval = 300;
   char local_ip[64] = {0};
   pid_t init_process_pid;
+
+  ReadWriteLock *agent_rwlock = nullptr;
+  OpenraspCtrlBlock *agent_ctrl_block = nullptr;
+
+  ReadWriteLock *plugin_rwlock = nullptr;
+  PluginInfoBlock *plugin_info_block = nullptr;
+
+  ReadWriteLock *webdir_rwlock = nullptr;
+  WebdirCtrlBlock *webdir_ctrl_block = nullptr;
 };
 
 extern std::unique_ptr<OpenraspAgentManager> oam;

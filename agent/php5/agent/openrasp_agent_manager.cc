@@ -89,17 +89,35 @@ static void super_install_signal_handler()
 }
 
 OpenraspAgentManager::OpenraspAgentManager()
-	: agent_ctrl_block(nullptr), rwlock(nullptr)
 {
-	meta_size = ROUNDUP(sizeof(pthread_rwlock_t), 1 << 3);
+	agent_ctrl_block = nullptr;
+	agent_rwlock = nullptr;
+
+	plugin_info_block = nullptr;
+	plugin_rwlock = nullptr;
+
+	webdir_ctrl_block = nullptr;
+	webdir_rwlock = nullptr;
+
+	rwlock_size = ROUNDUP(sizeof(pthread_rwlock_t), 1 << 3);
 }
 
 OpenraspAgentManager::~OpenraspAgentManager()
 {
-	if (rwlock != nullptr)
+	if (agent_rwlock != nullptr)
 	{
-		delete rwlock;
-		rwlock = nullptr;
+		delete agent_rwlock;
+		agent_rwlock = nullptr;
+	}
+	if (plugin_rwlock != nullptr)
+	{
+		delete plugin_rwlock;
+		plugin_rwlock = nullptr;
+	}
+	if (webdir_rwlock != nullptr)
+	{
+		delete webdir_rwlock;
+		webdir_rwlock = nullptr;
 	}
 }
 
@@ -113,9 +131,9 @@ bool OpenraspAgentManager::startup()
 			return false;
 		}
 		set_master_pid(init_process_pid);
-		set_dependency_interval(OpenraspCtrlBlock::default_dependency_interval);
-		set_webdir_scan_interval(OpenraspCtrlBlock::default_webdir_scan_interval);
-		set_scan_limit(OpenraspCtrlBlock::default_scan_limit);
+		set_dependency_interval(WebdirCtrlBlock::default_dependency_interval);
+		set_webdir_scan_interval(WebdirCtrlBlock::default_webdir_scan_interval);
+		set_scan_limit(WebdirCtrlBlock::default_scan_limit);
 		supervisor_startup();
 		initialized = true;
 	}
@@ -147,29 +165,72 @@ bool OpenraspAgentManager::shutdown()
 
 bool OpenraspAgentManager::create_share_memory()
 {
-	size_t total_size = meta_size + sizeof(OpenraspCtrlBlock);
-	char *shm_block = BaseManager::sm.create(SHMEM_SEC_CTRL_BLOCK, total_size);
-	if (shm_block)
+	/*agent block*/
+	size_t agent_block_size = rwlock_size + sizeof(OpenraspCtrlBlock);
+	char *agent_shm_block = BaseManager::sm.create(SHMEM_SEC_CTRL_BLOCK, agent_block_size);
+	if (nullptr == agent_shm_block)
 	{
-		memset(shm_block, 0, total_size);
-		rwlock = new ReadWriteLock((pthread_rwlock_t *)shm_block, LOCK_PROCESS);
-		char *shm_ctrl_block = shm_block + meta_size;
-		agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(shm_ctrl_block);
-		initialized = true;
-		return true;
+		return false;
 	}
-	return false;
+	memset(agent_shm_block, 0, agent_block_size);
+	agent_rwlock = new ReadWriteLock((pthread_rwlock_t *)agent_shm_block, LOCK_PROCESS);
+	char *real_agent_ctrl_block = agent_shm_block + rwlock_size;
+	agent_ctrl_block = reinterpret_cast<OpenraspCtrlBlock *>(real_agent_ctrl_block);
+
+	/*plugin info*/
+	size_t plugin_info_size = rwlock_size + sizeof(PluginInfoBlock);
+	char *plugin_shm_block = BaseManager::sm.create(SHMEM_SEC_PLUGIN_BLOCK, plugin_info_size);
+	if (nullptr == plugin_shm_block)
+	{
+		return false;
+	}
+	memset(plugin_shm_block, 0, plugin_info_size);
+	plugin_rwlock = new ReadWriteLock((pthread_rwlock_t *)plugin_shm_block, LOCK_PROCESS);
+	char *real_plugin_info_block = plugin_shm_block + rwlock_size;
+	plugin_info_block = reinterpret_cast<PluginInfoBlock *>(real_plugin_info_block);
+
+	/*webdir block*/
+	size_t webdir_block_size = rwlock_size + sizeof(WebdirCtrlBlock);
+	char *webdir_shm_block = BaseManager::sm.create(SHMEM_SEC_WEBDIR_BLOCK, webdir_block_size);
+	if (nullptr == webdir_shm_block)
+	{
+		return false;
+	}
+	memset(webdir_shm_block, 0, webdir_block_size);
+	webdir_rwlock = new ReadWriteLock((pthread_rwlock_t *)webdir_shm_block, LOCK_PROCESS);
+	char *real_webdir_ctrl_block = webdir_shm_block + rwlock_size;
+	webdir_ctrl_block = reinterpret_cast<WebdirCtrlBlock *>(real_webdir_ctrl_block);
+
+	initialized = true;
+	return true;
 }
 
 bool OpenraspAgentManager::destroy_share_memory()
 {
-	if (rwlock != nullptr)
+	if (agent_rwlock != nullptr)
 	{
-		delete rwlock;
-		rwlock = nullptr;
+		delete agent_rwlock;
+		agent_rwlock = nullptr;
+	}
+	if (plugin_rwlock != nullptr)
+	{
+		delete plugin_rwlock;
+		plugin_rwlock = nullptr;
+	}
+	if (webdir_rwlock != nullptr)
+	{
+		delete webdir_rwlock;
+		webdir_rwlock = nullptr;
 	}
 	agent_ctrl_block = nullptr;
 	BaseManager::sm.destroy(SHMEM_SEC_CONF_BLOCK);
+
+	plugin_info_block = nullptr;
+	BaseManager::sm.destroy(SHMEM_SEC_PLUGIN_BLOCK);
+
+	webdir_ctrl_block = nullptr;
+	BaseManager::sm.destroy(SHMEM_SEC_WEBDIR_BLOCK);
+
 	initialized = false;
 	return true;
 }
@@ -247,10 +308,18 @@ void OpenraspAgentManager::supervisor_run()
 			}
 		}
 		sleep(1);
-		if (!pid_alive(std::to_string(get_master_pid())))
+		pid_t pid_before_detect = get_master_pid();
+		if (!pid_alive(std::to_string(pid_before_detect)))
 		{
-			openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("supervisor process is going to exit, cuz of master process (%d) is not alive"), get_master_pid());
-			supervisor_shutdown();
+			if (get_master_pid() == pid_before_detect)
+			{
+				openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("supervisor process is going to exit, cuz of master process (%d) is not alive"), pid_before_detect);
+				supervisor_shutdown();
+			}
+			else
+			{
+				openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("master process pid changes from %d to %d"), pid_before_detect, get_master_pid());
+			}
 		}
 	}
 }
@@ -405,6 +474,7 @@ pid_t OpenraspAgentManager::search_fpm_master_pid()
 				std::getline(ifs_cmdline, cmdline);
 				if (cmdline.find("php-fpm: master process") == 0)
 				{
+					openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("find php-fpm: master process that its pid is %d"), pid);
 					return std::atoi(pid.c_str());
 				}
 			}
@@ -413,20 +483,21 @@ pid_t OpenraspAgentManager::search_fpm_master_pid()
 	return 0;
 }
 
+/*agent block*/
 void OpenraspAgentManager::set_supervisor_id(pid_t supervisor_id)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->write_lock() && agent_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
+		WriteUnLocker auto_unlocker(agent_rwlock);
 		agent_ctrl_block->set_supervisor_id(supervisor_id);
 	}
 }
 
 pid_t OpenraspAgentManager::get_supervisor_id()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->read_lock() && agent_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
+		ReadUnLocker auto_unlocker(agent_rwlock);
 		return agent_ctrl_block->get_supervisor_id();
 	}
 	return 0;
@@ -434,18 +505,18 @@ pid_t OpenraspAgentManager::get_supervisor_id()
 
 void OpenraspAgentManager::set_plugin_agent_id(pid_t plugin_agent_id)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->write_lock() && agent_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
+		WriteUnLocker auto_unlocker(agent_rwlock);
 		agent_ctrl_block->set_plugin_agent_id(plugin_agent_id);
 	}
 }
 
 pid_t OpenraspAgentManager::get_plugin_agent_id()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->read_lock() && agent_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
+		ReadUnLocker auto_unlocker(agent_rwlock);
 		return agent_ctrl_block->get_plugin_agent_id();
 	}
 	return 0;
@@ -453,18 +524,18 @@ pid_t OpenraspAgentManager::get_plugin_agent_id()
 
 void OpenraspAgentManager::set_webdir_agent_id(pid_t webdir_agent_id)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->write_lock() && agent_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
+		WriteUnLocker auto_unlocker(agent_rwlock);
 		agent_ctrl_block->set_webdir_agent_id(webdir_agent_id);
 	}
 }
 
 pid_t OpenraspAgentManager::get_webdir_agent_id()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->read_lock() && agent_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
+		ReadUnLocker auto_unlocker(agent_rwlock);
 		return agent_ctrl_block->get_webdir_agent_id();
 	}
 	return 0;
@@ -472,18 +543,18 @@ pid_t OpenraspAgentManager::get_webdir_agent_id()
 
 void OpenraspAgentManager::set_log_agent_id(pid_t log_agent_id)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->write_lock() && agent_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
+		WriteUnLocker auto_unlocker(agent_rwlock);
 		agent_ctrl_block->set_log_agent_id(log_agent_id);
 	}
 }
 
 pid_t OpenraspAgentManager::get_log_agent_id()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->read_lock() && agent_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
+		ReadUnLocker auto_unlocker(agent_rwlock);
 		return agent_ctrl_block->get_log_agent_id();
 	}
 	return 0;
@@ -491,147 +562,168 @@ pid_t OpenraspAgentManager::get_log_agent_id()
 
 void OpenraspAgentManager::set_master_pid(pid_t master_pid)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->write_lock() && agent_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
+		WriteUnLocker auto_unlocker(agent_rwlock);
 		agent_ctrl_block->set_master_pid(master_pid);
 	}
 }
 
 pid_t OpenraspAgentManager::get_master_pid()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (agent_rwlock != nullptr && agent_rwlock->read_lock() && agent_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
+		ReadUnLocker auto_unlocker(agent_rwlock);
 		return agent_ctrl_block->get_master_pid();
 	}
 	return 0;
 }
 
+void OpenraspAgentManager::set_registered(bool registered)
+{
+	if (agent_rwlock != nullptr && agent_rwlock->write_lock() && agent_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(agent_rwlock);
+		agent_ctrl_block->set_registered(registered);
+	}
+}
+
+bool OpenraspAgentManager::get_registered()
+{
+	if (agent_rwlock != nullptr && agent_rwlock->read_lock() && agent_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(agent_rwlock);
+		return agent_ctrl_block->get_registered();
+	}
+	return false;
+}
+
+/*plugin info*/
 void OpenraspAgentManager::set_plugin_version(const char *plugin_version)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (plugin_rwlock != nullptr && plugin_rwlock->write_lock() && plugin_info_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_plugin_version(plugin_version);
+		WriteUnLocker auto_unlocker(plugin_rwlock);
+		plugin_info_block->set_plugin_version(plugin_version);
 	}
 }
 const char *OpenraspAgentManager::get_plugin_version()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (plugin_rwlock != nullptr && plugin_rwlock->read_lock() && plugin_info_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_plugin_version();
+		ReadUnLocker auto_unlocker(plugin_rwlock);
+		return plugin_info_block->get_plugin_version();
 	}
 	return "";
 }
 
 void OpenraspAgentManager::set_plugin_name(const char *plugin_name)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (plugin_rwlock != nullptr && plugin_rwlock->write_lock() && plugin_info_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_plugin_name(plugin_name);
+		WriteUnLocker auto_unlocker(plugin_rwlock);
+		plugin_info_block->set_plugin_name(plugin_name);
 	}
 }
 const char *OpenraspAgentManager::get_plugin_name()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (plugin_rwlock != nullptr && plugin_rwlock->read_lock() && plugin_info_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_plugin_name();
+		ReadUnLocker auto_unlocker(plugin_rwlock);
+		return plugin_info_block->get_plugin_name();
 	}
 	return "";
 }
 
 void OpenraspAgentManager::set_plugin_md5(const char *plugin_md5)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (plugin_rwlock != nullptr && plugin_rwlock->write_lock() && plugin_info_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_plugin_md5(plugin_md5);
+		WriteUnLocker auto_unlocker(plugin_rwlock);
+		plugin_info_block->set_plugin_md5(plugin_md5);
 	}
 }
 const char *OpenraspAgentManager::get_plugin_md5()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (plugin_rwlock != nullptr && plugin_rwlock->read_lock() && plugin_info_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_plugin_md5();
-	}
-	return "";
-}
-
-void OpenraspAgentManager::set_webdir_scan_regex(const char *webdir_scan_regex)
-{
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
-	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_webdir_scan_regex(webdir_scan_regex);
-	}
-}
-const char *OpenraspAgentManager::get_webdir_scan_regex()
-{
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
-	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_webdir_scan_regex();
+		ReadUnLocker auto_unlocker(plugin_rwlock);
+		return plugin_info_block->get_plugin_md5();
 	}
 	return "";
 }
 
 long OpenraspAgentManager::get_plugin_update_timestamp()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (plugin_rwlock != nullptr && plugin_rwlock->read_lock() && plugin_info_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_last_update_time();
+		ReadUnLocker auto_unlocker(plugin_rwlock);
+		return plugin_info_block->get_last_update_time();
 	}
 	return 0;
 }
 
+/*webdir block*/
+void OpenraspAgentManager::set_webdir_scan_regex(const char *webdir_scan_regex)
+{
+	if (webdir_rwlock != nullptr && webdir_rwlock->write_lock() && webdir_ctrl_block)
+	{
+		WriteUnLocker auto_unlocker(webdir_rwlock);
+		webdir_ctrl_block->set_webdir_scan_regex(webdir_scan_regex);
+	}
+}
+const char *OpenraspAgentManager::get_webdir_scan_regex()
+{
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
+	{
+		ReadUnLocker auto_unlocker(webdir_rwlock);
+		return webdir_ctrl_block->get_webdir_scan_regex();
+	}
+	return "";
+}
+
 bool OpenraspAgentManager::path_writable()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return strcmp(agent_ctrl_block->get_webroot_path(), "") == 0;
+		ReadUnLocker auto_unlocker(webdir_rwlock);
+		return strcmp(webdir_ctrl_block->get_webroot_path(), "") == 0;
 	}
 	return false;
 }
 bool OpenraspAgentManager::path_exist(ulong hash)
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->webroot_found(hash);
+		ReadUnLocker auto_unlocker(webdir_rwlock);
+		return webdir_ctrl_block->webroot_found(hash);
 	}
 	return true;
 }
 
 void OpenraspAgentManager::write_webroot_path(const char *webroot_path)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->write_lock() && webdir_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_webroot_path(webroot_path);
+		WriteUnLocker auto_unlocker(webdir_rwlock);
+		webdir_ctrl_block->set_webroot_path(webroot_path);
 	}
 }
 
 bool OpenraspAgentManager::consume_webroot_path(std::string &webroot_path)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->write_lock() && webdir_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		const char *path = agent_ctrl_block->get_webroot_path();
+		WriteUnLocker auto_unlocker(webdir_rwlock);
+		const char *path = webdir_ctrl_block->get_webroot_path();
 		if (strlen(path) > 0)
 		{
 			ulong webroot_hash = zend_inline_hash_func(path, strlen(path));
-			int count = agent_ctrl_block->get_webroot_count();
-			agent_ctrl_block->set_webroot_hash(count, webroot_hash);
-			agent_ctrl_block->set_webroot_count(count + 1);
+			int count = webdir_ctrl_block->get_webroot_count();
+			webdir_ctrl_block->set_webroot_hash(count, webroot_hash);
+			webdir_ctrl_block->set_webroot_count(count + 1);
 			webroot_path = std::string(path);
-			agent_ctrl_block->set_webroot_path("");
+			webdir_ctrl_block->set_webroot_path("");
 			return true;
 		}
 	}
@@ -640,78 +732,59 @@ bool OpenraspAgentManager::consume_webroot_path(std::string &webroot_path)
 
 int OpenraspAgentManager::get_dependency_interval()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_dependency_interval();
+		ReadUnLocker auto_unlocker(webdir_rwlock);
+		return webdir_ctrl_block->get_dependency_interval();
 	}
-	return OpenraspCtrlBlock::default_dependency_interval;
+	return WebdirCtrlBlock::default_dependency_interval;
 }
 
 void OpenraspAgentManager::set_dependency_interval(int dependency_interval)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->write_lock() && webdir_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_dependency_interval(dependency_interval);
+		WriteUnLocker auto_unlocker(webdir_rwlock);
+		webdir_ctrl_block->set_dependency_interval(dependency_interval);
 	}
 }
 
 int OpenraspAgentManager::get_webdir_scan_interval()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_webdir_scan_interval();
+		ReadUnLocker auto_unlocker(webdir_rwlock);
+		return webdir_ctrl_block->get_webdir_scan_interval();
 	}
-	return OpenraspCtrlBlock::default_webdir_scan_interval;
+	return WebdirCtrlBlock::default_webdir_scan_interval;
 }
 
 void OpenraspAgentManager::set_webdir_scan_interval(int webdir_scan_interval)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->write_lock() && webdir_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_webdir_scan_interval(webdir_scan_interval);
+		WriteUnLocker auto_unlocker(webdir_rwlock);
+		webdir_ctrl_block->set_webdir_scan_interval(webdir_scan_interval);
 	}
 }
 
 long OpenraspAgentManager::get_scan_limit()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
 	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_scan_limit();
+		ReadUnLocker auto_unlocker(webdir_rwlock);
+		return webdir_ctrl_block->get_scan_limit();
 	}
-	return OpenraspCtrlBlock::default_scan_limit;
+	return WebdirCtrlBlock::default_scan_limit;
 }
 
 void OpenraspAgentManager::set_scan_limit(long scan_limit)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->write_lock() && webdir_ctrl_block)
 	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_scan_limit(scan_limit);
+		WriteUnLocker auto_unlocker(webdir_rwlock);
+		webdir_ctrl_block->set_scan_limit(scan_limit);
 	}
-}
-
-void OpenraspAgentManager::set_registered(bool registered)
-{
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
-	{
-		WriteUnLocker auto_unlocker(rwlock);
-		agent_ctrl_block->set_registered(registered);
-	}
-}
-
-bool OpenraspAgentManager::get_registered()
-{
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
-	{
-		ReadUnLocker auto_unlocker(rwlock);
-		return agent_ctrl_block->get_registered();
-	}
-	return false;
 }
 
 } // namespace openrasp

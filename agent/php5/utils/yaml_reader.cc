@@ -64,13 +64,13 @@ std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const
             std::string error_description = validator.check(rst);
             if (!error_description.empty())
             {
-                throw YAML::EmitterException(error_description);
+                throw YAML::RepresentationException(node->GetMark(), error_description);
             }
             return rst;
         }
         else
         {
-            throw YAML::EmitterException("type should be string");
+            throw YAML::RepresentationException(node->GetMark(), "type should be string");
         }
     }
     catch (const YAML::KeyNotFound &e)
@@ -107,14 +107,14 @@ int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int6
             std::string error_description = validator.check(rst);
             if (!error_description.empty())
             {
-                throw YAML::EmitterException(error_description);
+                throw YAML::RepresentationException(node->GetMark(), error_description);
             }
 
             return rst;
         }
         else
         {
-            throw YAML::EmitterException("type should be number");
+            throw YAML::RepresentationException(node->GetMark(), "type should be number");
         }
     }
     catch (const YAML::KeyNotFound &e)
@@ -150,7 +150,7 @@ bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
         }
         else
         {
-            throw YAML::EmitterException("type should be boolen");
+            throw YAML::RepresentationException(node->GetMark(), "type should be boolen");
         }
     }
     catch (const YAML::KeyNotFound &e)
@@ -194,7 +194,7 @@ std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::st
         }
         else
         {
-            throw YAML::EmitterException("type should be map");
+            throw YAML::RepresentationException(node->GetMark(), "type should be map");
         }
         return rst;
     }
@@ -203,7 +203,7 @@ std::vector<std::string> YamlReader::fetch_object_keys(const std::vector<std::st
     }
     catch (const YAML::BadDereference &e)
     {
-    }    
+    }
     catch (const YAML::Exception &e)
     {
         if (get_exception_report())
@@ -236,7 +236,7 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
         }
         else
         {
-            throw YAML::EmitterException("type should be sequence");
+            throw YAML::RepresentationException(node->GetMark(), "type should be sequence");
         }
         return rst;
     }
@@ -245,7 +245,7 @@ std::vector<std::string> YamlReader::fetch_strings(const std::vector<std::string
     }
     catch (const YAML::BadDereference &e)
     {
-    }    
+    }
     catch (const YAML::Exception &e)
     {
         if (get_exception_report())

@@ -85,11 +85,13 @@ if test "$PHP_OPENRASP" != "no"; then
       * )
         OPENRASP_REMOTE_MANAGER_SOURCE="agent/utils/os.cc \
         agent/openrasp_ctrl_block.cc \
+        agent/plugin_info_block.cc \
         agent/openrasp_agent.cc \
         agent/heartbeat_agent.cc \
         agent/webdir/webdir.cc \
-        agent/webdir/webdir_agent.cc \
+        agent/webdir/webdir_ctrl_block.cc \
         agent/webdir/webdir_utils.cc \
+        agent/webdir/webdir_agent.cc \
         agent/webdir/dependency_item.cc \
         agent/webdir/webdir_detector.cc \
         agent/webdir/dependency_writer.cc \
