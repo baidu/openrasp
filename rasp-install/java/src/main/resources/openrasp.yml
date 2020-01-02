@@ -22,9 +22,26 @@
 # request.param_encoding:
 # cpu.usage.percent: 0.9
 # cpu.usage.enable: false
+#security.weak_passwords:
+#  - "111111"
+#  - "123"
+#  - "123123"
+#  - "123456"
+#  - "123456a"
+#  - "a123456"
+#  - "admin"
+#  - "both"
+#  - "manager"
+#  - "mysql"
+#  - "root"
+#  - "rootweblogic"
+#  - "tomcat"
+#  - "user"
+#  - "weblogic1"
+#  - "weblogic123"
+#  - "welcome1"
 hooks.ignore: http_output
 # debug.level: 0
-# dependency_check.interval: 21600
 #hook.white:
 #  "localhost:8080/vulns/011-ssrf-commons-httpclient.jsp":
 #    - "sql"
