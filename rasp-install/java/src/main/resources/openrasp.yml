@@ -24,7 +24,6 @@
 # cpu.usage.enable: false
 hooks.ignore: http_output
 # debug.level: 0
-# dependency_check.interval: 21600
 #hook.white:
 #  "localhost:8080/vulns/011-ssrf-commons-httpclient.jsp":
 #    - "sql"
