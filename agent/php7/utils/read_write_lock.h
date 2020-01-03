@@ -36,9 +36,11 @@ public:
 
   bool read_unlock();
   bool read_try_lock();
+  bool read_lock();
 
   bool write_unlock();
   bool write_try_lock();
+  bool write_lock();
 
 private:
   int lock_type;

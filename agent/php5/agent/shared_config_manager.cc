@@ -46,7 +46,7 @@ int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
     DoubleArrayTrie::result_pair_type result_pair[ALL_TYPE];
     DoubleArrayTrie dat;
     int white_bit_mask = 0;
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         dat.load_existing_array((void *)shared_config_block->get_check_type_white_array(), shared_config_block->get_white_array_size());
@@ -64,7 +64,7 @@ int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
 
 bool SharedConfigManager::write_check_type_white_array_to_shm(const void *source, size_t num)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->reset_white_array(source, num);
@@ -111,7 +111,7 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std
 
 long SharedConfigManager::get_config_last_update()
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_config_update_time();
@@ -121,7 +121,7 @@ long SharedConfigManager::get_config_last_update()
 
 bool SharedConfigManager::set_config_last_update(long config_update_timestamp)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->set_config_update_time(config_update_timestamp);
@@ -132,7 +132,7 @@ bool SharedConfigManager::set_config_last_update(long config_update_timestamp)
 
 long SharedConfigManager::get_log_max_backup()
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_log_max_backup();
@@ -142,7 +142,7 @@ long SharedConfigManager::get_log_max_backup()
 
 bool SharedConfigManager::set_log_max_backup(long log_max_backup)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->set_log_max_backup(log_max_backup);
@@ -153,7 +153,7 @@ bool SharedConfigManager::set_log_max_backup(long log_max_backup)
 
 long SharedConfigManager::get_debug_level()
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_debug_level();
@@ -163,7 +163,7 @@ long SharedConfigManager::get_debug_level()
 
 bool SharedConfigManager::set_debug_level(long debug_level)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->set_debug_level(debug_level);
@@ -174,7 +174,7 @@ bool SharedConfigManager::set_debug_level(long debug_level)
 
 bool SharedConfigManager::set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         for (auto &action : buildin_action_map)
@@ -188,7 +188,7 @@ bool SharedConfigManager::set_buildin_check_action(std::map<OpenRASPCheckType, O
 
 OpenRASPActionType SharedConfigManager::get_buildin_check_action(OpenRASPCheckType check_type)
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_check_type_action(check_type);
@@ -266,7 +266,7 @@ std::string SharedConfigManager::get_rasp_id() const
 
 void SharedConfigManager::set_sql_error_codes(std::vector<long> error_codes)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->set_sql_error_codes(error_codes);
@@ -275,7 +275,7 @@ void SharedConfigManager::set_sql_error_codes(std::vector<long> error_codes)
 
 bool SharedConfigManager::sql_error_code_exist(long err_code)
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->sql_error_code_exist(err_code);

@@ -403,7 +403,7 @@ pid_t OpenraspAgentManager::search_fpm_master_pid()
 
 void OpenraspAgentManager::set_supervisor_id(pid_t supervisor_id)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_supervisor_id(supervisor_id);
@@ -412,7 +412,7 @@ void OpenraspAgentManager::set_supervisor_id(pid_t supervisor_id)
 
 pid_t OpenraspAgentManager::get_supervisor_id()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_supervisor_id();
@@ -422,7 +422,7 @@ pid_t OpenraspAgentManager::get_supervisor_id()
 
 void OpenraspAgentManager::set_plugin_agent_id(pid_t plugin_agent_id)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_plugin_agent_id(plugin_agent_id);
@@ -431,7 +431,7 @@ void OpenraspAgentManager::set_plugin_agent_id(pid_t plugin_agent_id)
 
 pid_t OpenraspAgentManager::get_plugin_agent_id()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_agent_id();
@@ -441,7 +441,7 @@ pid_t OpenraspAgentManager::get_plugin_agent_id()
 
 void OpenraspAgentManager::set_log_agent_id(pid_t log_agent_id)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_log_agent_id(log_agent_id);
@@ -450,7 +450,7 @@ void OpenraspAgentManager::set_log_agent_id(pid_t log_agent_id)
 
 pid_t OpenraspAgentManager::get_log_agent_id()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_log_agent_id();
@@ -460,7 +460,7 @@ pid_t OpenraspAgentManager::get_log_agent_id()
 
 void OpenraspAgentManager::set_master_pid(pid_t master_pid)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_master_pid(master_pid);
@@ -469,7 +469,7 @@ void OpenraspAgentManager::set_master_pid(pid_t master_pid)
 
 pid_t OpenraspAgentManager::get_master_pid()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_master_pid();
@@ -479,7 +479,7 @@ pid_t OpenraspAgentManager::get_master_pid()
 
 void OpenraspAgentManager::set_plugin_version(const char *plugin_version)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_plugin_version(plugin_version);
@@ -487,7 +487,7 @@ void OpenraspAgentManager::set_plugin_version(const char *plugin_version)
 }
 const char *OpenraspAgentManager::get_plugin_version()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_version();
@@ -497,7 +497,7 @@ const char *OpenraspAgentManager::get_plugin_version()
 
 void OpenraspAgentManager::set_plugin_name(const char *plugin_name)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_plugin_name(plugin_name);
@@ -505,7 +505,7 @@ void OpenraspAgentManager::set_plugin_name(const char *plugin_name)
 }
 const char *OpenraspAgentManager::get_plugin_name()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_name();
@@ -515,7 +515,7 @@ const char *OpenraspAgentManager::get_plugin_name()
 
 void OpenraspAgentManager::set_plugin_md5(const char *plugin_md5)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_plugin_md5(plugin_md5);
@@ -523,7 +523,7 @@ void OpenraspAgentManager::set_plugin_md5(const char *plugin_md5)
 }
 const char *OpenraspAgentManager::get_plugin_md5()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_plugin_md5();
@@ -533,7 +533,7 @@ const char *OpenraspAgentManager::get_plugin_md5()
 
 long OpenraspAgentManager::get_plugin_update_timestamp()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_last_update_time();
@@ -543,7 +543,7 @@ long OpenraspAgentManager::get_plugin_update_timestamp()
 
 void OpenraspAgentManager::set_registered(bool registered)
 {
-	if (rwlock != nullptr && rwlock->write_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->write_lock() && agent_ctrl_block)
 	{
 		WriteUnLocker auto_unlocker(rwlock);
 		agent_ctrl_block->set_registered(registered);
@@ -552,7 +552,7 @@ void OpenraspAgentManager::set_registered(bool registered)
 
 bool OpenraspAgentManager::get_registered()
 {
-	if (rwlock != nullptr && rwlock->read_try_lock() && agent_ctrl_block)
+	if (rwlock != nullptr && rwlock->read_lock() && agent_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(rwlock);
 		return agent_ctrl_block->get_registered();
