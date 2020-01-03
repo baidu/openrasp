@@ -41,7 +41,6 @@ public class CloudManager {
                 AppenderMappedLogger.HTTP_ALARM.getAppender());
         DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
                 AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
-        ServerDetector.checkServerPolicy();
         tasks.add(new KeepAlive());
         tasks.add(new StatisticsReport());
         for (CloudTimerTask task : tasks) {

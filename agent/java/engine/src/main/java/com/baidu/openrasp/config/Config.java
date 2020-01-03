@@ -27,8 +27,11 @@ import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.yaml.snakeyaml.Yaml;
@@ -223,17 +226,18 @@ public class Config extends FileScanListener {
             }
 
             Object value = null;
-            if (entry.getKey().equals(ConfigItem.HOOK_WHITE.name())) {
+            if (entry.getKey().equals(ConfigItem.HOOK_WHITE.toString())) {
                 if (entry.getValue() instanceof JsonObject) {
                     value = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                 }
-            } else if (entry.getKey().equals(ConfigItem.RESPONSE_HEADERS.name())) {
+            } else if (entry.getKey().equals(ConfigItem.RESPONSE_HEADERS.toString())) {
                 if (entry.getValue() instanceof JsonObject) {
                     value = CloudUtils.getMapGsonObject().fromJson((JsonObject) entry.getValue(), Map.class);
                 }
-            } else if (entry.getKey().equals(ConfigItem.SECURITY_WEAK_PASSWORDS.name())) {
-                if (entry.getValue() instanceof List) {
-                    value = entry.getValue();
+            } else if (entry.getKey().equals(ConfigItem.SECURITY_WEAK_PASSWORDS.toString())) {
+                if (entry.getValue() instanceof JsonArray) {
+                    value = new Gson().fromJson((JsonArray) entry.getValue(), new TypeToken<List<String>>() {
+                    }.getType());
                 }
             } else if (entry.getValue() instanceof JsonPrimitive) {
                 value = ((JsonPrimitive) entry.getValue()).getAsString();

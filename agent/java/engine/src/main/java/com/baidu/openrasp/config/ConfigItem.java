@@ -18,6 +18,7 @@ package com.baidu.openrasp.config;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
+import com.baidu.openrasp.detector.ServerDetector;
 import com.baidu.openrasp.exceptions.ConfigLoadException;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
@@ -594,6 +595,7 @@ public enum ConfigItem {
                     }
                 }
                 Config.getConfig().securityWeakPasswords = securityWeakPasswords;
+                ServerDetector.checkServerPolicy();
             }
         }
 
