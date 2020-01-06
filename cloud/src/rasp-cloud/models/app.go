@@ -70,7 +70,7 @@ type WhitelistConfigItem struct {
 }
 
 type GeneralAlarmConf struct {
-	AlarmCheckInterval  int64                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
+	AlarmCheckInterval  int                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
 }
 
 type EmailAlarmConf struct {

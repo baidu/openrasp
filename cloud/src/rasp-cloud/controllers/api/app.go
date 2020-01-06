@@ -437,6 +437,12 @@ func (o *AppController) validKafkaConf(conf *kafka.Kafka) {
 	}
 }
 
+func (o *AppController) validGeneralAlarmConf(conf *models.GeneralAlarmConf) {
+	if conf.AlarmCheckInterval < 120 {
+		o.ServeError(http.StatusBadRequest, "the minimum interval may exceed 120")
+	}
+}
+
 // @router /delete [post]
 func (o *AppController) Delete() {
 	var app = &models.App{}
@@ -543,10 +549,15 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 					o.ServeError(http.StatusBadRequest,
 						"the type of config key: "+key+"'s value must be send a bool")
 				}
-			case "int", "float64":
-				if _, ok := value.(float64); !ok {
+			case "int":
+				if _, ok := value.(int); !ok {
 					o.ServeError(http.StatusBadRequest,
 						"the type of config key: "+key+"'s value must be send a int")
+				}
+			case "float64":
+				if _, ok := value.(float64); !ok {
+					o.ServeError(http.StatusBadRequest,
+						"the type of config key: "+key+"'s value must be send a float64")
 				}
 			}
 		} else {
@@ -673,6 +684,9 @@ func (o *AppController) ConfigAlarm() {
 	}
 	if param.KafkaConf != nil {
 		o.validKafkaConf(param.KafkaConf)
+	}
+	if param.GeneralAlarmConf != nil {
+		o.validGeneralAlarmConf(param.GeneralAlarmConf)
 	}
 	content, err := json.Marshal(param)
 	if err != nil {
