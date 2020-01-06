@@ -14,15 +14,6 @@
             </label>
           </div>
 
-          <div class="p-4">
-            <label class="custom-switch" for="autoStart">
-              <input v-model="autoStartFlag" type="checkbox" id="autoStart"
-                     class="custom-switch-input" :value=false @click="autoStartTask()">
-              <span class="custom-switch-indicator" />
-              <span class="custom-switch-description">自动启动扫描</span>
-            </label>
-          </div>
-
           <div class="p-2">
             <button type="button" class="btn btn-primary ml-2" @click="refreshDriver()">
               <span class="fa fa-refresh" aria-hidden="true"></span> 刷新
@@ -162,7 +153,6 @@ export default {
       config: "",
       timer: '',
       refreshFreq: true,
-      autoStartFlag: false,
       loadIcon: [],
       loading: false,
       currentPage: 1,
@@ -327,18 +317,6 @@ export default {
     // driver refresh
     refreshDriver() {
        this.fetchData(this.currentPage);
-    },
-
-    // auto start
-    autoStartTask() {
-      this.autoStartFlag = !this.autoStartFlag
-      this.getRequest(this.baseUrl, "autoStartTask", {"auto_start": this.autoStartFlag})
-          .then(res => {
-              var status = res.status;
-              if(status != 0){
-                  alert(res.description);
-              }
-          })
     },
 
     getConfig(row) {
