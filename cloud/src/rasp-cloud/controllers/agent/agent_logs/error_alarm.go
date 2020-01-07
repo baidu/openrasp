@@ -15,6 +15,7 @@
 package agent_logs
 
 import (
+	"rasp-cloud/conf"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models/logs"
 	"time"
@@ -29,11 +30,13 @@ func (o *ErrorController) Post() {
 	var alarms []map[string]interface{}
 	o.UnmarshalJson(&alarms)
 	count := 0
-	for _, alarm := range alarms {
-		alarm["@timestamp"] = time.Now().UnixNano() / 1000000
-		err := logs.AddErrorAlarm(alarm)
-		if err == nil {
-			count++
+	if conf.AppConfig.ErrorLogEnable {
+		for _, alarm := range alarms {
+			alarm["@timestamp"] = time.Now().UnixNano() / 1000000
+			err := logs.AddErrorAlarm(alarm)
+			if err == nil {
+				count++
+			}
 		}
 	}
 	o.Serve(map[string]uint64{"count": uint64(count)})

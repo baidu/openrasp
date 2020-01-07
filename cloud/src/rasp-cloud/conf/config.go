@@ -44,6 +44,8 @@ type RaspAppConfig struct {
 	CookieLifeTime        int
 	RegisterCallbackUrl   string
 	RegisterCallbackToken string
+	RequestBodyEnable     bool
+	ErrorLogEnable        bool
 	Flag                  *Flag
 }
 
@@ -78,6 +80,8 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.CookieLifeTime = beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
 	AppConfig.RegisterCallbackUrl = beego.AppConfig.DefaultString("RegisterCallbackUrl", "")
 	AppConfig.RegisterCallbackToken = beego.AppConfig.DefaultString("RegisterCallbackToken", "")
+	AppConfig.RequestBodyEnable = beego.AppConfig.DefaultBool("RequestBodyEnable", false)
+	AppConfig.ErrorLogEnable = beego.AppConfig.DefaultBool("ErrorLogEnable", false)
 	ValidRaspConf(AppConfig)
 }
 
