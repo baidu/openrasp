@@ -90,8 +90,8 @@
           <label class="form-label">
             每隔多少秒发送一次报警（报警并非实时发送，而是每隔一段建检查ES里是否有新报警）
           </label>
-          <input v-model.trim="data.general_alarm_conf.alarm_check_interval"
-                 type="number" class="form-control" placeholder=120>
+          <input v-model.number="data.general_alarm_conf.alarm_check_interval"
+                 class="form-control" placeholder=120>
         </div>
       </div>
       <div class="card-footer">
@@ -451,7 +451,6 @@ export default {
       Object.keys(self.sendMethods).forEach(function (name) {
         var tmp = self.sendMethods[name]
         body['attack_type_alarm_conf'][name] = []
-
         Object.keys(tmp).forEach(function (method) {
           if (tmp[method]) {
             body['attack_type_alarm_conf'][name].push(method)

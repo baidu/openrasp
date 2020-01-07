@@ -139,6 +139,8 @@ var (
 			"X-Protected-By": "OpenRASP",
 		},
 		"plugin.filter":             true,
+		"cpu.usage.enable":          false,
+		"lru.compare_enable":        false,
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,
 		"log.maxstack":              50,

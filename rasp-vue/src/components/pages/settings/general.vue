@@ -105,13 +105,13 @@
           <label class="form-label">
             [基线] [Web根目录敏感文件检查] 扫描间隔（小时）
           </label>
-          <input v-model.trim="data['fileleak_scan.interval']" type="number" class="form-control" placeholder="3" min="1" />
+          <input v-model.number="data['fileleak_scan.interval']" type="number" class="form-control" placeholder="3" min="1" />
         </div>
         <div class="form-group">
           <label class="form-label">
             [基线] [Web根目录敏感文件检查] 最多检测多少个文件，写 0 关闭这个功能
           </label>
-          <input v-model.trim="data['fileleak_scan.limit']" type="number" class="form-control" placeholder="100" min="0" />
+          <input v-model.number="data['fileleak_scan.limit']" type="number" class="form-control" placeholder="100" min="0" />
         </div>
         <div class="form-group">
           <label class="form-label">

@@ -549,15 +549,10 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 					o.ServeError(http.StatusBadRequest,
 						"the type of config key: "+key+"'s value must be send a bool")
 				}
-			case "int":
-				if _, ok := value.(int); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a int")
-				}
-			case "float64":
+			case "int", "float64":
 				if _, ok := value.(float64); !ok {
 					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a float64")
+						"the type of config key: "+key+"'s value must be send a int/float64")
 				}
 			}
 		} else {
