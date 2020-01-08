@@ -85,7 +85,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">
-            LRU 原始字符串上限 [若开启原始字符串比较，超过上限直接进入插件检测；默认只存储哈希]
+            LRU 原始字符串上限 [若不开启只存储哈希；若开启同时存储原始字符串，若字符串超过上限直接进入插件检测；范围 1-102400]
           </label>
           <input v-model.number="data['lru.compare_limit']" type="number" min="0" class="form-control" placeholder="10240">
         </div>
@@ -103,9 +103,9 @@
         </div>
         <div class="form-group">
           <label class="form-label">
-            [基线] [Web根目录敏感文件检查] 扫描间隔（小时）
+            [基线] [Web根目录敏感文件检查] 扫描间隔（秒），范围 60-86400
           </label>
-          <input v-model.number="data['fileleak_scan.interval']" type="number" class="form-control" placeholder="3" min="1" />
+          <input v-model.number="data['fileleak_scan.interval']" type="number" class="form-control" placeholder="21600" min="60" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -164,7 +164,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">
-            [响应检测] 在采样周期里，最多检测多少次
+            [响应检测] 在采样周期里，最多检测多少次，设置为 0 关闭
           </label>
           <input v-model.number="data['response.sampler_burst']" type="number" min="0" class="form-control" placeholder="5">
         </div>
