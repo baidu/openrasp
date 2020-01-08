@@ -109,10 +109,10 @@ export default {
               max_concurrent_request: 20,
               max_request_interval: 1000,
               min_request_interval: 0,
-          }
+          },
+          white_url_reg: "",
+          scan_proxy: "",
       },
-      scan_proxy: "",
-      urlWhiteRegex: "",
       scan_plugin_status: {},
       byurl_regex_error: false,
       modalDisplay: "modal"
@@ -147,8 +147,8 @@ export default {
         this.concurrent = isNaN(Number(scanRate.max_concurrent_request))? undefined : Number(scanRate.max_concurrent_request);
         this.minInterval = isNaN(Number(scanRate.min_request_interval))? undefined : Number(scanRate.min_request_interval);
         this.maxInterval = isNaN(Number(scanRate.max_request_interval))? undefined : Number(scanRate.max_request_interval);
-        this.white_url_reg == undefined? "" : this.data.white_url_reg;
-        this.scan_proxy == undefined? "" : this.data.scan_proxy;
+        this.data.white_url_reg == undefined? "" : this.data.white_url_reg;
+        this.data.scan_proxy == undefined? "" : this.data.scan_proxy;
 
         if(!this.byurl_regex_error && this.concurrent > 0 && this.maxInterval > 0 && this.minInterval >= 0){
             if(this.minInterval <= this.maxInterval){
@@ -163,8 +163,8 @@ export default {
                             "max_request_interval": this.maxInterval,
                             "min_request_interval": this.minInterval
                         },
-                        "white_url_reg": this.urlWhiteRegex,
-                        "scan_proxy": this.scan_proxy
+                        "white_url_reg": this.data.white_url_reg,
+                        "scan_proxy": this.data.scan_proxy
                     }
                 }).then(res => {
                     var status = res.status;

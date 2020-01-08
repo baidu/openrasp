@@ -75,7 +75,7 @@
           <label class="form-label">
             调试开关 [0表示关闭，1以上的值表示开启]
           </label>
-          <input v-model.number="data['debug.level']" type="number" min="0" class="form-control" placeholder="0">
+          <b-form-select v-model.number="data['debug.level']" :options="[0, 1]" />
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -232,6 +232,16 @@ export default {
         min_interval: 60,
         max_interval: 86400,
       },
+      cpu_usage: {
+        min_percent: 30,
+        max_percent: 100,
+        min_interval: 1,
+        max_interval: 1800,
+      },
+      sampler_interval: {
+        close: 0,
+        min_period: 60,
+      },
       data: {
         rasp_config: {},
       }
@@ -264,6 +274,24 @@ export default {
       if (this.data['dependency_check.interval'] < this.dependency_check.min_interval ||
           this.data['dependency_check.interval'] > this.dependency_check.max_interval) {
           alert('采集任务间隔范围：' + this.dependency_check.min_interval + '~' + this.dependency_check.max_interval)
+          return
+      }
+
+      if (this.data['cpu.usage.percent'] < this.cpu_usage.min_percent ||
+          this.data['cpu.usage.percent'] > this.cpu_usage.min_percent) {
+          alert('单核CPU占用率阈值：' + this.cpu_usage.min_percent + '~' + this.cpu_usage.min_percent)
+          return
+      }
+
+      if (this.data['cpu.usage.interval'] < this.cpu_usage.min_interval ||
+          this.data['cpu.usage.interval'] > this.cpu_usage.max_interval) {
+          alert('单核CPU占用率采集间隔：' + this.cpu_usage.min_interval + '~' + this.cpu_usage.max_interval)
+          return
+      }
+
+      if (this.data['response.sampler_interval'] < this.sampler_interval.min_period &&
+          this.data['response.sampler_interval'] > this.sampler_interval.close) {
+          alert('采样周期最低60s')
           return
       }
 

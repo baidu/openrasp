@@ -270,7 +270,9 @@ func (wsConn *wsConnection) procLoop(appId string) {
 
 	for {
 		msg, err := wsConn.wsRead()
-		models.Register.SetIastRegister(appId, 2)
+		if models.Register.GetIastRegister(appId) != 2 {
+			models.Register.SetIastRegister(appId, 2)
+		}
 		if err != nil {
 			beego.Error("read error:" , err)
 			break
