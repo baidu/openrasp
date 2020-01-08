@@ -529,7 +529,17 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				o.ServeError(http.StatusBadRequest,
 					"the value's length of config item '"+key+"' must be less than" + v)
 			}
-		}
+			dependencyCheck := generalConfigTemplate["dependency_check.interval"].(int)
+			if dependencyCheck < 60 || dependencyCheck > 12 * 3600 {
+				o.ServeError(http.StatusBadRequest,
+					"the value's length of config item '"+key+"' must between 60 and 86400")
+			}
+			fileleakScan := generalConfigTemplate["fileleak_scan.interval"].(int)
+			if fileleakScan < 60 || fileleakScan > 12 * 3600 {
+				o.ServeError(http.StatusBadRequest,
+					"the value's length of config item '"+key+"' must between 60 and 86400")
+			}
+ 		}
 
 		// 对类型进行检验
 		if key != "security.weak_passwords" {
