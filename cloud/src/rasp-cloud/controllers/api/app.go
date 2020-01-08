@@ -524,20 +524,18 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				"the length of config key '"+key+"' must be less than 512")
 		}
 		if v, ok := value.(string); ok {
-			maxBytes := generalConfigTemplate["body.maxbytes"]
-			if len(v) >= maxBytes.(int) {
-				o.ServeError(http.StatusBadRequest,
-					"the value's length of config item '"+key+"' must be less than" + v)
-			}
-			dependencyCheck := generalConfigTemplate["dependency_check.interval"].(int)
-			if dependencyCheck < 60 || dependencyCheck > 12 * 3600 {
-				o.ServeError(http.StatusBadRequest,
-					"the value's length of config item '"+key+"' must between 60 and 86400")
-			}
-			fileleakScan := generalConfigTemplate["fileleak_scan.interval"].(int)
-			if fileleakScan < 60 || fileleakScan > 12 * 3600 {
-				o.ServeError(http.StatusBadRequest,
-					"the value's length of config item '"+key+"' must between 60 and 86400")
+			if key == "body.maxbytes" {
+				maxBytes := generalConfigTemplate[key]
+				if len(v) >= maxBytes.(int) {
+					o.ServeError(http.StatusBadRequest,
+						"the value's length of config item '"+key+"' must be less than" + v)
+				}
+			} else if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
+				interval := generalConfigTemplate[key].(int)
+				if interval < 60 || interval > 12 * 3600 {
+					o.ServeError(http.StatusBadRequest,
+						"the value's length of config item '"+key+"' must between 60 and 86400")
+				}
 			}
  		}
 
