@@ -16,20 +16,20 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego/validation"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
-	"rasp-cloud/models"
 	"rasp-cloud/kafka"
+	"rasp-cloud/models"
+	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"strings"
-	"fmt"
-	"reflect"
 )
 
 // Operations about app
@@ -530,17 +530,18 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 					o.ServeError(http.StatusBadRequest,
 						"the value's length of config item '"+key+"' must be less than" + v)
 				}
-			} else if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
+			}
+ 		}
+
+		// 对类型进行检验
+		if generalConfigTemplate[key] != nil {
+			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
 				interval := value.(float64)
 				if interval < 60 || interval > 12 * 3600 {
 					o.ServeError(http.StatusBadRequest,
 						"the value's length of config item '"+key+"' must between 60 and 86400")
 				}
 			}
- 		}
-
-		// 对类型进行检验
-		if generalConfigTemplate[key] != nil {
 			if key != "security.weak_passwords" {
 				switch reflect.TypeOf(generalConfigTemplate[key]).String(){
 				case "string":
