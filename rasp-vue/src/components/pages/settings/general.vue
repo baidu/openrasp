@@ -278,8 +278,8 @@ export default {
       }
 
       if (this.data['cpu.usage.percent'] < this.cpu_usage.min_percent ||
-          this.data['cpu.usage.percent'] > this.cpu_usage.min_percent) {
-          alert('单核CPU占用率阈值：' + this.cpu_usage.min_percent + '~' + this.cpu_usage.min_percent)
+          this.data['cpu.usage.percent'] > this.cpu_usage.max_percent) {
+          alert('单核CPU占用率阈值：' + this.cpu_usage.min_percent + '~' + this.cpu_usage.max_percent)
           return
       }
 
