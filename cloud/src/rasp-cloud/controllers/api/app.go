@@ -531,7 +531,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 						"the value's length of config item '"+key+"' must be less than" + v)
 				}
 			} else if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
-				interval := generalConfigTemplate[key].(int)
+				interval := value.(float64)
 				if interval < 60 || interval > 12 * 3600 {
 					o.ServeError(http.StatusBadRequest,
 						"the value's length of config item '"+key+"' must between 60 and 86400")
@@ -540,70 +540,71 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
  		}
 
 		// 对类型进行检验
-		if key != "security.weak_passwords" {
-			switch reflect.TypeOf(generalConfigTemplate[key]).String(){
-			case "string":
-				if _, ok := value.(string); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a string")
-				}
-			case "int64":
-				if _, ok := value.(int64); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a int64")
-				}
-			case "bool":
-				if _, ok := value.(bool); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a bool")
-				}
-			case "int", "float64":
-				if _, ok := value.(float64); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a int/float64")
-				}
-			}
-		} else {
-			if value != nil {
-				for idx, v := range value.([]interface{}) {
-					if len(v.(string)) > 16 {
+		if generalConfigTemplate[key] != nil {
+			if key != "security.weak_passwords" {
+				switch reflect.TypeOf(generalConfigTemplate[key]).String(){
+				case "string":
+					if _, ok := value.(string); !ok {
 						o.ServeError(http.StatusBadRequest,
-							"the length of value:" + v.(string) + " exceeds max_len 16!")
+							"the type of config key: "+key+"'s value must be send a string")
 					}
-					if idx >= 200 {
+				case "int64":
+					if _, ok := value.(int64); !ok {
 						o.ServeError(http.StatusBadRequest,
-							"the count of weak_password exceed 200!")
+							"the type of config key: "+key+"'s value must be send a int64")
+					}
+				case "bool":
+					if _, ok := value.(bool); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a bool")
+					}
+				case "int", "float64":
+					if _, ok := value.(float64); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a int/float64")
 					}
 				}
-			}
-		}
-
-		if key == "inject.custom_headers" {
-			for hk, hv := range value.(map[string]interface{}) {
-				if len(hk) >= 200 {
-					o.ServeError(http.StatusBadRequest,
-						"the value's length of config item '"+hk+"' must be less than 200")
-				}
-				if hv, ok := hv.(string); ok {
-					if len(hv) >= 200 {
-						o.ServeError(http.StatusBadRequest,
-							"the value's length of config item '"+hv+"' must be less than 200")
+			} else {
+				if value != nil {
+					for idx, v := range value.([]interface{}) {
+						if len(v.(string)) > 16 {
+							o.ServeError(http.StatusBadRequest,
+								"the length of value:" + v.(string) + " exceeds max_len 16!")
+						}
+						if idx >= 200 {
+							o.ServeError(http.StatusBadRequest,
+								"the count of weak_password exceed 200!")
+						}
 					}
-				} else {
-					o.ServeError(http.StatusBadRequest,
-						"the inject.custom_headers's value cannot convert to type string")
 				}
 			}
-		}
-		if v, ok := value.(float64); ok {
-			if v < 0 {
-				o.ServeError(http.StatusBadRequest,
-					"the value of config item '"+key+"' can not be less than 0")
-			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
-				key == "ognl.expression.minlength" {
-				if v == 0 {
+			if key == "inject.custom_headers" {
+				for hk, hv := range value.(map[string]interface{}) {
+					if len(hk) >= 200 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+hk+"' must be less than 200")
+					}
+					if hv, ok := hv.(string); ok {
+						if len(hv) >= 200 {
+							o.ServeError(http.StatusBadRequest,
+								"the value's length of config item '"+hv+"' must be less than 200")
+						}
+					} else {
+						o.ServeError(http.StatusBadRequest,
+							"the inject.custom_headers's value cannot convert to type string")
+					}
+				}
+			}
+			if v, ok := value.(float64); ok {
+				if v < 0 {
 					o.ServeError(http.StatusBadRequest,
-						"the value of config item '"+key+"' must be greater than 0")
+						"the value of config item '"+key+"' can not be less than 0")
+				} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
+					key == "ognl.expression.minlength" {
+					if v == 0 {
+						o.ServeError(http.StatusBadRequest,
+							"the value of config item '"+key+"' must be greater than 0")
+					}
 				}
 			}
 		}
