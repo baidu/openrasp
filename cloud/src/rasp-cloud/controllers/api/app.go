@@ -159,6 +159,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	if param.Config == nil {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
+
 	o.validateAppConfig(param.Config)
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
@@ -511,7 +512,8 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) {
 	generalConfigTemplate := models.DefaultGeneralConfig
-	for key, value := range config {
+	for key, _ := range generalConfigTemplate {
+		value := config[key]
 		if value == nil {
 			o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
 		}
