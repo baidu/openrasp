@@ -564,7 +564,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 					}
 				case "int", "float64":
 					if _, ok := value.(float64); !ok {
-						if value == "" {
+						if value == "" || reflect.TypeOf(value).String() == "int" {
 							config[key] = v
 						} else {
 							o.ServeError(http.StatusBadRequest,
