@@ -169,7 +169,6 @@ var (
 		"response.sampler_interval": 60,
 		"response.sampler_burst":    5,
 		"dependency_check.interval": 12 * 3600,
-		"webroot_scan.scan_limit":   100,
 	}
 )
 
