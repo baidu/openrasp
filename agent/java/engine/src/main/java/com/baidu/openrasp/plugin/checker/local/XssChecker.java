@@ -24,6 +24,7 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +47,7 @@ public class XssChecker extends ConfigurableChecker {
         String action = getActionElement(config, CONFIG_KEY_XSS_USER_INPUT);
         LinkedList<EventInfo> result = new LinkedList<EventInfo>();
         String content = String.valueOf(checkParameter.getParam("content"));
-        if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
+        if (!StringUtils.isEmpty(action) && !EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
             if (HookHandler.requestCache.get() != null && content != null) {
                 Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
                 if (parameterMap != null) {
