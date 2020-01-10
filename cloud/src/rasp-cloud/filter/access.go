@@ -17,6 +17,7 @@ package filter
 import (
 	"github.com/astaxie/beego/logs"
 	"os"
+	"rasp-cloud/conf"
 	"rasp-cloud/tools"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
@@ -40,9 +41,10 @@ func logAccess(ctx *context.Context) {
 	if ctx.Input.Referer() != "" {
 		cont += "[F]" + ctx.Input.Referer()
 	}
-
-	body := ctx.Input.RequestBody
-	cont += " - [B]" + string(body)
+	if conf.AppConfig.RequestBodyEnable {
+		body := ctx.Input.RequestBody
+		cont += " - [B]" + string(body)
+	}
 	accessLogger.Info(cont)
 }
 
