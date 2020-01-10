@@ -32,7 +32,8 @@
                 <div class="row" style="margin-top: 3px;">
                   <div class="col">
                     <label>url白名单正则（被正则命中的url不会被扫描, 正则会匹配request_uri部分,
-                      例如 http://test.com/path/eg?p=1&b=2会匹配 /path/eg?p=1&b=2, 当不希望扫描</label>
+                      例如 http://test.com/path/eg?p=1&b=2 对应request_uri部分为 /path/eg?p=1&b=2,
+                      当不希望扫描path/eg开头的路径时时可以配置为 ^/path/eg）</label>
                     <input type="text" class="form-control" v-model="data.white_url_reg">
                     <label v-show="byurl_regex_error" style="color:#ff0000">*白名单正则非法</label>
                   </div>

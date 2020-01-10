@@ -176,6 +176,7 @@ export default {
     currentPage() { this.fetchData(this.currentPage) }
   },
   mounted() {
+    this.current_app.id = this.$route.params.app_id
     if (!this.current_app.id) {
       return
     }

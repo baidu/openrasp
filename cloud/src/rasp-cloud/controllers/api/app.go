@@ -16,20 +16,20 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego/validation"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
-	"rasp-cloud/models"
 	"rasp-cloud/kafka"
+	"rasp-cloud/models"
+	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"strings"
-	"fmt"
-	"reflect"
 )
 
 // Operations about app
@@ -159,6 +159,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	if param.Config == nil {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
+
 	o.validateAppConfig(param.Config)
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
@@ -511,9 +512,10 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) {
 	generalConfigTemplate := models.DefaultGeneralConfig
-	for key, value := range config {
+	for key, v := range generalConfigTemplate {
+		value := config[key]
 		if value == nil {
-			o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
+			value = v
 		}
 		if key == "" {
 			o.ServeError(http.StatusBadRequest,
@@ -524,78 +526,88 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				"the length of config key '"+key+"' must be less than 512")
 		}
 		if v, ok := value.(string); ok {
-			maxBytes := generalConfigTemplate["body.maxbytes"]
-			if len(v) >= maxBytes.(int) {
-				o.ServeError(http.StatusBadRequest,
-					"the value's length of config item '"+key+"' must be less than" + v)
+			if key == "body.maxbytes" {
+				maxBytes := generalConfigTemplate[key]
+				if len(v) >= maxBytes.(int) {
+					o.ServeError(http.StatusBadRequest,
+						"the value's length of config item '"+key+"' must be less than" + v)
+				}
 			}
-		}
+ 		}
 
 		// 对类型进行检验
-		if key != "security.weak_passwords" {
-			switch reflect.TypeOf(generalConfigTemplate[key]).String(){
-			case "string":
-				if _, ok := value.(string); !ok {
+		if generalConfigTemplate[key] != nil {
+			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
+				interval := value.(float64)
+				if interval < 60 || interval > 12 * 3600 {
 					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a string")
-				}
-			case "int64":
-				if _, ok := value.(int64); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a int64")
-				}
-			case "bool":
-				if _, ok := value.(bool); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a bool")
-				}
-			case "int", "float64":
-				if _, ok := value.(float64); !ok {
-					o.ServeError(http.StatusBadRequest,
-						"the type of config key: "+key+"'s value must be send a int/float64")
+						"the value's length of config item '"+key+"' must between 60 and 86400")
 				}
 			}
-		} else {
-			if value != nil {
-				for idx, v := range value.([]interface{}) {
-					if len(v.(string)) > 16 {
+			if key != "security.weak_passwords" {
+				switch reflect.TypeOf(generalConfigTemplate[key]).String(){
+				case "string":
+					if _, ok := value.(string); !ok {
 						o.ServeError(http.StatusBadRequest,
-							"the length of value:" + v.(string) + " exceeds max_len 16!")
+							"the type of config key: "+key+"'s value must be send a string")
 					}
-					if idx >= 200 {
+				case "int64":
+					if _, ok := value.(int64); !ok {
 						o.ServeError(http.StatusBadRequest,
-							"the count of weak_password exceed 200!")
+							"the type of config key: "+key+"'s value must be send a int64")
+					}
+				case "bool":
+					if _, ok := value.(bool); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a bool")
+					}
+				case "int", "float64":
+					if _, ok := value.(float64); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a int/float64")
+					}
+				}
+			} else {
+				if value != nil {
+					for idx, v := range value.([]interface{}) {
+						if len(v.(string)) > 16 {
+							o.ServeError(http.StatusBadRequest,
+								"the length of value:" + v.(string) + " exceeds max_len 16!")
+						}
+						if idx >= 200 {
+							o.ServeError(http.StatusBadRequest,
+								"the count of weak_password exceed 200!")
+						}
 					}
 				}
 			}
-		}
-
-		if key == "inject.custom_headers" {
-			for hk, hv := range value.(map[string]interface{}) {
-				if len(hk) >= 200 {
-					o.ServeError(http.StatusBadRequest,
-						"the value's length of config item '"+hk+"' must be less than 200")
-				}
-				if hv, ok := hv.(string); ok {
-					if len(hv) >= 200 {
+			if key == "inject.custom_headers" {
+				for hk, hv := range value.(map[string]interface{}) {
+					if len(hk) >= 200 {
 						o.ServeError(http.StatusBadRequest,
-							"the value's length of config item '"+hv+"' must be less than 200")
+							"the value's length of config item '"+hk+"' must be less than 200")
 					}
-				} else {
-					o.ServeError(http.StatusBadRequest,
-						"the inject.custom_headers's value cannot convert to type string")
+					if hv, ok := hv.(string); ok {
+						if len(hv) >= 200 {
+							o.ServeError(http.StatusBadRequest,
+								"the value's length of config item '"+hv+"' must be less than 200")
+						}
+					} else {
+						o.ServeError(http.StatusBadRequest,
+							"the inject.custom_headers's value cannot convert to type string")
+					}
 				}
 			}
-		}
-		if v, ok := value.(float64); ok {
-			if v < 0 {
-				o.ServeError(http.StatusBadRequest,
-					"the value of config item '"+key+"' can not be less than 0")
-			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
-				key == "ognl.expression.minlength" {
-				if v == 0 {
+			if v, ok := value.(float64); ok {
+				if v < 0 {
 					o.ServeError(http.StatusBadRequest,
-						"the value of config item '"+key+"' must be greater than 0")
+						"the value of config item '"+key+"' can not be less than 0")
+				} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
+					key == "ognl.expression.minlength" {
+					if v == 0 {
+						o.ServeError(http.StatusBadRequest,
+							"the value of config item '"+key+"' must be greater than 0")
+					}
 				}
 			}
 		}

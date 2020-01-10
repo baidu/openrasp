@@ -65,7 +65,7 @@ private:
   std::string curr_suffix;
 
   std::string cached_body;
-  long cached_count;
+  long cached_count = 0;
 
 private:
   void clear();

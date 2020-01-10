@@ -59,6 +59,12 @@ var (
 	IastConnection = make(map[string]*wsConnection)
 )
 
+func recovery() {
+	if r := recover(); r != nil {
+		beego.Error("failed to exec ws:", r)
+	}
+}
+
 // @router / [post]
 func (o *IastController) Post() {
 	var param struct {
@@ -202,6 +208,7 @@ func (wsConn *wsConnection) wsRead() (*models.WsMessage, error) {
 }
 
 func (wsConn *wsConnection) wsReadLoop(appId string) {
+	defer recovery()
 	for {
 		msgType, data, err := wsConn.wsSocket.ReadMessage()
 		if err != nil {
@@ -238,6 +245,7 @@ closed:
 }
 
 func (wsConn *wsConnection) wsWriteLoop() {
+	defer recovery()
 	for {
 		select {
 		// 取一个应答
@@ -258,6 +266,7 @@ closed:
 }
 
 func (wsConn *wsConnection) procLoop(appId string) {
+	defer recovery()
 	go func() {
 		for {
 			time.Sleep(3 * time.Second)
