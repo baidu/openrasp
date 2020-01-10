@@ -15,7 +15,7 @@ type WsMessage struct {
 
 type IastRegister struct {
 	Data map[string]uint8
-	Lock sync.RWMutex
+	Lock sync.Mutex
 }
 
 type IastAppId struct {
@@ -43,8 +43,8 @@ var (
 )
 
 func (iast IastRegister) GetIastRegister(k string) uint8 {
-	iast.Lock.RLock()
-	defer iast.Lock.RUnlock()
+	iast.Lock.Lock()
+	defer iast.Lock.Unlock()
 	return iast.Data[k]
 }
 

@@ -512,10 +512,10 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) {
 	generalConfigTemplate := models.DefaultGeneralConfig
-	for key, _ := range generalConfigTemplate {
+	for key, v := range generalConfigTemplate {
 		value := config[key]
 		if value == nil {
-			o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
+			value = v
 		}
 		if key == "" {
 			o.ServeError(http.StatusBadRequest,
