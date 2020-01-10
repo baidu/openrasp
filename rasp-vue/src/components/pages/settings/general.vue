@@ -123,7 +123,7 @@
           <label class="form-label">
             [插件] 传给插件的最大堆栈深度
           </label>
-          <input v-model.number="data['plugin.maxstack']" type="number" min="0" class="form-control" placeholder="50">
+          <input v-model.number="data['plugin.maxstack']" type="number" min="0" class="form-control" placeholder="100">
         </div>
         <div class="form-group">
           <label class="form-label">
