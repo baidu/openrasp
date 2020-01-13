@@ -1418,7 +1418,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             })
 
             // 匹配 header 参数
-            if ( context.header != null) {
+            if (reason == false && context.header != null) {
                 Object.keys(context.header).some(function (name) {
                     if ( name.toLowerCase() == "cookie") {
                         var cookies = get_cookies(context.header.cookie)
@@ -1440,7 +1440,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             }
 
             // 匹配json参数
-            if (Object.keys(json_parameters).length > 0) {
+            if (reason == false && Object.keys(json_parameters).length > 0) {
                 var jsons = [ [json_parameters, "input_json"] ]
                 while (jsons.length > 0 && reason === false) {
                     var json_arr = jsons.pop()
@@ -2248,9 +2248,8 @@ plugin.register('command', function (params, context) {
                 return true
             }
         })
-
         // 匹配 header 参数
-        if ( context.header != null) {
+        if (reason == false && context.header != null) {
             Object.keys(context.header).some(function (name) {
                 if ( name.toLowerCase() == "cookie") {
                     var cookies = get_cookies(context.header.cookie)
@@ -2272,7 +2271,7 @@ plugin.register('command', function (params, context) {
         }
 
         // 匹配json参数
-        if (Object.keys(json_parameters).length > 0) {
+        if (reason == false && Object.keys(json_parameters).length > 0) {
             var jsons = [ [json_parameters, "input_json"] ]
             while (jsons.length > 0 && reason === false) {
                 var json_arr = jsons.pop()
