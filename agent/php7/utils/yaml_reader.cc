@@ -313,6 +313,8 @@ std::string YamlReader::detect_unknown_config_key()
         "lru.max_size",
         "debug.level",
         "hook.white",
+        "response.sampler_interval",
+        "response.sampler_burst",
         "decompile.enable"};
     std::vector<std::string> found_keys = fetch_object_keys({});
     for (auto &key : found_keys)

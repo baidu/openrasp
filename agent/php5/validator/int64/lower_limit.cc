@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "natural_number.h"
+#include "lower_limit.h"
 
 namespace openrasp
 {
@@ -23,12 +23,29 @@ namespace validator
 namespace vint64
 {
 
-std::string NaturalNumber::check(const int64_t value) const
+LowerLimit::LowerLimit(int64_t lower_limit, bool zero_valid)
+{
+    this->lower_limit = lower_limit;
+    this->zero_valid = zero_valid;
+}
+
+std::string LowerLimit::check(const int64_t value) const
 {
     std::string result;
-    if (value < 0)
+    if (value < lower_limit)
     {
-        result = "shoule be greater than or equal to 0";
+        result = "the value shoule be >= " + std::to_string(lower_limit);
+        if (zero_valid && lower_limit > 0)
+        {
+            if (0 == value)
+            {
+                result.clear();
+            }
+            else
+            {
+                result += " OR = 0";
+            }
+        }
     }
     return result;
 }

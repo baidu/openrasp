@@ -17,8 +17,7 @@
 #include "openrasp_config_block.h"
 #include "utils/regex.h"
 #include "openrasp_v8.h"
-#include "validator/int64/natural_number.h"
-#include "validator/int64/unsigned_integer.h"
+#include "validator/int64/lower_limit.h"
 #include "validator/string/regex.h"
 
 namespace openrasp
@@ -28,7 +27,7 @@ const int64_t PluginBlock::default_maxstack = 100;
 
 void PluginBlock::update(BaseReader *reader)
 {
-  timeout.millis = reader->fetch_int64({"plugin.timeout.millis"}, PluginBlock::default_timeout_millis, openrasp::validator::vint64::UnsignedInteger());
+  timeout.millis = reader->fetch_int64({"plugin.timeout.millis"}, PluginBlock::default_timeout_millis, openrasp::validator::vint64::LowerLimit(1));
   maxstack = reader->fetch_int64({"plugin.maxstack"}, PluginBlock::default_maxstack);
   filter = reader->fetch_bool({"plugin.filter"}, true);
 };
@@ -52,9 +51,9 @@ void SyslogBlock::update(BaseReader *reader)
   url = reader->fetch_string({"syslog.url"}, std::string(""));
   enable = reader->fetch_bool({"syslog.enable"}, false);
   facility = reader->fetch_int64({"syslog.facility"}, SyslogBlock::default_facility);
-  connection_timeout = reader->fetch_int64({"syslog.connection_timeout"}, SyslogBlock::default_connection_timeout, openrasp::validator::vint64::UnsignedInteger());
-  read_timeout = reader->fetch_int64({"syslog.read_timeout"}, SyslogBlock::default_read_timeout, openrasp::validator::vint64::UnsignedInteger());
-  reconnect_interval = reader->fetch_int64({"syslog.reconnect_interval"}, SyslogBlock::default_reconnect_interval, openrasp::validator::vint64::UnsignedInteger());
+  connection_timeout = reader->fetch_int64({"syslog.connection_timeout"}, SyslogBlock::default_connection_timeout, openrasp::validator::vint64::LowerLimit(1));
+  read_timeout = reader->fetch_int64({"syslog.read_timeout"}, SyslogBlock::default_read_timeout, openrasp::validator::vint64::LowerLimit(1));
+  reconnect_interval = reader->fetch_int64({"syslog.reconnect_interval"}, SyslogBlock::default_reconnect_interval, openrasp::validator::vint64::LowerLimit(1));
 };
 
 const int64_t BlockBlock::default_status_code = 302;
@@ -112,9 +111,8 @@ void DecompileBlock::update(BaseReader *reader)
 
 void ResponseBlock::update(BaseReader *reader)
 {
-  sampler_interval = reader->fetch_int64({"response.sampler_interval"}, 60);
+  sampler_interval = reader->fetch_int64({"response.sampler_interval"}, 60, openrasp::validator::vint64::LowerLimit(60, true));
   sampler_burst = reader->fetch_int64({"response.sampler_burst"}, 5);
-  if (sampler_interval < 60) sampler_interval = 60;
 };
 
 } // namespace openrasp
