@@ -584,6 +584,8 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 								"the count of weak_password exceed 200!")
 						}
 					}
+				} else {
+					value = generalConfigTemplate["security.weak_passwords"]
 				}
 			}
 			if key == "inject.custom_headers" {

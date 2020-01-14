@@ -108,7 +108,7 @@ func (o *IastController) Post() {
 						beego.Info("msg:", string(msg))
 						if err := json.Unmarshal(msg, &result); err != nil {
 							beego.Error("Invalid JSON from iast")
-							result["status"] = 400
+							result["status"] = http.StatusBadRequest
 							result["description"] = "Invalid JSON from iast"
 						}
 					}
@@ -116,7 +116,7 @@ func (o *IastController) Post() {
 					goto quit
 				case <- time.After(3 * time.Second):
 					beego.Error("TimeOut Recv Data From IAST!")
-					result["status"] = 400
+					result["status"] = http.StatusBadRequest
 					result["description"] = "TimeOut Recv Data From IAST!"
 					quit <- true
 					goto quit
