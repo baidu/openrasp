@@ -1191,7 +1191,7 @@ function get_all_parameter(context) {
     return parameter
 }
 
-function check_ssrf(params, context) {
+function check_ssrf(params, context, is_redirect) {
     var hostname  = params.hostname
     var url       = params.url
     var ip        = params.ip
@@ -1201,16 +1201,18 @@ function check_ssrf(params, context) {
     if (algorithmConfig.ssrf_userinput.action != 'ignore')
     {
         var all_parameter = get_all_parameter(context)
-        if (is_from_userinput(all_parameter, url))
+        if (is_redirect || is_from_userinput(all_parameter, url))
         {
             for (var i=0; i<ip.length; i++) {
                 if (/^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[i]))
                 {
-                    return {
-                        action:     algorithmConfig.ssrf_userinput.action,
-                        message:    _("SSRF - Requesting intranet address: %1%", [ ip[i] ]),
-                        confidence: 100,
-                        algorithm:  'ssrf_userinput'
+                    if (!(is_redirect && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(params.origin_ip))){
+                        return {
+                            action:     algorithmConfig.ssrf_userinput.action,
+                            message:    _("SSRF - Requesting intranet address: %1%", [ ip[i] ]),
+                            confidence: 100,
+                            algorithm:  'ssrf_userinput'
+                        }
                     }
                 }
             }
@@ -1641,7 +1643,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     })
 
     plugin.register('ssrf', function(params, context) {
-        var ret = check_ssrf(params, context)
+        var ret = check_ssrf(params, context, false)
         if (ret !== false) {
             return ret
         }
@@ -1651,15 +1653,16 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     plugin.register('ssrfRedirect', function(params, context) {
         var params2 = {
             // 使用原始url，用于检测用户输入
-            url: params.url,
+            url: params.url2,
             hostname: params.hostname2,
             ip: params.ip2,
+            ip_origin: params.ip,
             port: params.port2,
             function: params.function
         }
-        var ret2 = check_ssrf(params2, context)
+        var ret2 = check_ssrf(params2, context, true)
         if (ret2 !== false) {
-            ret = check_ssrf(params, context)
+            ret = check_ssrf(params, context, false)
             if (ret === false) {
                 return ret2
             }
