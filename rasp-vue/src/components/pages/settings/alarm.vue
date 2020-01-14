@@ -88,7 +88,7 @@
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">
-            每隔多少秒发送一次报警（报警并非实时发送，而是每隔一段建检查ES里是否有新报警）
+            每隔多少秒发送一次报警（报警并非实时发送，而是每隔一段时间检查ES里是否有新报警）
           </label>
           <input v-model.number="data.general_alarm_conf.alarm_check_interval"
                  class="form-control" placeholder=120>

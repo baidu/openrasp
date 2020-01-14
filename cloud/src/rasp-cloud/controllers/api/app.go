@@ -574,18 +574,20 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 				}
 			} else {
 				if value != nil {
-					for idx, v := range value.([]interface{}) {
-						if len(v.(string)) > 16 {
-							o.ServeError(http.StatusBadRequest,
-								"the length of value:" + v.(string) + " exceeds max_len 16!")
-						}
-						if idx >= 200 {
-							o.ServeError(http.StatusBadRequest,
-								"the count of weak_password exceed 200!")
+					if len(value.([]interface{})) == 0 {
+						config[key] = generalConfigTemplate["security.weak_passwords"]
+					} else {
+						for idx, v := range value.([]interface{}) {
+							if len(v.(string)) > 16 {
+								o.ServeError(http.StatusBadRequest,
+									"the length of value:" + v.(string) + " exceeds max_len 16!")
+							}
+							if idx >= 200 {
+								o.ServeError(http.StatusBadRequest,
+									"the count of weak_password exceed 200!")
+							}
 						}
 					}
-				} else {
-					value = generalConfigTemplate["security.weak_passwords"]
 				}
 			}
 			if key == "inject.custom_headers" {
