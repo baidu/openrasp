@@ -1144,8 +1144,12 @@ function get_cookies(cookie_str) {
     return result
 }
 
-// 合并header、cookie、parameter参数， header、cookie的key会被重命名
+// 合并context.parameter中 header、cookie、parameter、json参数， header、cookie的key会被重命名
 function get_all_parameter(context) {
+    if (context.get_all_parameter !== undefined) {
+        return context.parameter
+    }
+    context.get_all_parameter = true
     var key_num = 0
     var parameter = context.parameter || {}
     if ( context.header != null) {
@@ -1153,17 +1157,34 @@ function get_all_parameter(context) {
             if ( name.toLowerCase() == "cookie") {
                 var cookies = get_cookies(context.header.cookie)
                 for (name in cookies) {
-                    while("c" + key_num in parameter) {
+                    while("cookie" + key_num + "_" + name in parameter) {
                         key_num ++
                     }
-                    parameter["c" + key_num] = [cookies[name]]
+                    parameter["cookie" + key_num + "_" + name] = [cookies[name]]
                 }
             }
             else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
-                while("h" + key_num in parameter) {
+                while("header" + key_num + "_" + name in parameter) {
                     key_num ++
                 }
-                parameter["h" + key_num] = [context.header[name]]
+                parameter["header" + key_num + "_" + name] = [context.header[name]]
+            }
+        }
+        var jsons = [ [context.json || {}, "input_json"] ]
+        while (jsons.length > 0) {
+            var json_arr = jsons.pop()
+            var crt_json_key = json_arr[1]
+            var json_obj = json_arr[0]
+            for (item in json_obj) {
+                if (typeof json_obj[item] == "string") {
+                    while("json" + key_num + "_" + crt_json_key + "->" + item in parameter) {
+                        key_num ++
+                    }
+                    parameter["json" + key_num + "_" + crt_json_key + "->" + item] = [json_obj[item]]
+                }
+                else if (typeof json_obj[item] == "object") {
+                    jsons.push([json_obj[item], crt_json_key + "->" + item])
+                }
             }
         }
     }
