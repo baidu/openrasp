@@ -74,3 +74,23 @@ hook.white:
 # "127.0.0.1/index.php":
 #   - "webshell_callable"
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#弱口令列表
+security.weak_passwords:
+  - ""
+  - "root"
+  - "123"
+  - "123456"
+  - "a123456"
+  - "123456a"
+  - "111111"
+  - "123123"
+  - "admin"
+  - "user"
+  - "mysql"
+
+#响应检测采样周期（秒）
+response.sampler_interval: 60
+
+#响应检测采样周期里，最多检测多少次
+response.sampler_burst: 5

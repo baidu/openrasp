@@ -26,7 +26,7 @@
 #include "shared_config_manager.h"
 #include "agent/utils/os.h"
 #include "openrasp_conf_holder.h"
-#include "validator/int64/unsigned_integer.h"
+#include "validator/int64/lower_limit.h"
 
 namespace openrasp
 {
@@ -164,7 +164,7 @@ bool HeartBeatAgent::do_heartbeat()
 
 				{
 					//update log_max_backup only its value greater than zero
-					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::validator::vint64::UnsignedInteger());
+					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::validator::vint64::LowerLimit(1));
 
 					//dependency check
 					int64_t dependency_interval = config_reader.fetch_int64({"dependency_check.interval"}, WebdirCtrlBlock::default_dependency_interval);

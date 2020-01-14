@@ -30,11 +30,11 @@ block.status_code: 302
 #拦截攻击后，跳转到这个URL
 block.redirect_url: "https://rasp.baidu.com/blocked/?request_id=%request_id%"
 #拦截攻击后，若期望响应类型为JSON，则根据此模板显示内容
-block.content_json: "{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
+block.content_json: '{"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"}'
 #拦截攻击后，若期望响应类型为XML，则根据此模板显示内容
-block.content_xml: "<?xml version=\"1.0\"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>"
+block.content_xml: '<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>'
 #拦截攻击后，若期望响应类型不为JSON/XML，则根据此模板显示内容
-block.content_html: "</script><script>location.href=\"https://rasp.baidu.com/blocked2/?request_id=%request_id%\"</script>"
+block.content_html: '</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>'
 
 #对于以下URL，修改响应并注入HTML
 inject.urlprefix: ""
@@ -63,7 +63,7 @@ decompile.enable: false
 debug.level: 0
 
 hook.white:
-# white url list for each check type  
+# white url list for each check type
 # url format: start from host and must match with url in alarm.log
 # "*" means for all url
 # "all" means for all check type
@@ -78,3 +78,23 @@ hook.white:
 # "127.0.0.1/index.php":
 #   - "webshell_callable"
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#弱口令列表
+security.weak_passwords:
+  - ""
+  - "root"
+  - "123"
+  - "123456"
+  - "a123456"
+  - "123456a"
+  - "111111"
+  - "123123"
+  - "admin"
+  - "user"
+  - "mysql"
+
+#响应检测采样周期（秒）
+response.sampler_interval: 60
+
+#响应检测采样周期里，最多检测多少次
+response.sampler_burst: 5
