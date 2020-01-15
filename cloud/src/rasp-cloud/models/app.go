@@ -15,6 +15,7 @@
 package models
 
 import (
+	"rasp-cloud/kafka"
 	"rasp-cloud/mongo"
 	"fmt"
 	"strconv"
@@ -62,6 +63,7 @@ type App struct {
 	HttpAlarmConf       HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
 	AlgorithmConfig     map[string]interface{} `json:"algorithm_config"`
 	GeneralAlarmConf    GeneralAlarmConf       `json:"general_alarm_conf" bson:"general_alarm_conf"`
+	KafkaConf           *kafka.Kafka           `json:"kafka_alarm_conf" bson:"kafka_alarm_conf"`
 }
 
 type WhitelistConfigItem struct {
