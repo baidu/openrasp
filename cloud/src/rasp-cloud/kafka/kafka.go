@@ -5,7 +5,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/astaxie/beego"
 	"rasp-cloud/conf"
-	"rasp-cloud/models"
+	"rasp-cloud/mongo"
 	"strings"
 )
 
@@ -67,10 +67,7 @@ func SendMessage(appId string, key string, val map[string]interface{}) error {
 
 func SendMessages(appId string, key string, valMaps []interface{}) error {
 	var msgs []*sarama.ProducerMessage
-	kafka, err := GetKafkaConfig(appId)
-	if err != nil {
-		return err
-	}
+	kafka, _ := GetKafkaConfig(appId)
 	if kafka.KafkaEnable && kafka.KafkaTopic != "" && kafka.KafkaAddr != "" {
 		addr := strings.Split(kafka.KafkaAddr, ",")
 		producer, err := sarama.NewSyncProducer(addr, config)
@@ -108,10 +105,7 @@ func SendMessages(appId string, key string, valMaps []interface{}) error {
 }
 
 func GetKafkaConfig(appId string) (kafka *Kafka, err error) {
-	app, err := models.GetAppByIdWithoutMask(appId)
-	if app == nil {
-		return nil, err
-	}
+	err = mongo.FindId(kafkaAddrCollectionName, appId, &kafka)
 	if err != nil {
 		kafka = &Kafka{
 			KafkaAddr:   conf.AppConfig.KafkaAddr,
@@ -121,5 +115,10 @@ func GetKafkaConfig(appId string) (kafka *Kafka, err error) {
 			KafkaEnable: conf.AppConfig.KafkaEnable,
 		}
 	}
-	return app.KafkaConf, err
+	return kafka, err
+}
+
+func PutKafkaConfig(kafka *Kafka) error {
+	err := mongo.UpsertId(kafkaAddrCollectionName, kafkaAddrId, &kafka)
+	return err
 }
