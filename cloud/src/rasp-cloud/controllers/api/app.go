@@ -656,6 +656,10 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 			o.ServeError(http.StatusBadRequest,
 				"the length of whitelist config url must be between [1,200]")
 		}
+		if len(value.Description) > 200 {
+			o.ServeError(http.StatusBadRequest,
+				"the length of whitelist config desc can not be greater than 200")
+		}
 		for key := range value.Hook {
 			if len(key) > 128 {
 				o.ServeError(http.StatusBadRequest,
