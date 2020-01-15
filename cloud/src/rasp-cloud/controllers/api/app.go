@@ -536,13 +536,18 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 			}
  		}
 
-		// 对类型进行检验
+		// 对类型和值进行检验
 		if generalConfigTemplate[key] != nil {
 			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
 				interval := value.(float64)
 				if interval < 60 || interval > 12 * 3600 {
 					o.ServeError(http.StatusBadRequest,
 						"the value's length of config item '"+key+"' must between 60 and 86400")
+				}
+			}
+			if key == "block.content_html" || key == "block.content_xml" || key == "block.content_json" {
+				if value == "" {
+					value = v
 				}
 			}
 			if key != "security.weak_passwords" {
@@ -651,6 +656,10 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 			o.ServeError(http.StatusBadRequest,
 				"the length of whitelist config url must be between [1,200]")
 		}
+		if len(value.Description) > 200 {
+			o.ServeError(http.StatusBadRequest,
+				"the length of whitelist config desc can not be greater than 200")
+		}
 		for key := range value.Hook {
 			if len(key) > 128 {
 				o.ServeError(http.StatusBadRequest,
@@ -716,10 +725,6 @@ func (o *AppController) ConfigAlarm() {
 	app, err = models.UpdateAppById(param.AppId, updateData)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
-	}
-	err = kafka.PutKafkaConfig(param.KafkaConf)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to put kafka config", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
 		"Alarm configuration updated for "+param.AppId)

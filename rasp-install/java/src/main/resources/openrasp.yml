@@ -22,6 +22,7 @@
 # request.param_encoding:
 # cpu.usage.percent: 0.9
 # cpu.usage.enable: false
+# cpu.usage.interval: 5
 # response.sampler_burst: 5
 # response.sampler_interval: 60
 #security.weak_passwords:

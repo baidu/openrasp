@@ -117,8 +117,3 @@ func GetKafkaConfig() (kafka *Kafka, err error) {
 	}
 	return kafka, err
 }
-
-func PutKafkaConfig(kafka *Kafka) error {
-	err := mongo.UpsertId(kafkaAddrCollectionName, kafkaAddrId, &kafka)
-	return err
-}
