@@ -10,7 +10,7 @@
 
         <div v-if="data.attack_type == 'directory'">
             通常应用不会读取敏感目录，请与业务线确认这个是否为正常行为。如果不是，请根据堆栈检查服务器是否存在 webshell 后门。
-        </div>        
+        </div>
 
         <div v-if="data.attack_type == 'readFile'">
             通常应用不会读取敏感文件，请与业务线确认这个是否为正常行为。如果不是，请根据堆栈检查服务器是否存在 webshell 后门。

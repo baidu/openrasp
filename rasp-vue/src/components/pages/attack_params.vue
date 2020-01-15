@@ -97,7 +97,22 @@
             <p>
                 {{ data.attack_params.realpath }}
             </p>
-        </div>          
+        </div>     
+
+        <div v-if="data.attack_type == 'deleteFile'">
+            <div class="h6">
+                删除的文件
+            </div>
+            <p>
+                {{ data.attack_params.path }}
+            </p>
+            <div class="h6">
+                删除的文件 - 真实路径
+            </div>
+            <p>
+                {{ data.attack_params.realpath }}
+            </p>
+        </div>      
 
         <div v-if="data.attack_type == 'include'">
             <div class="h6">
