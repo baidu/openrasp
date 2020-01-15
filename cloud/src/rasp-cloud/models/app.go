@@ -67,6 +67,7 @@ type App struct {
 type WhitelistConfigItem struct {
 	Url  string          `json:"url" bson:"url"`
 	Hook map[string]bool `json:"hook" bson:"hook"`
+	Description string   `json:"description" bson:"description"`
 }
 
 type GeneralAlarmConf struct {

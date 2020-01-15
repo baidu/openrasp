@@ -536,13 +536,18 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 			}
  		}
 
-		// 对类型进行检验
+		// 对类型和值进行检验
 		if generalConfigTemplate[key] != nil {
 			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
 				interval := value.(float64)
 				if interval < 60 || interval > 12 * 3600 {
 					o.ServeError(http.StatusBadRequest,
 						"the value's length of config item '"+key+"' must between 60 and 86400")
+				}
+			}
+			if key == "block.content_html" || key == "block.content_xml" || key == "block.content_json" {
+				if value == "" {
+					value = v
 				}
 			}
 			if key != "security.weak_passwords" {
