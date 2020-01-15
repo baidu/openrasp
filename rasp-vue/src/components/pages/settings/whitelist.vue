@@ -46,6 +46,10 @@
         <input ref="focus" v-model.trim="modalData.url" maxlength="200" type="text" class="form-control" maxlen="200">
       </div>
       <div class="form-group">
+        <label>白名单备注（可选）</label>
+        <input ref="focus" v-model.trim="modalData.description" maxlength="200" type="text" class="form-control" maxlen="200">
+      </div>
+      <div class="form-group">
         <label>检测点</label>
         <div class="row">
           <div class="col-12">
@@ -96,9 +100,10 @@ export default {
         { key: 'index', label: '#', tdAttr: {'nowrap': ''} },
         { key: 'url', label: 'URL' },
         { key: 'hook', label: '检测点', tdAttr: {'style': 'min-width: 150px; '} },
+        { key: 'description', label: '备注' },
         { key: 'command', label: '操作', tdAttr: {'nowrap': ''} }
       ],
-      modalData: { url: '', hook: {}},
+      modalData: { url: '', hook: {}, description: ''},
       attack_types
     }
   },
@@ -149,9 +154,9 @@ export default {
         }
 
         this.$set(this.data, this.index, this.modalData)
-        console.log (this.index, this.data)
+        // console.log (this.index, this.data)
       }
-      this.modalData = { url: '', hook: {}}
+      this.modalData = { url: '', hook: {}, description: ''}
       this.$refs.modal.hide()
       this.setSticky(true)
     },
