@@ -160,7 +160,7 @@ func (o *AppController) UpdateAppGeneralConfig() {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
 
-	o.validateAppConfig(param.Config)
+	param.Config = o.validateAppConfig(param.Config)
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
@@ -252,7 +252,7 @@ func (o *AppController) Post() {
 		o.validDingConf(&app.DingAlarmConf)
 	}
 	if app.GeneralConfig != nil {
-		o.validateAppConfig(app.GeneralConfig)
+		app.GeneralConfig = o.validateAppConfig(app.GeneralConfig)
 		configTime := time.Now().UnixNano()
 		app.ConfigTime = configTime
 	}
@@ -510,12 +510,13 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 	return param
 }
 
-func (o *AppController) validateAppConfig(config map[string]interface{}) {
+func (o *AppController) validateAppConfig(config map[string]interface{}) map[string]interface{} {
 	generalConfigTemplate := models.DefaultGeneralConfig
 	for key, v := range generalConfigTemplate {
 		value := config[key]
 		if value == nil {
 			value = v
+			config[key] = value
 		}
 		if key == "" {
 			o.ServeError(http.StatusBadRequest,
@@ -563,20 +564,28 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 					}
 				case "int", "float64":
 					if _, ok := value.(float64); !ok {
-						o.ServeError(http.StatusBadRequest,
-							"the type of config key: "+key+"'s value must be send a int/float64")
+						if value == "" || reflect.TypeOf(value).String() == "int" {
+							config[key] = v
+						} else {
+							o.ServeError(http.StatusBadRequest,
+								"the type of config key: "+key+"'s value must be send a int/float64")
+						}
 					}
 				}
 			} else {
 				if value != nil {
-					for idx, v := range value.([]interface{}) {
-						if len(v.(string)) > 16 {
-							o.ServeError(http.StatusBadRequest,
-								"the length of value:" + v.(string) + " exceeds max_len 16!")
-						}
-						if idx >= 200 {
-							o.ServeError(http.StatusBadRequest,
-								"the count of weak_password exceed 200!")
+					if len(value.([]interface{})) == 0 {
+						config[key] = generalConfigTemplate["security.weak_passwords"]
+					} else {
+						for idx, v := range value.([]interface{}) {
+							if len(v.(string)) > 16 {
+								o.ServeError(http.StatusBadRequest,
+									"the length of value:" + v.(string) + " exceeds max_len 16!")
+							}
+							if idx >= 200 {
+								o.ServeError(http.StatusBadRequest,
+									"the count of weak_password exceed 200!")
+							}
 						}
 					}
 				}
@@ -612,6 +621,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 			}
 		}
 	}
+	return config
 }
 
 func (o *AppController) RemoveDupWhitelistConfigItem(a []models.WhitelistConfigItem) (ret []models.WhitelistConfigItem){

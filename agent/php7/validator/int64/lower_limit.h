@@ -24,10 +24,15 @@ namespace validator
 {
 namespace vint64
 {
-class NaturalNumber : public Base
+class LowerLimit : public Base
 {
+private:
+    int64_t lower_limit = 0;
+    bool zero_valid = false;
+
 public:
-    NaturalNumber() = default;
+    LowerLimit() = default;
+    LowerLimit(int64_t lower_limit, bool zero_valid = false);
     virtual std::string check(const int64_t value) const;
 };
 } // namespace vint64

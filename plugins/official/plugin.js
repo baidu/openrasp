@@ -1144,8 +1144,12 @@ function get_cookies(cookie_str) {
     return result
 }
 
-// 合并header、cookie、parameter参数， header、cookie的key会被重命名
+// 合并context.parameter中 header、cookie、parameter、json参数， header、cookie的key会被重命名
 function get_all_parameter(context) {
+    if (context.get_all_parameter !== undefined) {
+        return context.parameter
+    }
+    context.get_all_parameter = true
     var key_num = 0
     var parameter = context.parameter || {}
     if ( context.header != null) {
@@ -1153,24 +1157,41 @@ function get_all_parameter(context) {
             if ( name.toLowerCase() == "cookie") {
                 var cookies = get_cookies(context.header.cookie)
                 for (name in cookies) {
-                    while("c" + key_num in parameter) {
+                    while("cookie" + key_num + "_" + name in parameter) {
                         key_num ++
                     }
-                    parameter["c" + key_num] = [cookies[name]]
+                    parameter["cookie" + key_num + "_" + name] = [cookies[name]]
                 }
             }
             else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
-                while("h" + key_num in parameter) {
+                while("header" + key_num + "_" + name in parameter) {
                     key_num ++
                 }
-                parameter["h" + key_num] = [context.header[name]]
+                parameter["header" + key_num + "_" + name] = [context.header[name]]
+            }
+        }
+        var jsons = [ [context.json || {}, "input_json"] ]
+        while (jsons.length > 0) {
+            var json_arr = jsons.pop()
+            var crt_json_key = json_arr[1]
+            var json_obj = json_arr[0]
+            for (item in json_obj) {
+                if (typeof json_obj[item] == "string") {
+                    while("json" + key_num + "_" + crt_json_key + "->" + item in parameter) {
+                        key_num ++
+                    }
+                    parameter["json" + key_num + "_" + crt_json_key + "->" + item] = [json_obj[item]]
+                }
+                else if (typeof json_obj[item] == "object") {
+                    jsons.push([json_obj[item], crt_json_key + "->" + item])
+                }
             }
         }
     }
     return parameter
 }
 
-function check_ssrf(params, context) {
+function check_ssrf(params, context, is_redirect) {
     var hostname  = params.hostname
     var url       = params.url
     var ip        = params.ip
@@ -1180,16 +1201,18 @@ function check_ssrf(params, context) {
     if (algorithmConfig.ssrf_userinput.action != 'ignore')
     {
         var all_parameter = get_all_parameter(context)
-        if (is_from_userinput(all_parameter, url))
+        if (is_redirect || is_from_userinput(all_parameter, url))
         {
             for (var i=0; i<ip.length; i++) {
                 if (/^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[i]))
                 {
-                    return {
-                        action:     algorithmConfig.ssrf_userinput.action,
-                        message:    _("SSRF - Requesting intranet address: %1%", [ ip[i] ]),
-                        confidence: 100,
-                        algorithm:  'ssrf_userinput'
+                    if (!(is_redirect && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(params.origin_ip))){
+                        return {
+                            action:     algorithmConfig.ssrf_userinput.action,
+                            message:    _("SSRF - Requesting intranet address: %1%", [ ip[i] ]),
+                            confidence: 100,
+                            algorithm:  'ssrf_userinput'
+                        }
                     }
                 }
             }
@@ -1418,7 +1441,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             })
 
             // 匹配 header 参数
-            if ( context.header != null) {
+            if (reason == false && context.header != null) {
                 Object.keys(context.header).some(function (name) {
                     if ( name.toLowerCase() == "cookie") {
                         var cookies = get_cookies(context.header.cookie)
@@ -1440,7 +1463,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             }
 
             // 匹配json参数
-            if (Object.keys(json_parameters).length > 0) {
+            if (reason == false && Object.keys(json_parameters).length > 0) {
                 var jsons = [ [json_parameters, "input_json"] ]
                 while (jsons.length > 0 && reason === false) {
                     var json_arr = jsons.pop()
@@ -1620,7 +1643,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     })
 
     plugin.register('ssrf', function(params, context) {
-        var ret = check_ssrf(params, context)
+        var ret = check_ssrf(params, context, false)
         if (ret !== false) {
             return ret
         }
@@ -1630,15 +1653,16 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     plugin.register('ssrfRedirect', function(params, context) {
         var params2 = {
             // 使用原始url，用于检测用户输入
-            url: params.url,
+            url: params.url2,
             hostname: params.hostname2,
             ip: params.ip2,
+            ip_origin: params.ip,
             port: params.port2,
             function: params.function
         }
-        var ret2 = check_ssrf(params2, context)
+        var ret2 = check_ssrf(params2, context, true)
         if (ret2 !== false) {
-            ret = check_ssrf(params, context)
+            ret = check_ssrf(params, context, false)
             if (ret === false) {
                 return ret2
             }
@@ -2248,9 +2272,8 @@ plugin.register('command', function (params, context) {
                 return true
             }
         })
-
         // 匹配 header 参数
-        if ( context.header != null) {
+        if (reason == false && context.header != null) {
             Object.keys(context.header).some(function (name) {
                 if ( name.toLowerCase() == "cookie") {
                     var cookies = get_cookies(context.header.cookie)
@@ -2272,7 +2295,7 @@ plugin.register('command', function (params, context) {
         }
 
         // 匹配json参数
-        if (Object.keys(json_parameters).length > 0) {
+        if (reason == false && Object.keys(json_parameters).length > 0) {
             var jsons = [ [json_parameters, "input_json"] ]
             while (jsons.length > 0 && reason === false) {
                 var json_arr = jsons.pop()
