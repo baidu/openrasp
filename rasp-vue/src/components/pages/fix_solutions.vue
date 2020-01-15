@@ -91,6 +91,10 @@
             检查目标文件是否为后门
         </div> 
 
+        <div v-if="data.attack_type == 'response'">
+            对响应里的敏感数据进行打码处理，避免展示明文数据
+        </div> 
+
     </div>
 
 </template>
