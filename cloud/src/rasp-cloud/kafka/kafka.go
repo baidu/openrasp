@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	kafkaAddrId               = "0"
 	kafkaAddrCollectionName   = "kafka"
 )
 
@@ -63,8 +62,6 @@ func SendMessage(appId string, key string, val map[string]interface{}) error {
 		if err != nil {
 			beego.Error("Send message Fail")
 			return err
-		} else {
-			beego.Info("send ok!")
 		}
 	}
 	return nil
@@ -108,8 +105,6 @@ func SendMessages(appId string, key string, valMaps []interface{}) error {
 			beego.Error("Send message Fail")
 			return err
 		}
-	} else {
-		beego.Error("kafka is not enabled!")
 	}
 	return nil
 }
