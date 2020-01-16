@@ -1,4 +1,4 @@
-const plugin_version = '2019-1223-1000'
+const plugin_version = '2020-0116-2000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -553,7 +553,7 @@ var algorithmConfig = {
     // },
 
     response_dataLeak: {
-        name:   '算法1 - 检查响应里是否有身份证等敏感信息',
+        name:   '算法1 - 检查响应里是否有身份证等敏感信息（拦截等同于记录日志）',
         action: 'log',
 
         // 检查类型
