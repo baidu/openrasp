@@ -31,10 +31,15 @@ func init() {
 	config.Producer.Return.Successes = true
 }
 
-func SendMessage(topic string, key string, val map[string]interface{}) error {
-	kafka, _ := GetKafkaConfig()
+func SendMessage(appId string, key string, val map[string]interface{}) error {
+	kafka, _ := GetKafkaConfig(appId)
 	if kafka.KafkaEnable && kafka.KafkaTopic != "" && kafka.KafkaAddr != "" {
 		addrs := strings.Split(kafka.KafkaAddr, ",")
+		if kafka.KafkaUser != "" || kafka.KafkaPwd != "" {
+			config.Net.SASL.Enable = true
+			config.Net.SASL.User = kafka.KafkaUser
+			config.Net.SASL.Password = kafka.KafkaPwd
+		}
 		producer, err := sarama.NewSyncProducer(addrs, config)
 		if err != nil {
 			beego.Error(err)
@@ -65,11 +70,16 @@ func SendMessage(topic string, key string, val map[string]interface{}) error {
 	return nil
 }
 
-func SendMessages(topic string, key string, valMaps []interface{}) error {
+func SendMessages(appId string, key string, valMaps []interface{}) error {
 	var msgs []*sarama.ProducerMessage
-	kafka, _ := GetKafkaConfig()
+	kafka, _ := GetKafkaConfig(appId)
 	if kafka.KafkaEnable && kafka.KafkaTopic != "" && kafka.KafkaAddr != "" {
 		addr := strings.Split(kafka.KafkaAddr, ",")
+		if kafka.KafkaUser != "" || kafka.KafkaPwd != "" {
+			config.Net.SASL.Enable = true
+			config.Net.SASL.User = kafka.KafkaUser
+			config.Net.SASL.Password = kafka.KafkaPwd
+		}
 		producer, err := sarama.NewSyncProducer(addr, config)
 		if err != nil {
 			beego.Error(err)
@@ -104,8 +114,8 @@ func SendMessages(topic string, key string, valMaps []interface{}) error {
 	return nil
 }
 
-func GetKafkaConfig() (kafka *Kafka, err error) {
-	err = mongo.FindId(kafkaAddrCollectionName, kafkaAddrId, &kafka)
+func GetKafkaConfig(appId string) (kafka *Kafka, err error) {
+	err = mongo.FindId(kafkaAddrCollectionName, appId, &kafka)
 	if err != nil {
 		kafka = &Kafka{
 			KafkaAddr:   conf.AppConfig.KafkaAddr,
@@ -116,4 +126,9 @@ func GetKafkaConfig() (kafka *Kafka, err error) {
 		}
 	}
 	return kafka, err
+}
+
+func PutKafkaConfig(kafka *Kafka) error {
+	err := mongo.UpsertId(kafkaAddrCollectionName, kafkaAddrId, &kafka)
+	return err
 }

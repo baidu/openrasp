@@ -726,6 +726,10 @@ func (o *AppController) ConfigAlarm() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
 	}
+	err = kafka.PutKafkaConfig(param.KafkaConf)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to put kafka config", err)
+	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
 		"Alarm configuration updated for "+param.AppId)
 	o.Serve(app)
