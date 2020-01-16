@@ -323,6 +323,10 @@ export default {
       var oldVal = data.description
       var newVal = prompt('输入新的备注', oldVal)
 
+      if (newVal == null) {
+        return
+      }
+
       this.request.post('v1/api/rasp/describe', {
         id: data.id,
         description: newVal
