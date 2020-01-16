@@ -35,6 +35,11 @@ func SendMessage(appId string, key string, val map[string]interface{}) error {
 	kafka, _ := GetKafkaConfig(appId)
 	if kafka.KafkaEnable && kafka.KafkaTopic != "" && kafka.KafkaAddr != "" {
 		addrs := strings.Split(kafka.KafkaAddr, ",")
+		if kafka.KafkaUser != "" || kafka.KafkaPwd != "" {
+			config.Net.SASL.Enable = true
+			config.Net.SASL.User = kafka.KafkaUser
+			config.Net.SASL.Password = kafka.KafkaPwd
+		}
 		producer, err := sarama.NewSyncProducer(addrs, config)
 		if err != nil {
 			beego.Error(err)
@@ -70,6 +75,11 @@ func SendMessages(appId string, key string, valMaps []interface{}) error {
 	kafka, _ := GetKafkaConfig(appId)
 	if kafka.KafkaEnable && kafka.KafkaTopic != "" && kafka.KafkaAddr != "" {
 		addr := strings.Split(kafka.KafkaAddr, ",")
+		if kafka.KafkaUser != "" || kafka.KafkaPwd != "" {
+			config.Net.SASL.Enable = true
+			config.Net.SASL.User = kafka.KafkaUser
+			config.Net.SASL.Password = kafka.KafkaPwd
+		}
 		producer, err := sarama.NewSyncProducer(addr, config)
 		if err != nil {
 			beego.Error(err)

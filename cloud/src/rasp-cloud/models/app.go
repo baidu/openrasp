@@ -508,6 +508,11 @@ func HandleApp(app *App, isCreate bool) error {
 	if app.GeneralConfig == nil {
 		app.GeneralConfig = make(map[string]interface{})
 	}
+	if app.KafkaConf != nil {
+		if app.KafkaConf.KafkaPwd != "" {
+			app.KafkaConf.KafkaPwd = SecreteMask
+		}
+	}
 	app.AlgorithmConfig = make(map[string]interface{})
 	plugin, err := GetSelectedPlugin(app.Id, false)
 	if err != nil {

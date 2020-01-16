@@ -180,7 +180,7 @@ export function getDefaultConfig() {
       
     },
     general_alarm_conf: {
-      alarm_check_interval: 120
+
     }
   }
 }

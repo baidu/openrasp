@@ -342,6 +342,18 @@
           <b-form-input v-model="data.kafka_alarm_conf['topic']" type="string" class="form-control" />
         </div>
         <div class="form-group">
+          <label class="form-label">
+            kafka用户名
+          </label>
+          <b-form-input v-model="data.kafka_alarm_conf['user']" type="string" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            kafka密码
+          </label>
+          <b-form-input v-model="data.kafka_alarm_conf['pwd']" type="string" class="form-control" />
+        </div>
+        <div class="form-group">
           <label class="custom-switch">
             <input v-model="data.kafka_alarm_conf['enable']" type="checkbox" checked="data.general_config['syslog.enable']" class="custom-switch-input">
             <span class="custom-switch-indicator" />
