@@ -563,8 +563,8 @@ var algorithmConfig = {
             bank_card:     true
         },
 
-        // Content-Type 过滤 (v8内置了黑名单，暂时删除)
-        // content_type: 'html|json|xml'
+        // Content-Type 过滤
+        content_type: 'html|json|xml'
     }
 }
 
@@ -659,8 +659,8 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
 
-// 敏感信息泄露 - Content Type 正则 (v8内置了黑名单，暂时删除)
-// var dataLeakContentType = new RegExp(algorithmConfig.response_dataLeak.content_type, 'i')
+// 敏感信息泄露 - Content Type 正则
+var dataLeakContentType = new RegExp(algorithmConfig.response_dataLeak.content_type, 'i')
 
 if (! RASP.is_unittest)
 {
@@ -2698,10 +2698,10 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
         var items = [], parts = []
 
-        // content-type 过滤 （v8内置了黑名单，暂时删除）
-        // if (! dataLeakContentType.test(content_type)) {
-        //     return clean
-        // }
+        // content-type 过滤
+        if (content_type != "" && ! dataLeakContentType.test(content_type)) {
+            return clean
+        }
 
         // 是否检查身份证泄露
         if (kind.identity_card) {
