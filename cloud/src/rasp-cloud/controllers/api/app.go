@@ -256,6 +256,9 @@ func (o *AppController) Post() {
 		configTime := time.Now().UnixNano()
 		app.ConfigTime = configTime
 	}
+	if app.GeneralAlarmConf.AlarmCheckInterval == 0 {
+		app.GeneralAlarmConf.AlarmCheckInterval = 120
+	}
 	if app.WhitelistConfig != nil {
 		o.validateWhiteListConfig(app.WhitelistConfig)
 		configTime := time.Now().UnixNano()
@@ -726,7 +729,7 @@ func (o *AppController) ConfigAlarm() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
 	}
-	err = kafka.PutKafkaConfig(param.KafkaConf)
+	err = kafka.PutKafkaConfig(param.AppId, param.KafkaConf)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to put kafka config", err)
 	}

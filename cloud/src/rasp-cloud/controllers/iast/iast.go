@@ -151,6 +151,7 @@ func (o *WebsocketController) Get() {
 	}
 
 	if !models.IastApp.GetIastAppId(appId) {
+		defer recovery()
 		models.InChan = wsConn.inChan
 		models.OutChan = wsConn.outChan
 		models.CloseChan = wsConn.closeChan
