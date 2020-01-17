@@ -142,9 +142,8 @@
               开启邮件报警
             </span>
           </label>
-        </div>
+          <br/>
 
-        <div class="form-group">
           <label class="custom-switch">
             <input v-model="data.email_alarm_conf.tls_enable" type="checkbox" checked="data.email_alarm_conf.enable" class="custom-switch-input">
             <span class="custom-switch-indicator" />
