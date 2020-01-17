@@ -17,7 +17,7 @@
         </div>
 
         <div v-if="data.attack_type == 'deleteFile'">
-            对传入的文件路径进行过滤
+            对传入的文件路径进行过滤或者校验。
         </div>
 
         <div v-if="data.attack_type == 'writeFile'">
@@ -57,7 +57,7 @@
             检查系统是否存在已知的反序列化漏洞，并升级软件或者框架到最新版本。
         </div>         
 
-        <div v-if="data.attack_type == 'ssrf'">
+        <div v-if="data.attack_type == 'ssrf' || data.attack_type == 'ssrfRedirect'">
             检查业务代码，看是否可以直接向用户指定的内网URL，发起请求。
         </div>  
 
@@ -84,19 +84,19 @@
         </div>        
 
         <div v-if="data.attack_type == 'xss_userinput' || data.attack_type == 'xss_echo'">
-            检查应用是否直接输出了用户传入的参数，可以考虑使用 ESAPI 进行转义
+            检查应用是否直接输出了用户传入的参数，可以考虑使用 ESAPI 进行转义。
         </div>
 
         <div v-if="data.attack_type == 'eval'">
-            避免使用 eval/assert 函数
+            避免使用 eval/assert 函数，或者检查目标文件是否为后门程序。
         </div>  
 
         <div v-if="data.attack_type == 'loadLibrary'">
-            检查目标文件是否为后门
+            检查目标文件是否为后门。
         </div> 
 
         <div v-if="data.attack_type == 'response'">
-            对响应里的敏感数据进行打码处理，避免展示明文数据
+            对响应里的敏感数据进行打码处理，避免展示明文数据。
         </div> 
 
     </div>
