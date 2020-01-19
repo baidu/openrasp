@@ -2691,7 +2691,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
 
     // response 所有检测点都会抽样
     plugin.register('response', function (params, context) {
-        const content_type = params.content_type
+        const content_type = params["content-type"]
         const content      = params.content
         const kind         = algorithmConfig.response_dataLeak.kind
         const header       = context.header || {}
@@ -2699,7 +2699,10 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         var items = [], parts = []
 
         // content-type 过滤
-        if (content_type != "" && ! dataLeakContentType.test(content_type)) {
+        console.log(dataLeakContentType)
+        console.log(content_type)
+        console.log(dataLeakContentType.test(content_type))
+        if (!content_type && ! dataLeakContentType.test(content_type)) {
             return clean
         }
 
