@@ -2699,9 +2699,6 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         var items = [], parts = []
 
         // content-type 过滤
-        console.log(dataLeakContentType)
-        console.log(content_type)
-        console.log(dataLeakContentType.test(content_type))
         if (!content_type && ! dataLeakContentType.test(content_type)) {
             return clean
         }
