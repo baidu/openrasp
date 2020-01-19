@@ -474,7 +474,6 @@ pid_t OpenraspAgentManager::search_fpm_master_pid()
 				std::getline(ifs_cmdline, cmdline);
 				if (cmdline.find("php-fpm: master process") == 0)
 				{
-					openrasp_error(LEVEL_DEBUG, RUNTIME_ERROR, _("find php-fpm: master process that its pid is %s"), pid);
 					return std::atoi(pid.c_str());
 				}
 			}

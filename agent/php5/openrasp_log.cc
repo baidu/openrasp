@@ -541,7 +541,7 @@ bool RaspLoggerEntry::log(severity_level level_int, openrasp::JsonReader &base_j
     std::vector<std::string> source_code_vec;
     if (OPENRASP_CONFIG(decompile.enable))
     {
-        source_code_vec = format_source_code_arr(TSRMLS_C);
+        source_code_vec = format_source_code_arr();
     }
     base_json.write_vector({"source_code"}, source_code_vec);
     if (strcmp(name, RaspLoggerEntry::ALARM_LOG_DIR_NAME) == 0 &&

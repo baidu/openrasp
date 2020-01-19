@@ -202,7 +202,7 @@ void get_stack(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Valu
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
     v8::HandleScope handle_scope(isolate);
-    auto arr = format_debug_backtrace_arr(TSRMLS_C);
+    auto arr = format_debug_backtrace_arr();
     size_t len = arr.size();
     auto stack = v8::Array::New(isolate, len);
     for (size_t i = 0; i < len; i++)

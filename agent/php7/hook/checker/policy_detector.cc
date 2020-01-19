@@ -56,6 +56,7 @@ void PolicyDetector::run()
 
 void PolicyDetector::log_policy()
 {
+    j.write_vector({"policy_params", "stack"}, format_debug_backtrace_arr());
     builtin_policy_info(j, policy_material.hash());
 }
 } // namespace checker
