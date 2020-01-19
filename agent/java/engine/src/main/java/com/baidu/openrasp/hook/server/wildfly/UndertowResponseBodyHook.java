@@ -62,7 +62,7 @@ public class UndertowResponseBodyHook extends ServerResponseBodyHook {
                     params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
-                        params.put("content-type", res.getContentType());
+                        params.put("content_type", res.getContentType());
                     }
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
@@ -85,7 +85,7 @@ public class UndertowResponseBodyHook extends ServerResponseBodyHook {
                 params.put("content", buffer);
                 HttpServletResponse res = HookHandler.responseCache.get();
                 if (res != null) {
-                    params.put("content-type", res.getContentType());
+                    params.put("content_type", res.getContentType());
                 }
                 if (!params.isEmpty()) {
                     checkBody(params, isCheckXss, isCheckSensitive);
