@@ -209,7 +209,7 @@ func init() {
 		if generalConf != nil && generalConf.AlarmCheckInterval > MinAlarmCheckInterval {
 			AlarmCheckInterval = generalConf.AlarmCheckInterval
 		}
-		go startAlarmTicker(time.Second * time.Duration(AlarmCheckInterval))
+		go startAlarmTicker()
 	}
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		initApp()
@@ -294,13 +294,14 @@ func createDefaultApp() {
 	}
 }
 
-func startAlarmTicker(interval time.Duration) {
-	ticker := time.NewTicker(interval)
+func startAlarmTicker() {
+	timer := time.NewTimer(time.Second * time.Duration(AlarmCheckInterval))
 	for {
 		select {
-		case <-ticker.C:
+		case <-timer.C:
 			HandleAttackAlarm()
 		}
+		timer.Reset(time.Second * time.Duration(AlarmCheckInterval))
 	}
 }
 
@@ -559,7 +560,7 @@ func UpdateAppById(id string, doc interface{}) (app *App, err error) {
 }
 
 func UpdateConfigById(collection string, id string, doc interface{}) (err error) {
-	err = mongo.UpdateId(collection, id, doc)
+	err = mongo.UpsertId(collection, id, doc)
 	if err != nil {
 		return
 	}

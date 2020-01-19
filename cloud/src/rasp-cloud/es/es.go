@@ -231,11 +231,14 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 func BulkInsert(index string, docType string, docs []interface{}) (err error) {
 	bulkService := ElasticClient.Bulk()
 	for _, doc := range docs {
-		bulkService.Add(elastic.NewBulkIndexRequest().
-			Index(index).
-			Type(docType).
-			OpType("index").
-			Doc(doc))
+		if doc, ok := doc.(map[string]interface{}); ok{
+			bulkService.Add(elastic.NewBulkUpdateRequest().
+				Index(index).
+				Type(docType).
+				Id(fmt.Sprint(doc["upsert_id"])).
+				DocAsUpsert(true).
+				Doc(doc))
+		}
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()

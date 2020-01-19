@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"rasp-cloud/es"
 	"rasp-cloud/models/logs"
 	"time"
@@ -12,6 +13,7 @@ import (
 )
 
 type Dependency struct {
+	UpsertId     string   `json:"upsert_id"`
 	Path         []string `json:"path"`
 	CreateTime   int64    `json:"@timestamp"`
 	RaspId       string   `json:"rasp_id"`
@@ -48,7 +50,11 @@ var (
 
 func AddDependency(rasp *Rasp, dependencies []*Dependency) error {
 	docs := make([]interface{}, 0, len(dependencies))
+	idContent := ""
 	for _, dependency := range dependencies {
+		idContent += fmt.Sprint(dependency.Path)
+		idContent += fmt.Sprint(dependency.Tag)
+		idContent += fmt.Sprint(dependency.RaspId)
 		dependency.CreateTime = time.Now().UnixNano() / 1000000
 		dependency.AppId = rasp.AppId
 		dependency.RaspId = rasp.Id
@@ -56,6 +62,7 @@ func AddDependency(rasp *Rasp, dependencies []*Dependency) error {
 		dependency.RegisterIp = rasp.RegisterIp
 		dependency.Tag = dependency.Vendor + ":" + dependency.Product + ":" + dependency.Version
 		dependency.SearchString = dependency.Product + dependency.Version
+		dependency.UpsertId = idContent
 		docs = append(docs, dependency)
 	}
 	err := logs.AddLogsWithKafka("dependency-data", rasp.AppId, docs)
