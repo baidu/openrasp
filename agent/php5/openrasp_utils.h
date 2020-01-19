@@ -28,11 +28,10 @@ std::string fetch_possible_protocol(const char *filename);
 
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC);
 
-std::vector<std::string> format_source_code_arr(TSRMLS_D);
-void format_source_code_arr(zval *source_code_arr TSRMLS_DC);
-std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D);
+std::vector<std::string> format_source_code_arr();
+
+std::vector<std::string> format_debug_backtrace_arr();
 std::vector<std::string> format_debug_backtrace_arr(long limit TSRMLS_DC);
-void add_stack_to_params(zval *params TSRMLS_DC);
 
 std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 std::string json_encode_from_zval(zval *value TSRMLS_DC);

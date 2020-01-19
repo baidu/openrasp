@@ -41,10 +41,10 @@ std::string fetch_possible_protocol(const char *filename);
 int recursive_mkdir(const char *path, int len, int mode);
 
 std::vector<std::string> format_source_code_arr();
-void format_source_code_arr(zval *source_code_arr);
+
 std::vector<std::string> format_debug_backtrace_arr();
 std::vector<std::string> format_debug_backtrace_arr(long limit);
-void add_stack_to_params(zval *params);
+
 std::string json_encode_from_zval(zval *value);
 
 std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);

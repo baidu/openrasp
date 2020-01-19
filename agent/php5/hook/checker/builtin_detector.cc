@@ -78,6 +78,7 @@ void BuiltinDetector::log_alarm(const CheckResult &cr)
     j.write_string({"attack_type"}, CheckTypeTransfer::instance().type_to_name(builtin_material.get_builtin_check_type()));
     j.write_string({"plugin_algorithm"}, CheckTypeTransfer::instance().type_to_name(builtin_material.get_builtin_check_type()));
     j.write_string({"intercept_state"}, check_result_to_string(cr));
+    j.write_vector({"attack_params", "stack"}, format_debug_backtrace_arr());
     builtin_alarm_info(j);
 }
 
