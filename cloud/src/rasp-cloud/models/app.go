@@ -73,7 +73,7 @@ type WhitelistConfigItem struct {
 }
 
 type GeneralAlarmConf struct {
-	AlarmCheckInterval  int                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
+	AlarmCheckInterval  int64                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
 }
 
 type EmailAlarmConf struct {
@@ -119,6 +119,7 @@ var AlarmTypes = []string{"email", "ding", "http"}
 
 const (
 	appCollectionName = "app"
+	configCollectionName = "config"
 	defaultAppName    = "PHP 示例应用"
 	SecreteMask       = "************"
 	DefalutPluginName = "plugin.js"
@@ -173,6 +174,8 @@ var (
 		"response.sampler_burst":    5,
 		"dependency_check.interval": 12 * 3600,
 	}
+	AlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
+	MinAlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
 )
 
 func init() {
@@ -202,7 +205,11 @@ func init() {
 		if count <= 0 {
 			createDefaultApp()
 		}
-		go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))
+		generalConf, _ := getGeneralConfig()
+		if generalConf != nil && generalConf.AlarmCheckInterval > MinAlarmCheckInterval {
+			AlarmCheckInterval = generalConf.AlarmCheckInterval
+		}
+		go startAlarmTicker(time.Second * time.Duration(AlarmCheckInterval))
 	}
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		initApp()
@@ -466,6 +473,18 @@ func GetSecretByAppId(appId string) (secret string, err error) {
 	return
 }
 
+func getGeneralConfig() (conf *GeneralAlarmConf, err error) {
+	var result struct {
+		GeneralAlarmConf    GeneralAlarmConf       `json:"general_alarm_conf" bson:"general_alarm_conf"`
+	}
+	err = mongo.FindId(configCollectionName, "0", &result)
+	if err != nil && &result != nil {
+		return
+	}
+	conf = &result.GeneralAlarmConf
+	return
+}
+
 func RegenerateSecret(appId string) (secret string, err error) {
 	var app *App
 	err = mongo.FindId(appCollectionName, appId, &app)
@@ -478,6 +497,10 @@ func RegenerateSecret(appId string) (secret string, err error) {
 }
 
 func HandleApp(app *App, isCreate bool) error {
+	generalConf, _ := getGeneralConfig()
+	if generalConf != nil {
+		app.GeneralAlarmConf.AlarmCheckInterval = generalConf.AlarmCheckInterval
+	}
 	if app.EmailAlarmConf.RecvAddr == nil {
 		app.EmailAlarmConf.RecvAddr = make([]string, 0)
 	}
@@ -535,12 +558,24 @@ func UpdateAppById(id string, doc interface{}) (app *App, err error) {
 	return GetAppById(id)
 }
 
+func UpdateConfigById(collection string, id string, doc interface{}) (err error) {
+	err = mongo.UpdateId(collection, id, doc)
+	if err != nil {
+		return
+	}
+	return err
+}
+
 func UpdateGeneralConfig(appId string, config map[string]interface{}) (*App, error) {
 	return UpdateAppById(appId, bson.M{"general_config": config, "config_time": time.Now().UnixNano()})
 }
 
 func UpdateWhiteListConfig(appId string, config []WhitelistConfigItem) (app *App, err error) {
 	return UpdateAppById(appId, bson.M{"whitelist_config": config, "config_time": time.Now().UnixNano()})
+}
+
+func UpdateGeneralAlarmConfig(config *GeneralAlarmConf) (err error) {
+	return UpdateConfigById(configCollectionName, "0", bson.M{"general_alarm_conf": config})
 }
 
 func UpdateAppConfig(version string) error {
