@@ -256,9 +256,6 @@ func (o *AppController) Post() {
 		configTime := time.Now().UnixNano()
 		app.ConfigTime = configTime
 	}
-	if app.GeneralAlarmConf.AlarmCheckInterval == 0 {
-		app.GeneralAlarmConf.AlarmCheckInterval = 120
-	}
 	if app.WhitelistConfig != nil {
 		o.validateWhiteListConfig(app.WhitelistConfig)
 		configTime := time.Now().UnixNano()
@@ -442,8 +439,8 @@ func (o *AppController) validKafkaConf(conf *kafka.Kafka) {
 }
 
 func (o *AppController) validGeneralAlarmConf(conf *models.GeneralAlarmConf) {
-	if conf.AlarmCheckInterval < 120 {
-		o.ServeError(http.StatusBadRequest, "the minimum interval may exceed 120")
+	if conf.AlarmCheckInterval < models.MinAlarmCheckInterval {
+		o.ServeError(http.StatusBadRequest, "the minimum interval may exceed min interval")
 	}
 }
 
@@ -715,6 +712,7 @@ func (o *AppController) ConfigAlarm() {
 		o.validKafkaConf(param.KafkaConf)
 	}
 	if param.GeneralAlarmConf != nil {
+		models.AlarmCheckInterval = param.GeneralAlarmConf.AlarmCheckInterval
 		o.validGeneralAlarmConf(param.GeneralAlarmConf)
 	}
 	content, err := json.Marshal(param)
@@ -726,6 +724,10 @@ func (o *AppController) ConfigAlarm() {
 		o.ServeError(http.StatusBadRequest, "failed to decode param json", err)
 	}
 	app, err = models.UpdateAppById(param.AppId, updateData)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to update app", err)
+	}
+	err = models.UpdateGeneralAlarmConfig(param.GeneralAlarmConf)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
 	}

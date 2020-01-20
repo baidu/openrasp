@@ -100,10 +100,12 @@
                 {{ data.policy_params.username }}:{{ data.policy_params.password }}
             </p>
 
-            <div class="h6">
-                应用堆栈
+            <div v-if="data.stack_trace && data.stack_trace.length">
+                <div class="h6">
+                    应用堆栈
+                </div>
+                <pre>{{ data.stack_trace }}</pre>    
             </div>
-            <pre>{{ data.stack_trace }}</pre>            
 
             <div class="h6">
                 问题描述
@@ -174,10 +176,12 @@
                 {{ data.policy_params.socket }}
             </p>
 
-            <div class="h6">
-                应用堆栈
+            <div v-if="data.stack_trace && data.stack_trace.length">
+                <div class="h6">
+                    应用堆栈
+                </div>
+                <pre>{{ data.stack_trace }}</pre>    
             </div>
-            <pre>{{ data.stack_trace }}</pre>
 
             <div class="h6">
                 问题描述

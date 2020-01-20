@@ -39,29 +39,12 @@ static void security_check(bool flag, int id, const char *msg TSRMLS_DC)
 {
     if (!flag)
     {
-        zval policy_id, message;
-        INIT_ZVAL(policy_id);
-        INIT_ZVAL(message);
-        ZVAL_LONG(&policy_id, id);
-        ZVAL_STRING(&message, msg, 0);
-
-        zval result;
-        INIT_ZVAL(result);
-        ALLOC_HASHTABLE(Z_ARRVAL(result));
-        zend_hash_init(Z_ARRVAL(result), 0, 0, 0, 0);
-        Z_TYPE(result) = IS_ARRAY;
-        add_assoc_zval(&result, "policy_id", &policy_id);
-        zval *policy_params = nullptr;
-        MAKE_STD_ZVAL(policy_params);
-        array_init(policy_params);
-        add_assoc_long(policy_params, "pid", getpid());
-        add_assoc_string(policy_params, "sapi", const_cast<char *>(sapi_module.name ? sapi_module.name : ""), 1);
-        add_stack_to_params(policy_params TSRMLS_CC);
-        add_assoc_zval(&result, "policy_params", policy_params);
-        add_assoc_zval(&result, "message", &message);
-        std::string base_str = json_encode_from_zval(&result TSRMLS_CC);
-        zval_dtor(&result);
-        openrasp::JsonReader base_json(base_str);
+        openrasp::JsonReader base_json;
+        base_json.write_int64({"policy_id"}, id);
+        base_json.write_int64({"policy_params", "pid"}, getpid());
+        base_json.write_string({"policy_params", "sapi"}, (sapi_module.name ? sapi_module.name : ""));
+        base_json.write_vector({"policy_params", "stack"}, format_debug_backtrace_arr());
+        base_json.write_string({"message"}, msg);
         if (!base_json.has_error())
         {
             LOG_G(policy_logger).log(LEVEL_INFO, base_json TSRMLS_CC);

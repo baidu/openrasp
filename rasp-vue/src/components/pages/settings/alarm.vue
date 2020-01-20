@@ -76,6 +76,32 @@
     </div>
     <!-- end alarm methods -->
 
+    <!-- begin general alarm settings -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          报警通用配置(该配置一次性对所有应用下发，无需重复配置)
+        </h3>
+        <div class="card-options">
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">
+            每隔多少秒发送一次报警（报警并非实时发送，而是每隔一段建检查ES里是否有新报警）
+          </label>
+          <input v-model.number="data.general_alarm_conf.alarm_check_interval"
+                 class="form-control" placeholder=120>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="submit" class="btn btn-primary" @click="saveSettings('general')">
+          保存
+        </button>
+      </div>
+    </div>
+    <!-- end general alarm settings -->
+
     <!-- begin alarm settings -->
     <div class="card">
       <div class="card-header">
@@ -126,14 +152,6 @@
           </label>
           <input v-model="data.email_alarm_conf.password" type="password" class="form-control" autocomplete="off">
         </div>
-        <div class="form-group">
-          <label class="form-label">
-            每隔多少秒发送一次报警（报警并非实时发送，而是每隔一段时间检查ES里是否有新报警）
-          </label>
-          <input v-model.number="data.email_alarm_conf.check_interval"
-                 class="form-control" placeholder=120>
-        </div>
-
         <div class="form-group">
           <label class="custom-switch">
             <input v-model="data.email_alarm_conf.enable" type="checkbox" checked="data.email_alarm_conf.enable" class="custom-switch-input">

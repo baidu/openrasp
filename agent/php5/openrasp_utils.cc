@@ -94,8 +94,9 @@ static std::vector<DebugTrace> build_debug_trace(long limit TSRMLS_DC)
     return array;
 }
 
-std::vector<std::string> format_source_code_arr(TSRMLS_D)
+std::vector<std::string> format_source_code_arr()
 {
+    TSRMLS_FETCH();
     std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(plugin.maxstack) TSRMLS_CC);
     std::vector<std::string> array;
     for (DebugTrace &item : trace)
@@ -105,17 +106,9 @@ std::vector<std::string> format_source_code_arr(TSRMLS_D)
     return array;
 }
 
-void format_source_code_arr(zval *source_code_arr TSRMLS_DC)
+std::vector<std::string> format_debug_backtrace_arr()
 {
-    auto array = format_source_code_arr(TSRMLS_C);
-    for (auto &str : array)
-    {
-        add_next_index_stringl(source_code_arr, str.c_str(), str.length(), 1);
-    }
-}
-
-std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
-{
+    TSRMLS_FETCH();
     return format_debug_backtrace_arr(OPENRASP_CONFIG(plugin.maxstack) TSRMLS_CC);
 }
 
@@ -128,22 +121,6 @@ std::vector<std::string> format_debug_backtrace_arr(long limit TSRMLS_DC)
         array.push_back(item.to_log_string());
     }
     return array;
-}
-
-void add_stack_to_params(zval *params TSRMLS_DC)
-{
-    if (params && Z_TYPE_P(params) == IS_ARRAY)
-    {
-        zval *stack = nullptr;
-        MAKE_STD_ZVAL(stack);
-        array_init(stack);
-        std::vector<std::string> arr = format_debug_backtrace_arr(TSRMLS_C);
-        for (const std::string &item : arr)
-        {
-            add_next_index_stringl(stack, item.c_str(), item.length(), 1);
-        }
-        add_assoc_zval(params, "stack", stack);
-    }
 }
 
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)

@@ -49,7 +49,7 @@ public class TongwebResponseBodyHook extends ServerResponseBodyHook {
                     params.put("content", content);
                     HttpServletResponse res = HookHandler.responseCache.get();
                     if (res != null) {
-                        params.put("content-type", res.getContentType());
+                        params.put("content_type", res.getContentType());
                     }
                 } catch (Exception e) {
                     LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
