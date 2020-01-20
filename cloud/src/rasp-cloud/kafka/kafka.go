@@ -26,7 +26,6 @@ type Kafka struct {
 func init() {
 	config = sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Partitioner = sarama.NewRandomPartitioner
 	config.Producer.Return.Successes = true
 }
 
@@ -38,6 +37,8 @@ func SendMessage(appId string, key string, val map[string]interface{}) error {
 			config.Net.SASL.Enable = true
 			config.Net.SASL.User = kafka.KafkaUser
 			config.Net.SASL.Password = kafka.KafkaPwd
+		} else {
+			config.Net.SASL.Enable = false
 		}
 		producer, err := sarama.NewSyncProducer(addrs, config)
 		if err != nil {
