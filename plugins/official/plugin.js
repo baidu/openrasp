@@ -1147,7 +1147,7 @@ function get_cookies(cookie_str) {
 // 合并context.parameter中 header、cookie、parameter、json参数， header、cookie的key会被重命名
 function get_all_parameter(context) {
     if (context.get_all_parameter !== undefined) {
-        return context.parameter
+        return context.parameter || {}
     }
     context.get_all_parameter = true
     var key_num = 0
