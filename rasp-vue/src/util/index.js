@@ -217,7 +217,7 @@ export const request = axios.create({
   baseURL:
     process.env.NODE_ENV === 'production'
       ? '/'
-      : 'http://scloud.baidu.com:8089/',
+      : 'http://scloud.baidu.com:8080/',
   timeout: 8000
 })
 request.interceptors.request.use(

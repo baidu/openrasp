@@ -141,6 +141,7 @@ export default {
       this.$refs.dependencyDetailModal.search_data = {
         app_id: this.current_app.id,
         tag: data.tag,
+        key_word: this.key_word
       }
       this.$refs.dependencyDetailModal.showModal()      
     },
