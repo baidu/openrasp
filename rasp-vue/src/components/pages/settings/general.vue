@@ -252,24 +252,10 @@ export default {
   },
   methods: {
     ...mapMutations(["setCurrentApp"]),
-    setData: function(data) {
-      console.log('set', data['plugin.filter'])
-      
+    setData: function(data) {      
       this.data = data
       if (this.data['security.weak_passwords']) {
           this.weak_password_list = this.data['security.weak_passwords'].join(',')
-      }
-      if (!this.data['cpu.usage.enable']) {
-          this.data['cpu.usage.enable'] = false
-      }
-      if (!this.data['lru.compare_enable']) {
-          this.data['lru.compare_enable'] = false
-      }
-      if (this.data['plugin.filter'] == undefined) {
-          this.data['plugin.filter'] = true
-      }
-      if (!this.data['decompile.enable']) {
-          this.data['decompile.enable'] = false
       }
     },
     doSave: function() {
