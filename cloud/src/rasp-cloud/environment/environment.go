@@ -254,6 +254,7 @@ func fork() (err error) {
 
 func initLogger() {
 	logPath := "logs/api"
+	maxSize := strconv.FormatInt(conf.AppConfig.LogMaxSize, 10)
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
@@ -262,7 +263,7 @@ func initLogger() {
 	}
 	logs.SetLogFuncCall(true)
 	logs.SetLogger(logs.AdapterFile,
-		`{"filename":"`+logPath+`/agent-cloud.log","daily":true,"maxdays":10,"perm":"0777","maxsize": 104857600}`)
+		`{"filename":"`+logPath+`/agent-cloud.log","daily":true,"maxdays":10,"perm":"0777","maxsize": `+maxSize+`}`)
 
 }
 
