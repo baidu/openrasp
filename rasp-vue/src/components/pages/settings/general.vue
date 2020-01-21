@@ -253,6 +253,8 @@ export default {
   methods: {
     ...mapMutations(["setCurrentApp"]),
     setData: function(data) {
+      console.log('set', data['plugin.filter'])
+      
       this.data = data
       if (this.data['security.weak_passwords']) {
           this.weak_password_list = this.data['security.weak_passwords'].join(',')
@@ -263,7 +265,7 @@ export default {
       if (!this.data['lru.compare_enable']) {
           this.data['lru.compare_enable'] = false
       }
-      if (!this.data['plugin.filter']) {
+      if (this.data['plugin.filter'] == undefined) {
           this.data['plugin.filter'] = true
       }
       if (!this.data['decompile.enable']) {
