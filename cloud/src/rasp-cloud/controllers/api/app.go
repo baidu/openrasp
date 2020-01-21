@@ -512,130 +512,128 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) map[string]interface{} {
 	generalConfigTemplate := models.DefaultGeneralConfig
+	returnConfig := make(map[string]interface{})
 	for key, v := range generalConfigTemplate {
 		value := config[key]
-		if v != nil {
-			if value == nil {
-				config[key] = v
-			}
-			if key == "" {
-				o.ServeError(http.StatusBadRequest,
-					"the config key can not be empty")
-			}
-			if len(key) > 512 {
-				o.ServeError(http.StatusBadRequest,
-					"the length of config key '"+key+"' must be less than 512")
-			}
-			if v, ok := value.(string); ok {
-				if key == "body.maxbytes" {
-					maxBytes := generalConfigTemplate[key]
-					if len(v) >= maxBytes.(int) {
-						o.ServeError(http.StatusBadRequest,
-							"the value's length of config item '"+key+"' must be less than" + v)
-					}
+		if value == nil {
+			config[key] = v
+		}
+		returnConfig[key] = config[key]
+		if key == "" {
+			o.ServeError(http.StatusBadRequest,
+				"the config key can not be empty")
+		}
+		if len(key) > 512 {
+			o.ServeError(http.StatusBadRequest,
+				"the length of config key '"+key+"' must be less than 512")
+		}
+		if v, ok := value.(string); ok {
+			if key == "body.maxbytes" {
+				maxBytes := generalConfigTemplate[key]
+				if len(v) >= maxBytes.(int) {
+					o.ServeError(http.StatusBadRequest,
+						"the value's length of config item '"+key+"' must be less than" + v)
 				}
 			}
+		}
 
-			// 对类型和值进行检验
-			if generalConfigTemplate[key] != nil && value != "" {
-				if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
-					if interval, ok := value.(float64); ok {
-						if interval < 60 || interval > 12 * 3600 {
-							o.ServeError(http.StatusBadRequest,
-								"the value's length of config item '"+key+"' must between 60 and 86400")
-						}
-					} else if interval, ok := value.(int); ok {
-						if interval < 60 || interval > 12 * 3600 {
-							o.ServeError(http.StatusBadRequest,
-								"the value's length of config item '"+key+"' must between 60 and 86400")
-						}
+		// 对类型和值进行检验
+		if generalConfigTemplate[key] != nil && value != nil {
+			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
+				if interval, ok := value.(float64); ok {
+					if interval < 60 || interval > 12 * 3600 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+key+"' must between 60 and 86400")
+					}
+				} else if interval, ok := value.(int); ok {
+					if interval < 60 || interval > 12 * 3600 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+key+"' must between 60 and 86400")
 					}
 				}
-				if key == "block.content_html" || key == "block.content_xml" || key == "block.content_json" {
-					if value == "" {
-						value = v
-					}
+			}
+			if key == "block.content_html" || key == "block.content_xml" || key == "block.content_json" {
+				if value == "" {
+					value = v
 				}
-				if key != "security.weak_passwords" {
-					switch reflect.TypeOf(generalConfigTemplate[key]).String(){
-					case "string":
-						if _, ok := value.(string); !ok {
-							o.ServeError(http.StatusBadRequest,
-								"the type of config key: "+key+"'s value must be send a string")
-						}
-					case "int64":
-						if _, ok := value.(int64); !ok {
-							o.ServeError(http.StatusBadRequest,
-								"the type of config key: "+key+"'s value must be send a int64")
-						}
-					case "bool":
-						if _, ok := value.(bool); !ok {
-							o.ServeError(http.StatusBadRequest,
-								"the type of config key: "+key+"'s value must be send a bool")
-						}
-					case "int", "float64":
-						if _, ok := value.(float64); !ok {
-							if value == "" || reflect.TypeOf(value).String() == "int" {
-								config[key] = v
-							} else {
-								o.ServeError(http.StatusBadRequest,
-									"the type of config key: "+key+"'s value must be send a int/float64")
-							}
-						}
+			}
+			if key != "security.weak_passwords" {
+				switch reflect.TypeOf(generalConfigTemplate[key]).String(){
+				case "string":
+					if _, ok := value.(string); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a string")
 					}
-				} else {
-					if value != nil {
-						if _, ok := value.([]interface{}); ok {
-							if len(value.([]interface{})) == 0 {
-								config[key] = generalConfigTemplate["security.weak_passwords"]
-							} else {
-								for idx, v := range value.([]interface{}) {
-									if len(v.(string)) > 16 {
-										o.ServeError(http.StatusBadRequest,
-											"the length of value:" + v.(string) + " exceeds max_len 16!")
-									}
-									if idx >= 200 {
-										o.ServeError(http.StatusBadRequest,
-											"the count of weak_password exceed 200!")
-									}
-								}
-							}
-						}
+				case "int64":
+					if _, ok := value.(int64); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a int64")
 					}
-				}
-				if key == "inject.custom_headers" {
-					for hk, hv := range value.(map[string]interface{}) {
-						if len(hk) >= 200 {
-							o.ServeError(http.StatusBadRequest,
-								"the value's length of config item '"+hk+"' must be less than 200")
-						}
-						if hv, ok := hv.(string); ok {
-							if len(hv) >= 200 {
-								o.ServeError(http.StatusBadRequest,
-									"the value's length of config item '"+hv+"' must be less than 200")
-							}
+				case "bool":
+					if _, ok := value.(bool); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a bool")
+					}
+				case "int", "float64":
+					if _, ok := value.(float64); !ok {
+						if value == "" || reflect.TypeOf(value).String() == "int" {
+							config[key] = v
 						} else {
 							o.ServeError(http.StatusBadRequest,
-								"the inject.custom_headers's value cannot convert to type string")
+								"the type of config key: "+key+"'s value must be send a int/float64")
 						}
 					}
 				}
-				if v, ok := value.(float64); ok {
-					if v < 0 {
-						o.ServeError(http.StatusBadRequest,
-							"the value of config item '"+key+"' can not be less than 0")
-					} else if key == "plugin.timeout.millis" || key == "body.maxbytes" ||
-						key == "syslog.reconnect_interval" || key == "ognl.expression.minlength" {
-						if v == 0 {
-							o.ServeError(http.StatusBadRequest,
-								"the value of config item '"+key+"' must be greater than 0")
+			} else {
+				if _, ok := value.([]interface{}); ok {
+					if len(value.([]interface{})) == 0 {
+						config[key] = generalConfigTemplate["security.weak_passwords"]
+					} else {
+						for idx, v := range value.([]interface{}) {
+							if len(v.(string)) > 16 {
+								o.ServeError(http.StatusBadRequest,
+									"the length of value:" + v.(string) + " exceeds max_len 16!")
+							}
+							if idx >= 200 {
+								o.ServeError(http.StatusBadRequest,
+									"the count of weak_password exceed 200!")
+							}
 						}
+					}
+				}
+			}
+			if key == "inject.custom_headers" {
+				for hk, hv := range value.(map[string]interface{}) {
+					if len(hk) >= 200 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+hk+"' must be less than 200")
+					}
+					if hv, ok := hv.(string); ok {
+						if len(hv) >= 200 {
+							o.ServeError(http.StatusBadRequest,
+								"the value's length of config item '"+hv+"' must be less than 200")
+						}
+					} else {
+						o.ServeError(http.StatusBadRequest,
+							"the inject.custom_headers's value cannot convert to type string")
+					}
+				}
+			}
+			if v, ok := value.(float64); ok {
+				if v < 0 {
+					o.ServeError(http.StatusBadRequest,
+						"the value of config item '"+key+"' can not be less than 0")
+				} else if key == "plugin.timeout.millis" || key == "body.maxbytes" ||
+					key == "syslog.reconnect_interval" || key == "ognl.expression.minlength" {
+					if v == 0 {
+						o.ServeError(http.StatusBadRequest,
+							"the value of config item '"+key+"' must be greater than 0")
 					}
 				}
 			}
 		}
 	}
-	return config
+	return returnConfig
 }
 
 func (o *AppController) RemoveDupWhitelistConfigItem(a []models.WhitelistConfigItem) (ret []models.WhitelistConfigItem){
