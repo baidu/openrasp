@@ -141,7 +141,7 @@ func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
 	logger := logs.NewLogger()
 	logPath := path.Join(dirName, fileName)
 	err := logger.SetLogger(tools.AdapterAlarmFile,
-		`{"filename":"`+logPath+`", "daily":true, "maxdays":10, "perm":"0777"}`)
+		`{"filename":"`+logPath+`", "daily":true, "maxdays":10, "perm":"0777","maxsize": 104857600}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init alarm logger", err)
 	}

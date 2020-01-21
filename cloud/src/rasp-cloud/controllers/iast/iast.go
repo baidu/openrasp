@@ -51,7 +51,7 @@ var (
 	wsUpgrader = websocket.Upgrader{
 		ReadBufferSize:    4096,
 		WriteBufferSize:   4096,
-		HandshakeTimeout:  5 * time.Second,
+		HandshakeTimeout:  6 * time.Second,
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
@@ -72,6 +72,7 @@ func (o *IastController) Post() {
 		Data  *models.Iast   `json:"data" `
 	}
 	var result = make(map[string]interface{})
+	var tmpResult = make(map[string]map[string]interface{})
 	var wsConn *wsConnection
 	quit := make(chan bool)
 	o.UnmarshalJson(&param)
@@ -105,19 +106,26 @@ func (o *IastController) Post() {
 				// 取一个应答
 				case msg := <-models.ResChan:
 					if string(msg) != "" {
-						beego.Info("msg:", string(msg))
+						//beego.Info("msg:", string(msg))
 						if err := json.Unmarshal(msg, &result); err != nil {
 							beego.Error("Invalid JSON from iast")
 							result["status"] = http.StatusBadRequest
 							result["description"] = "Invalid JSON from iast"
+							result["register"] = 3
+						} else if data, ok := result["data"].(map[string]interface{}); ok{
+							if id, ok := data["app_id"].(string); ok && id != "0"{
+								tmpResult[id] = result
+							}
 						}
 					}
 					quit <- true
 					goto quit
-				case <- time.After(3 * time.Second):
+				case <- time.After(5 * time.Second):
 					beego.Error("TimeOut Recv Data From IAST!")
 					result["status"] = http.StatusBadRequest
 					result["description"] = "TimeOut Recv Data From IAST!"
+					result["register"] = 4
+					tmpResult[appId] = result
 					quit <- true
 					goto quit
 				}
@@ -128,7 +136,7 @@ func (o *IastController) Post() {
 		}()
 
 		<- quit
-		o.Serve(result)
+		o.Serve(tmpResult[appId])
 	}
 	// 扫描器未连接
 	o.Serve(result)
@@ -274,7 +282,7 @@ func (wsConn *wsConnection) procLoop(appId string) {
 	defer recovery()
 	go func() {
 		for {
-			time.Sleep(3 * time.Second)
+			time.Sleep(4 * time.Second)
 			if err := wsConn.wsWrite(websocket.TextMessage, []byte("heartbeat from OpenRASP cloud")); err != nil {
 				beego.Error("heartbeat error:", err)
 				break

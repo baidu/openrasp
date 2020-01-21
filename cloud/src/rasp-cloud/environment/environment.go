@@ -262,7 +262,7 @@ func initLogger() {
 	}
 	logs.SetLogFuncCall(true)
 	logs.SetLogger(logs.AdapterFile,
-		`{"filename":"`+logPath+`/agent-cloud.log","daily":true,"maxdays":10,"perm":"0777"}`)
+		`{"filename":"`+logPath+`/agent-cloud.log","daily":true,"maxdays":10,"perm":"0777","maxsize": 104857600}`)
 
 }
 

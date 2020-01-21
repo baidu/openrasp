@@ -71,7 +71,7 @@ func initAccessLogger() {
 	accessLogger.EnableFuncCallDepth(true)
 	accessLogger.SetLogFuncCallDepth(4)
 	err := accessLogger.SetLogger(logs.AdapterFile,
-		`{"filename":"`+logPath+`/access.log","daily":true,"maxdays":10,"perm":"0777"}`)
+		`{"filename":"`+logPath+`/access.log","daily":true,"maxdays":10,"perm":"0777","maxsize": 104857600}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init access log", err)
 	}
