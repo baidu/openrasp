@@ -203,7 +203,6 @@ export default {
       const body = {
           order: "getAllTasks",
           data: {"page": this.currentPage, "app_id": this.current_app.id},
-          headers: {'Content-Type': 'application/json'}
       }
       return this.request.post(this.baseUrl, body)
         .then(res => {
@@ -226,7 +225,6 @@ export default {
         const body = {
             order: order,
             data: data,
-            headers: {'Content-Type': 'application/json'}
         }
         return this.request.post(url, body)
     },

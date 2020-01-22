@@ -98,7 +98,6 @@ func (o *IastController) Post() {
 		if err := wsConn.wsWrite(websocket.TextMessage, o.Ctx.Input.RequestBody); err != nil {
 			beego.Error("send msg from web failed!")
 			defer wsConn.wsClose()
-			o.ServeError(http.StatusBadRequest, "IAST is not started!")
 		}
 		go func() {
 			for {
@@ -112,8 +111,8 @@ func (o *IastController) Post() {
 							result["status"] = http.StatusBadRequest
 							result["description"] = "Invalid JSON from iast"
 							result["register"] = 3
-						} else if data, ok := result["data"].(map[string]interface{}); ok{
-							if id, ok := data["app_id"].(string); ok && id != "0"{
+						} else if data, ok := result["data"].(map[string]interface{}); ok {
+							if id, ok := data["app_id"].(string); ok && id != "0" {
 								tmpResult[id] = result
 							}
 						}
@@ -134,7 +133,6 @@ func (o *IastController) Post() {
 		//	beego.Info("enter lable")
 		quit:
 		}()
-
 		<- quit
 		o.Serve(tmpResult[appId])
 	}
@@ -292,7 +290,8 @@ func (wsConn *wsConnection) procLoop(appId string) {
 
 	for {
 		msg, err := wsConn.wsRead()
-		if models.Register.GetIastRegister(appId) != 2 {
+		status := models.Register.GetIastRegister(appId)
+		if status != 2 && status != 0 {
 			models.Register.SetIastRegister(appId, 2)
 		}
 		if err != nil {
