@@ -16,14 +16,14 @@ package routers
 
 import (
 	"github.com/astaxie/beego"
+	"rasp-cloud/conf"
+	"rasp-cloud/controllers"
 	"rasp-cloud/controllers/agent"
 	"rasp-cloud/controllers/agent/agent_logs"
 	"rasp-cloud/controllers/api"
 	"rasp-cloud/controllers/api/fore_logs"
 	"rasp-cloud/controllers/iast"
 	"rasp-cloud/tools"
-	"rasp-cloud/conf"
-	"rasp-cloud/controllers"
 )
 
 func InitRouter() {
@@ -156,7 +156,7 @@ func InitRouter() {
 	} else if startType == conf.StartTypeDefault {
 		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
 	} else {
-		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
+		tools.Panic(tools.ErrCodeStartTypeNotSupport, "Unknown -type parameter provided: "+startType, nil)
 	}
 	if startType == conf.StartTypeForeground || startType == conf.StartTypeDefault {
 		beego.SetStaticPath("//", "dist")

@@ -52,12 +52,12 @@ func init() {
 	}
 	info, err := session.BuildInfo()
 	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get MongoDB version", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "Failed to get MongoDB version", err)
 	}
 	beego.Info("MongoDB version: " + info.Version)
 	if strings.Compare(info.Version, minMongoVersion) < 0 {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "unable to support the MongoDB with a version lower than "+
-			minMongoVersion+","+" the current version is "+info.Version, nil)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "MongoDB version lower than "+
+			minMongoVersion+" is not supported, current version is "+info.Version, nil)
 	}
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "init MongoDB failed", err)
