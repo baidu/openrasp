@@ -18,21 +18,21 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
-	"io/ioutil"
-	"net"
-	"path/filepath"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"golang.org/x/crypto/ssh/terminal"
+	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"rasp-cloud/conf"
 	"rasp-cloud/tools"
+	"strconv"
+	"strings"
 	"syscall"
+	"time"
 )
 
 type PIDFile struct {
@@ -51,10 +51,10 @@ var (
 func init() {
 	chdir()
 	StartFlag := &conf.Flag{}
-	StartFlag.StartType = flag.String("type", "", "use to provide different routers")
-	StartFlag.Daemon = flag.Bool("d", false, "use to run as daemon process")
-	StartFlag.Version = flag.Bool("version", false, "use to get version")
-	StartFlag.Operation = flag.String("s", "", "send signal to a master process: stop, restart")
+	StartFlag.StartType = flag.String("type", "", "Specify startup type: panel/agent, or both if none provided")
+	StartFlag.Daemon = flag.Bool("d", false, "Fork to background")
+	StartFlag.Version = flag.Bool("version", false, "Show version string")
+	StartFlag.Operation = flag.String("s", "", "Send signal to master process: stop/restart")
 	StartFlag.Upgrade = flag.String("upgrade", "", "Execute upgrade job, e.g update ElasticSearch mapping")
 	flag.Parse()
 	if *StartFlag.Version {
@@ -93,7 +93,7 @@ func init() {
 	} else {
 		CheckForkStatus(false)
 	}
-	beego.Info("===== startup type: " + *StartFlag.StartType + " =====")
+	beego.Info("===== Startup Type: " + *StartFlag.StartType + " =====")
 }
 
 func handleVersionFlag() {
@@ -107,7 +107,7 @@ func handleVersionFlag() {
 	os.Exit(0)
 }
 
-func HandleOperation(operation string)  {
+func HandleOperation(operation string) {
 	switch operation {
 	case conf.RestartOperation:
 		restart()
@@ -121,7 +121,7 @@ func HandleOperation(operation string)  {
 func restart() {
 	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
-		log.Println("restarting........")
+		log.Println("Restarting........")
 		if err != nil {
 			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
 		}
@@ -137,13 +137,13 @@ func restart() {
 	os.Exit(0)
 }
 
-func stop()  {
+func stop() {
 	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
 		log.Println("stopping........")
 		if err != nil {
 			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
-		}else {
+		} else {
 			err = syscall.Kill(pid, syscall.SIGQUIT)
 			if err != nil {
 				log.Fatalln(err)
@@ -216,7 +216,7 @@ func HandleDaemon() {
 	if CheckPIDAlreadyRunning(PidFileName) {
 		RecoverPid(PidFileName, false)
 		log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
-	}else {
+	} else {
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
 		res := CheckPort(port)
 		if res == false {
@@ -230,7 +230,7 @@ func HandleDaemon() {
 
 func CheckForkStatus(remove bool) {
 	f, ret := newPIDFile(PidFileName, remove)
-	if ret == false && f == nil{
+	if ret == false && f == nil {
 		log.Fatalf("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
 	}
 }
@@ -287,7 +287,7 @@ func processExists(pid string) bool {
 
 func checkPIDAlreadyExists(path string, remove bool) bool {
 	pid := readPIDFILE(path)
-	if processExists(pid) && pid != " "{
+	if processExists(pid) && pid != " " {
 		log.Printf("the main process %s has already exist!", pid)
 		return true
 	}
@@ -308,7 +308,7 @@ func CheckPIDAlreadyRunning(path string) bool {
 		return false
 	}
 
-	if processExists(pid) && pid != ""{
+	if processExists(pid) && pid != "" {
 		return true
 	}
 	return false
@@ -356,7 +356,7 @@ func removePIDFile() error {
 }
 
 func CheckPort(port int) bool {
-	tcpAddress, err := net.ResolveTCPAddr("tcp", ":" + strconv.Itoa(port))
+	tcpAddress, err := net.ResolveTCPAddr("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatal(err)
 		return false
