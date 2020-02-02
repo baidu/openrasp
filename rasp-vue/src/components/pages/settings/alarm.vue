@@ -80,7 +80,7 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          报警通用配置(该配置一次性对所有应用下发，无需重复配置)
+          报警通用配置(全局配置，对所有应用生效)
         </h3>
         <div class="card-options">
         </div>
@@ -328,27 +328,24 @@
         <div class="form-group">
           <label class="form-label">
             服务器地址
-            <a href="javascript:" target="_blank">
-              [帮助文档]
-            </a>
           </label>
-          <input v-model.trim="data.kafka_alarm_conf['url']" type="text" class="form-control" placeholder="1.1.1.1:6666">
+          <input v-model.trim="data.kafka_alarm_conf['url']" type="text" class="form-control" placeholder="127.0.0.1:6666">
         </div>
         <div class="form-group">
           <label class="form-label">
             Topic
           </label>
-          <b-form-input v-model="data.kafka_alarm_conf['topic']" type="string" class="form-control" />
+          <b-form-input v-model="data.kafka_alarm_conf['topic']" type="string" class="form-control" placeholder="your_topic" />
         </div>
         <div class="form-group">
           <label class="form-label">
-            kafka用户名
+            kafka 用户名（可选）
           </label>
           <b-form-input v-model="data.kafka_alarm_conf['user']" type="string" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
-            kafka密码
+            kafka 密码（可选）
           </label>
           <b-form-input v-model="data.kafka_alarm_conf['pwd']" type="string" class="form-control" />
         </div>

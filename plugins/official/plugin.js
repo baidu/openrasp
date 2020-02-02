@@ -1,4 +1,4 @@
-const plugin_version = '2020-0116-2000'
+const plugin_version = '2020-0202-2230'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -209,7 +209,7 @@ var algorithmConfig = {
 
     // SSRF - 来自用户输入，且为内网地址就拦截
     ssrf_userinput: {
-        name:   '算法1 - 用户输入匹配算法',
+        name:   '算法1 - 用户输入匹配算法（支持 rebind 检测）',
         action: 'block'
     },
     // SSRF - 是否允许访问 aws metadata
@@ -553,7 +553,7 @@ var algorithmConfig = {
     // },
 
     response_dataLeak: {
-        name:   '算法1 - 检查响应里是否有身份证等敏感信息（拦截等同于记录日志）',
+        name:   '算法1 - 检查响应里是否有身份证等敏感信息（不建议开启拦截）',
         action: 'log',
 
         // 检查类型
