@@ -1,9 +1,11 @@
 package models
 
 import (
+	"crypto/md5"
 	"fmt"
 	"rasp-cloud/es"
 	"rasp-cloud/models/logs"
+	"sort"
 	"time"
 	"github.com/olivere/elastic"
 	"encoding/json"
@@ -13,7 +15,6 @@ import (
 )
 
 type Dependency struct {
-	UpsertId     string   `json:"upsert_id"`
 	Path         []string `json:"path"`
 	CreateTime   int64    `json:"@timestamp"`
 	RaspId       string   `json:"rasp_id"`
@@ -50,11 +51,16 @@ var (
 
 func AddDependency(rasp *Rasp, dependencies []*Dependency) error {
 	docs := make([]interface{}, 0, len(dependencies))
+	docsMap := make([]map[string]interface{}, 0, len(dependencies))
 	idContent := ""
 	for _, dependency := range dependencies {
+		doc := make(map[string]interface{})
+		sort.Strings(dependency.Path)
 		idContent += fmt.Sprint(dependency.Path)
-		idContent += fmt.Sprint(dependency.Tag)
 		idContent += fmt.Sprint(dependency.RaspId)
+		idContent += fmt.Sprint(dependency.Product)
+		idContent += fmt.Sprint(dependency.Version)
+		idContent += fmt.Sprint(dependency.Vendor)
 		dependency.CreateTime = time.Now().UnixNano() / 1000000
 		dependency.AppId = rasp.AppId
 		dependency.RaspId = rasp.Id
@@ -62,14 +68,16 @@ func AddDependency(rasp *Rasp, dependencies []*Dependency) error {
 		dependency.RegisterIp = rasp.RegisterIp
 		dependency.Tag = dependency.Vendor + ":" + dependency.Product + ":" + dependency.Version
 		dependency.SearchString = dependency.Product + dependency.Version
-		dependency.UpsertId = idContent
+		doc["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
+		doc["content"] = dependency
 		docs = append(docs, dependency)
+		docsMap = append(docsMap, doc)
 	}
 	err := logs.AddLogsWithKafka("dependency-data", rasp.AppId, docs)
 	if err != nil {
 		return err
 	}
-	return es.BulkInsert(es.GetIndex(AliasDependencyIndexName, rasp.AppId), dependencyType, docs)
+	return es.BulkInsert(es.GetIndex(AliasDependencyIndexName, rasp.AppId), dependencyType, docsMap)
 }
 
 func SearchDependency(appId string, param *SearchDependencyParam) (int64, []map[string]interface{}, error) {
@@ -109,7 +117,25 @@ func SearchDependency(appId string, param *SearchDependencyParam) (int64, []map[
 	return total, result, nil
 }
 
+func getDependencyAggr(dependencyTopHitName string) (*elastic.TermsAggregation) {
+	dependencyMaxAggrName := "dependency_max_aggr"
+	dependencyTopHitAggr := elastic.NewTopHitsAggregation().
+		Size(1).
+		Sort("@timestamp", false).
+		DocvalueFields("@timestamp", "path", "hostname", "rasp_id", "product", "search_string",
+			"vendor", "app_id", "source", "register_ip", "version")
+	dependencyTimeMaxAggr := elastic.NewMaxAggregation().Field("@timestamp")
+	return elastic.NewTermsAggregation().
+		Field("tag").
+		Size(10000).
+		Order(dependencyMaxAggrName, false).
+		SubAggregation(dependencyMaxAggrName, dependencyTimeMaxAggr).
+		SubAggregation(dependencyTopHitName, dependencyTopHitAggr)
+}
+
 func AggrDependencyByQuery(appId string, param *SearchDependencyParam) (int64, []map[string]interface{}, error) {
+	var dependencyTopHitName = "dependency_top_hit"
+	var aggrName = "dependency_aggr"
 	query, err := getDependencyQuery(param)
 	if err != nil {
 		return 0, nil, err
@@ -117,10 +143,7 @@ func AggrDependencyByQuery(appId string, param *SearchDependencyParam) (int64, [
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
 	index := es.GetIndex(AliasDependencyIndexName, appId)
-	aggrName := "dependency_aggr"
-	aggr := elastic.NewTermsAggregation().
-		Field("tag").
-		Size(10000)
+	aggr := getDependencyAggr(dependencyTopHitName)
 	if strings.Compare(es.Version[0:1], "5") > 0 {
 		aggr.OrderByKeyAsc()
 	} else {
@@ -149,17 +172,18 @@ func AggrDependencyByQuery(appId string, param *SearchDependencyParam) (int64, [
 					break
 				}
 				value := make(map[string]interface{})
-				if item := terms.Buckets[index]; item != nil && item.Key != nil {
-					if tag, ok := item.Key.(string); ok {
-						dependencyData := strings.Split(tag, ":")
-						if len(dependencyData) == 3 {
-							value["vendor"] = dependencyData[0]
-							value["product"] = dependencyData[1]
-							value["version"] = dependencyData[2]
-							value["tag"] = tag
-							value["rasp_count"] = item.DocCount
-							result = append(result, value)
+				item := terms.Buckets[index]
+				if topHit, ok := item.TopHits(dependencyTopHitName); ok && topHit.Hits != nil && topHit.Hits.Hits != nil {
+					hits := topHit.Hits.Hits
+					if len(hits) > 0 {
+						err := json.Unmarshal(*hits[0].Source, &value)
+						if err != nil {
+							return 0, nil, err
 						}
+
+						value["rasp_count"] = terms.Buckets[index].DocCount
+						es.HandleSearchResult(value, hits[0].Id)
+						result = append(result, value)
 					}
 				}
 			}

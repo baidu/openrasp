@@ -54,6 +54,8 @@ type RaspAppConfig struct {
 	RequestBodyEnable     bool
 	ErrorLogEnable        bool
 	Flag                  *Flag
+	LogMaxSize            int64
+	LogMaxDays            int
 }
 
 type Flag struct {
@@ -95,6 +97,8 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.RegisterCallbackToken = beego.AppConfig.DefaultString("RegisterCallbackToken", "")
 	AppConfig.RequestBodyEnable = beego.AppConfig.DefaultBool("RequestBodyEnable", false)
 	AppConfig.ErrorLogEnable = beego.AppConfig.DefaultBool("ErrorLogEnable", false)
+	AppConfig.LogMaxSize = beego.AppConfig.DefaultInt64("LogMaxSize", 104857600)
+	AppConfig.LogMaxDays = beego.AppConfig.DefaultInt("LogMaxDays", 10)
 	ValidRaspConf(AppConfig)
 }
 

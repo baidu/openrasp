@@ -114,6 +114,8 @@
           <p v-if="! loading && register == 0" class="text-center" v-model="register">扫描器未连接或已离线</p>
           <p v-if="! loading && total == 0 && register == 1" class="text-center" v-model="register">连接中</p>
           <p v-if="! loading && total == 0 && register == 2" class="text-center" v-model="register">扫描器已连接，暂无数据</p>
+          <p v-if="! loading && register == 3" class="text-center" v-model="register">响应接收异常</p>
+          <p v-if="! loading && register == 4" class="text-center" v-model="register">扫描器连接超时</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -201,7 +203,6 @@ export default {
       const body = {
           order: "getAllTasks",
           data: {"page": this.currentPage, "app_id": this.current_app.id},
-          headers: {'Content-Type': 'application/json'}
       }
       return this.request.post(this.baseUrl, body)
         .then(res => {
@@ -224,7 +225,6 @@ export default {
         const body = {
             order: order,
             data: data,
-            headers: {'Content-Type': 'application/json'}
         }
         return this.request.post(url, body)
     },

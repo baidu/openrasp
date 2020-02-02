@@ -512,12 +512,13 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 
 func (o *AppController) validateAppConfig(config map[string]interface{}) map[string]interface{} {
 	generalConfigTemplate := models.DefaultGeneralConfig
+	returnConfig := make(map[string]interface{})
 	for key, v := range generalConfigTemplate {
 		value := config[key]
 		if value == nil {
-			value = v
-			config[key] = value
+			config[key] = v
 		}
+		returnConfig[key] = config[key]
 		if key == "" {
 			o.ServeError(http.StatusBadRequest,
 				"the config key can not be empty")
@@ -534,15 +535,21 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 						"the value's length of config item '"+key+"' must be less than" + v)
 				}
 			}
- 		}
+		}
 
 		// 对类型和值进行检验
-		if generalConfigTemplate[key] != nil {
+		if generalConfigTemplate[key] != nil && value != nil {
 			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
-				interval := value.(float64)
-				if interval < 60 || interval > 12 * 3600 {
-					o.ServeError(http.StatusBadRequest,
-						"the value's length of config item '"+key+"' must between 60 and 86400")
+				if interval, ok := value.(float64); ok {
+					if interval < 60 || interval > 12 * 3600 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+key+"' must between 60 and 86400")
+					}
+				} else if interval, ok := value.(int); ok {
+					if interval < 60 || interval > 12 * 3600 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+key+"' must between 60 and 86400")
+					}
 				}
 			}
 			if key == "block.content_html" || key == "block.content_xml" || key == "block.content_json" {
@@ -578,7 +585,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 					}
 				}
 			} else {
-				if value != nil {
+				if _, ok := value.([]interface{}); ok {
 					if len(value.([]interface{})) == 0 {
 						config[key] = generalConfigTemplate["security.weak_passwords"]
 					} else {
@@ -616,8 +623,8 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 				if v < 0 {
 					o.ServeError(http.StatusBadRequest,
 						"the value of config item '"+key+"' can not be less than 0")
-				} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
-					key == "ognl.expression.minlength" {
+				} else if key == "plugin.timeout.millis" || key == "body.maxbytes" ||
+					key == "syslog.reconnect_interval" || key == "ognl.expression.minlength" {
 					if v == 0 {
 						o.ServeError(http.StatusBadRequest,
 							"the value of config item '"+key+"' must be greater than 0")
@@ -626,7 +633,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 			}
 		}
 	}
-	return config
+	return returnConfig
 }
 
 func (o *AppController) RemoveDupWhitelistConfigItem(a []models.WhitelistConfigItem) (ret []models.WhitelistConfigItem){

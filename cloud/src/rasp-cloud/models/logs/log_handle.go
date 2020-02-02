@@ -26,6 +26,7 @@ import (
 	"path"
 	"rasp-cloud/es"
 	"rasp-cloud/tools"
+	"strconv"
 	"time"
 	"rasp-cloud/conf"
 	"strings"
@@ -131,6 +132,8 @@ func registerAlarmInfo(info *AlarmLogInfo) {
 }
 
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
+	maxSize := strconv.FormatInt(conf.AppConfig.LogMaxSize, 10)
+	maxDays := strconv.Itoa(conf.AppConfig.LogMaxDays)
 	if isExists, _ := tools.PathExists(dirName); !isExists {
 		err := os.MkdirAll(dirName, os.ModePerm)
 		if err != nil {
@@ -141,7 +144,7 @@ func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
 	logger := logs.NewLogger()
 	logPath := path.Join(dirName, fileName)
 	err := logger.SetLogger(tools.AdapterAlarmFile,
-		`{"filename":"`+logPath+`", "daily":true, "maxdays":10, "perm":"0777"}`)
+		`{"filename":"`+logPath+`", "daily":true, "maxdays":`+maxDays+`, "perm":"0777","maxsize": `+maxSize+`}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init alarm logger", err)
 	}
