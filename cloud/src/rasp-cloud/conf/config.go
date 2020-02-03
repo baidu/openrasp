@@ -26,6 +26,7 @@ const (
 	StartTypeReset      = "reset"
 	StartTypeDefault    = "default"
 	RestartOperation 	= "restart"
+	StatusOperation 	= "status"
 	StopOperation 		= "stop"
 )
 
