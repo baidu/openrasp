@@ -532,7 +532,7 @@ var algorithmConfig = {
     },
 
     webshell_ld_preload: {
-        name:   '算法5 - 拦截基于 LD_PRELOAD 的后门',
+        name:   '算法5 - 拦截 PHP LD_PRELOAD 机制后门',
         action: 'block'
     },
 
