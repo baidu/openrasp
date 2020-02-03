@@ -987,3 +987,29 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 	beego.Debug("succeed in pushing ding ding alarm for app: " + app.Name + " ,with corp id: " + dingCong.CorpId)
 	return nil
 }
+
+func PushKafkaAttackAlarm(app *App, alarms []map[string]interface{}, isTest bool) error {
+	var kafkaConf = app.KafkaConf
+	addrs := strings.Split(kafkaConf.KafkaAddr, ",")
+	if len(addrs) != 0 {
+		body := make(map[string]interface{})
+		body["app_id"] = app.Id
+		if isTest {
+			body["data"] = getTestAlarmData()
+		} else {
+			body["data"] = alarms
+		}
+
+		for _, addr := range addrs {
+			err := kafka.SendMessage(body["app_id"].(string), "kafka-test", body["data"].([]map[string]interface{})[0])
+			if err != nil {
+				return handleError("failed to push kafka alarms to: " + addr + ", with error: " + err.Error())
+			}
+		}
+	} else {
+		return handleError("failed to send kafka alarm: the http receiving address can not be empty")
+	}
+	beego.Debug("succeed in pushing kafka alarm for app: " + app.Name + " ,with urls: " +
+		fmt.Sprintf("%v", addrs))
+	return nil
+}

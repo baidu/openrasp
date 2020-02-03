@@ -321,7 +321,7 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          Kafka 报警推送（后台推送）
+          Kafka 报警推送（后台推送，Kafka版本号应大于等于0.8）
         </h3>
       </div>
       <div class="card-body">
@@ -362,6 +362,9 @@
       <div class="card-footer">
         <button type="submit" class="btn btn-primary" @click="saveSettings('kafka')">
           保存
+        </button>
+        <button type="submit" class="btn btn-info pull-right" @click="testSettings('kafka')">
+          发送测试数据
         </button>
       </div>
     </div>    

@@ -883,6 +883,28 @@ func (o *AppController) TestHttp() {
 	o.ServeWithEmptyData()
 }
 
+// @router /kafka/test [post]
+func (o *AppController) TestKafka() {
+	var param map[string]string
+	o.UnmarshalJson(&param)
+	appId := param["app_id"]
+	if appId == "" {
+		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
+	}
+	app, err := models.GetAppByIdWithoutMask(appId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "can not find the app", err)
+	}
+	if !app.KafkaConf.KafkaEnable {
+		o.ServeError(http.StatusBadRequest, "please enable the kafka first")
+	}
+	err = models.PushKafkaAttackAlarm(app, nil, true)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to test kafka alarm", err)
+	}
+	o.ServeWithEmptyData()
+}
+
 // @router /plugin/latest [post]
 func (o *AppController) CheckPluginLatest() {
 	var param map[string]string
