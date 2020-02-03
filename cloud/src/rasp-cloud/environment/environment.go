@@ -15,7 +15,7 @@
 package environment
 
 import (
-	"bytes"
+    "bytes"
 	"flag"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -50,6 +50,7 @@ var (
 
 func init() {
 	chdir()
+	OldPid = readPIDFILE(PidFileName)
 	StartFlag := &conf.Flag{}
 	StartFlag.StartType = flag.String("type", "", "Specify startup type: panel/agent, or both if none provided")
 	StartFlag.Daemon = flag.Bool("d", false, "Fork to background")
@@ -61,15 +62,14 @@ func init() {
 		handleVersionFlag()
 	}
 	beego.Info("Version: " + Version)
-	OldPid = readPIDFILE(PidFileName)
+	if *StartFlag.Operation != "" {
+		HandleOperation(*StartFlag.Operation)
+	}
 	if tools.BuildTime != "" {
 		beego.Info("Build Time: " + tools.BuildTime)
 	}
 	if tools.CommitID != "" {
 		beego.Info("Git Commit ID: " + tools.CommitID)
-	}
-	if *StartFlag.Operation != "" {
-		HandleOperation(*StartFlag.Operation)
 	}
 	if *StartFlag.Upgrade != "" {
 		StartBeego = false
@@ -107,12 +107,14 @@ func handleVersionFlag() {
 	os.Exit(0)
 }
 
-func HandleOperation(operation string) {
+func HandleOperation(operation string)  {
 	switch operation {
 	case conf.RestartOperation:
 		restart()
 	case conf.StopOperation:
 		stop()
+	case conf.StatusOperation:
+		status()
 	default:
 		log.Println("unknown operation!")
 	}
@@ -132,12 +134,12 @@ func restart() {
 		time.Sleep(5 * time.Second)
 		log.Println("restart success!")
 	} else {
-		log.Printf("the process id:%s is not exists!", OldPid)
+		log.Printf("the process id:%s is not exists or not a rasp process!", OldPid)
 	}
 	os.Exit(0)
 }
 
-func stop() {
+func stop()  {
 	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
 		log.Println("stopping........")
@@ -154,6 +156,20 @@ func stop() {
 		log.Printf("the process id:%s is not exists!", OldPid)
 	}
 	os.Exit(0)
+}
+
+func status() {
+	_, err := strconv.Atoi(OldPid)
+	if CheckPIDAlreadyRunning(PidFileName) {
+		if err != nil {
+			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
+		}
+		log.Printf("the rasp-cloud is running!")
+		os.Exit(0)
+	} else {
+		log.Printf("the rasp-cloud is dead!")
+		os.Exit(-1)
+	}
 }
 
 func chdir() {
@@ -217,13 +233,24 @@ func HandleDaemon() {
 		RecoverPid(PidFileName, false)
 		log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
 	} else {
+		var cnt int
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
-		res := CheckPort(port)
-		if res == false {
-			RecoverPid(PidFileName, false)
-			log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+		for cnt = 0; cnt < 30; cnt++ {
+			res := CheckPort(port)
+			if res {
+				break
+			}
+			time.Sleep(1 * time.Second)
 		}
-		log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+		//if res == false {
+		//	RecoverPid(PidFileName, false)
+		//	log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+		//}
+		if cnt == 29 {
+			log.Fatal("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
+		} else {
+			log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+		}
 	}
 	os.Exit(0)
 }
@@ -278,17 +305,24 @@ func initEnvConf() {
 	}
 }
 
-func processExists(pid string) bool {
+func processExists(pid string) (bool, error) {
 	if _, err := os.Stat(filepath.Join("/proc", pid)); err == nil {
-		return true
+		port := beego.AppConfig.DefaultInt("httpport", 8080)
+		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:" + strconv.Itoa(port))
+		out, _ := lsof.Output()
+		if strings.Index(string(out), "rasp-") != -1 {
+			return true, nil
+		} else {
+			return false, nil
+		}
 	}
-	return false
+	return false, nil
 }
 
 func checkPIDAlreadyExists(path string, remove bool) bool {
-	pid := readPIDFILE(path)
-	if processExists(pid) && pid != " " {
-		log.Printf("the main process %s has already exist!", pid)
+	//pid := readPIDFILE(path)
+	if res, err := processExists(OldPid); res && err == nil && OldPid != " "{
+		log.Printf("the main process %s has already exist!", OldPid)
 		return true
 	}
 	if remove {
@@ -298,7 +332,7 @@ func checkPIDAlreadyExists(path string, remove bool) bool {
 }
 
 func CheckPIDAlreadyRunning(path string) bool {
-	pid := readPIDFILE(path)
+	//pid := readPIDFILE(path)
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Println("getwd error:", err)
@@ -308,7 +342,7 @@ func CheckPIDAlreadyRunning(path string) bool {
 		return false
 	}
 
-	if processExists(pid) && pid != "" {
+	if res, err := processExists(OldPid); res && err == nil && OldPid != " "{
 		return true
 	}
 	return false
@@ -362,7 +396,6 @@ func CheckPort(port int) bool {
 		return false
 	}
 
-	time.Sleep(5 * time.Second)
 	listener, err := net.ListenTCP("tcp", tcpAddress)
 	if err != nil {
 		return true
