@@ -553,7 +553,7 @@ var algorithmConfig = {
     // },
 
     response_dataLeak: {
-        name:   '算法1 - 检查响应里是否有身份证等敏感信息（不建议开启拦截）',
+        name:   '算法1 - 检查响应里是否有敏感信息（拦截等于记录日志）',
         action: 'log',
 
         // 检查类型
