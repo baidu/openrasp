@@ -186,8 +186,8 @@ func (o *RaspController) Describe() {
 		o.ServeError(http.StatusBadRequest, "the length of rasp id can not be greater than 256")
 	}
 
-	if len(param.Description) > 1024 {
-		o.ServeError(http.StatusBadRequest, "the length of description can not be greater than 1024")
+	if len(param.Description) > 50 {
+		o.ServeError(http.StatusBadRequest, "the length of description can not be greater than 50")
 	}
 
 	err := models.UpdateRaspDescription(param.Id, param.Description)
