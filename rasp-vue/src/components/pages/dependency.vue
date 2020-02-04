@@ -47,10 +47,8 @@
           </nav>
 
           <b-table hover bordered :items="data" :fields="fields">
-            <template slot="button" slot-scope="scope">
-              <a href="javascript:" @click="showDependencyDetail(scope.item)">
-                查看详情
-              </a>
+            <template v-slot:cell(button)="data">
+              <b-link @click="showDependencyDetail(data.item)">查看详情</b-link>
             </template>
           </b-table>
 
