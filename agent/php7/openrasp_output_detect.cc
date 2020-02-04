@@ -176,7 +176,7 @@ static void check_sensitive_content(const char *content, size_t content_length, 
     if (sampler.check())
     {
         data::ResponseObject data(content, content_length, content_type);
-        checker::V8Detector checker(data, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+        checker::V8Detector checker(data, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis), false);
         checker.run();
     }
 }

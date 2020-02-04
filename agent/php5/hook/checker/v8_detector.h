@@ -32,12 +32,13 @@ protected:
     openrasp::LRU<std::string, bool> &lru;
     openrasp::Isolate *isolate = nullptr;
     int timeout = 100;
+    bool canBlock = true;
 
     virtual bool pretreat() const;
     virtual CheckResult check();
 
 public:
-    V8Detector(const openrasp::data::V8Material &v8_material, openrasp::LRU<std::string, bool> &lru, openrasp::Isolate *isolate, int timeout);
+    V8Detector(const openrasp::data::V8Material &v8_material, openrasp::LRU<std::string, bool> &lru, openrasp::Isolate *isolate, int timeout, bool canblock = true);
     virtual void run();
 };
 

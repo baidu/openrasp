@@ -45,8 +45,8 @@ CheckResult V8Detector::check()
     return check_result;
 }
 
-V8Detector::V8Detector(const openrasp::data::V8Material &v8_material, openrasp::LRU<std::string, bool> &lru, openrasp::Isolate *isolate, int timeout)
-    : v8_material(v8_material), lru(lru), isolate(isolate), timeout(timeout)
+V8Detector::V8Detector(const openrasp::data::V8Material &v8_material, openrasp::LRU<std::string, bool> &lru, openrasp::Isolate *isolate, int timeout, bool canBlock)
+    : v8_material(v8_material), lru(lru), isolate(isolate), timeout(timeout), canBlock(canBlock)
 {
 }
 
@@ -71,7 +71,7 @@ void V8Detector::run()
     {
         lru.set(lru_ley, true);
     }
-    else if (kBlock == cr)
+    else if (kBlock == cr && canBlock)
     {
         block_handle();
     }
