@@ -9,22 +9,22 @@
       <div class="card-body">
         <p>最多允许200个URL，单条URL长度限制为200字符</p>
         <b-table hover bordered :items="data" :fields="fields">
-          <template slot="index" slot-scope="scope" nowrap>
-            {{ scope.index + 1 }}
+          <template v-slot:cell(index)="data" nowrap>
+            {{ data.index + 1 }}
           </template>
-          <template slot="hook" slot-scope="scope">
-            <span v-if="scope.value.all">
+          <template v-slot:cell(hook)="data">
+            <span v-if="data.value.all">
               所有 Hook 点
             </span>
-            <span v-if="!scope.value.all">
-              {{ whitelist2str(scope.value) }}
+            <span v-if="!data.value.all">
+              {{ whitelist2str(data.value) }}
             </span>
           </template>
-          <template slot="command" slot-scope="scope">
-            <a href="javascript:" @click="showModal(scope.index)">
+          <template v-slot:cell(command)="data">
+            <a href="javascript:" @click="showModal(data.index)">
               编辑
             </a>
-            <a href="javascript:" @click="deleteItem(scope.index)">
+            <a href="javascript:" @click="deleteItem(data.index)">
               删除
             </a>
           </template>
