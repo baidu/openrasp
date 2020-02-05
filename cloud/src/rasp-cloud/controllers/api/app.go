@@ -552,17 +552,20 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 					}
 				}
 			}
-			if key == "block.content_html" || key == "block.content_xml" || key == "block.content_json" {
-				if value == "" {
-					value = v
-				}
-			}
+
 			if key != "security.weak_passwords" {
 				switch reflect.TypeOf(generalConfigTemplate[key]).String(){
 				case "string":
-					if _, ok := value.(string); !ok {
+					valueStr, ok := value.(string)
+					if !ok {
 						o.ServeError(http.StatusBadRequest,
 							"the type of config key: "+key+"'s value must be send a string")
+					}
+					if key == "block.content_html" || key == "block.content_xml" ||
+						key == "block.content_json" || key == "fileleak_scan.name"{
+						if strings.TrimSpace(valueStr) == "" {
+							returnConfig[key] = v
+						}
 					}
 				case "int64":
 					if _, ok := value.(int64); !ok {
@@ -585,9 +588,15 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 					}
 				}
 			} else {
-				if _, ok := value.([]interface{}); ok {
-					if len(value.([]interface{})) == 0 {
-						config[key] = generalConfigTemplate["security.weak_passwords"]
+				if valueArray, ok := value.([]interface{}); ok {
+					tmpArray := []interface{}{}
+					for _, ele := range valueArray {
+						if strings.TrimSpace(ele.(string)) != "" {
+							tmpArray = append(tmpArray, ele)
+						}
+					}
+					if len(tmpArray) == 0 {
+						returnConfig[key] = generalConfigTemplate["security.weak_passwords"]
 					} else {
 						for idx, v := range value.([]interface{}) {
 							if len(v.(string)) > 16 {
