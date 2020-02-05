@@ -24,6 +24,7 @@
 #include "openrasp_lru.h"
 #include "openrasp_check_type.h"
 #include "utils/string.h"
+#include "model/zend_ref_item.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -63,7 +64,8 @@ extern "C"
 }
 #endif
 #include <string>
-#include <set>
+#include <unordered_set>
+#include <unordered_map>
 
 #ifdef ZEND_WIN32
 #ifndef MAXPATHLEN
@@ -275,8 +277,9 @@ ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
 int check_type_white_bit_mask;
 openrasp::LRU<std::string, bool> lru;
 long origin_pg_error_verbos;
-std::vector<std::string> callable_blacklist;
+std::unordered_set<std::string> callable_blacklist;
 std::string echo_filter_regex;
+std::unordered_map<uintptr_t, const openrasp::request::ZendRefItem> zend_ref_items;
 ZEND_END_MODULE_GLOBALS(openrasp_hook)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_hook);
@@ -303,7 +306,7 @@ std::string openrasp_real_path(const char *filename, int length, bool use_includ
 void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, PriorityType::HookPriority hp = PriorityType::pNormal);
 
 bool openrasp_zval_in_request(zval *item);
-std::string fetch_name_in_request(zval *item, std::string &var_type);
+bool fetch_name_in_request(zval *item, std::string &name, std::string &type);
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type);
 
 void block_handle();

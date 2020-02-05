@@ -22,8 +22,8 @@ namespace data
 {
 
 SqlObject::SqlObject(const std::string &server, zval *query)
+: server(server)
 {
-    this->server = server;
     this->query = query;
 }
 

@@ -27,8 +27,6 @@ PRE_HOOK_FUNCTION(array_walk, CALLABLE);
 PRE_HOOK_FUNCTION(array_map, CALLABLE);
 PRE_HOOK_FUNCTION(array_filter, CALLABLE);
 
-const std::vector<std::string> default_callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-
 PRE_HOOK_FUNCTION_EX(__construct, reflectionfunction, CALLABLE);
 
 static void check_callable_function(zend_fcall_info fci, OpenRASPCheckType check_type)

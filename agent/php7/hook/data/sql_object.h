@@ -29,7 +29,7 @@ class SqlObject : public V8Material
 private:
     //do not efree here
     zval *query = nullptr;
-    std::string server;
+    const std::string server;
 
 public:
     SqlObject(const std::string &server, zval *query);

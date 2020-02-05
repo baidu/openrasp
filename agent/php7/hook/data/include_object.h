@@ -32,10 +32,12 @@ private:
     std::string realpath;
     const std::string document_root;
     const std::string function;
+    std::string param;
     bool plugin_filter = false;
+    bool without_protocol = false;
 
 public:
-    IncludeObject(zval *filename, const std::string &document_root, const std::string &function, bool plugin_filter);
+    IncludeObject(zval *filename, const std::string &document_root, const std::string &function, bool plugin_filter, bool without_protocol);
     virtual std::string build_lru_key() const;
     virtual OpenRASPCheckType get_v8_check_type() const;
     virtual bool is_valid() const;

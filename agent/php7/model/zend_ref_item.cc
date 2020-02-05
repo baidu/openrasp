@@ -14,30 +14,36 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "builtin_material.h"
-#include <unordered_set>
+#include "zend_ref_item.h"
 
 namespace openrasp
 {
-namespace data
+namespace request
 {
-class CallableObject : public BuiltinMaterial
+
+ZendRefItem::ZendRefItem(int id, const std::string &name)
 {
-protected:
-    //do not efree here
-    zval *function = nullptr;
-    const std::unordered_set<std::string>& callable_blacklist;
+    this->id = id;
+    this->name = name;
+}
 
-public:
-    CallableObject(zval *function, const std::unordered_set<std::string> &callable_blacklist);
-    virtual bool is_valid() const;
-    virtual OpenRASPCheckType get_builtin_check_type() const;
-    virtual void fill_json_with_params(JsonReader &j) const;
-    virtual bool builtin_check(JsonReader &j) const;
-};
+void ZendRefItem::set_id(int id)
+{
+    this->id = id;
+}
+int ZendRefItem::get_id() const
+{
+    return id;
+}
+void ZendRefItem::set_name(const std::string &name)
+{
+    this->name = name;
+}
+std::string ZendRefItem::get_name() const
+{
+    return name;
+}
 
-} // namespace data
+} // namespace request
 
 } // namespace openrasp
