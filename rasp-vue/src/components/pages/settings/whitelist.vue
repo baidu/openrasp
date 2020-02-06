@@ -54,7 +54,7 @@
         <div class="row">
           <div class="col-12">
             <label class="custom-switch">
-              <input v-model="modalData.hook.all" type="checkbox" checked="modalData.hook.all" class="custom-switch-input">
+              <input v-model="modalData.hook.all" type="checkbox" class="custom-switch-input">
               <span class="custom-switch-indicator" />
               <span class="custom-switch-description">
                 关闭所有检测点
@@ -65,7 +65,7 @@
         <div v-if="!modalData.hook.all" class="row">
           <div v-for="(item, key) in attack_types" :key="key" class="col-6">
             <label class="custom-switch">
-              <input v-model="modalData.hook[key]" type="checkbox" checked="modalData.hook[key]" class="custom-switch-input">
+              <input type="checkbox" :value="key" v-model="modalData.hook[key]" class="custom-switch-input">
               <span class="custom-switch-indicator" />
               <span class="custom-switch-description">
                 {{ item }}
