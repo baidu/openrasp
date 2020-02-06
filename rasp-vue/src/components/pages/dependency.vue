@@ -94,8 +94,8 @@ export default {
       key_word: '',
       total: 0,
       fields: [
-        { key: 'vendor',     label: '厂商',    class: 'text-nowrap' },
-        { key: 'product',    label: '产品',    class: 'text-nowrap' },
+        { key: 'vendor',     label: '厂商' },
+        { key: 'product',    label: '产品' },
         { key: 'version',    label: '版本号',   tdAttr: { 'style': 'min-width: 150px;' } },
         { key: 'rasp_count', label: '影响主机' },
         { key: 'button',     label: '查看详情', class: 'text-nowrap' }
