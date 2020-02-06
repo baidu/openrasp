@@ -30,6 +30,7 @@ import com.google.gson.Gson;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * @description: 依赖检查上报
@@ -38,12 +39,20 @@ import java.util.Map;
  */
 public class DependencyReport extends CloudTimerTask {
 
+    public static final Logger LOGGER = Logger.getLogger(DependencyReport.class.getName());
+    private static boolean firstReport = false;
+    private static final int FIRST_INTERNAL = 120;
+
     public DependencyReport() {
         super("OpenRASP Dependency Report Thread");
     }
 
     @Override
     public long getSleepTime() {
+        if (!firstReport) {
+            firstReport = true;
+            return FIRST_INTERNAL;
+        }
         return Config.getConfig().getDependencyCheckInterval();
     }
 
@@ -53,6 +62,7 @@ public class DependencyReport extends CloudTimerTask {
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         parameters.put("dependency", dependencyHashSet);
+        LOGGER.info("start reporting " + dependencyHashSet.size() + " dependencies");
         String url = CloudRequestUrl.CLOUD_DEPENDENCY_REPORT_URL;
         GenericResponse response = new CloudHttp().commonRequest(url, new Gson().toJson(parameters));
         if (!CloudUtils.checkResponse(response)) {
