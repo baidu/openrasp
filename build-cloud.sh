@@ -78,7 +78,6 @@ function build_cloud()
     fi
 
     cd src/rasp-cloud
-
     go mod download
 
     commit=$(git rev-parse HEAD 2>/dev/null)
