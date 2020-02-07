@@ -470,8 +470,14 @@ var algorithmConfig = {
     command_error: {
         name:   '算法4 - 查找语法错误和敏感操作',
         action: 'log',
+
+        unbalanced_quote_enable: true,
+
+        sensitive_cmd_enable: true,
         concat_char: ["|", ";"],
         sensitive_cmd: ["curl", "bash", "cat", "sh"],
+
+        alarm_token_enable: true,
         alarm_token: ["$IFS", "${IFS}", "'"]
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
@@ -2353,27 +2359,34 @@ plugin.register('command', function (params, context) {
         var double_quote = 0
         var ticks = 0
         for (var i=0; i<raw_tokens.length; i++) {
-            if (alarm_token.indexOf(raw_tokens[i].text) != -1) {
-                if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
+            // 敏感token检测
+            if (algorithmConfig.command_error.alarm_token_enable) {
+                if (alarm_token.indexOf(raw_tokens[i].text) != -1) {
+                    if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
+                        return {
+                            action:     algorithmConfig.command_error.action,
+                            confidence: 90,
+                            message:    _("Command execution - Sensitive command token detect: %1%", [raw_tokens[i].text]),
+                            algorithm:  'command_error'
+                        }
+                    }
+                }
+            }
+
+            // 敏感连接命令检测
+            if (algorithmConfig.command_error.sensitive_cmd_enable) {
+                if (raw_tokens[i+1] !== undefined &&
+                    concat_char.indexOf(raw_tokens[i].text) != -1 &&
+                    sensitive_cmd.indexOf(raw_tokens[i+1].text) != -1) {
                     return {
                         action:     algorithmConfig.command_error.action,
-                        confidence: 90,
-                        message:    _("Command execution - Sensitive command token detect: %1%", [raw_tokens[i].text]),
+                        confidence: 70,
+                        message:    _("Command execution - Sensitive command concat detect: %1% %2%", [raw_tokens[i].text], raw_tokens[i+1].text),
                         algorithm:  'command_error'
                     }
                 }
             }
 
-            if (raw_tokens[i+1] !== undefined &&
-                concat_char.indexOf(raw_tokens[i].text) != -1 &&
-                sensitive_cmd.indexOf(raw_tokens[i+1].text) != -1) {
-                return {
-                    action:     algorithmConfig.command_error.action,
-                    confidence: 70,
-                    message:    _("Command execution - Sensitive command concat detect: %1% %2%", [raw_tokens[i].text], raw_tokens[i+1].text),
-                    algorithm:  'command_error'
-                }
-            }
             if (raw_tokens[i].text == "\"") {
                 double_quote ++
             }
@@ -2381,20 +2394,24 @@ plugin.register('command', function (params, context) {
                 ticks ++
             }
         }
-        if (double_quote % 2 != 0) {
-            return {
-                action:     algorithmConfig.command_error.action,
-                confidence: 70,
-                message:    _("Command execution - Detected unbalanced double quote!"),
-                algorithm:  'command_error'
+
+        // 引号不匹配检测
+        if (algorithmConfig.command_error.unbalanced_quote_enable) {
+            if (double_quote % 2 != 0) {
+                return {
+                    action:     algorithmConfig.command_error.action,
+                    confidence: 70,
+                    message:    _("Command execution - Detected unbalanced double quote!"),
+                    algorithm:  'command_error'
+                }
             }
-        }
-        if (ticks % 2 != 0) {
-            return {
-                action:     algorithmConfig.command_error.action,
-                confidence: 70,
-                message:    _("Command execution - Detected unbalanced backtick!"),
-                algorithm:  'command_error'
+            if (ticks % 2 != 0) {
+                return {
+                    action:     algorithmConfig.command_error.action,
+                    confidence: 70,
+                    message:    _("Command execution - Detected unbalanced backtick!"),
+                    algorithm:  'command_error'
+                }
             }
         }
     }
