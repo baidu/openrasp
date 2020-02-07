@@ -78,7 +78,9 @@ function build_cloud()
     fi
 
     cd src/rasp-cloud
-    go mod download
+    if [[ -z "NO_GOMOD_DOWNLOAD" ]]; then
+        go mod download
+    fi
 
     commit=$(git rev-parse HEAD 2>/dev/null)
     build_time=$(date "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
