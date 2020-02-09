@@ -343,6 +343,7 @@ PHP_RSHUTDOWN_FUNCTION(openrasp)
     {
         int result;
         hook_without_params(REQUEST_END TSRMLS_CC);
+        result = PHP_RSHUTDOWN(openrasp_hook)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_RSHUTDOWN(openrasp_log)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         result = PHP_RSHUTDOWN(openrasp_inject)(SHUTDOWN_FUNC_ARGS_PASSTHRU);
         OPENRASP_G(request).clear();

@@ -21,7 +21,7 @@ namespace openrasp
 namespace data
 {
 
-CallableObject::CallableObject(zval *function, const std::vector<std::string> &callable_blacklist)
+CallableObject::CallableObject(zval *function, const std::unordered_set<std::string> &callable_blacklist)
     : callable_blacklist(callable_blacklist)
 {
     this->function = function;
@@ -60,11 +60,8 @@ bool CallableObject::builtin_check(JsonReader &j) const
         {
             function_name = function_name.substr(1);
         }
-        result = std::find(
-                     callable_blacklist.begin(),
-                     callable_blacklist.end(),
-                     function_name) !=
-                 callable_blacklist.end();
+        auto found = callable_blacklist.find(function_name);
+        result = (found != callable_blacklist.end());
     }
     return result;
 }

@@ -122,7 +122,9 @@ void include_handler(zval *op1, ZEND_OPCODE_HANDLER_ARGS)
         break;
     }
 
-    if (maybe_ssrf_vulnerability(op1))
+    std::string protocol = fetch_possible_protocol(Z_STRVAL_P(op1));
+
+    if (maybe_ssrf_vulnerability(protocol))
     {
         if (!openrasp_check_type_ignored(SSRF TSRMLS_CC))
         {
@@ -133,7 +135,7 @@ void include_handler(zval *op1, ZEND_OPCODE_HANDLER_ARGS)
     {
         if (!openrasp_check_type_ignored(INCLUDE TSRMLS_CC))
         {
-            openrasp::data::IncludeObject include_obj(op1, OPENRASP_G(request).get_document_root(), function, OPENRASP_CONFIG(plugin.filter));
+            openrasp::data::IncludeObject include_obj(op1, OPENRASP_G(request).get_document_root(), function, OPENRASP_CONFIG(plugin.filter), protocol.empty());
             openrasp::checker::V8Detector v8_detector(include_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
             v8_detector.run();
         }

@@ -468,14 +468,7 @@ bool maybe_ssrf_vulnerability(zval *file)
         Z_STRLEN_P(file) > 0)
     {
         std::string protocol = fetch_possible_protocol(Z_STRVAL_P(file));
-        for (auto &ch : protocol)
-        {
-            ch = std::tolower(ch);
-        }
-        if (protocol == "http" || protocol == "https" || protocol == "ftp")
-        {
-            return true;
-        }
+        return maybe_ssrf_vulnerability(protocol);
     }
     return false;
 }

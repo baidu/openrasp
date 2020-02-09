@@ -54,5 +54,6 @@ bool openrasp_call_user_function(HashTable *function_table, zval **object_pp, co
 bool get_long_constant(const std::string &key, long &value);
 
 bool maybe_ssrf_vulnerability(zval *file);
+bool maybe_ssrf_vulnerability(std::string protcol);
 
 #endif

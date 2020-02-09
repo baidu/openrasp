@@ -23,7 +23,8 @@ int echo_print_handler(ZEND_OPCODE_HANDLER_ARGS)
 {
     zend_op *opline = execute_data->opline;
     if (!openrasp_check_type_ignored(XSS_ECHO TSRMLS_CC) &&
-        OPENRASP_OP1_TYPE(opline) == IS_VAR)
+        OPENRASP_OP1_TYPE(opline) == IS_VAR &&
+        openrasp_zval_in_request(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr))
     {
         std::string opname = (opline->opcode == ZEND_ECHO) ? "echo" : "print";
         openrasp::data::EchoObject echo_obj(OPENRASP_T(OPENRASP_OP1_VAR(opline)).var.ptr, opname, OPENRASP_HOOK_G(echo_filter_regex));

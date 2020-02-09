@@ -16,28 +16,28 @@
 
 #pragma once
 
-#include "builtin_material.h"
-#include <unordered_set>
+#include <string>
 
 namespace openrasp
 {
-namespace data
+namespace request
 {
-class CallableObject : public BuiltinMaterial
+class ZendRefItem
 {
-protected:
-    //do not efree here
-    zval *function = nullptr;
-    const std::unordered_set<std::string>& callable_blacklist;
+private:
+    /* data */
+    int id;
+    std::string name;
 
 public:
-    CallableObject(zval *function, const std::unordered_set<std::string> &callable_blacklist);
-    virtual bool is_valid() const;
-    virtual OpenRASPCheckType get_builtin_check_type() const;
-    virtual void fill_json_with_params(JsonReader &j) const;
-    virtual bool builtin_check(JsonReader &j) const;
-};
 
-} // namespace data
+    ZendRefItem() = default;
+    ZendRefItem(int id, const std::string &name);
+    void set_id(int id);
+    int get_id() const;
+    void set_name(const std::string &name);
+    std::string get_name() const;
+};
+} // namespace request
 
 } // namespace openrasp
