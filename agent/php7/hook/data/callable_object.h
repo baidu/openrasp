@@ -17,6 +17,7 @@
 #pragma once
 
 #include "builtin_material.h"
+#include <unordered_set>
 
 namespace openrasp
 {
@@ -27,10 +28,10 @@ class CallableObject : public BuiltinMaterial
 protected:
     //do not efree here
     zval *function = nullptr;
-    const std::vector<std::string> callable_blacklist;
+    const std::unordered_set<std::string>& callable_blacklist;
 
 public:
-    CallableObject(zval *function, const std::vector<std::string> &callable_blacklist);
+    CallableObject(zval *function, const std::unordered_set<std::string> &callable_blacklist);
     virtual bool is_valid() const;
     virtual OpenRASPCheckType get_builtin_check_type() const;
     virtual void fill_json_with_params(JsonReader &j) const;

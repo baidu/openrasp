@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "openrasp_log.h"
 #include "sql_username_object.h"
 #include <cctype>
 #include <sstream>
@@ -31,7 +32,15 @@ SqlUsernameObject::SqlUsernameObject(const SqlConnectionObject &sql_connection_o
 
 bool SqlUsernameObject::is_valid() const
 {
-    return sql_connection_object.is_valid();
+    if (sql_connection_object.is_valid())
+    {
+        if (slm != nullptr && slm->log_exist((long)time(nullptr), hash()))
+        {
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 void SqlUsernameObject::fill_json_with_params(JsonReader &j) const

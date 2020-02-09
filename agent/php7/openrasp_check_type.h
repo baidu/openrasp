@@ -20,7 +20,6 @@
 #include "openrasp.h"
 #include <string>
 #include <memory>
-#include <set>
 #include <map>
 
 enum OpenRASPCheckType
@@ -75,7 +74,7 @@ public:
   std::string type_to_name(OpenRASPCheckType type) const;
   OpenRASPCheckType name_to_type(const std::string &name) const;
   std::map<std::string, std::string> get_buildin_action_map() const;
-  bool is_buildin_check_type(OpenRASPCheckType type) const;
+  std::vector<OpenRASPCheckType> get_buildin_check_types() const;
 };
 
 #endif

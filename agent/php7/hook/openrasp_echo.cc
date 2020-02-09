@@ -36,10 +36,9 @@ int echo_print_handler(zend_execute_data *execute_data)
 #else
     zval *inc_filename = zend_get_zval_ptr(opline, opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
 #endif
-    std::string name;
-    std::string var_type;
     if (inc_filename != nullptr &&
-        !openrasp_check_type_ignored(XSS_ECHO))
+        !openrasp_check_type_ignored(XSS_ECHO) &&
+        openrasp_zval_in_request(inc_filename))
     {
         std::string opname = (opline->extended_value == 0) ? "echo" : "print";
         openrasp::data::EchoObject echo_obj(inc_filename, opname, OPENRASP_HOOK_G(echo_filter_regex));

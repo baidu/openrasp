@@ -23,22 +23,17 @@ namespace data
 {
 
 EchoObject::EchoObject(zval *value, const std::string &opcode_name, const std::string &regex)
+: opcode_name(opcode_name), regex(regex)
 {
     this->value = value;
-    this->opcode_name = opcode_name;
-    this->regex = regex;
-    if (nullptr != value && Z_TYPE_P(value) == IS_STRING)
-    {
-        name = fetch_name_in_request(value, type);
-    }
 }
 bool EchoObject::is_valid() const
 {
-    if (opcode_name.empty())
+    if (nullptr == value || Z_TYPE_P(value) != IS_STRING)
     {
         return false;
     }
-    if (name.empty())
+    if (opcode_name.empty())
     {
         return false;
     }
@@ -46,6 +41,9 @@ bool EchoObject::is_valid() const
 }
 void EchoObject::fill_json_with_params(JsonReader &j) const
 {
+    std::string type;
+    std::string name;
+    fetch_name_in_request(value, name, type);
     j.write_string({"attack_params", "type"}, type);
     j.write_string({"attack_params", "name"}, name);
     j.write_string({"attack_params", "value"}, Z_STRVAL_P(value));

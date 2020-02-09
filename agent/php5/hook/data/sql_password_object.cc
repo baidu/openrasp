@@ -15,6 +15,7 @@
  */
 
 #include "agent/shared_config_manager.h"
+#include "openrasp_log.h"
 #include "sql_password_object.h"
 #include <cctype>
 #include <sstream>
@@ -32,7 +33,15 @@ SqlPasswordObject::SqlPasswordObject(const SqlConnectionObject &sql_connection_o
 
 bool SqlPasswordObject::is_valid() const
 {
-    return sql_connection_object.is_valid();
+    if (sql_connection_object.is_valid())
+    {
+        if (slm != nullptr && slm->log_exist((long)time(nullptr), hash()))
+        {
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 void SqlPasswordObject::fill_json_with_params(JsonReader &j) const

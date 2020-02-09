@@ -20,7 +20,7 @@
 #include "openrasp_log.h"
 #include "utils/debug_trace.h"
 #include <string>
-#include <set>
+#include <unordered_set>
 #include "utils/regex.h"
 extern "C"
 {
@@ -370,7 +370,7 @@ void openrasp_set_locale(const char *locale, const char *locale_path)
 
 bool current_sapi_supported()
 {
-    const static std::set<std::string> supported_sapis =
+    const static std::unordered_set<std::string> supported_sapis =
         {
 #ifdef HAVE_CLI_SUPPORT
             "cli",
@@ -468,14 +468,22 @@ bool maybe_ssrf_vulnerability(zval *file)
         Z_STRLEN_P(file) > 0)
     {
         std::string protocol = fetch_possible_protocol(Z_STRVAL_P(file));
-        for (auto &ch : protocol)
-        {
-            ch = std::tolower(ch);
-        }
-        if (protocol == "http" || protocol == "https" || protocol == "ftp")
-        {
-            return true;
-        }
+        return maybe_ssrf_vulnerability(protocol);
     }
     return false;
+}
+
+bool maybe_ssrf_vulnerability(std::string protocol)
+{
+    static std::unordered_set<std::string> protocols = {"http", "https", "ftp"};
+    if (protocol.empty())
+    {
+        return false;
+    }
+    for (auto &ch : protocol)
+    {
+        ch = std::tolower(ch);
+    }
+    auto found = protocols.find(protocol);
+    return found != protocols.end();
 }

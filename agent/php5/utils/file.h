@@ -35,7 +35,6 @@ void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugi
                       std::function<bool(const char *filename)> file_filter, long limit = LONG_MAX,
                       bool use_abs_path = false, std::string default_slash = "/");
 time_t get_last_modified(const std::string &file_path);
-bool is_sensitive_file(const std::string &file);
 
 } // namespace openrasp
 

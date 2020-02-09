@@ -683,7 +683,7 @@ const char *OpenraspAgentManager::get_webdir_scan_regex()
 
 bool OpenraspAgentManager::path_writable()
 {
-	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_try_lock() && webdir_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(webdir_rwlock);
 		return strcmp(webdir_ctrl_block->get_webroot_path(), "") == 0;
@@ -692,7 +692,7 @@ bool OpenraspAgentManager::path_writable()
 }
 bool OpenraspAgentManager::path_exist(ulong hash)
 {
-	if (webdir_rwlock != nullptr && webdir_rwlock->read_lock() && webdir_ctrl_block)
+	if (webdir_rwlock != nullptr && webdir_rwlock->read_try_lock() && webdir_ctrl_block)
 	{
 		ReadUnLocker auto_unlocker(webdir_rwlock);
 		return webdir_ctrl_block->webroot_found(hash);

@@ -565,6 +565,7 @@ int main() {
     model/url.cc \
     model/request.cc \
     model/parameter.cc \
+    model/zend_ref_item.cc \
     agent/base_manager.cc \
     agent/shared_log_manager.cc \
     agent/shared_config_manager.cc \

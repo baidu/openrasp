@@ -28,10 +28,8 @@ class EchoObject : public BuiltinMaterial
 protected:
     //do not efree here
     zval *value = nullptr;
-    std::string opcode_name;
-    std::string regex;
-    std::string type;
-    std::string name;
+    const std::string opcode_name;
+    const std::string regex;
 
 public:
     EchoObject(zval *value, const std::string &opcode_name, const std::string &regex);

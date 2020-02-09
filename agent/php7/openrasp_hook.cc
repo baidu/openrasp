@@ -40,6 +40,7 @@ static const int hookHandlerSize = 256;
 static hook_handler_t global_hook_handlers[PriorityType::pTotal][hookHandlerSize] = {0};
 static size_t global_hook_handlers_len[PriorityType::pTotal] = {0};
 static const std::string COLON_TWO_SLASHES = "://";
+static void update_zend_ref_items();
 
 typedef struct _track_vars_pair_t
 {
@@ -59,51 +60,37 @@ void register_hook_handler(hook_handler_t hook_handler, OpenRASPCheckType type, 
 
 bool openrasp_zval_in_request(zval *item)
 {
-    std::string var_type;
-    return !fetch_name_in_request(item, var_type).empty();
+    if (nullptr != item)
+    {
+        auto found = OPENRASP_HOOK_G(zend_ref_items).find(reinterpret_cast<uintptr_t>(Z_COUNTED_P(item)));
+        return found != OPENRASP_HOOK_G(zend_ref_items).end();
+    }
+    return false;
 }
 
-std::string fetch_name_in_request(zval *item, std::string &var_type)
+bool fetch_name_in_request(zval *item, std::string &name, std::string &type)
 {
-    std::string name;
-    static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
-                                            {TRACK_VARS_GET, "_GET"},
-                                            {TRACK_VARS_COOKIE, "_COOKIE"}};
-    int size = sizeof(pairs) / sizeof(pairs[0]);
-    for (int index = 0; index < size; ++index)
+    if (nullptr != item)
     {
-        zval *global = &PG(http_globals)[pairs[index].id];
-        if (Z_TYPE_P(global) != IS_ARRAY &&
-            !zend_is_auto_global_str(const_cast<char *>(pairs[index].name), strlen(pairs[index].name)))
+        auto found = OPENRASP_HOOK_G(zend_ref_items).find(reinterpret_cast<uintptr_t>(Z_COUNTED_P(item)));
+        if (found != OPENRASP_HOOK_G(zend_ref_items).end())
         {
-            return name;
-        }
-        zval *val = nullptr;
-        zend_string *key = nullptr;
-        zend_ulong idx;
-        ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(global), idx, key, val)
-        {
-            if (Z_COUNTED_P(item) == Z_COUNTED_P(val))
+            static std::unordered_map<int, std::string>  id_names = 
             {
-                if (key != nullptr)
-                {
-                    name = std::string(ZSTR_VAL(key));
-                }
-                else
-                {
-                    zend_long actual = idx;
-                    name = std::to_string(actual);
-                }
+                {TRACK_VARS_POST, "_POST"},
+                {TRACK_VARS_GET, "_GET"},
+                {TRACK_VARS_COOKIE, "_COOKIE"}};
+            name = found->second.get_name();
+            int id = found->second.get_id();
+            auto id_found = id_names.find(id);
+            if (id_found != id_names.end())
+            {
+                type = id_found->second;
             }
-        }
-        ZEND_HASH_FOREACH_END();
-        if (!name.empty())
-        {
-            var_type = std::string(pairs[index].name);
-            return name;
+            return true;
         }
     }
-    return name;
+    return false;
 }
 
 bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
@@ -113,11 +100,6 @@ bool openrasp_check_type_ignored(OpenRASPCheckType check_type)
         return true;
     }
     if ((1 << check_type) & OPENRASP_HOOK_G(check_type_white_bit_mask))
-    {
-        return true;
-    }
-    if (CheckTypeTransfer::instance().is_buildin_check_type(check_type) &&
-        openrasp::scm->get_buildin_check_action(check_type) == AC_IGNORE)
     {
         return true;
     }
@@ -407,9 +389,58 @@ PHP_RINIT_FUNCTION(openrasp_hook)
         {
             OPENRASP_HOOK_G(lru).reset(OPENRASP_CONFIG(lru.max_size));
         }
+        std::vector<OpenRASPCheckType> buindin_check_types = CheckTypeTransfer::instance().get_buildin_check_types();
+        for (OpenRASPCheckType check_type : buindin_check_types)
+        {
+            if (openrasp::scm->get_buildin_check_action(check_type) == AC_IGNORE)
+            {
+                OPENRASP_HOOK_G(check_type_white_bit_mask) |= (1 << check_type);
+            }
+        }
     }
     OPENRASP_HOOK_G(origin_pg_error_verbos) = -1;
+    update_zend_ref_items();
     return SUCCESS;
 }
 
-PHP_RSHUTDOWN_FUNCTION(openrasp_hook);
+PHP_RSHUTDOWN_FUNCTION(openrasp_hook)
+{
+    OPENRASP_HOOK_G(zend_ref_items).clear();
+}
+
+void update_zend_ref_items()
+{
+    static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
+                                        {TRACK_VARS_GET, "_GET"},
+                                        {TRACK_VARS_COOKIE, "_COOKIE"}};
+    int size = sizeof(pairs) / sizeof(pairs[0]);
+    for (int index = 0; index < size; ++index)
+    {
+        zval *global = &PG(http_globals)[pairs[index].id];
+        if (Z_TYPE_P(global) != IS_ARRAY &&
+            !zend_is_auto_global_str(const_cast<char *>(pairs[index].name), strlen(pairs[index].name)))
+        {
+            return;
+        }
+        zval *val = nullptr;
+        zend_string *key = nullptr;
+        zend_ulong idx;
+        ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(global), idx, key, val)
+        {
+            zend_refcounted *val_ref = Z_COUNTED_P(val);
+            uintptr_t upt = reinterpret_cast<uintptr_t>(val_ref);
+            std::string name;
+            if (key != nullptr)
+            {
+                name = std::string(ZSTR_VAL(key));
+            }
+            else
+            {
+                zend_long actual = idx;
+                name = std::to_string(actual);
+            }
+            OPENRASP_HOOK_G(zend_ref_items).insert({upt, openrasp::request::ZendRefItem(pairs[index].id, name)});
+        }
+        ZEND_HASH_FOREACH_END();
+    }
+}

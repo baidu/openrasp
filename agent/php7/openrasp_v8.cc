@@ -187,7 +187,8 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                     static const int64_t default_min_param_length = 15;
                     static const int64_t default_max_detection_num = 10;
 
-                    OPENRASP_HOOK_G(callable_blacklist) = extract_string_array(isolate, "RASP.algorithmConfig.webshell_callable.functions", 100, default_callable_blacklist);
+                    std::vector<std::string> callable_blacklist_vector = extract_string_array(isolate, "RASP.algorithmConfig.webshell_callable.functions", 100, default_callable_blacklist);
+                    OPENRASP_HOOK_G(callable_blacklist) = std::unordered_set<std::string>(callable_blacklist_vector.begin(), callable_blacklist_vector.end());
                     OPENRASP_HOOK_G(echo_filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_echo.filter_regex", default_echo_filter_regex);
                     OUTPUT_G(filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_userinput.filter_regex", default_filter_regex);
                     OUTPUT_G(min_param_length) = extract_int64(isolate, "RASP.algorithmConfig.xss_userinput.min_length", default_min_param_length);

@@ -110,28 +110,4 @@ time_t get_last_modified(const std::string &file_path)
     return last_modified;
 }
 
-bool is_sensitive_file(const std::string &file)
-{
-    static std::set<std::string> extensions = {
-        ".gz",
-        ".tgz",
-        ".7z",
-        ".bz2",
-        ".tbz2",
-        ".tar",
-        ".xz",
-        ".rar",
-        ".sql",
-        ".db",
-        "zip"};
-    for (const std::string &ext : extensions)
-    {
-        if (end_with(file, ext))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 } // namespace openrasp

@@ -43,7 +43,7 @@ void builtin_policy_info(openrasp::JsonReader &base_json, const std::string &has
     {
         ulong connection_hash = std::hash<std::string>{}(hash_key);
         long timestamp = (long)time(nullptr);
-        if (slm->log_exist(timestamp, connection_hash))
+        if (slm->log_update(timestamp, connection_hash))
         {
             skip = true;
         }
@@ -64,7 +64,7 @@ void builtin_policy_info(openrasp::JsonReader &base_json, ulong hash)
     if (hash > 0 && slm != nullptr)
     {
         long timestamp = (long)time(nullptr);
-        if (slm->log_exist(timestamp, hash))
+        if (slm->log_update(timestamp, hash))
         {
             skip = true;
         }
