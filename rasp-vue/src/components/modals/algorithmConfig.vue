@@ -35,6 +35,17 @@
             </div>
           </div>
 
+          <div v-if="key == 'command_error'">
+            <div v-for="row in command_error_keys" :key="row.key">
+              <label class="custom-switch m-0">
+                <input type="checkbox" v-model="data[row.key]" class="custom-switch-input">
+                <span class="custom-switch-indicator" @click="data[row.key] = !data[row.key]"></span>
+                <span class="custom-switch-description">{{row.descr}}</span>              
+              </label>
+              <br>
+            </div>
+          </div>
+
           <div v-if="key.endsWith('_protocol')">
             <label>禁止加载的协议列表，逗号分隔</label>
             <textarea class="form-control" autocomplete="off" autocorrect="off"
@@ -156,6 +167,20 @@ export default {
         {
           key:   'information_schema',
           descr: '拦截 information_schema 相关操作'
+        }
+      ],
+      command_error_keys: [
+        {
+          key:   'unbalanced_quote_enable',
+          descr: '检查单双反引号的个数，是否为基数'
+        },
+        {
+          key:   'sensitive_cmd_enable',
+          descr: '检查恶意的命令拼接操作，如 | bash'
+        },
+        {
+          key:   'alarm_token_enable',
+          descr: '检查恶意的 TOKEN，如 $IFS'
         }
       ]
     }
