@@ -21,7 +21,6 @@ import (
 	"github.com/gorilla/websocket"
 	"net/http"
 	"rasp-cloud/controllers"
-	"rasp-cloud/environment"
 	"rasp-cloud/models"
 	"strings"
 	"sync"
@@ -193,13 +192,6 @@ func (o *WebsocketController) Get() {
 		wsConn.wsCloseDup()
 	}
 
-}
-
-// @router /version [post]
-func (o *IastController) Version() {
-	result := make(map[string]interface{})
-	result["version"] = environment.Version
-	o.Serve(result)
 }
 
 // @router /auth [post]

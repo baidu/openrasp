@@ -295,8 +295,8 @@ func fork() (err error) {
 
 func initLogger() {
 	logPath := "logs/api"
-	maxSize := strconv.FormatInt(conf.AppConfig.LogMaxSize, 10)
-	maxDays := strconv.Itoa(conf.AppConfig.LogMaxDays)
+	maxSize := strconv.FormatInt(beego.AppConfig.DefaultInt64("LogMaxSize", 104857600), 10)
+	maxDays := strconv.Itoa(beego.AppConfig.DefaultInt("LogMaxDays", 10))
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
@@ -304,9 +304,12 @@ func initLogger() {
 		}
 	}
 	logs.SetLogFuncCall(true)
-	logs.SetLogger(logs.AdapterFile,
+	err := logs.SetLogger(logs.AdapterFile,
 		`{"filename":"`+logPath+`/agent-cloud.log","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
-
+	if err != nil {
+		beego.Error(err)
+		os.Exit(-1)
+	}
 }
 
 func initEnvConf() {

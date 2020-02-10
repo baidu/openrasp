@@ -146,8 +146,10 @@ func InitRouter() {
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	pingNS := beego.NewNamespace("/ping", beego.NSInclude(&controllers.PingController{}))
+	versionNS := beego.NewNamespace("/version", beego.NSInclude(&controllers.GeneralController{}))
 	ns := beego.NewNamespace("/v1")
 	ns.Namespace(pingNS)
+	ns.Namespace(versionNS)
 	startType := *conf.AppConfig.Flag.StartType
 	if startType == conf.StartTypeForeground {
 		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
