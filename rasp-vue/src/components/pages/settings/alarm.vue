@@ -335,19 +335,19 @@
           <label class="form-label">
             Topic
           </label>
-          <b-form-input v-model="data.kafka_alarm_conf['topic']" type="string" class="form-control" placeholder="your_topic" />
+          <b-form-input v-model="data.kafka_alarm_conf['topic']" type="text" class="form-control" placeholder="your_topic" />
         </div>
         <div class="form-group">
           <label class="form-label">
             kafka 用户名（可选）
           </label>
-          <b-form-input v-model="data.kafka_alarm_conf['user']" type="string" class="form-control" />
+          <b-form-input v-model="data.kafka_alarm_conf['user']" type="text" class="form-control" />
         </div>
         <div class="form-group">
           <label class="form-label">
             kafka 密码（可选）
           </label>
-          <b-form-input v-model="data.kafka_alarm_conf['pwd']" type="string" class="form-control" />
+          <b-form-input v-model="data.kafka_alarm_conf['pwd']" type="text" class="form-control" />
         </div>
         <div class="form-group">
           <label class="custom-switch">
