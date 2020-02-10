@@ -142,10 +142,10 @@ func restart() {
 			}
 			restartCnt += 1
 			time.Sleep(1 * time.Second)
-			if restartCnt == 10 {
+			if restartCnt % 60 == 0{
 				log.Println("this operation may spend about a few minutes")
 			}
-			if restartCnt >= 120 {
+			if restartCnt >= 300 {
 				log.Fatalln("Restart timeout! Probably the process has been restarted immediately")
 			}
 		}
