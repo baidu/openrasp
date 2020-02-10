@@ -125,16 +125,34 @@ func restart() {
 	if CheckPIDAlreadyRunning(PidFileName) {
 		log.Println("Restarting........")
 		if err != nil {
-			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
+			tools.Panic(tools.ErrCodeGetPidFailed, "Failed to get pid", err)
 		}
 		err = syscall.Kill(pid, syscall.SIGHUP)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		time.Sleep(5 * time.Second)
-		log.Println("restart success!")
+		restartCnt := 0
+		for {
+			exist, err := processExists(OldPid)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			if !exist {
+				break;
+			}
+			restartCnt += 1
+			time.Sleep(1 * time.Second)
+			if restartCnt == 10 {
+				log.Println("this operation may spend about a few minutes")
+			}
+			if restartCnt >= 120 {
+				log.Fatalln("Restart timeout! Probably the process has been restarted immediately")
+			}
+		}
+		log.Println("Restart success!")
 	} else {
-		log.Printf("the process id:%s is not exists or not a rasp process!", OldPid)
+		log.Printf("The process id:%s is not exists or not a rasp process!", OldPid)
+		os.Exit(-1)
 	}
 	os.Exit(0)
 }
@@ -142,18 +160,18 @@ func restart() {
 func stop()  {
 	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
-		log.Println("stopping........")
+		log.Println("Stopping........")
 		if err != nil {
-			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
+			tools.Panic(tools.ErrCodeGetPidFailed, "Failed to get pid", err)
 		} else {
 			err = syscall.Kill(pid, syscall.SIGQUIT)
 			if err != nil {
 				log.Fatalln(err)
 			}
-			log.Println("stop ok!")
+			log.Println("Stop ok!")
 		}
 	} else {
-		log.Printf("the process id:%s is not exists!", OldPid)
+		log.Printf("The process id:%s is not exists!", OldPid)
 	}
 	os.Exit(0)
 }
@@ -164,10 +182,10 @@ func status() {
 		if err != nil {
 			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
 		}
-		log.Printf("the rasp-cloud is running!")
+		log.Printf("The rasp-cloud is running!")
 		os.Exit(0)
 	} else {
-		log.Printf("the rasp-cloud is dead!")
+		log.Printf("The rasp-cloud is dead!")
 		os.Exit(-1)
 	}
 }
@@ -242,10 +260,6 @@ func HandleDaemon() {
 			}
 			time.Sleep(1 * time.Second)
 		}
-		//if res == false {
-		//	RecoverPid(PidFileName, false)
-		//	log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
-		//}
 		if cnt == 29 {
 			log.Fatal("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
 		} else {

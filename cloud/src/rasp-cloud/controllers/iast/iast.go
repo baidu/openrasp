@@ -56,7 +56,7 @@ var (
 			return true
 		},
 	}
-	IastConnection = make(map[string]*wsConnection)
+	IastConnection sync.Map
 )
 
 func recovery() {
@@ -93,8 +93,13 @@ func (o *IastController) Post() {
 	appId := param.Data.AppId
 	result["register"] = models.Register.GetIastRegister(appId)
 	result["status"] = 0
-	if models.IastApp.Data[appId] {
-		wsConn = IastConnection[appId]
+	if models.IastApp.GetIastAppId(appId) {
+		wsConnInterface, success := IastConnection.Load(appId)
+		if !success {
+			o.ServeError(http.StatusBadRequest, "load Connection app failed for app:" + appId)
+		}
+		wsConn = wsConnInterface.(*wsConnection)
+		//wsConn = IastConnection[appId]
 		if err := wsConn.wsWrite(websocket.TextMessage, o.Ctx.Input.RequestBody); err != nil {
 			beego.Error("send msg from web failed!")
 			defer wsConn.wsClose()
@@ -164,13 +169,15 @@ func (o *WebsocketController) Get() {
 		models.IsClosed = wsConn.isClosed
 		models.IastApp.SetIastAppId(appId, true)
 		//models.IastApp.Data[appId] = true
-		IastConnection[appId] = wsConn
-		// 处理器
-		go wsConn.procLoop(appId)
-		// 读协程
-		go wsConn.wsReadLoop(appId)
-		// 写协程
-		go wsConn.wsWriteLoop()
+		IastConnection.Store(appId, wsConn)
+		go func() {
+			// 处理器
+			go wsConn.procLoop(appId)
+			// 读协程
+			go wsConn.wsReadLoop(appId)
+			// 写协程
+			go wsConn.wsWriteLoop()
+		}()
 	} else {
 		msgType, _, err := wsConn.wsSocket.ReadMessage()
 		if err != nil {
@@ -280,12 +287,15 @@ func (wsConn *wsConnection) procLoop(appId string) {
 	defer recovery()
 	go func() {
 		for {
-			time.Sleep(4 * time.Second)
-			if err := wsConn.wsWrite(websocket.TextMessage, []byte("heartbeat from OpenRASP cloud")); err != nil {
-				beego.Error("heartbeat error:", err)
-				break
+			select {
+			case <- time.After(4 * time.Second):
+				if err := wsConn.wsWrite(websocket.TextMessage, []byte("heartbeat from OpenRASP cloud")); err != nil {
+					beego.Error("heartbeat error:", err)
+					goto error
+				}
 			}
 		}
+		error:
 	}()
 
 	for {

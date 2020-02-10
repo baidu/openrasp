@@ -85,10 +85,10 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary pull-left"
-                  @click="setConfigTask()"
+                  @click="setConfigTask()" :disabled="byurl_regex_error"
                   :data-dismiss=modalDisplay>确定
           </button>
-          <button class="btn btn-primary" :click="reset()" data-dismiss="modal">
+          <button class="btn btn-info" :click="reset()" data-dismiss="modal">
             关闭
           </button>
         </div>

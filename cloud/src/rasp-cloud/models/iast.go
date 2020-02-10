@@ -1,6 +1,8 @@
 package models
 
-import "sync"
+import (
+	"sync"
+)
 
 type Iast struct {
 	CurrentPage 	  int               `json:"current_page"`
