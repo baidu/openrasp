@@ -173,20 +173,12 @@
                                     <shadedPattern>com.baidu.openrasp.abego</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.antlr</pattern>
-                                    <shadedPattern>com.baidu.openrasp.antlr</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.stringtemplate</pattern>
                                     <shadedPattern>com.baidu.openrasp.stringtemplate</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.stringtemplate</pattern>
                                     <shadedPattern>com.baidu.openrasp.stringtemplate</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>st4hidden.org.antlr</pattern>
-                                    <shadedPattern>com.baidu.openrasp.st4hidden.org.antlr</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>javassist</pattern>
