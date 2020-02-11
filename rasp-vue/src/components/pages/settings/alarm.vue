@@ -351,7 +351,7 @@
         </div>
         <div class="form-group">
           <label class="custom-switch">
-            <input v-model="data.kafka_alarm_conf['enable']" type="checkbox" checked="data.general_config['syslog.enable']" class="custom-switch-input">
+            <input v-model="data.kafka_alarm_conf['enable']" type="checkbox" class="custom-switch-input">
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
               开启 Kafka 日志推送
