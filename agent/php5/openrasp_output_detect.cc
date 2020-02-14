@@ -54,8 +54,8 @@ void openrasp_detect_output(INTERNAL_FUNCTION_PARAMETERS)
         RETVAL_FALSE;
     }
     auto content_type = get_content_type(TSRMLS_C);
-    check_sensitice_content(content, content_length, content_type TSRMLS_CC);
-    int status = check_xss(content, content_length, content_type, TSRMLS_CC);
+    check_sensitive_content(content, content_length, content_type TSRMLS_CC);
+    int status = check_xss(content, content_length, content_type TSRMLS_CC);
     if (status == SUCCESS)
     {
         RETVAL_STRING("", 1);
