@@ -226,6 +226,7 @@ char *fetch_request_body(size_t max_len TSRMLS_DC)
 bool need_alloc_shm_current_sapi()
 {
     static const char *supported_sapis[] = {
+        "cgi-fcgi",
         "fpm-fcgi",
         "apache2handler",
         nullptr};
