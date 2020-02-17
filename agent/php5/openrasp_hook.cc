@@ -163,7 +163,7 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
 #if PHP_API_VERSION < 20100412
             if (w_op & OPENDIR &&
                 PG(safe_mode) &&
-                (!php_checkuid(resolved_path.c_str(), nullptr, CHECKUID_CHECK_FILE_AND_DIR)))
+                (!php_checkuid(resolved_path, nullptr, CHECKUID_CHECK_FILE_AND_DIR)))
             {
                 efree(resolved_path);
                 resolved_path = nullptr;
