@@ -11,12 +11,12 @@
               </ul>
             </div>
             <div class="col-auto">
-              <a href="https://github.com/baidu/openrasp" class="btn btn-outline-primary btn-sm">源代码</a>
+              <a href="https://github.com/baidu/openrasp" target="_blank" class="btn btn-outline-primary btn-sm">源代码</a>
             </div>
           </div>
         </div>
         <div class="col-12 col-lg-auto mt-3 mt-lg-0 text-center">
-          Copyright © 2017-2019 Baidu, Inc. 当前版本 {{rasp_version}}
+          Copyright © 2017-2020 Baidu, Inc. 当前版本 {{rasp_version}}
         </div>
       </div>
     </div>
