@@ -85,13 +85,13 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
         File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
         if (!contextFile.exists()) {
             LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "Unable to load conf/context.xml: no such file"));
+                    "Unable to load conf/context.xml: no such file, ignored"));
             return;
         }
 
         if (!contextFile.canRead()) {
             LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "Unable to load conf/context.xml: file is not readable"));
+                    "Unable to load conf/context.xml: file is not readable, ignored"));
             return;
         }
 
@@ -123,7 +123,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
             LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/tomcat-users.xml: no such file or file is not readable"));
+                    "can not load file conf/tomcat-users.xml: no such file or file is not readable, ignored"));
             return;
         }
 
