@@ -297,17 +297,13 @@ public class HookHandler {
         if (Config.getConfig().getDebugLevel() > 0) {
             a = System.currentTimeMillis();
         }
-        boolean enableHookCache = enableCurrThreadHook.get();
         boolean isBlock = false;
         CheckParameter parameter = new CheckParameter(type, params);
         try {
-            enableCurrThreadHook.set(false);
             isBlock = CheckerManager.check(type, parameter);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LogTool.error(ErrorType.PLUGIN_ERROR,
                     "plugin check error: " + e.getClass().getName() + " because: " + e.getMessage(), e);
-        } finally {
-            enableCurrThreadHook.set(enableHookCache);
         }
         if (a > 0) {
             long t = System.currentTimeMillis() - a;
@@ -330,28 +326,36 @@ public class HookHandler {
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
     public static void doCheckWithoutRequest(CheckParameter.Type type, Map params) {
-        //当服务器的cpu使用率超过90%，禁用全部hook点
-        if (Config.getConfig().getDisableHooks()) {
-            return;
-        }
-        //当云控注册成功之前，不进入任何hook点
-        if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
-            return;
-        }
-        if (requestCache.get() != null) {
-            try {
-                StringBuffer sb = requestCache.get().getRequestURL();
-                if (sb != null) {
-                    String url = sb.substring(sb.indexOf("://") + 3);
-                    if (HookWhiteModel.isContainURL(type.getCode(), url)) {
-                        return;
-                    }
-                }
-            } catch (Exception e) {
-                LogTool.traceWarn(ErrorType.HOOK_ERROR, "white list check has failed: " + e.getMessage(), e);
+        boolean enableHookCache = enableCurrThreadHook.get();
+        try {
+            enableCurrThreadHook.set(false);
+            //当服务器的cpu使用率超过90%，禁用全部hook点
+            if (Config.getConfig().getDisableHooks()) {
+                return;
             }
+            //当云控注册成功之前，不进入任何hook点
+            if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
+                return;
+            }
+            if (requestCache.get() != null) {
+                try {
+                    StringBuffer sb = requestCache.get().getRequestURL();
+                    if (sb != null) {
+                        String url = sb.substring(sb.indexOf("://") + 3);
+                        if (HookWhiteModel.isContainURL(type.getCode(), url)) {
+                            return;
+                        }
+                    }
+                } catch (Exception e) {
+                    LogTool.traceWarn(ErrorType.HOOK_ERROR, "white list check has failed: " + e.getMessage(), e);
+                }
+            }
+            doRealCheckWithoutRequest(type, params);
+        } catch (Throwable t) {
+            // ignore
+        } finally {
+            enableCurrThreadHook.set(enableHookCache);
         }
-        doRealCheckWithoutRequest(type, params);
     }
 
     /**

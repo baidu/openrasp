@@ -192,6 +192,10 @@
                                     <pattern>com.strobel</pattern>
                                     <shadedPattern>com.baidu.openrasp.strobel</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.jsoniter</pattern>
+                                    <shadedPattern>com.baidu.openrasp.jsoniter</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>

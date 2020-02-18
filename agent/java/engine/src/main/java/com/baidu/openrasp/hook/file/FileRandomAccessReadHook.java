@@ -49,7 +49,7 @@ public class FileRandomAccessReadHook extends AbstractClassHook {
     }
 
     public static void checkReadFile(File file) {
-        if (file != null && !file.getName().endsWith(".jar")) {
+        if (file != null && !file.getName().endsWith(".jar") && !file.getName().endsWith(".war")) {
             FileInputStreamHook.checkReadFile(file);
         }
     }
