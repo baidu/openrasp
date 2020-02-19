@@ -191,6 +191,7 @@ export default {
   },
   watch: {
     current_app() { 
+      this.currentVersion = ""
       this.loadRaspList(1) 
     },
     currentVersion() {
@@ -247,9 +248,9 @@ export default {
       } else if (!this.filter.online && this.filter.offline) {
           body.data.online = false
       }
-      if (this.currentVersion) {
-          body.data.version = this.currentVersion
-      }
+      // if (this.currentVersion) {
+      //     body.data.version = this.currentVersion
+      // }
       this.request.post('v1/api/rasp/search/version', body).then(res => {
         this.agent_versions = res.data
         if (this.agent_versions.length == 0 && this.currentVersion) {
