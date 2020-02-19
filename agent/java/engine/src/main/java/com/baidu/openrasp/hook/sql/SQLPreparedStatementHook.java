@@ -80,7 +80,8 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         }
 
          /* HSqlDB */
-        if ("org/hsqldb/jdbc/JDBCPreparedStatement".equals(className)) {
+        if ("org/hsqldb/jdbc/JDBCPreparedStatement".equals(className)
+                || "org/hsqldb/jdbc/jdbcPreparedStatement".equals(className)) {
             this.type = SqlType.HSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
