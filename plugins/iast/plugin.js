@@ -208,6 +208,9 @@ plugin.register('eval', function (params, context) {
     add_hook('eval', params, context)
 })
 
+plugin.register('request', function (params, context) {
+})
+
 plugin.register('requestEnd', function (params, context) {
     send_rasp_result(context)
 })
