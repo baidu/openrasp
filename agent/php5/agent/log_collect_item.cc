@@ -56,7 +56,7 @@ LogCollectItem::LogCollectItem(int instance_id, bool collect_enable)
     if (file_exists(status_file_abs))
     {
         std::string status_json;
-        if (get_entire_file_content(status_file_abs.c_str(), status_json))
+        if (read_entire_content(status_file_abs, status_json))
         {
             JsonReader json_reader(status_json);
             fpos = json_reader.fetch_int64({"fpos"}, 0);
@@ -95,27 +95,28 @@ std::string LogCollectItem::get_active_log_file() const
     return get_base_dir_path() + get_name() + ".log." + curr_suffix;
 }
 
-void LogCollectItem::open_active_log()
+void LogCollectItem::update_fpos()
 {
     if (!ifs.is_open())
     {
         ifs.open(get_active_log_file(), std::ifstream::binary);
+        ifs.seekg(fpos);
     }
-}
-
-void LogCollectItem::determine_fpos()
-{
-    open_active_log();
     long curr_st_ino = get_active_file_inode();
     if (0 != curr_st_ino && st_ino != curr_st_ino)
     {
         st_ino = curr_st_ino;
         fpos = 0;
     }
-    ifs.seekg(fpos);
+}
+
+void LogCollectItem::update_collect_status()
+{
+    update_fpos();
     if (!ifs.good())
     {
         ifs.clear();
+        ifs.sync();
     }
     ifs.sync();
 }
@@ -131,8 +132,12 @@ long LogCollectItem::get_active_file_inode()
     return 0;
 }
 
-void LogCollectItem::save_status_snapshot() const
+void LogCollectItem::update_status_snapshot()
 {
+    ifs.clear();
+    fpos = ifs.tellg();
+    last_post_time = (long)time(NULL);
+
     JsonReader json_reader;
     json_reader.write_string({"curr_suffix"}, curr_suffix);
     json_reader.write_int64({"last_post_time"}, last_post_time);
@@ -151,17 +156,6 @@ void LogCollectItem::save_status_snapshot() const
 #ifndef _WIN32
     umask(oldmask);
 #endif
-}
-
-void LogCollectItem::update_fpos()
-{
-    ifs.clear();
-    fpos = ifs.tellg();
-}
-
-void LogCollectItem::update_last_post_time()
-{
-    last_post_time = (long)time(NULL);
 }
 
 std::string LogCollectItem::get_cpmplete_url() const
@@ -203,38 +197,44 @@ bool LogCollectItem::log_content_qualified(const std::string &content)
     return true;
 }
 
-bool LogCollectItem::get_post_logs(std::string &body)
+void LogCollectItem::refresh_cache_body()
 {
-    std::string line;
-    body.push_back('[');
-    int count = 0;
-    bool qualified_log_found = false;
-    while (std::getline(ifs, line) &&
-           count < LogAgent::max_post_logs_account)
+    if (0 == cached_count)
     {
-        if (log_content_qualified(line))
+        cached_body.push_back('[');
+        std::string line;
+        while (std::getline(ifs, line) &&
+               cached_count < LogAgent::max_post_logs_account)
         {
-            qualified_log_found = true;
-            body.append(line);
-            body.push_back(',');
-            ++count;
-        }
-        else
-        {
-            if (!qualified_log_found)
+            if (log_content_qualified(line))
             {
-                update_fpos();
+                cached_body.append(line);
+                cached_body.push_back(',');
+                ++cached_count;
+            }
+            else
+            {
+                break;
             }
         }
+        cached_body.pop_back();
+        cached_body.push_back(']');
+        if (0 == cached_count)
+        {
+            cached_body.clear();
+        }
     }
-    body.pop_back();
-    body.push_back(']');
-    if (0 == count)
-    {
-        body.clear();
-        return false;
-    }
-    return true;
+}
+
+void LogCollectItem::clear_cache_body()
+{
+    cached_count = 0;
+    cached_body.clear();
+}
+
+std::string LogCollectItem::get_cache_body() const
+{
+    return cached_body;
 }
 
 bool LogCollectItem::need_rotate() const
@@ -283,7 +283,7 @@ void LogCollectItem::cleanup_expired_logs() const
                          return !strncmp(filename, (log_name + ".log.").c_str(), (log_name + ".log.").size()) &&
                                 std::string(filename) < (log_name + ".log." + tobe_deleted_date_suffix);
                      },
-                     true);
+                     LONG_MAX, true);
     for (std::string delete_file : files_tobe_deleted)
     {
         unlink(delete_file.c_str());

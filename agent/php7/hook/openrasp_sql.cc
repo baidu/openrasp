@@ -16,12 +16,18 @@
 
 #include "openrasp_sql.h"
 #include "openrasp_hook.h"
+#include "openrasp_log.h"
 #include "openrasp_ini.h"
 #include "openrasp_v8.h"
 #include <string>
 #include <map>
 #include "agent/shared_config_manager.h"
 #include "utils/utf.h"
+#include "hook/checker/v8_detector.h"
+#include "hook/data/sql_object.h"
+#include "hook/data/sql_username_object.h"
+#include "hook/data/sql_password_object.h"
+#include "hook/checker/policy_detector.h"
 
 extern "C"
 {
@@ -32,135 +38,25 @@ extern "C"
 #endif
 }
 
-static bool sql_policy_alarm(sql_connection_entry *conn_entry, sql_connection_entry::connection_policy_type policy_type)
+void sql_connection_policy_check(INTERNAL_FUNCTION_PARAMETERS, init_sql_connection_t connection_init_func, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    bool result = false;
+    if (connection_init_func)
     {
-        if (slm != nullptr)
+        if (connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj))
         {
-            ulong connection_hash = conn_entry->build_hash_code(policy_type);
-            long timestamp = (long)time(nullptr);
-            if (!slm->log_exist(timestamp, connection_hash))
-            {
-                conn_entry->connection_entry_policy_log(policy_type);
-            }
-        }
-        else
-        {
-            conn_entry->connection_entry_policy_log(policy_type);
-        }
-        }
-#ifdef HAVE_LINE_COVERAGE
-    __gcov_flush();
-#endif
-    return result;
-}
-
-bool check_database_connection_username(INTERNAL_FUNCTION_PARAMETERS, init_connection_t connection_init_func)
-{
-    sql_connection_entry conn_entry;
-    bool need_block = false;
-    if (connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry))
-    {
-        if (conn_entry.check_high_privileged())
-        {
-            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::USER);
-        }
-        if (conn_entry.check_weak_password())
-        {
-            need_block = sql_policy_alarm(&conn_entry, sql_connection_entry::connection_policy_type::PASSWORD);
-        }
-    }
-    return need_block;
-}
-
-void plugin_sql_check(char *query, int query_len, const char *server)
-{
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (query && strlen(query) == query_len && isolate)
-    {
-        std::string cache_key = std::string(get_check_type_name(SQL)).append(query, query_len);
-        if (OPENRASP_HOOK_G(lru).contains(cache_key))
-        {
-            return;
-        }
-        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
-        {
-            v8::HandleScope handle_scope(isolate);
-            auto context = isolate->GetCurrentContext();
-            auto params = v8::Object::New(isolate);
-            params->Set(context, openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, query_len)).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server)).IsJust();
-            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-        }
-        if (check_result == openrasp::CheckResult::kCache)
-        {
-            OPENRASP_HOOK_G(lru).set(cache_key, true);
-        }
-        if (check_result == openrasp::CheckResult::kBlock)
-        {
-            handle_block();
+            openrasp::data::SqlUsernameObject suo(sql_connection_obj);
+            openrasp::checker::PolicyDetector username_detector(suo);
+            username_detector.run();
+            openrasp::data::SqlPasswordObject spo(sql_connection_obj);
+            openrasp::checker::PolicyDetector weak_passwd_detector(spo);
+            weak_passwd_detector.run();
         }
     }
 }
 
-bool is_mysql_error_code_monitored(long err_code)
+void plugin_sql_check(zval *query, const std::string &server)
 {
-    if (openrasp::scm->sql_error_code_exist(err_code))
-    {
-        return true;
-    }
-    return false;
-}
-
-void sql_query_error_alarm(char *server, char *query, const std::string &err_code, const std::string &err_msg)
-{
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (isolate && server && query)
-    {
-        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
-        {
-            v8::HandleScope handle_scope(isolate);
-            auto context = isolate->GetCurrentContext();
-            auto params = v8::Object::New(isolate);
-            params->Set(context, openrasp::NewV8String(isolate, "query"), openrasp::NewV8String(isolate, query, strlen(query))).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, server)).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code)).IsJust();
-            std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
-            params->Set(context, openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg)).IsJust();
-            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL_ERROR)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-        }
-        if (check_result == openrasp::CheckResult::kBlock)
-        {
-            handle_block();
-        }
-    }
-}
-
-void sql_connect_error_alarm(sql_connection_entry *sql_connection_p, const std::string &err_code, const std::string &err_msg)
-{
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (isolate && sql_connection_p)
-    {
-        openrasp::CheckResult check_result = openrasp::CheckResult::kCache;
-        {
-            v8::HandleScope handle_scope(isolate);
-            auto context = isolate->GetCurrentContext();
-            auto params = v8::Object::New(isolate);
-            params->Set(context, openrasp::NewV8String(isolate, "server"), openrasp::NewV8String(isolate, sql_connection_p->get_server())).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "hostname"), openrasp::NewV8String(isolate, sql_connection_p->get_host())).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "username"), openrasp::NewV8String(isolate, sql_connection_p->get_username())).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "socket"), openrasp::NewV8String(isolate, sql_connection_p->get_socket())).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "connectionString"), openrasp::NewV8String(isolate, sql_connection_p->get_connection_string())).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "port"), v8::Integer::New(isolate, sql_connection_p->get_port())).IsJust();
-            params->Set(context, openrasp::NewV8String(isolate, "error_code"), openrasp::NewV8String(isolate, err_code)).IsJust();
-            std::string utf8_err_msg = openrasp::replace_invalid_utf8(err_msg);
-            params->Set(context, openrasp::NewV8String(isolate, "error_msg"), openrasp::NewV8String(isolate, utf8_err_msg)).IsJust();
-            check_result = Check(isolate, openrasp::NewV8String(isolate, get_check_type_name(SQL_ERROR)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-        }
-        if (check_result == openrasp::CheckResult::kBlock)
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
+    openrasp::data::SqlObject sql_obj(server, query);
+    openrasp::checker::V8Detector v8_detector(sql_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+    v8_detector.run();
 }

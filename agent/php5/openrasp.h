@@ -50,9 +50,8 @@ extern "C"
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
-zend_bool locked;
 openrasp::ConfigHolder config;
-openrasp::Request request;
+openrasp::request::Request request;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)

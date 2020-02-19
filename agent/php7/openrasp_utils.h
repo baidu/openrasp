@@ -18,10 +18,10 @@
 #define OPENRASP_UTILS_H
 
 #include "openrasp.h"
+#include "utils/url.h"
 #include <string>
 #include <vector>
 #include <map>
-#include <functional>
 #include <time.h>
 
 #ifdef __cplusplus
@@ -35,16 +35,16 @@ extern "C"
 }
 #endif
 
-const char *fetch_url_scheme(const char *filename);
+const char *determine_scheme_pos(const char *filename);
+std::string fetch_possible_protocol(const char *filename);
 
 int recursive_mkdir(const char *path, int len, int mode);
-bool get_entire_file_content(const char *file, std::string &content);
-void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path = false);
 
 std::vector<std::string> format_source_code_arr();
-void format_source_code_arr(zval *source_code_arr);
+
 std::vector<std::string> format_debug_backtrace_arr();
-void add_stack_to_params(zval *params);
+std::vector<std::string> format_debug_backtrace_arr(long limit);
+
 std::string json_encode_from_zval(zval *value);
 
 std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
@@ -52,10 +52,19 @@ std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey);
 zend_string *fetch_request_body(size_t max_len);
 bool need_alloc_shm_current_sapi();
 std::string convert_to_header_key(char *key, size_t length);
-bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std::string &host, std::string &port);
+bool openrasp_parse_url(const std::string &origin_url, openrasp::Url &openrasp_url);
 std::map<std::string, std::string> get_env_map();
 std::string get_phpversion();
 
+bool make_openrasp_root_dir(const char *path);
+void openrasp_set_locale(const char *locale, const char *locale_path);
+bool current_sapi_supported();
+
 zval *fetch_http_globals(int vars_id);
+bool openrasp_call_user_function(HashTable *function_table, zval *object, const std::string &function_name,
+                                 zval *retval_ptr, uint32_t param_count, zval params[]);
+bool get_long_constant(const std::string &key, long &value);
+bool maybe_ssrf_vulnerability(zval *file);
+bool maybe_ssrf_vulnerability(std::string protcol);
 
 #endif

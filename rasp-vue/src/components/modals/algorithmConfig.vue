@@ -35,6 +35,17 @@
             </div>
           </div>
 
+          <div v-if="key == 'command_error'">
+            <div v-for="row in command_error_keys" :key="row.key">
+              <label class="custom-switch m-0">
+                <input type="checkbox" v-model="data[row.key]" class="custom-switch-input">
+                <span class="custom-switch-indicator" @click="data[row.key] = !data[row.key]"></span>
+                <span class="custom-switch-description">{{row.descr}}</span>              
+              </label>
+              <br>
+            </div>
+          </div>
+
           <div v-if="key.endsWith('_protocol')">
             <label>禁止加载的协议列表，逗号分隔</label>
             <textarea class="form-control" autocomplete="off" autocorrect="off"
@@ -62,7 +73,7 @@
             <div class="form-group">
               <input type="text" v-model.trim="error_code_concat" class="form-control">
             </div>
-          </div>          
+          </div>
 
           <div v-if="key == 'command_common'">
             <label>渗透命令探针 - 正则表达式</label>
@@ -70,6 +81,28 @@
               <input type="text" v-model.trim="data.pattern" class="form-control">
             </div>
             <span class="text-danger" v-if="command_common_error">{{command_common_error }}</span>
+          </div>
+
+          <div v-if="key == 'response_dataLeak'">
+            <label class="custom-switch m-0">
+              <input type="checkbox" v-model="data.kind.phone" class="custom-switch-input">
+              <span class="custom-switch-indicator" @click="data.kind.phone = !data.kind.phone"></span>
+              <span class="custom-switch-description">检测手机号泄露</span>              
+            </label>
+            <br/>
+
+            <label class="custom-switch m-0">
+              <input type="checkbox" v-model="data.kind.identity_card" class="custom-switch-input">
+              <span class="custom-switch-indicator" @click="data.kind.identity_card = !data.kind.identity_card"></span>
+              <span class="custom-switch-description">检测身份证泄露</span>              
+            </label>
+            <br/>
+
+            <label class="custom-switch m-0">
+              <input type="checkbox" v-model="data.kind.bank_card" class="custom-switch-input">
+              <span class="custom-switch-indicator" @click="data.kind.bank_card = !data.kind.bank_card"></span>
+              <span class="custom-switch-description">检测银行卡、信用卡泄露</span>              
+            </label>
           </div>
 
         </div>
@@ -135,6 +168,20 @@ export default {
           key:   'information_schema',
           descr: '拦截 information_schema 相关操作'
         }
+      ],
+      command_error_keys: [
+        {
+          key:   'unbalanced_quote_enable',
+          descr: '检查单双反引号的个数，是否为基数'
+        },
+        {
+          key:   'sensitive_cmd_enable',
+          descr: '检查恶意的命令拼接操作，如 | bash'
+        },
+        {
+          key:   'alarm_token_enable',
+          descr: '检查恶意的 TOKEN，如 $IFS'
+        }
       ]
     }
   },
@@ -182,7 +229,6 @@ export default {
       })
     },
     saveConfig() {
-
       if (this.key == 'sql_exception') {
         this.data.mysql.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
       }

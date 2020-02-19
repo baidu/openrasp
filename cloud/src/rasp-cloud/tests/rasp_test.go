@@ -4,10 +4,10 @@ import (
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/tests/inits"
+	"rasp-cloud/tests/start"
 	"github.com/bouk/monkey"
 	"reflect"
 	"github.com/astaxie/beego/context"
-	"rasp-cloud/tests/start"
 	"rasp-cloud/models"
 	"errors"
 	"rasp-cloud/conf"
@@ -23,7 +23,9 @@ func TestRaspRegister(t *testing.T) {
 		defer monkey.UnpatchInstanceMethod(reflect.TypeOf(&context.BeegoInput{}), "Header")
 
 		Convey("when the param is valid", func() {
-			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(start.TestRasp))
+			rasp := start.TestRasp
+			rasp.Environ["JAVA_HOME"] = "/home/java/jdk-7.0.25"
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
 			So(r.Status, ShouldEqual, 0)
 		})
 
@@ -143,23 +145,53 @@ func TestRaspRegister(t *testing.T) {
 			So(r.Status, ShouldEqual, 0)
 		})
 
-		Convey("when the length of environ key is greater than 4096", func() {
-			rasp := *start.TestRasp
-			rasp.Environ = map[string]string{inits.GetLongString(4097): "123"}
-			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
-			So(r.Status, ShouldBeGreaterThan, 0)
-		})
-
-		Convey("when the length of environ value is greater than 4096", func() {
-			rasp := *start.TestRasp
-			rasp.Environ = map[string]string{"123": inits.GetLongString(4097)}
-			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
-			So(r.Status, ShouldBeGreaterThan, 0)
-		})
-
 		Convey("when the register callback url is invalid", func() {
 			conf.AppConfig.RegisterCallbackUrl = "xxxxx.xxxx.xxxx.xxxx"
 			rasp := *start.TestRasp
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the server type is empty", func() {
+			rasp := *start.TestRasp
+			rasp.ServerType = ""
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the server version is empty", func() {
+			rasp := *start.TestRasp
+			rasp.ServerVersion = ""
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of description is greater than 1024", func() {
+			rasp := *start.TestRasp
+			rasp.Description = inits.GetLongString(1025)
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of host type is greater than 256", func() {
+			rasp := *start.TestRasp
+			rasp.HostType = inits.GetLongString(257)
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the register ip is empty", func() {
+			rasp := *start.TestRasp
+			rasp.RegisterIp = ""
+			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("the total length of environment variable is greater than 100000", func() {
+			rasp := *start.TestRasp
+			rasp.Environ = map[string]string{
+				inits.GetLongString(50001): inits.GetLongString(50001),
+			}
 			r := inits.GetResponse("POST", "/v1/agent/rasp", inits.GetJson(rasp))
 			So(r.Status, ShouldEqual, 0)
 		})
@@ -227,7 +259,7 @@ func TestDeleteRasp(t *testing.T) {
 				Environ:           map[string]string{},
 			}
 			monkey.Patch(models.FindRasp, func(*models.Rasp, int, int) (int, []*models.Rasp, error) {
-				return 0, nil, errors.New("")
+				return 1, nil, errors.New("")
 			})
 			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"id":     rasp.Id,
@@ -236,8 +268,8 @@ func TestDeleteRasp(t *testing.T) {
 			monkey.Unpatch(models.FindRasp)
 			So(r.Status, ShouldBeGreaterThan, 0)
 
-			monkey.Patch(models.RemoveRaspById, func(id []string) (int, error) {
-				return 0, errors.New("")
+			monkey.Patch(models.RemoveRaspById, func(id string) (error) {
+				return errors.New("")
 			})
 			r = inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"id":     rasp.Id,
@@ -247,11 +279,15 @@ func TestDeleteRasp(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 
 			models.UpsertRaspById(rasp.Id, rasp)
+			monkey.Patch(models.RemoveRaspById, func(id string) (error) {
+				return nil
+			})
+			defer monkey.Unpatch(models.RemoveRaspById)
 			r = inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"id":     rasp.Id,
 				"app_id": rasp.AppId,
 			}))
-			So(r.Status, ShouldBeGreaterThan, 0)
+			So(r.Status, ShouldEqual, 0)
 		})
 
 		Convey("delete the rasp with register_ip", func() {
@@ -296,13 +332,6 @@ func TestDeleteRasp(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
-		Convey("when the search param is empty", func() {
-			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
-				"app_id": start.TestApp.Id,
-			}))
-			So(r.Status, ShouldBeGreaterThan, 0)
-		})
-
 		Convey("when the param is invalid", func() {
 			r := inits.GetResponse("POST", "/v1/api/rasp/delete", inits.GetJson(map[string]interface{}{
 				"app_id":      start.TestApp.Id,
@@ -325,6 +354,253 @@ func TestDeleteRasp(t *testing.T) {
 			}))
 			monkey.Unpatch(models.RemoveRaspBySelector)
 			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+	})
+}
+
+func TestSearchVersionRasp(t *testing.T) {
+	Convey("Subject: Test Rasp Search Version Api\n", t, func() {
+		Convey("when the param is valid", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/search/version", inits.GetJson(
+				map[string]interface{}{
+					"data":    start.TestRasp,
+					"page":    1,
+					"perpage": 1,
+				},
+			))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the data is nil", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/search/version", inits.GetJson(
+				map[string]interface{}{
+					"data":    nil,
+					"page":    1,
+					"perpage": 1,
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.FindRaspVersion, func(*models.Rasp) ([]*models.RecordCount, error) {
+				return nil, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/rasp/search/version", inits.GetJson(
+				map[string]interface{}{
+					"data":    start.TestRasp,
+					"page":    1,
+					"perpage": 1,
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.FindRaspVersion)
+
+			monkey.Patch(models.FindRaspVersion, func(*models.Rasp) ([]*models.RecordCount, error) {
+				return nil, nil
+			})
+			r = inits.GetResponse("POST", "/v1/api/rasp/search/version", inits.GetJson(
+				map[string]interface{}{
+					"data":    start.TestRasp,
+					"page":    1,
+					"perpage": 1,
+				},
+			))
+			So(r.Status, ShouldEqual, 0)
+			monkey.Unpatch(models.FindRaspVersion)
+		})
+	})
+}
+
+func TestAuth(t *testing.T) {
+	Convey("Subject: Test Auth Api\n", t, func() {
+		Convey("when the param is valid", func() {
+			r := inits.GetResponse("POST", "/v1/agent/rasp/auth", inits.GetJson(
+				map[string]interface{}{
+
+				},
+			))
+			So(r.Status, ShouldEqual, 0)
+		})
+	})
+}
+
+func TestGeneralCsv(t *testing.T) {
+	Convey("Subject: Test general csv Api\n", t, func() {
+		Convey("when the param is valid", func() {
+			r := inits.GetResponseWithNoBody("GET", "/v1/api/rasp/csv?app_id="+start.TestApp.Id, inits.GetJson(
+				map[string]interface{}{
+
+				},
+			))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.FindRasp, func(selector *models.Rasp, page int,
+				perpage int) (count int, result []*models.Rasp, err error) {
+				return 1, nil, errors.New("")
+			})
+			r := inits.GetResponse("GET", "/v1/api/rasp/csv?app_id="+start.TestApp.Id, inits.GetJson(
+				map[string]interface{}{
+
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.FindRasp)
+		})
+
+		Convey("when the app_id can not be empty", func() {
+			r := inits.GetResponseWithNoBody("GET", "/v1/api/rasp/csv?app_id=", inits.GetJson(
+				map[string]interface{}{
+
+				},
+			))
+			So(r.Desc, ShouldEqual, "")
+		})
+	})
+}
+
+func TestDescribe(t *testing.T) {
+	Convey("Subject: Test Desc Api\n", t, func() {
+		Convey("when the param is valid", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/describe", inits.GetJson(
+				map[string]interface{}{
+					"id":          start.TestRasp.Id,
+					"description": "this is a description",
+				},
+			))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the rasp id is empty", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/describe", inits.GetJson(
+				map[string]interface{}{
+					"id":          "",
+					"description": "this is a description",
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of rasp id is greater than 256", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/describe", inits.GetJson(
+				map[string]interface{}{
+					"id":          inits.GetLongString(256),
+					"description": "this is a description",
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the desc is empty", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/describe", inits.GetJson(
+				map[string]interface{}{
+					"id":          start.TestRasp.Id,
+					"description": "",
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of rasp desc is greater than 1024", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/describe", inits.GetJson(
+				map[string]interface{}{
+					"id":          start.TestRasp.Id,
+					"description": inits.GetLongString(1025),
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.UpdateRaspDescription, func(raspId string, description string) (error) {
+				return errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/rasp/describe", inits.GetJson(
+				map[string]interface{}{
+					"id":          start.TestRasp.Id,
+					"description": "this is a description",
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.UpdateRaspDescription)
+		})
+
+		Convey("when the length of rasp id can not be greater than 256", func() {
+			monkey.Patch(models.UpdateRaspDescription, func(raspId string, description string) (error) {
+				return errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/rasp/describe", inits.GetJson(
+				map[string]interface{}{
+					"id":          inits.GetLongString(257),
+					"description": "this is a description",
+				},
+			))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.UpdateRaspDescription)
+		})
+	})
+}
+
+func TestBatchDeleteRasp(t *testing.T) {
+	Convey("Subject: Test Rasp Batch Delete Api\n", t, func() {
+		Convey("delete the rasp with ids", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/batch_delete", inits.GetJson(
+				map[string]interface{}{
+					"app_id": start.TestApp.Id,
+					"ids": []string{start.TestRasp.Id},
+				}))
+			So(r.Status, ShouldEqual, 0)
+		})
+
+		Convey("when the app_id is empty", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/batch_delete", inits.GetJson(
+				map[string]interface{}{
+					"app_id": "",
+					"ids": []string{start.TestRasp.Id},
+				}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of Ids is 0", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/batch_delete", inits.GetJson(
+				map[string]interface{}{
+					"app_id": start.TestApp.Id,
+					"ids": []string{},
+				}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of Ids is greater than 512", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/batch_delete", inits.GetJson(
+				map[string]interface{}{
+					"app_id": start.TestApp.Id,
+					"ids": inits.GetLongStringArray(513),
+				}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the length of Id is greater than 512", func() {
+			r := inits.GetResponse("POST", "/v1/api/rasp/batch_delete", inits.GetJson(
+				map[string]interface{}{
+					"app_id": start.TestApp.Id,
+					"ids": []string{inits.GetLongString(513)},
+				}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
+		Convey("when the mongodb has errors", func() {
+			monkey.Patch(models.RemoveRaspByIds, func(appId string, ids []string) (int, error) {
+				return 0, errors.New("")
+			})
+			r := inits.GetResponse("POST", "/v1/api/rasp/batch_delete", inits.GetJson(
+				map[string]interface{}{
+					"app_id": start.TestApp.Id,
+					"ids": []string{start.TestRasp.Id},
+				}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+			monkey.Unpatch(models.UpdateRaspDescription)
 		})
 	})
 }

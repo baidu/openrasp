@@ -29,6 +29,7 @@ extern "C"
 #include "openrasp_v8.h"
 #include "openrasp_hook.h"
 #include "openrasp_ini.h"
+#include "openrasp_output_detect.h"
 #include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
@@ -107,9 +108,9 @@ PHP_MINIT_FUNCTION(openrasp_v8)
                 type_action_map.insert({CheckTypeTransfer::instance().name_to_type(iter->first), string_to_action(iter->second)});
             }
             openrasp::scm->set_buildin_check_action(type_action_map);
-            std::vector<long> sql_error_codes;
-            extract_sql_error_codes(isolate, sql_error_codes, SharedConfigBlock::SQL_ERROR_CODE_MAX_SIZE);
-            openrasp::scm->set_sql_error_codes(sql_error_codes);
+            openrasp::scm->set_mysql_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.mysql.error_code", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE));
+            openrasp::scm->set_sqlite_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.sqlite.error_code", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE));
+            openrasp::scm->build_pg_error_array(isolate);
             isolate->Dispose();
         }
         Platform::Get()->Shutdown();
@@ -179,7 +180,21 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                 v8::HandleScope handle_scope(isolate);
                 isolate->GetData()->request_context_templ.Reset(isolate, CreateRequestContextTemplate(isolate));
                 OPENRASP_V8_G(isolate) = isolate;
-                OPENRASP_G(config).updateAlgorithmConfig();
+
+                {
+                    static const std::vector<std::string> default_callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
+                    static const std::string default_echo_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
+                    static const std::string default_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
+                    static const int64_t default_min_param_length = 15;
+                    static const int64_t default_max_detection_num = 10;
+
+                    std::vector<std::string> callable_blacklist_vector = extract_string_array(isolate, "RASP.algorithmConfig.webshell_callable.functions", 100, default_callable_blacklist);
+                    OPENRASP_HOOK_G(callable_blacklist) = std::unordered_set<std::string>(callable_blacklist_vector.begin(), callable_blacklist_vector.end());
+                    OPENRASP_HOOK_G(echo_filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_echo.filter_regex", default_echo_filter_regex);
+                    OUTPUT_G(filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_userinput.filter_regex", default_filter_regex);
+                    OUTPUT_G(min_param_length) = extract_int64(isolate, "RASP.algorithmConfig.xss_userinput.min_length", default_min_param_length);
+                    OUTPUT_G(max_detection_num) = extract_int64(isolate, "RASP.algorithmConfig.xss_userinput.max_detection_num", default_max_detection_num);
+                }
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,9 @@ public class SecurityPolicyInfo extends EventInfo {
         DEFAULT_APP(3004),
         DIRECTORY_LISTING(3005),
         SQL_CONNECTION(3006),
-        JBOSS_JMX_CONSOLE(3007);
+        JBOSS_JMX_CONSOLE(3007),
+        SENSITIVE_LOG(3008),
+        SENSITIVE_OUTOUT(3009);
 
 
         private int id;

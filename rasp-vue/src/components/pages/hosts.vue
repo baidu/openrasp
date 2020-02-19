@@ -40,11 +40,11 @@
               </div>
             </b-dropdown>
           </div>
-          <div class="input-icon ml-2">
+          <div class="input-icon ml-3">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadRaspList(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="主机名称/备注/IP/OS" @keyup.enter="loadRaspList(1)">
           </div>
 
           <button class="btn btn-primary ml-2" @click="loadRaspList(1)">
@@ -103,8 +103,9 @@
             </thead>
             <tbody>
               <tr v-for="row in data" :key="row.id">
-                <td>
+                <td style="min-width: 100px; ">
                   <a href="javascript:" @click="showHostDetail(row)">{{ row.hostname }}</a>
+                  <span v-if="row.description"><br>[{{ row.description }}]</span>
                 </td>
                 <td nowrap>
                   {{ row.register_ip }}
@@ -129,18 +130,18 @@
                   </span>
                 </td>
                 <td nowrap>
+                  <a href="javascript:" @click="setComment(row)">
+                    备注
+                  </a>
                   <a href="javascript:" v-if="! row.online" @click="doDelete(row)">
                     删除
                   </a>
-                  <span v-if="row.online">-</span>
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <p v-if="! loading && total == 0" class="text-center">
-暂无数据
-</p>
+          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
 
           <nav v-if="! loading && total > 10">
             <ul class="pagination pull-left">
@@ -152,7 +153,7 @@
             </ul>
             <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadRaspList($event)" />
           </nav>
-</div>
+        </div>
       </div>
     </div>
 
@@ -190,11 +191,20 @@ export default {
   },
   watch: {
     current_app() { 
+      this.currentVersion = ""
       this.loadRaspList(1) 
     },
     currentVersion() {
-        this.loadRaspList(1)
+      this.loadRaspList(1)
     },
+    // agent_versions: function(newVal, oldVal) {
+    //   if (newVal.length <= 0 && oldVal.length > 0) {
+    //       oldVal.forEach(element=>{
+    //           element["count"] = 0
+    //       })
+    //       this.agent_versions = oldVal
+    //   }
+    // },
     filter: {
       handler() {
         if (!this.current_app.id) {
@@ -225,14 +235,27 @@ export default {
   methods: {
     ceil: Math.ceil,
     enumAgentVersion() {
-      this.request.post('v1/api/rasp/search/version', {
+      const body = {
           data: {
               app_id: this.current_app.id
           },
           page: 1,
-          perpage: 100
-      }).then(res => {
-          this.agent_versions = res.data
+          perpage: 10
+      }
+
+      if (this.filter.online && !this.filter.offline) {
+          body.data.online = true
+      } else if (!this.filter.online && this.filter.offline) {
+          body.data.online = false
+      }
+      // if (this.currentVersion) {
+      //     body.data.version = this.currentVersion
+      // }
+      this.request.post('v1/api/rasp/search/version', body).then(res => {
+        this.agent_versions = res.data
+        if (this.agent_versions.length == 0 && this.currentVersion) {
+            this.agent_versions.push({"version": this.currentVersion, "count": 0})
+        }
       })
     },
     toHostStatus() {
@@ -273,7 +296,7 @@ export default {
       }
 
       if (this.currentVersion) {
-          body.data.version = this.currentVersion
+        body.data.version = this.currentVersion
       }
 
       if (this.hostname) {
@@ -296,7 +319,22 @@ export default {
         this.total = res.total
         this.loading = false
       })
-    },    
+    },
+    setComment: function(data) {
+      var oldVal = data.description
+      var newVal = prompt('输入新的备注', oldVal)
+
+      if (newVal == null) {
+        return
+      }
+
+      this.request.post('v1/api/rasp/describe', {
+        id: data.id,
+        description: newVal
+      }).then(res => {
+        this.loadRaspList(this.currentPage)
+      })
+    },
     doDelete: function(data) {
       if (!confirm('确认删除? 删除前请先在主机端卸载 OpenRASP Agent')) {
         return

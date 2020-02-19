@@ -207,7 +207,9 @@ export default {
         'eval_regex': true,
         'include_protocol': true,
         'xxe_protocol': true,
-        'ssrf_protocol': true
+        'ssrf_protocol': true,
+        'response_dataLeak': true,
+        'command_error': true
       },
       browser_headers: browser_headers
     }

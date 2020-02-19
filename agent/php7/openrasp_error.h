@@ -30,8 +30,10 @@ enum openrasp_error_code
 	REGISTER_ERROR = 20008,
 	HEARTBEAT_ERROR,
 	LOGCOLLECT_ERROR,
+	DEPENDENCY_ERROR = 20015,
 	CRASH_ERROR = 200020
 };
+
 
 void openrasp_error(int type, openrasp_error_code code, const char *format, ...);
 

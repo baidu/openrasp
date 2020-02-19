@@ -20,6 +20,7 @@
 #include "utils/digest.h"
 #include "utils/net.h"
 #include "utils/hostname.h"
+#include "openrasp_v8.h"
 #include <algorithm>
 
 namespace openrasp
@@ -43,20 +44,16 @@ SharedConfigManager::~SharedConfigManager()
 
 int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
 {
-    DoubleArrayTrie::result_pair_type result_pair[ALL_TYPE];
     DoubleArrayTrie dat;
     int white_bit_mask = 0;
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         dat.load_existing_array((void *)shared_config_block->get_check_type_white_array(), shared_config_block->get_white_array_size());
-        size_t num = dat.prefix_search(url.c_str(), result_pair, sizeof(result_pair));
-        if (num > 0)
+        std::vector<DoubleArrayTrie::result_pair_type> result_pairs = dat.prefix_search(url.c_str());
+        for (DoubleArrayTrie::result_pair_type result_pair : result_pairs)
         {
-            for (size_t i = 0; i < num; ++i)
-            {
-                white_bit_mask |= result_pair[i].value;
-            }
+            white_bit_mask |= result_pair.value;
         }
     }
     return white_bit_mask;
@@ -64,7 +61,7 @@ int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
 
 bool SharedConfigManager::write_check_type_white_array_to_shm(const void *source, size_t num)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->reset_white_array(source, num);
@@ -109,9 +106,28 @@ bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std
     return build_check_type_white_array(white_mask_map);
 }
 
+bool SharedConfigManager::build_check_type_white_array(BaseReader *br)
+{
+    if (!br || br->has_error())
+    {
+        return false;
+    }
+    std::vector<std::string> hook_white_key({"hook.white"});
+    std::map<std::string, std::vector<std::string>> hook_white_map;
+    std::vector<std::string> url_keys = br->fetch_object_keys(hook_white_key);
+    for (auto &key_item : url_keys)
+    {
+        hook_white_key.push_back(key_item);
+        std::vector<std::string> white_types = br->fetch_strings(hook_white_key, {});
+        hook_white_key.pop_back();
+        hook_white_map.insert({key_item, white_types});
+    }
+    return build_check_type_white_array(hook_white_map);
+}
+
 long SharedConfigManager::get_config_last_update()
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_config_update_time();
@@ -121,7 +137,7 @@ long SharedConfigManager::get_config_last_update()
 
 bool SharedConfigManager::set_config_last_update(long config_update_timestamp)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->set_config_update_time(config_update_timestamp);
@@ -132,7 +148,7 @@ bool SharedConfigManager::set_config_last_update(long config_update_timestamp)
 
 long SharedConfigManager::get_log_max_backup()
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_log_max_backup();
@@ -142,7 +158,7 @@ long SharedConfigManager::get_log_max_backup()
 
 bool SharedConfigManager::set_log_max_backup(long log_max_backup)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->set_log_max_backup(log_max_backup);
@@ -153,7 +169,7 @@ bool SharedConfigManager::set_log_max_backup(long log_max_backup)
 
 long SharedConfigManager::get_debug_level()
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_debug_level();
@@ -163,7 +179,7 @@ long SharedConfigManager::get_debug_level()
 
 bool SharedConfigManager::set_debug_level(long debug_level)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         shared_config_block->set_debug_level(debug_level);
@@ -172,9 +188,19 @@ bool SharedConfigManager::set_debug_level(long debug_level)
     return false;
 }
 
+bool SharedConfigManager::set_debug_level(BaseReader *br)
+{
+    if (!br || br->has_error())
+    {
+        return false;
+    }
+    long debug_level = br->fetch_int64({"debug.level"}, 0);
+    return set_debug_level(debug_level);
+}
+
 bool SharedConfigManager::set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
         for (auto &action : buildin_action_map)
@@ -188,7 +214,7 @@ bool SharedConfigManager::set_buildin_check_action(std::map<OpenRASPCheckType, O
 
 OpenRASPActionType SharedConfigManager::get_buildin_check_action(OpenRASPCheckType check_type)
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
         return shared_config_block->get_check_type_action(check_type);
@@ -264,21 +290,140 @@ std::string SharedConfigManager::get_rasp_id() const
     return this->rasp_id;
 }
 
-void SharedConfigManager::set_sql_error_codes(std::vector<long> error_codes)
+bool SharedConfigManager::write_weak_password_array_to_shm(const void *source, size_t num)
 {
-    if (rwlock != nullptr && rwlock->write_try_lock())
+    if (rwlock != nullptr && rwlock->write_lock())
     {
         WriteUnLocker auto_unlocker(rwlock);
-        shared_config_block->set_sql_error_codes(error_codes);
+        return shared_config_block->reset_weak_password_array(source, num);
+    }
+    return false;
+}
+
+bool SharedConfigManager::build_weak_password_array(std::vector<std::string> &weak_passwords)
+{
+    DoubleArrayTrie dat;
+    std::sort(weak_passwords.begin(), weak_passwords.end());
+    dat.build(weak_passwords.size(), &weak_passwords, 0, 0);
+    return write_weak_password_array_to_shm(dat.array(), dat.total_size());
+}
+
+bool SharedConfigManager::build_weak_password_array(BaseReader *br)
+{
+    if (!br || br->has_error())
+    {
+        return false;
+    }
+    static std::vector<std::string> dafault_weak_passwords =
+        {
+            "",
+            "root",
+            "123",
+            "123456",
+            "a123456",
+            "123456a",
+            "111111",
+            "123123",
+            "admin",
+            "user",
+            "mysql"};
+    std::vector<std::string> hook_white_key({"security.weak_passwords"});
+    std::vector<std::string> weak_passwords = br->fetch_strings(hook_white_key, dafault_weak_passwords);
+    if (!build_weak_password_array(weak_passwords))
+    {
+        return build_weak_password_array(dafault_weak_passwords);
+    }
+    return true;
+}
+
+bool SharedConfigManager::is_password_weak(std::string password)
+{
+    DoubleArrayTrie dat;
+    if (rwlock != nullptr && rwlock->read_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        dat.load_existing_array((void *)shared_config_block->get_weak_password_array(), shared_config_block->get_weak_password_array_size());
+        DoubleArrayTrie::result_pair_type result_pair = dat.match_search(password.c_str());
+        return result_pair.value != -1;
+    }
+    return false;
+}
+
+void SharedConfigManager::set_mysql_error_codes(std::vector<int64_t> error_codes)
+{
+    if (rwlock != nullptr && rwlock->write_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_mysql_error_codes(error_codes);
     }
 }
 
-bool SharedConfigManager::sql_error_code_exist(long err_code)
+bool SharedConfigManager::mysql_error_code_exist(int64_t err_code)
 {
-    if (rwlock != nullptr && rwlock->read_try_lock())
+    if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
-        return shared_config_block->sql_error_code_exist(err_code);
+        return shared_config_block->mysql_error_code_exist(err_code);
+    }
+    return false;
+}
+
+void SharedConfigManager::set_sqlite_error_codes(std::vector<int64_t> error_codes)
+{
+    if (rwlock != nullptr && rwlock->write_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        shared_config_block->set_sqlite_error_codes(error_codes);
+    }
+}
+
+bool SharedConfigManager::sqlite_error_code_exist(int64_t err_code)
+{
+    if (rwlock != nullptr && rwlock->read_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        return shared_config_block->sqlite_error_code_exist(err_code);
+    }
+    return false;
+}
+
+bool SharedConfigManager::write_pg_error_array_to_shm(const void *source, size_t num)
+{
+    if (rwlock != nullptr && rwlock->write_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        return shared_config_block->reset_pg_error_array(source, num);
+    }
+    return false;
+}
+
+bool SharedConfigManager::build_pg_error_array(std::vector<std::string> &pg_errors)
+{
+    DoubleArrayTrie dat;
+    std::sort(pg_errors.begin(), pg_errors.end());
+    dat.build(pg_errors.size(), &pg_errors, 0, 0);
+    return write_pg_error_array_to_shm(dat.array(), dat.total_size());
+}
+
+bool SharedConfigManager::build_pg_error_array(Isolate *isolate)
+{
+    if (!isolate)
+    {
+        return false;
+    }
+    std::vector<std::string> pg_errs = extract_string_array(isolate, "RASP.algorithmConfig.sql_exception.pgsql.error_code", SharedConfigBlock::PGSQL_ERROR_CODE_MAX_SIZE);
+    return build_pg_error_array(pg_errs);
+}
+
+bool SharedConfigManager::pg_error_filtered(std::string error)
+{
+    DoubleArrayTrie dat;
+    if (rwlock != nullptr && rwlock->read_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        dat.load_existing_array((void *)shared_config_block->get_pg_error_array(), shared_config_block->get_pg_error_array_size());
+        DoubleArrayTrie::result_pair_type result_pair = dat.match_search(error.c_str());
+        return result_pair.value != -1;
     }
     return false;
 }

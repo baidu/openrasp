@@ -9,22 +9,22 @@
       <div class="card-body">
         <p>最多允许200个URL，单条URL长度限制为200字符</p>
         <b-table hover bordered :items="data" :fields="fields">
-          <template slot="index" slot-scope="scope" nowrap>
-            {{ scope.index + 1 }}
+          <template v-slot:cell(index)="data" nowrap>
+            {{ data.index + 1 }}
           </template>
-          <template slot="hook" slot-scope="scope">
-            <span v-if="scope.value.all">
+          <template v-slot:cell(hook)="data">
+            <span v-if="data.value.all">
               所有 Hook 点
             </span>
-            <span v-if="!scope.value.all">
-              {{ whitelist2str(scope.value) }}
+            <span v-if="!data.value.all">
+              {{ whitelist2str(data.value) }}
             </span>
           </template>
-          <template slot="command" slot-scope="scope">
-            <a href="javascript:" @click="showModal(scope.index)">
+          <template v-slot:cell(command)="data">
+            <a href="javascript:" @click="showModal(data.index)">
               编辑
             </a>
-            <a href="javascript:" @click="deleteItem(scope.index)">
+            <a href="javascript:" @click="deleteItem(data.index)">
               删除
             </a>
           </template>
@@ -46,11 +46,15 @@
         <input ref="focus" v-model.trim="modalData.url" maxlength="200" type="text" class="form-control" maxlen="200">
       </div>
       <div class="form-group">
+        <label>白名单备注（可选）</label>
+        <input ref="focus" v-model.trim="modalData.description" maxlength="200" type="text" class="form-control" maxlen="200">
+      </div>
+      <div class="form-group">
         <label>检测点</label>
         <div class="row">
           <div class="col-12">
             <label class="custom-switch">
-              <input v-model="modalData.hook.all" type="checkbox" checked="modalData.hook.all" class="custom-switch-input">
+              <input v-model="modalData.hook.all" type="checkbox" class="custom-switch-input">
               <span class="custom-switch-indicator" />
               <span class="custom-switch-description">
                 关闭所有检测点
@@ -61,7 +65,7 @@
         <div v-if="!modalData.hook.all" class="row">
           <div v-for="(item, key) in attack_types" :key="key" class="col-6">
             <label class="custom-switch">
-              <input v-model="modalData.hook[key]" type="checkbox" checked="modalData.hook[key]" class="custom-switch-input">
+              <input type="checkbox" :value="key" v-model="modalData.hook[key]" class="custom-switch-input">
               <span class="custom-switch-indicator" />
               <span class="custom-switch-description">
                 {{ item }}
@@ -96,9 +100,10 @@ export default {
         { key: 'index', label: '#', tdAttr: {'nowrap': ''} },
         { key: 'url', label: 'URL' },
         { key: 'hook', label: '检测点', tdAttr: {'style': 'min-width: 150px; '} },
+        { key: 'description', label: '备注' },
         { key: 'command', label: '操作', tdAttr: {'nowrap': ''} }
       ],
-      modalData: { url: '', hook: {}},
+      modalData: { url: '', hook: {}, description: ''},
       attack_types
     }
   },
@@ -149,9 +154,9 @@ export default {
         }
 
         this.$set(this.data, this.index, this.modalData)
-        console.log (this.index, this.data)
+        // console.log (this.index, this.data)
       }
-      this.modalData = { url: '', hook: {}}
+      this.modalData = { url: '', hook: {}, description: ''}
       this.$refs.modal.hide()
       this.setSticky(true)
     },
@@ -162,6 +167,13 @@ export default {
       this.data.splice(index, 1)
     },
     doSave() {
+      this.data.forEach(element=>{
+          for (let i in element.hook) {
+              if(!element.hook[i]) {
+                  delete element.hook[i]
+              }
+          }
+      })
       return this.request.post('v1/api/app/whitelist/config', {
         app_id: this.current_app.id,
         config: this.data

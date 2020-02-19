@@ -38,19 +38,12 @@ static void security_check(bool flag, int id, const char *msg)
 {
     if (!flag)
     {
-        zval result;
-        array_init(&result);
-        add_assoc_long(&result, "policy_id", id);
-        zval policy_params;
-        array_init(&policy_params);
-        add_assoc_long(&policy_params, "pid", getpid());
-        add_assoc_string(&policy_params, "sapi", const_cast<char *>(sapi_module.name ? sapi_module.name : ""));
-        add_stack_to_params(&policy_params);
-        add_assoc_zval(&result, "policy_params", &policy_params);
-        add_assoc_string(&result, "message", const_cast<char *>(msg));
-        std::string base_str = json_encode_from_zval(&result TSRMLS_CC);
-        zval_dtor(&result);
-        openrasp::JsonReader base_json(base_str);
+        openrasp::JsonReader base_json;
+        base_json.write_int64({"policy_id"}, id);
+        base_json.write_int64({"policy_params", "pid"}, getpid());
+        base_json.write_string({"policy_params", "sapi"}, (sapi_module.name ? sapi_module.name : ""));
+        base_json.write_vector({"policy_params", "stack"}, format_debug_backtrace_arr());
+        base_json.write_string({"message"}, msg);
         if (!base_json.has_error())
         {
             LOG_G(policy_logger).log(LEVEL_INFO, base_json);

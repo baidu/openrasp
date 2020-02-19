@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-2020 Baidu Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.baidu.openrasp.cloud.syslog;
 
 import com.baidu.openrasp.cloud.httpappender.HttpAppender;
@@ -10,8 +26,12 @@ import com.baidu.openrasp.tool.FileUtil;
 import org.apache.log4j.*;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.helpers.OnlyOnceErrorHandler;
+import org.apache.log4j.varia.NullAppender;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.util.Map;
 
 /**
  * @description: 根据配置动态开启syslog
@@ -73,21 +93,42 @@ public class DynamicConfigAppender {
     /**
      * 初始化log4j的logger，并添加fileAppender
      */
-    public static void initLog4jLogger() throws Exception {
+    public static void initLog4jLogger() {
+        String log4jBaseDir = getLog4jPath(false, null);
+        if (log4jBaseDir == null) {
+            log4jBaseDir = FileUtil.getBaseDir();
+        }
         for (AppenderMappedLogger type : AppenderMappedLogger.values()) {
             if (type.ordinal() <= 3) {
                 if ("root".equals(type.getLogger())) {
-                    BasicConfigurator.configure(createFileAppender(type.getAppender(), type.getTargetPath()));
-                    Logger.getRootLogger().setLevel(Level.INFO);
+                    if (log4jBaseDir.isEmpty()) {
+                        Logger.getRootLogger().addAppender(createNullAppender(type.getAppender()));
+                        Logger.getRootLogger().setLevel(Level.INFO);
+                    } else {
+                        if (!(new File(log4jBaseDir).exists() && new File(log4jBaseDir).isDirectory())) {
+                            log4jBaseDir = FileUtil.getBaseDir();
+                        }
+                        BasicConfigurator.configure(createFileAppender(type.getAppender(), log4jBaseDir + type.getTargetPath()));
+                        Logger.getRootLogger().setLevel(Level.INFO);
+
+                    }
                 } else {
                     Logger logger = Logger.getLogger(type.getLogger());
-                    logger.setLevel(Level.INFO);
-                    logger.setAdditivity(false);
-                    logger.addAppender(createFileAppender(type.getAppender(), type.getTargetPath()));
+                    if (log4jBaseDir.isEmpty()) {
+                        logger.addAppender(createNullAppender(type.getAppender()));
+                        logger.setLevel(Level.INFO);
+                        logger.setAdditivity(false);
+                    } else {
+                        if (!(new File(log4jBaseDir).exists() && new File(log4jBaseDir).isDirectory())) {
+                            log4jBaseDir = FileUtil.getBaseDir();
+                        }
+                        logger.addAppender(createFileAppender(type.getAppender(), log4jBaseDir + type.getTargetPath()));
+                        logger.setLevel(Level.INFO);
+                        logger.setAdditivity(false);
+                    }
                 }
             }
         }
-
         setLogMaxBackup();
         //初始化时是否开启log4j的debug的功能
         enableDebug();
@@ -96,12 +137,11 @@ public class DynamicConfigAppender {
     /**
      * 创建fileAppender
      */
-    public static OpenraspDailyRollingFileAppender createFileAppender(String appender, String targetPath) throws Exception {
+    public static OpenraspDailyRollingFileAppender createFileAppender(String appender, String targetPath) {
         OpenraspDailyRollingFileAppender fileAppender = new OpenraspDailyRollingFileAppender();
         fileAppender.setName(appender);
         fileAppender.setErrorHandler(new OnlyOnceErrorHandler());
-        String raspBaseDir = FileUtil.getBaseDir();
-        fileAppender.setFile(raspBaseDir + targetPath);
+        fileAppender.setFile(targetPath);
         fileAppender.setAppend(true);
         fileAppender.setDatePattern("'.'yyyy-MM-dd");
         fileAppender.setEncoding("UTF-8");
@@ -114,6 +154,15 @@ public class DynamicConfigAppender {
         fileAppender.setLayout(layout);
         fileAppender.activateOptions();
         return fileAppender;
+    }
+
+    /**
+     * 创建NullAppender
+     */
+    public static NullAppender createNullAppender(String appenderName) {
+        NullAppender appender = new NullAppender();
+        appender.setName(appenderName);
+        return appender;
     }
 
     /**
@@ -211,6 +260,73 @@ public class DynamicConfigAppender {
             fileAppender.rollFiles(new File(fileName));
         } catch (Exception e) {
             LogLog.warn("the appender " + fileAppender.getName() + " roll failed");
+        }
+    }
+
+    /**
+     * 获取log4j的日志自定义路径
+     */
+    private static String getLog4jPath(boolean isCloud, String path) {
+        if (isCloud) {
+            return path;
+        } else {
+            String configPath = FileUtil.getBaseDir() + File.separator + "conf" + File.separator + "openrasp.yml";
+            File configFile = new File(configPath);
+            if (configFile.exists()) {
+                try {
+                    Yaml yaml = new Yaml();
+                    Map<String, Object> configMap = yaml.loadAs(new FileInputStream(configPath), Map.class);
+                    if (configMap != null) {
+                        Boolean cloudEnable = (Boolean) configMap.get("cloud.enable");
+                        if (cloudEnable != null && cloudEnable) {
+                            return null;
+                        } else {
+                            return (String) configMap.get("log.path");
+                        }
+                    }
+                } catch (Exception e) {
+                    String message = "get log4j custom path failed from openrasp.yml";
+                    LogLog.warn(message, e);
+                }
+            }
+            return null;
+        }
+    }
+
+    /**
+     * 更新log4j的日志自定义路径
+     */
+    public static void updateLog4jPath(boolean isCloud, String path) {
+        String log4jBaseDir = getLog4jPath(isCloud, path);
+        if (log4jBaseDir == null) {
+            return;
+        }
+        for (AppenderMappedLogger type : AppenderMappedLogger.values()) {
+            if (type.ordinal() <= 3) {
+                Logger logger;
+                if ("root".equals(type.getLogger())) {
+                    logger = Logger.getRootLogger();
+                } else {
+                    logger = Logger.getLogger(type.getLogger());
+                }
+                if (log4jBaseDir.isEmpty()) {
+                    logger.removeAppender(type.getAppender());
+                    logger.addAppender(createNullAppender(type.getAppender()));
+                } else {
+                    if (!(new File(log4jBaseDir).exists() && new File(log4jBaseDir).isDirectory() && new File(log4jBaseDir).canWrite())) {
+                        return;
+                    }
+                    Appender appender = logger.getAppender(type.getAppender());
+                    if (appender instanceof FileAppender) {
+                        if (!(log4jBaseDir + type.getTargetPath()).equals(((FileAppender) appender).getFile())) {
+                            ((FileAppender) appender).setFile(log4jBaseDir + type.getTargetPath());
+                        }
+                    } else if (appender instanceof NullAppender) {
+                        logger.removeAppender(type.getAppender());
+                        logger.addAppender(createFileAppender(type.getAppender(), log4jBaseDir + type.getTargetPath()));
+                    }
+                }
+            }
         }
     }
 }

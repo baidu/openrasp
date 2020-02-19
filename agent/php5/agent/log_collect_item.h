@@ -36,34 +36,40 @@ public:
   LogCollectItem(int instance_id, bool collect_enable);
 
   bool has_error() const;
-  void update_fpos();
-  void update_last_post_time();
-  void determine_fpos();
+  void update_collect_status();
   inline void update_curr_suffix();
-  void save_status_snapshot() const;
+  void update_status_snapshot();
 
   bool need_rotate() const;
   void handle_rotate(bool need_rotate);
 
-  bool get_post_logs(std::string &body);
+  void clear_cache_body();
+  void refresh_cache_body();
+  std::string get_cache_body() const;
   bool get_collect_enable() const;
   std::string get_cpmplete_url() const;
   std::string get_active_log_file() const;
 
 private:
   static const std::string status_file;
+
   const int instance_id;
-  std::string curr_suffix;
-  std::ifstream ifs;
-  int fpos = 0;
-  long st_ino = 0;
-  long last_post_time = 0;
   bool collect_enable = false;
   bool error = false;
 
+  std::ifstream ifs;
+
+  int fpos = 0;
+  long st_ino = 0;
+  long last_post_time = 0;
+  std::string curr_suffix;
+
+  std::string cached_body;
+  long cached_count = 0;
+
 private:
   void clear();
-  void open_active_log();
+  void update_fpos();
   void cleanup_expired_logs() const;
   inline std::string get_base_dir_path() const;
   long get_active_file_inode();

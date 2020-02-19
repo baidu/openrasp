@@ -149,7 +149,7 @@ plugin.register('include', function (params, context) {
 
 plugin.register('ssrf', function (params, context) {
     plugin.log('ssrf', params);
-    if (params.hostname === '0x7f.0x0.0x0.0x1' && params.url === 'http://0x7f.0x0.0x0.0x1:8080/app') {
+    if (params.hostname === '127.0.0.1' && params.url === 'http://127.0.0.1:8080/app') {
         return {
             action: 'block'
         }

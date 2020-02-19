@@ -34,10 +34,10 @@ func TestHeartBeat(t *testing.T) {
 				"plugin_version": start.TestRasp.PluginVersion + time.Now().String(),
 				"plugin_md5":     "5165165b1ccc",
 				"config_time":    0,
+				"hostname":       "my-test",
 			}))
 			So(r.Status, ShouldEqual, 0)
 		})
-
 		Convey("when the app id doesn't exist", func() {
 			monkey.PatchInstanceMethod(reflect.TypeOf(&context.BeegoInput{}), "Header",
 				func(input *context.BeegoInput, key string) string {
@@ -87,6 +87,15 @@ func TestHeartBeat(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 			monkey.Unpatch(models.GetSelectedPlugin)
 		})
-
+		Convey("when the length of rasp hostname must be less than 1024", func() {
+			r := inits.GetResponse("POST", "/v1/agent/heartbeat", inits.GetJson(map[string]interface{}{
+				"rasp_id":        start.TestRasp.Id,
+				"plugin_version": start.TestRasp.PluginVersion + time.Now().String(),
+				"plugin_md5":     "5165165b1ccc",
+				"config_time":    0,
+				"hostname":       inits.GetLongString(1025),
+			}))
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
 	})
 }

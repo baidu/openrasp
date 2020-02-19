@@ -24,6 +24,7 @@ import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -45,8 +46,8 @@ public class XssChecker extends ConfigurableChecker {
         JsonObject config = Config.getConfig().getAlgorithmConfig();
         String action = getActionElement(config, CONFIG_KEY_XSS_USER_INPUT);
         LinkedList<EventInfo> result = new LinkedList<EventInfo>();
-        String content = String.valueOf(checkParameter.getParam("html_body"));
-        if (!EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
+        String content = String.valueOf(checkParameter.getParam("content"));
+        if (!StringUtils.isEmpty(action) && !EventInfo.CHECK_ACTION_IGNORE.equals(action)) {
             if (HookHandler.requestCache.get() != null && content != null) {
                 Map<String, String[]> parameterMap = HookHandler.requestCache.get().getParameterMap();
                 if (parameterMap != null) {
@@ -77,7 +78,7 @@ public class XssChecker extends ConfigurableChecker {
                                     }
                                     String message = "Reflected XSS attack detected, parameter name: " + entry.getKey();
                                     Map<String, Object> params = (Map<String, Object>) checkParameter.getParams();
-                                    params.remove("html_body");
+                                    params.remove("content");
                                     params.put("name", entry.getKey());
                                     params.put("value", value);
                                     result.add(AttackInfo.createLocalAttackInfo(checkParameter, action, message, CONFIG_KEY_XSS_USER_INPUT));

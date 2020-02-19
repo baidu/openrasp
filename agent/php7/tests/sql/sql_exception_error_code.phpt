@@ -36,4 +36,4 @@ include(__DIR__.'/../timezone.inc');
 passthru('tail -n 1 /tmp/openrasp/logs/rasp/rasp.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
-.*Size of RASP.algorithmConfig.sql_exception.error_code must.*
+.*Size of RASP.algorithmConfig.sql_exception.mysql.error_code must.*

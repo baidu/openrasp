@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+#include "utils/regex.h"
+#include "hook/data/sql_error_object.h"
+#include "hook/checker/v8_detector.h"
+#include "hook/data/sql_object.h"
 #include "openrasp_sql.h"
 #include "openrasp_hook.h"
 
@@ -33,11 +37,19 @@ POST_HOOK_FUNCTION_EX(exec, pdo, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, pdo, SQL_PREPARED);
 POST_HOOK_FUNCTION_EX(prepare, pdo, SQL_ERROR);
 
-static void fetch_pdo_error_info(const char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg);
-static void fetch_pdo_exception_info(const char *driver_name, zval *object, std::string &error_code, std::string &errro_msg);
-static void parse_error_info(const char *driver_name, zval *error_info, std::string &error_code, std::string &errro_msg);
+const static std::set<std::string> supported_server = {"mysql", "pgsql", "sqlite"};
 
-extern void parse_connection_string(char *connstring, sql_connection_entry *sql_connection_p);
+static void error_info_check(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *error_info);
+static void pdo_exception_intercept(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *object);
+static void pdo_error_info_intercept(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *statement);
+
+extern void parse_connection_string(char *connstring, openrasp::data::SqlConnectionObject &sql_connection_obj);
+
+static bool is_server_supported(const std::string &server)
+{
+    auto found = supported_server.find(server);
+    return found != supported_server.end();
+}
 
 static char *dsn_from_uri(char *uri, char *buf, size_t buflen)
 {
@@ -53,7 +65,7 @@ static char *dsn_from_uri(char *uri, char *buf, size_t buflen)
     return dsn;
 }
 
-static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
     char *data_source = nullptr;
     size_t data_source_len = 0;
@@ -70,7 +82,7 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         return false;
     }
 
-    sql_connection_p->set_connection_string(data_source);
+    sql_connection_obj.set_connection_string(data_source);
     /* parse the data source name */
     colon = strchr(data_source, ':');
 
@@ -114,10 +126,10 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
     {
         if (strncmp(server_names[index], data_source, strlen(server_names[index])) == 0)
         {
-            sql_connection_p->set_server((const char *)server_names[index]);
+            sql_connection_obj.set_server((const char *)server_names[index]);
         }
     }
-    if (sql_connection_p->get_server() == "mysql")
+    if (sql_connection_obj.get_server() == "mysql")
     {
         struct pdo_data_src_parser mysql_vars[] = {
             {"charset", nullptr, 0},
@@ -127,17 +139,17 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             {"unix_socket", nullptr, 0},
         };
         int matches = php_pdo_parse_data_source(colon + 1, strlen(colon + 1), mysql_vars, 5);
-        sql_connection_p->set_host(mysql_vars[2].optval);
-        sql_connection_p->set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
-        sql_connection_p->set_port(atoi(mysql_vars[3].optval));
-        sql_connection_p->set_socket(SAFE_STRING(mysql_vars[4].optval));
+        sql_connection_obj.set_host(mysql_vars[2].optval);
+        sql_connection_obj.set_using_socket(nullptr == mysql_vars[2].optval || strcmp("localhost", mysql_vars[2].optval) == 0);
+        sql_connection_obj.set_port(atoi(mysql_vars[3].optval));
+        sql_connection_obj.set_socket(SAFE_STRING(mysql_vars[4].optval));
         if (username)
         {
-            sql_connection_p->set_username(username);
+            sql_connection_obj.set_username(username);
         }
         if (password)
         {
-            sql_connection_p->set_password(password);
+            sql_connection_obj.set_password(password);
         }
         for (int i = 0; i < 5; i++)
         {
@@ -147,7 +159,7 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
             }
         }
     }
-    else if (sql_connection_p->get_server() == "pgsql")
+    else if (sql_connection_obj.get_server() == "pgsql")
     {
         char *e = nullptr;
         char *p = nullptr;
@@ -175,7 +187,7 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
         {
             spprintf(&conn_str, 0, "%s", (char *)dhn_data_source);
         }
-        parse_connection_string(conn_str, sql_connection_p);
+        parse_connection_string(conn_str, sql_connection_obj);
         efree(conn_str);
         efree(dhn_data_source);
     }
@@ -189,35 +201,32 @@ static bool init_pdo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connecti
 void pre_pdo_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = Z_PDO_DBH_P(getThis());
-    char *statement = nullptr;
-    size_t statement_len = 0;
+    zval *statement = nullptr;
 
     if (!ZEND_NUM_ARGS() ||
-        FAILURE == zend_parse_parameters(1, "s", &statement, &statement_len))
+        FAILURE == zend_parse_parameters(1, "z", &statement))
     {
         return;
     }
 
-    plugin_sql_check(statement, statement_len, dbh->driver->driver_name);
+    plugin_sql_check(statement, dbh->driver->driver_name);
 }
 
 void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = Z_PDO_DBH_P(getThis());
-    char *driver_name = (char *)dbh->driver->driver_name;
-    if (strcmp(driver_name, "mysql"))
+    std::string driver_name = std::string(dbh->driver->driver_name);
+    if (!is_server_supported(driver_name))
     {
         return;
     }
-    char *statement = nullptr;
-    size_t statement_len = 0;
+    zval *statement = nullptr;
     if (!ZEND_NUM_ARGS() ||
-        FAILURE == zend_parse_parameters(1, "s", &statement, &statement_len))
+        FAILURE == zend_parse_parameters(1, "z", &statement))
     {
         return;
     }
-    std::string error_code;
-    std::string error_msg;
+    openrasp::data::SqlObject sql_obj(driver_name, statement);
     if (Z_TYPE_P(return_value) == IS_FALSE)
     {
         if (dbh->error_mode == PDO_ERRMODE_EXCEPTION)
@@ -226,17 +235,13 @@ void post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
             {
                 zval object;
                 ZVAL_OBJ(&object, EG(exception));
-                fetch_pdo_exception_info(driver_name, &object, error_code, error_msg);
+                pdo_exception_intercept(sql_obj, driver_name, &object);
             }
         }
         else
         {
-            fetch_pdo_error_info(driver_name, getThis(), error_code, error_msg);
+            pdo_error_info_intercept(sql_obj, driver_name, getThis());
         }
-    }
-    if (!error_code.empty())
-    {
-        sql_query_error_alarm(driver_name, statement, error_code, error_msg);
     }
 }
 
@@ -252,10 +257,10 @@ void post_pdo_exec_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void post_pdo___construct_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (Z_TYPE_P(getThis()) == IS_OBJECT && !EG(exception) &&
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry))
+    if (Z_TYPE_P(getThis()) == IS_OBJECT && !EG(exception))
     {
-        handle_block();
+        openrasp::data::SqlConnectionObject sco;
+        sql_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_pdo_connection_entry, sco);
     }
 }
 
@@ -263,19 +268,13 @@ void post_pdo___construct_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     if (EG(exception) && EG(exception)->ce == php_pdo_get_exception())
     {
-        sql_connection_entry conn_entry;
-        if (!init_pdo_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, &conn_entry))
+        openrasp::data::SqlConnectionObject sco;
+        init_pdo_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sco);
+        if (is_server_supported(sco.get_server()))
         {
-            return;
-        }
-        std::string error_code;
-        std::string error_msg;
-        zval object;
-        ZVAL_OBJ(&object, EG(exception));
-        fetch_pdo_exception_info(conn_entry.get_server().c_str(), &object, error_code, error_msg);
-        if (!error_code.empty())
-        {
-            sql_connect_error_alarm(&conn_entry, error_code, error_msg);
+            zval object;
+            ZVAL_OBJ(&object, EG(exception));
+            pdo_exception_intercept(sco, sco.get_server().c_str(), &object);
         }
     }
 }
@@ -283,16 +282,14 @@ void post_pdo___construct_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 void pre_pdo_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     pdo_dbh_t *dbh = Z_PDO_DBH_P(getThis());
-    char *statement = nullptr;
-    size_t statement_len = 0;
+    zval *statement = nullptr;
     zval *options = nullptr;
 
-    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "s|a", &statement,
-                                         &statement_len, &options))
+    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "z|a", &statement, &options))
     {
         return;
     }
-    plugin_sql_check(statement, statement_len, dbh->driver->driver_name);
+    plugin_sql_check(statement, dbh->driver->driver_name);
 }
 
 void post_pdo_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
@@ -300,72 +297,96 @@ void post_pdo_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
     post_pdo_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void fetch_pdo_error_info(const char *driver_name, zval *statement, std::string &error_code, std::string &errro_msg)
+void error_info_check(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *error_info)
 {
-    zval function_name, retval;
-    ZVAL_STRING(&function_name, "errorinfo");
-    if (call_user_function(EG(function_table), statement, &function_name, &retval, 0, nullptr) == SUCCESS)
+    if (nullptr != error_info && Z_TYPE_P(error_info) == IS_ARRAY)
     {
-        parse_error_info(driver_name, &retval, error_code, errro_msg);
-        zval_ptr_dtor(&retval);
+        zval *tmp = nullptr;
+        std::string error_msg;
+        if ((tmp = zend_hash_index_find(Z_ARRVAL_P(error_info), 2)) != nullptr &&
+            Z_TYPE_P(tmp) == IS_STRING)
+        {
+            error_msg = std::string(Z_STRVAL_P(tmp));
+        }
+        ulong code_index = driver_name == "pgsql" ? 0 : 1;
+        if ((tmp = zend_hash_index_find(Z_ARRVAL_P(error_info), code_index)) != nullptr)
+        {
+            if (Z_TYPE_P(tmp) == IS_LONG)
+            {
+                openrasp::data::SqlErrorObject seo(v8_material, driver_name, Z_LVAL_P(tmp), error_msg);
+                openrasp::checker::V8Detector error_checker(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+                error_checker.run();
+            }
+            else if (Z_TYPE_P(tmp) == IS_STRING)
+            {
+                openrasp::data::SqlErrorObject seo(v8_material, driver_name, Z_STRVAL_P(tmp), error_msg);
+                openrasp::checker::V8Detector error_checker(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+                error_checker.run();
+            }
+        }
     }
-    zval_ptr_dtor(&function_name);
 }
 
-void fetch_pdo_exception_info(const char *driver_name, zval *object, std::string &error_code, std::string &errro_msg)
+void pdo_error_info_intercept(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *statement)
+{
+    zval retval;
+    if (openrasp_call_user_function(EG(function_table), statement, "errorinfo", &retval, 0, nullptr))
+    {
+        error_info_check(v8_material, driver_name, &retval);
+        zval_ptr_dtor(&retval);
+    }
+}
+
+static void pdo_exception_intercept(const openrasp::data::V8Material &v8_material, const std::string &driver_name, zval *object)
 {
     zval rv;
     zval *error_info = zend_read_property(php_pdo_get_exception(), object, "errorInfo", sizeof("errorInfo") - 1, 1, &rv);
     if (nullptr != error_info && Z_TYPE_P(error_info) == IS_ARRAY)
     {
-        parse_error_info(driver_name, error_info, error_code, errro_msg);
+        error_info_check(v8_material, driver_name, error_info);
     }
     else
     {
-        zval *code = zend_read_property(php_pdo_get_exception(), object, "code", sizeof("code") - 1, 1, &rv);
-        if (nullptr == code)
+        if (driver_name == "mysql" ||
+            driver_name == "sqlite")
         {
-            return;
-        }
-        long error_code_num = 0;
-        if (Z_TYPE_P(code) == IS_LONG)
-        {
-            error_code_num = Z_LVAL_P(code);
-        }
-        else if (Z_TYPE_P(code) == IS_STRING)
-        {
-            error_code_num = atol(Z_STRVAL_P(code));
-        }
-        if (!is_mysql_error_code_monitored(error_code_num))
-        {
-            return;
-        }
-        error_code = std::to_string(error_code_num);
-        zval *message = zend_read_property(php_pdo_get_exception(), object, "message", sizeof("message") - 1, 1, &rv);
-        if (Z_TYPE_P(message) == IS_STRING)
-        {
-            errro_msg = std::string(Z_STRVAL_P(message));
-        }
-    }
-}
-
-void parse_error_info(const char *driver_name, zval *error_info, std::string &error_code, std::string &errro_msg)
-{
-    if (nullptr != error_info && Z_TYPE_P(error_info) == IS_ARRAY)
-    {
-        zval *tmp = nullptr;
-        if ((tmp = zend_hash_index_find(Z_ARRVAL_P(error_info), 2)) != nullptr &&
-            Z_TYPE_P(tmp) == IS_STRING)
-        {
-            errro_msg = std::string(Z_STRVAL_P(tmp));
-        }
-        if ((tmp = zend_hash_index_find(Z_ARRVAL_P(error_info), 1)) != nullptr)
-        {
-            if (0 == strcmp(driver_name, "mysql") &&
-                Z_TYPE_P(tmp) == IS_LONG &&
-                is_mysql_error_code_monitored(Z_LVAL_P(tmp)))
+            zval *code = zend_read_property(php_pdo_get_exception(), object, "code", sizeof("code") - 1, 1, &rv);
+            if (nullptr == code)
             {
-                error_code = std::to_string(Z_LVAL_P(tmp));
+                return;
+            }
+            std::string error_msg;
+            zval *message = zend_read_property(php_pdo_get_exception(), object, "message", sizeof("message") - 1, 1, &rv);
+            if (Z_TYPE_P(message) == IS_STRING)
+            {
+                error_msg = std::string(Z_STRVAL_P(message));
+            }
+            if (Z_TYPE_P(code) == IS_LONG)
+            {
+                openrasp::data::SqlErrorObject seo(v8_material, driver_name, Z_LVAL_P(code), error_msg);
+                openrasp::checker::V8Detector error_checker(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+                error_checker.run();
+            }
+            else if (Z_TYPE_P(code) == IS_STRING)
+            {
+                openrasp::data::SqlErrorObject seo(v8_material, driver_name, Z_STRVAL_P(code), error_msg);
+                openrasp::checker::V8Detector error_checker(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+                error_checker.run();
+            }
+        }
+        else if (driver_name == "pgsql")
+        {
+            zval *message = zend_read_property(php_pdo_get_exception(), object, "message", sizeof("message") - 1, 1, &rv);
+            if (nullptr != message && Z_TYPE_P(message) == IS_STRING)
+            {
+                std::string error_msg = std::string(Z_STRVAL_P(message), Z_STRLEN_P(message));
+                if (openrasp::regex_search(error_msg.c_str(), "^SQLSTATE\\[[0-9A-Z]{5}\\] .*"))
+                {
+                    std::string error_code = error_msg.substr(9, 5);
+                    openrasp::data::SqlErrorObject seo(v8_material, driver_name, error_code, error_msg);
+                    openrasp::checker::V8Detector v8_detector(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+                    v8_detector.run();
+                }
             }
         }
     }

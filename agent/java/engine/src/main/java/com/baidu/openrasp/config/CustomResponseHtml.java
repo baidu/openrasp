@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,11 +84,6 @@ public class CustomResponseHtml extends FileScanListener {
      * @param content 自定义页面内容
      */
     private CustomResponseHtml(String content) {
-        File assetsDir = new File(Config.getConfig().getBaseDirectory() + File.separator
-                + CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR);
-        if (!assetsDir.exists()) {
-            assetsDir.mkdir();
-        }
         this.content = content;
     }
 

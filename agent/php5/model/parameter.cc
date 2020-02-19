@@ -25,7 +25,8 @@
 
 namespace openrasp
 {
-
+namespace request
+{
 Parameter::MultipartFile::MultipartFile(const std::string &filename, const std::string &tmpname)
 {
     this->filename = filename;
@@ -289,5 +290,6 @@ void Parameter::recursive_restore_files(std::vector<std::string> &keys, zval *na
         }
     }
 }
+} // namespace request
 
 } // namespace openrasp

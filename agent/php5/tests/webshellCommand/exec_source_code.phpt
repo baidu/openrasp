@@ -21,6 +21,7 @@ openrasp.root_dir=/tmp/openrasp
 a=cd
 --FILE--
 <?php
+include(__DIR__.'/../timezone.inc');
 exec($_GET['a']);
 passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
 ?>

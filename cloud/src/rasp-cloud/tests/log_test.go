@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/tests/inits"
@@ -28,7 +29,8 @@ func TestPostLog(t *testing.T) {
             "attack_params" : {
               "mysql_connection_id" : "80",
               "query" : "SELECT * FROM vuln WHERE id = 1 or 88=88 or 77=77 or 99=99 ",
-              "server" : "mysql"
+              "server" : "mysql",
+              "stack": ["java.lang.UNIXProcess.cinite", "java.lang.ProcessImpl.start"]
             },
             "attack_source" : "0:0:0:0:0:0:0:1",
             "attack_type" : "sql",
@@ -190,6 +192,7 @@ func TestLogSearch(t *testing.T) {
 		Convey("when log type is attack", func() {
 			r := inits.GetResponse("POST", "/v1/api/log/attack/search",
 				inits.GetJson(getAttackLogSearchData()))
+			fmt.Println("r:", r.Desc)
 			So(r.Status, ShouldEqual, 0)
 		})
 

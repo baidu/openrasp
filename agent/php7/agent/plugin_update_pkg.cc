@@ -33,7 +33,7 @@ PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string versio
 bool PluginUpdatePackage::build_snapshot()
 {
   Platform::Get()->Startup();
-  Snapshot snapshot("", {active_plugin}, OpenRASPInfo::PHP_OPENRASP_VERSION, 0);
+  Snapshot snapshot(process_globals.plugin_config, {active_plugin}, OpenRASPInfo::PHP_OPENRASP_VERSION, 0);
   Platform::Get()->Shutdown();
   if (!snapshot.IsOk())
   {
@@ -63,9 +63,9 @@ bool PluginUpdatePackage::build_snapshot()
     type_action_map.insert({CheckTypeTransfer::instance().name_to_type(iter->first), string_to_action(iter->second)});
   }
   openrasp::scm->set_buildin_check_action(type_action_map);
-  std::vector<long> sql_error_codes;
-  extract_sql_error_codes(isolate, sql_error_codes, SharedConfigBlock::SQL_ERROR_CODE_MAX_SIZE);
-  openrasp::scm->set_sql_error_codes(sql_error_codes);
+  openrasp::scm->set_mysql_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.mysql.error_code", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE));
+  openrasp::scm->set_sqlite_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.sqlite.error_code", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE));
+  openrasp::scm->build_pg_error_array(isolate);
   isolate->Dispose();
   Platform::Get()->Shutdown();
   return build_successful;

@@ -3,13 +3,13 @@ package test
 import (
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
+	"rasp-cloud/tests/start"
 	"github.com/bouk/monkey"
 	"reflect"
 	"gopkg.in/mgo.v2"
 	"github.com/pkg/errors"
 	"rasp-cloud/mongo"
 	"rasp-cloud/models"
-	"rasp-cloud/tests/start"
 )
 
 func TestMongoErr(t *testing.T) {
@@ -35,7 +35,7 @@ func TestMongoErr(t *testing.T) {
 			&map[string]interface{}{}, "name")
 		So(err, ShouldNotEqual, nil)
 
-		_, err = models.SetSelectedPlugin("sssssss", "sssssss")
+		_, err = models.SetSelectedPlugin("sssssss", "sssssss", "")
 		So(err, ShouldNotEqual, nil)
 
 		monkey.Patch(models.GetLoginUserName, func() (userName string, err error) {

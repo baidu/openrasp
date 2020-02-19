@@ -36,7 +36,7 @@ public:
   virtual bool shutdown();
 
   bool log_exist(long timestamp, ulong log_hash);
-
+  bool log_update(long timestamp, ulong log_hash);
 private:
   int meta_size;
   ReadWriteLock *rwlock;

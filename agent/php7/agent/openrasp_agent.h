@@ -44,6 +44,7 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid) = 0;
   virtual pid_t get_pid_from_shm() = 0;
   virtual void install_sigterm_handler(sighandler_t signal_handler);
+  virtual std::string get_name() const;
 
 protected:
   std::string name;
@@ -61,7 +62,6 @@ public:
   virtual void write_pid_to_shm(pid_t agent_pid);
   virtual pid_t get_pid_from_shm();
   virtual std::shared_ptr<PluginUpdatePackage> build_plugin_update_package(BaseReader *body_reader);
-  virtual std::map<std::string, std::vector<std::string>> build_hook_white_map(const std::vector<std::string> &keys, BaseReader *body_reader);
 
 private:
   bool do_heartbeat();
@@ -87,6 +87,7 @@ private:
 private:
   bool post_logs_via_curl(std::string &log_arr, std::string &url_string);
 };
+
 } // namespace openrasp
 
 #endif

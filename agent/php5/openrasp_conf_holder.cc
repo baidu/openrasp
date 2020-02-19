@@ -22,7 +22,7 @@ namespace openrasp
 
 bool ConfigHolder::update(BaseReader *reader)
 {
-  if (!reader)
+  if (!reader || reader->has_error())
   {
     return false;
   }
@@ -35,6 +35,7 @@ bool ConfigHolder::update(BaseReader *reader)
   clientip.update(reader);
   lru.update(reader);
   decompile.update(reader);
+  response.update(reader);
   return true;
 }
 
@@ -46,13 +47,6 @@ long ConfigHolder::GetLatestUpdateTime() const
 void ConfigHolder::SetLatestUpdateTime(long latestUpdateTime)
 {
   this->latestUpdateTime = latestUpdateTime;
-}
-
-bool ConfigHolder::updateAlgorithmConfig()
-{
-  webshell_callable.update();
-  xss.update();
-  return true;
 }
 
 } // namespace openrasp

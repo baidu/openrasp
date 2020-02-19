@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.config.ConfigItem;
+import com.baidu.openrasp.dependency.DependencyReport;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.messaging.LogTool;
@@ -41,8 +43,16 @@ import java.util.Map;
  */
 public class KeepAlive extends CloudTimerTask {
 
+    private DependencyReport dependencyReport = new DependencyReport();
+
     public KeepAlive() {
-        super(Config.getConfig().getHeartbeatInterval());
+        super("OpenRASP Heartbeat Thread");
+        dependencyReport.start();
+    }
+
+    @Override
+    public long getSleepTime() {
+        return Config.getConfig().getHeartbeatInterval();
     }
 
     @Override
@@ -62,7 +72,7 @@ public class KeepAlive extends CloudTimerTask {
     }
 
     private void handleRaspNotFound() {
-        // 关闭心跳和所有 hook 点，并且开始重新注册
+        // 暂停心跳和所有 hook 点，并且开始重新注册
         suspend();
         HookHandler.enableHook.getAndSet(false);
         new Register(new Register.RegisterCallback() {
@@ -84,7 +94,7 @@ public class KeepAlive extends CloudTimerTask {
         }
     }
 
-    public static Map<String, Object> generateParameters() {
+    public Map<String, Object> generateParameters() {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
@@ -95,7 +105,7 @@ public class KeepAlive extends CloudTimerTask {
         return params;
     }
 
-    private static void handleResponse(GenericResponse response) {
+    private void handleResponse(GenericResponse response) {
         long oldConfigTime = CloudCacheModel.getInstance().getConfigTime();
         String oldPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         Long deliveryTime = null;
@@ -150,6 +160,17 @@ public class KeepAlive extends CloudTimerTask {
                 if (configMap.get("log.maxbackup") != null) {
                     DynamicConfigAppender.setLogMaxBackup();
                 }
+                //更新log4j appender 打印日志的路径
+                if (configMap.get("log.path") != null) {
+                    String log4jPath = (String) configMap.get("log.path");
+                    DynamicConfigAppender.updateLog4jPath(true, log4jPath);
+                    DynamicConfigAppender.setLogMaxBackup();
+                    DynamicConfigAppender.fileAppenderAddBurstFilter();
+                }
+
+                if (configMap.get(ConfigItem.DEPENDENCY_CHECK_INTERVAL.toString()) != null) {
+                    dependencyReport.interrupt();
+                }
             } catch (Throwable e) {
                 LogTool.warn(ErrorType.CONFIG_ERROR, "config update failed: " + e.getMessage(), e);
             }
@@ -171,4 +192,5 @@ public class KeepAlive extends CloudTimerTask {
             new CloudHttp().commonRequest(url, content);
         }
     }
+
 }

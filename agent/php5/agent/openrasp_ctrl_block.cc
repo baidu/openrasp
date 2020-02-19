@@ -26,6 +26,7 @@ extern "C"
 namespace openrasp
 {
 
+/*agent block*/
 void OpenraspCtrlBlock::set_supervisor_id(pid_t supervisor_id)
 {
     this->supervisor_id = supervisor_id;
@@ -44,6 +45,16 @@ void OpenraspCtrlBlock::set_plugin_agent_id(pid_t plugin_agent_id)
 pid_t OpenraspCtrlBlock::get_plugin_agent_id()
 {
     return plugin_agent_id;
+}
+
+void OpenraspCtrlBlock::set_webdir_agent_id(pid_t webdir_agent_id)
+{
+    this->webdir_agent_id = webdir_agent_id;
+}
+
+pid_t OpenraspCtrlBlock::get_webdir_agent_id()
+{
+    return webdir_agent_id;
 }
 
 void OpenraspCtrlBlock::set_log_agent_id(pid_t log_agent_id)
@@ -66,42 +77,6 @@ pid_t OpenraspCtrlBlock::get_master_pid()
     return master_pid;
 }
 
-void OpenraspCtrlBlock::set_plugin_version(const char *plugin_version)
-{
-    strncpy(this->plugin_version, plugin_version, OpenraspCtrlBlock::plugin_version_size);
-    last_update_time = (long)time(nullptr);
-}
-
-const char *OpenraspCtrlBlock::get_plugin_version()
-{
-    return plugin_version;
-}
-
-void OpenraspCtrlBlock::set_plugin_name(const char *plugin_name)
-{
-    strncpy(this->plugin_name, plugin_name, OpenraspCtrlBlock::plugin_name_size);
-}
-
-const char *OpenraspCtrlBlock::get_plugin_name()
-{
-    return plugin_name;
-}
-
-void OpenraspCtrlBlock::set_plugin_md5(const char *plugin_md5)
-{
-    strncpy(this->plugin_md5, plugin_md5, OpenraspCtrlBlock::plugin_md5_size);
-}
-
-const char *OpenraspCtrlBlock::get_plugin_md5()
-{
-    return plugin_md5;
-}
-
-long OpenraspCtrlBlock::get_last_update_time()
-{
-    return last_update_time;
-}
-
 void OpenraspCtrlBlock::set_registered(bool registered)
 {
     this->registered = registered;
@@ -111,5 +86,4 @@ bool OpenraspCtrlBlock::get_registered()
 {
     return registered;
 }
-
 } // namespace openrasp

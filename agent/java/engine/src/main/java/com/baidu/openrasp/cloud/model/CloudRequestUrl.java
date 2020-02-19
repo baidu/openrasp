@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,4 +27,5 @@ public interface CloudRequestUrl {
     String CLOUD_PLUGIN_HTTP_APPENDER_URL = cloudAddress + "/v1/agent/log/plugin";
     String CLOUD_EXCEPTION_HTTP_APPENDER_URL = cloudAddress + "/v1/agent/log/error";
     String CLOUD_STATISTICS_REPORT_URL = cloudAddress + "/v1/agent/report";
+    String CLOUD_DEPENDENCY_REPORT_URL = cloudAddress + "/v1/agent/dependency";
 }

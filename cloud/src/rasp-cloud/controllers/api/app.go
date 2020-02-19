@@ -16,18 +16,20 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego/validation"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
+	"rasp-cloud/kafka"
 	"rasp-cloud/models"
+	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"strings"
-	"fmt"
 )
 
 // Operations about app
@@ -145,8 +147,9 @@ func (o *AppController) RegenerateAppSecret() {
 // @router /general/config [post]
 func (o *AppController) UpdateAppGeneralConfig() {
 	var param struct {
-		AppId  string                 `json:"app_id"`
-		Config map[string]interface{} `json:"config"`
+		StrategyId	string		           `json:"strategy_id,omitempty"`
+		AppId       string                 `json:"app_id"`
+		Config      map[string]interface{} `json:"config"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -156,11 +159,16 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	if param.Config == nil {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
-	o.validateAppConfig(param.Config)
+
+	param.Config = o.validateAppConfig(param.Config)
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
 	}
+	//_, err = models.UpdateGeneralConfigForStrategy(param.StrategyId, param.AppId, param.Config)
+	//if err != nil {
+	//	o.ServeError(http.StatusBadRequest, "failed to update strategy general config", err)
+	//}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateGenerateConfig,
 		o.Ctx.Input.IP(), "Updated general config of "+param.AppId)
 	o.Serve(app)
@@ -169,8 +177,9 @@ func (o *AppController) UpdateAppGeneralConfig() {
 // @router /whitelist/config [post]
 func (o *AppController) UpdateAppWhiteListConfig() {
 	var param struct {
-		AppId  string                       `json:"app_id"`
-		Config []models.WhitelistConfigItem `json:"config"`
+		StrategyId	string					     `json:"strategy_id,omitempty"`
+		AppId       string                       `json:"app_id"`
+		Config      []models.WhitelistConfigItem `json:"config"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -181,10 +190,15 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 		o.ServeError(http.StatusBadRequest, "config can not be empty")
 	}
 	o.validateWhiteListConfig(param.Config)
+	param.Config = o.RemoveDupWhitelistConfigItem(param.Config)
 	app, err := models.UpdateWhiteListConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app whitelist config", err)
 	}
+	//_, err = models.UpdateWhiteListConfigForStrategy(param.StrategyId, param.AppId, param.Config)
+	//if err != nil {
+	//	o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
+	//}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateWhitelistConfig,
 		o.Ctx.Input.IP(), "Updated whitelist config of "+param.AppId)
 	o.Serve(app)
@@ -238,11 +252,10 @@ func (o *AppController) Post() {
 		o.validDingConf(&app.DingAlarmConf)
 	}
 	if app.GeneralConfig != nil {
-		o.validateAppConfig(app.GeneralConfig)
+		app.GeneralConfig = o.validateAppConfig(app.GeneralConfig)
 		configTime := time.Now().UnixNano()
 		app.ConfigTime = configTime
 	}
-
 	if app.WhitelistConfig != nil {
 		o.validateWhiteListConfig(app.WhitelistConfig)
 		configTime := time.Now().UnixNano()
@@ -416,6 +429,21 @@ func (o *AppController) validAttackTypeAlarmConf(conf *map[string][]string) {
 	}
 }
 
+func (o *AppController) validKafkaConf(conf *kafka.Kafka) {
+	if conf.KafkaAddr == "" {
+		o.ServeError(http.StatusBadRequest, "the kafka addr cannot be empty")
+	}
+	if conf.KafkaTopic == "" {
+		o.ServeError(http.StatusBadRequest, "the kafka topic cannot be empty")
+	}
+}
+
+func (o *AppController) validGeneralAlarmConf(conf *models.GeneralAlarmConf) {
+	if conf.AlarmCheckInterval < models.MinAlarmCheckInterval {
+		o.ServeError(http.StatusBadRequest, "the minimum interval may exceed min interval")
+	}
+}
+
 // @router /delete [post]
 func (o *AppController) Delete() {
 	var app = &models.App{}
@@ -453,6 +481,10 @@ func (o *AppController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove plugins by app_id", err)
 	}
+	err = models.RemoveDependencyByApp(app.Id)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to remove dependency data by app_id", err)
+	}
 	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "Deleted app with name "+app.Name)
 	o.ServeWithEmptyData()
 }
@@ -478,11 +510,15 @@ func (o *AppController) validAppArrayParam(param []string, paramName string,
 	return param
 }
 
-func (o *AppController) validateAppConfig(config map[string]interface{}) {
-	for key, value := range config {
+func (o *AppController) validateAppConfig(config map[string]interface{}) map[string]interface{} {
+	generalConfigTemplate := models.DefaultGeneralConfig
+	returnConfig := make(map[string]interface{})
+	for key, v := range generalConfigTemplate {
+		value := config[key]
 		if value == nil {
-			o.ServeError(http.StatusBadRequest, "the value of "+key+" config cannot be nil")
+			config[key] = v
 		}
+		returnConfig[key] = config[key]
 		if key == "" {
 			o.ServeError(http.StatusBadRequest,
 				"the config key can not be empty")
@@ -492,41 +528,138 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) {
 				"the length of config key '"+key+"' must be less than 512")
 		}
 		if v, ok := value.(string); ok {
-			if len(v) >= 4096 {
-				o.ServeError(http.StatusBadRequest,
-					"the value's length of config item '"+key+"' must be less than 4096")
+			if key == "body.maxbytes" {
+				maxBytes := generalConfigTemplate[key]
+				if len(v) >= maxBytes.(int) {
+					o.ServeError(http.StatusBadRequest,
+						"the value's length of config item '"+key+"' must be less than" + v)
+				}
 			}
 		}
-		if key == "inject.custom_headers" {
-			for hk, hv := range value.(map[string]interface{}) {
-				if len(hk) >= 200 {
-					o.ServeError(http.StatusBadRequest,
-						"the value's length of config item '"+hk+"' must be less than 200")
-				}
-				if hv, ok := hv.(string); ok {
-					if len(hv) >= 200 {
+
+		// 对类型和值进行检验
+		if generalConfigTemplate[key] != nil && value != nil {
+			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
+				if interval, ok := value.(float64); ok {
+					if interval < 60 || interval > 12 * 3600 {
 						o.ServeError(http.StatusBadRequest,
-							"the value's length of config item '"+hv+"' must be less than 200")
+							"the value's length of config item '"+key+"' must between 60 and 86400")
 					}
-				} else {
-					o.ServeError(http.StatusBadRequest,
-						"the inject.custom_headers's value cannot convert to type string")
+				} else if interval, ok := value.(int); ok {
+					if interval < 60 || interval > 12 * 3600 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+key+"' must between 60 and 86400")
+					}
 				}
 			}
-		}
-		if v, ok := value.(float64); ok {
-			if v < 0 {
-				o.ServeError(http.StatusBadRequest,
-					"the value of config item '"+key+"' can not be less than 0")
-			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
-				key == "ognl.expression.minlength" {
-				if v == 0 {
+
+			if key != "security.weak_passwords" {
+				switch reflect.TypeOf(generalConfigTemplate[key]).String(){
+				case "string":
+					valueStr, ok := value.(string)
+					if !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a string")
+					}
+					if key == "block.content_html" || key == "block.content_xml" ||
+						key == "block.content_json" || key == "fileleak_scan.name"{
+						if strings.TrimSpace(valueStr) == "" {
+							returnConfig[key] = v
+						}
+					}
+				case "int64":
+					if _, ok := value.(int64); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a int64")
+					}
+				case "bool":
+					if _, ok := value.(bool); !ok {
+						o.ServeError(http.StatusBadRequest,
+							"the type of config key: "+key+"'s value must be send a bool")
+					}
+				case "int", "float64":
+					if _, ok := value.(float64); !ok {
+						if value == "" || reflect.TypeOf(value).String() == "int" {
+							config[key] = v
+						} else {
+							o.ServeError(http.StatusBadRequest,
+								"the type of config key: "+key+"'s value must be send a int/float64")
+						}
+					}
+				}
+			} else {
+				if valueArray, ok := value.([]interface{}); ok {
+					tmpArray := []interface{}{}
+					for _, ele := range valueArray {
+						if strings.TrimSpace(ele.(string)) != "" {
+							tmpArray = append(tmpArray, ele)
+						}
+					}
+					if len(tmpArray) == 0 {
+						returnConfig[key] = generalConfigTemplate["security.weak_passwords"]
+					} else {
+						for idx, v := range value.([]interface{}) {
+							if len(v.(string)) > 16 {
+								o.ServeError(http.StatusBadRequest,
+									"the length of value:" + v.(string) + " exceeds max_len 16!")
+							}
+							if idx >= 200 {
+								o.ServeError(http.StatusBadRequest,
+									"the count of weak_password exceed 200!")
+							}
+						}
+					}
+				}
+			}
+			if key == "inject.custom_headers" {
+				for hk, hv := range value.(map[string]interface{}) {
+					if len(hk) >= 200 {
+						o.ServeError(http.StatusBadRequest,
+							"the value's length of config item '"+hk+"' must be less than 200")
+					}
+					if hv, ok := hv.(string); ok {
+						if len(hv) >= 200 {
+							o.ServeError(http.StatusBadRequest,
+								"the value's length of config item '"+hv+"' must be less than 200")
+						}
+					} else {
+						o.ServeError(http.StatusBadRequest,
+							"the inject.custom_headers's value cannot convert to type string")
+					}
+				}
+			}
+			if v, ok := value.(float64); ok {
+				if v < 0 {
 					o.ServeError(http.StatusBadRequest,
-						"the value of config item '"+key+"' must be greater than 0")
+						"the value of config item '"+key+"' can not be less than 0")
+				} else if key == "plugin.timeout.millis" || key == "body.maxbytes" ||
+					key == "syslog.reconnect_interval" || key == "ognl.expression.minlength" {
+					if v == 0 {
+						o.ServeError(http.StatusBadRequest,
+							"the value of config item '"+key+"' must be greater than 0")
+					}
 				}
 			}
 		}
 	}
+	return returnConfig
+}
+
+func (o *AppController) RemoveDupWhitelistConfigItem(a []models.WhitelistConfigItem) (ret []models.WhitelistConfigItem){
+	n := len(a)
+	for i:=0; i < n; i++{
+		state := false
+		for j := i+1 ; j < n; j++{
+			if (j > 0 && reflect.DeepEqual(a[i],a[j])){
+				state = true
+				break
+			}
+		}
+		if !state {
+			ret = append(ret, a[i])
+		}
+	}
+	return
 }
 
 func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigItem) {
@@ -538,6 +671,10 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 		if len(value.Url) > 200 || len(value.Url) == 0 {
 			o.ServeError(http.StatusBadRequest,
 				"the length of whitelist config url must be between [1,200]")
+		}
+		if len(value.Description) > 200 {
+			o.ServeError(http.StatusBadRequest,
+				"the length of whitelist config desc can not be greater than 200")
 		}
 		for key := range value.Hook {
 			if len(key) > 128 {
@@ -551,11 +688,13 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 // @router /alarm/config [post]
 func (o *AppController) ConfigAlarm() {
 	var param struct {
-		AppId               string                 `json:"app_id"`
-		AttackTypeAlarmConf *map[string][]string   `json:"attack_type_alarm_conf,omitempty"`
-		EmailAlarmConf      *models.EmailAlarmConf `json:"email_alarm_conf,omitempty"`
-		DingAlarmConf       *models.DingAlarmConf  `json:"ding_alarm_conf,omitempty"`
-		HttpAlarmConf       *models.HttpAlarmConf  `json:"http_alarm_conf,omitempty"`
+		AppId               string                   `json:"app_id"`
+		AttackTypeAlarmConf *map[string][]string     `json:"attack_type_alarm_conf,omitempty"`
+		EmailAlarmConf      *models.EmailAlarmConf   `json:"email_alarm_conf,omitempty"`
+		DingAlarmConf       *models.DingAlarmConf    `json:"ding_alarm_conf,omitempty"`
+		HttpAlarmConf       *models.HttpAlarmConf    `json:"http_alarm_conf,omitempty"`
+		KafkaConf           *kafka.Kafka             `json:"kafka_alarm_conf,omitempty"`
+		GeneralAlarmConf    *models.GeneralAlarmConf `json:"general_alarm_conf"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -585,6 +724,13 @@ func (o *AppController) ConfigAlarm() {
 	if param.AttackTypeAlarmConf != nil {
 		o.validAttackTypeAlarmConf(param.AttackTypeAlarmConf)
 	}
+	if param.KafkaConf != nil {
+		o.validKafkaConf(param.KafkaConf)
+	}
+	if param.GeneralAlarmConf != nil {
+		models.AlarmCheckInterval = param.GeneralAlarmConf.AlarmCheckInterval
+		o.validGeneralAlarmConf(param.GeneralAlarmConf)
+	}
 	content, err := json.Marshal(param)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to encode param to json", err)
@@ -595,7 +741,15 @@ func (o *AppController) ConfigAlarm() {
 	}
 	app, err = models.UpdateAppById(param.AppId, updateData)
 	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to update app", err)
+	}
+	err = models.UpdateGeneralAlarmConfig(param.GeneralAlarmConf)
+	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
+	}
+	err = kafka.PutKafkaConfig(param.AppId, param.KafkaConf)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to put kafka config", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
 		"Alarm configuration updated for "+param.AppId)
@@ -663,7 +817,7 @@ func (o *AppController) SetSelectedPlugin() {
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
 	}
-	plugin, err := models.SetSelectedPlugin(appId, pluginId)
+	plugin, err := models.SetSelectedPlugin(appId, pluginId, "")
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to set selected plugin", err)
 	}
@@ -734,6 +888,28 @@ func (o *AppController) TestHttp() {
 	err = models.PushHttpAttackAlarm(app, 0, nil, true)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to test http alarm", err)
+	}
+	o.ServeWithEmptyData()
+}
+
+// @router /kafka/test [post]
+func (o *AppController) TestKafka() {
+	var param map[string]string
+	o.UnmarshalJson(&param)
+	appId := param["app_id"]
+	if appId == "" {
+		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
+	}
+	app, err := models.GetAppByIdWithoutMask(appId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "can not find the app", err)
+	}
+	if !app.KafkaConf.KafkaEnable {
+		o.ServeError(http.StatusBadRequest, "please enable the kafka first")
+	}
+	err = models.PushKafkaAttackAlarm(app, nil, true)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to test kafka alarm", err)
 	}
 	o.ServeWithEmptyData()
 }

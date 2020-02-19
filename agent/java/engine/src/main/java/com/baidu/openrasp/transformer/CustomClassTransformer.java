@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.dependency.DependencyFinder;
 import com.baidu.openrasp.detector.ServerDetectorManager;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.messaging.ErrorType;
@@ -35,7 +36,7 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.security.ProtectionDomain;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -52,7 +53,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
     private static HashSet<String> jspClassLoaderNames = new HashSet<String>();
     private static ConcurrentSkipListSet<String> necessaryHookType = new ConcurrentSkipListSet<String>();
     private static ConcurrentSkipListSet<String> dubboNecessaryHookType = new ConcurrentSkipListSet<String>();
-    public static ConcurrentHashMap<String, WeakReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, WeakReference<ClassLoader>>();
+    public static ConcurrentHashMap<String, SoftReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, SoftReference<ClassLoader>>();
 
     private Instrumentation inst;
     private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
@@ -135,8 +136,11 @@ public class CustomClassTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
+        if (loader != null) {
+            DependencyFinder.addJarPath(domain);
+        }
         if (loader != null && jspClassLoaderNames.contains(loader.getClass().getName())) {
-            jspClassLoaderCache.put(className.replace("/", "."), new WeakReference<ClassLoader>(loader));
+            jspClassLoaderCache.put(className.replace("/", "."), new SoftReference<ClassLoader>(loader));
         }
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {

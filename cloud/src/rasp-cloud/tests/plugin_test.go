@@ -44,6 +44,15 @@ func TestUploadPlugin(t *testing.T) {
 			So(r.Status, ShouldBeGreaterThan, 0)
 		})
 
+		Convey("failed to read upload plugin", func() {
+			monkey.Patch(ioutil.ReadAll, func(io.Reader) ([]byte, error) {
+				return []byte(""), nil
+			})
+			defer monkey.Unpatch(ioutil.ReadAll)
+			r := inits.GetResponse("POST", "/v1/api/plugin", "")
+			So(r.Status, ShouldBeGreaterThan, 0)
+		})
+
 		Convey("when get file has error", func() {
 			monkey.PatchInstanceMethod(reflect.TypeOf(&beego.Controller{}), "GetFile",
 				func(*beego.Controller, string) (multipart.File, *multipart.FileHeader, error) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,12 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.Register;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -89,26 +87,30 @@ public abstract class ServerDetector {
     /**
      * 服务器基线检测
      */
-    public static void checkServerPolicy() {
-        String serverName = ApplicationModel.getServerName();
-        if ("tomcat".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TOMCAT, CheckParameter.EMPTY_MAP);
-        } else if ("jboss".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JBOSS, CheckParameter.EMPTY_MAP);
-        } else if ("jetty".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JETTY, CheckParameter.EMPTY_MAP);
-        } else if ("resin".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_RESIN, CheckParameter.EMPTY_MAP);
-        } else if ("websphere".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBSPHERE, CheckParameter.EMPTY_MAP);
-        } else if ("weblogic".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBLOGIC, CheckParameter.EMPTY_MAP);
-        } else if ("undertow".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WILDFLY, CheckParameter.EMPTY_MAP);
-        } else if ("jboss eap".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JBOSSEAP, CheckParameter.EMPTY_MAP);
-        } else if ("tongweb".equals(serverName)) {
-            HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TONGWEB, CheckParameter.EMPTY_MAP);
+    public synchronized static void checkServerPolicy() {
+        try {
+            String serverName = ApplicationModel.getServerName();
+            if ("tomcat".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TOMCAT, CheckParameter.EMPTY_MAP);
+            } else if ("jboss".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JBOSS, CheckParameter.EMPTY_MAP);
+            } else if ("jetty".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JETTY, CheckParameter.EMPTY_MAP);
+            } else if ("resin".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_RESIN, CheckParameter.EMPTY_MAP);
+            } else if ("websphere".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBSPHERE, CheckParameter.EMPTY_MAP);
+            } else if ("weblogic".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WEBLOGIC, CheckParameter.EMPTY_MAP);
+            } else if ("undertow".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_WILDFLY, CheckParameter.EMPTY_MAP);
+            } else if ("jboss eap".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_JBOSSEAP, CheckParameter.EMPTY_MAP);
+            } else if ("tongweb".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TONGWEB, CheckParameter.EMPTY_MAP);
+            }
+        } catch (Throwable t) {
+            LogTool.warn(ErrorType.HOOK_ERROR, "failed to do server policy checking: " + t.getMessage(), t);
         }
     }
 

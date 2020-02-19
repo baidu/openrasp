@@ -16,9 +16,33 @@
 # inject.urlprefix:
 # log.maxburst: 100
 # log.maxbackup: 30
+# log.path:
 # decompile.enable: false
 # block.status_code: 302
 # request.param_encoding:
+# cpu.usage.percent: 0.9
+# cpu.usage.enable: false
+# cpu.usage.interval: 5
+# response.sampler_burst: 5
+# response.sampler_interval: 60
+#security.weak_passwords:
+#  - "111111"
+#  - "123"
+#  - "123123"
+#  - "123456"
+#  - "123456a"
+#  - "a123456"
+#  - "admin"
+#  - "both"
+#  - "manager"
+#  - "mysql"
+#  - "root"
+#  - "rootweblogic"
+#  - "tomcat"
+#  - "user"
+#  - "weblogic1"
+#  - "weblogic123"
+#  - "welcome1"
 hooks.ignore: http_output
 # debug.level: 0
 #hook.white:
@@ -29,7 +53,7 @@ hooks.ignore: http_output
 #    - "sql"
 #    - "ssrf"
 inject.custom_headers:
-  X-Protectd-By: OpenRASP
+  X-Protected-By: OpenRASP
 #   X-Content-Type-Options: nosniff
 #   X-Frame-Options: deny
 #   X-XSS-Protection: 1; mode=block

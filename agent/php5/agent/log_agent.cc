@@ -18,7 +18,6 @@
 #include "openrasp_hook.h"
 #include <fstream>
 #include <sstream>
-#include <dirent.h>
 #include <algorithm>
 #include "shared_config_manager.h"
 #include "agent/utils/os.h"
@@ -78,17 +77,17 @@ void LogAgent::run()
 			if (ldi->get_collect_enable() &&
 				file_exists(ldi->get_active_log_file()))
 			{
-				ldi->determine_fpos();
-				std::string post_body;
+				ldi->update_collect_status();
+				ldi->refresh_cache_body();
+				std::string post_body = ldi->get_cache_body();
 				std::string url = ldi->get_cpmplete_url();
-				if (ldi->get_post_logs(post_body))
+				if (!post_body.empty())
 				{
 					bool result = post_logs_via_curl(post_body, url);
 					if (result)
 					{
-						ldi->update_fpos();
-						ldi->update_last_post_time();
-						ldi->save_status_snapshot();
+						ldi->clear_cache_body();
+						ldi->update_status_snapshot();
 					}
 					current_interval =
 						result
@@ -104,6 +103,7 @@ void LogAgent::run()
 			sleep(1);
 			if (!pid_alive(std::to_string(oam->get_master_pid())) ||
 				!pid_alive(std::to_string(supervisor_pid)) ||
+				getpid() != get_pid_from_shm() ||
 				LogAgent::signal_received == SIGTERM)
 			{
 				exit(0);

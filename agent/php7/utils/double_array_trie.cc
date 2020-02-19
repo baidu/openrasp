@@ -30,17 +30,6 @@ DoubleArrayTrie::~DoubleArrayTrie()
     clear();
 }
 
-void DoubleArrayTrie::set_result(int *x, int r, size_t) const
-{
-    *x = r;
-}
-
-void DoubleArrayTrie::set_result(result_pair_type *x, int r, size_t l) const
-{
-    x->value = r;
-    x->length = l;
-}
-
 void DoubleArrayTrie::load_existing_array(void *ptr, size_t size)
 {
     clear();
@@ -130,15 +119,51 @@ int DoubleArrayTrie::build(size_t key_size, const std::vector<std::string> *key,
     return error_;
 }
 
-size_t DoubleArrayTrie::prefix_search(const char *key, result_pair_type *result, size_t result_len, size_t len, size_t node_pos) const
+DoubleArrayTrie::result_pair_type DoubleArrayTrie::match_search(const char *key, size_t len, size_t node_pos) const
 {
     if (!len)
     {
         len = std::strlen(key);
     }
 
+    DoubleArrayTrie::result_pair_type result;
+    result.set_result_pair(-1, 0);
+
     register int b = array_[node_pos].base;
-    register size_t num = 0;
+    register unsigned int p;
+
+    for (register size_t i = 0; i < len; ++i)
+    {
+        p = b + (unsigned char)(key[i]) + 1;
+        if (static_cast<unsigned int>(b) == array_[p].check)
+        {
+            b = array_[p].base;
+        }
+        else
+        {
+            return result;
+        }
+    }
+
+    p = b;
+    int n = array_[p].base;
+    if (static_cast<unsigned int>(b) == array_[p].check && n < 0)
+    {
+        result.set_result_pair(-n - 1, len);
+    }
+
+    return result;
+}
+
+std::vector<DoubleArrayTrie::result_pair_type> DoubleArrayTrie::prefix_search(const char *key, size_t len, size_t node_pos) const
+{
+    std::vector<result_pair_type> result;
+    if (!len)
+    {
+        len = std::strlen(key);
+    }
+
+    register int b = array_[node_pos].base;
     register int n = 0;
     register unsigned int p = 0;
 
@@ -148,11 +173,7 @@ size_t DoubleArrayTrie::prefix_search(const char *key, result_pair_type *result,
         n = array_[p].base;
         if ((unsigned int)b == array_[p].check && n < 0)
         {
-            if (num < result_len)
-            {
-                set_result(&result[num], -n - 1, i);
-            }
-            ++num;
+            result.push_back({-n - 1, i});
         }
 
         p = b + (unsigned char)(key[i]) + 1;
@@ -162,7 +183,7 @@ size_t DoubleArrayTrie::prefix_search(const char *key, result_pair_type *result,
         }
         else
         {
-            return num;
+            return result;
         }
     }
 
@@ -171,14 +192,10 @@ size_t DoubleArrayTrie::prefix_search(const char *key, result_pair_type *result,
 
     if ((unsigned int)b == array_[p].check && n < 0)
     {
-        if (num < result_len)
-        {
-            set_result(&result[num], -n - 1, len);
-        }
-        ++num;
+        result.push_back({-n - 1, len});
     }
 
-    return num;
+    return result;
 }
 
 size_t DoubleArrayTrie::resize(const size_t new_size)

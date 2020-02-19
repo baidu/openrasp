@@ -16,13 +16,14 @@ package routers
 
 import (
 	"github.com/astaxie/beego"
+	"rasp-cloud/conf"
+	"rasp-cloud/controllers"
 	"rasp-cloud/controllers/agent"
 	"rasp-cloud/controllers/agent/agent_logs"
 	"rasp-cloud/controllers/api"
 	"rasp-cloud/controllers/api/fore_logs"
+	"rasp-cloud/controllers/iast"
 	"rasp-cloud/tools"
-	"rasp-cloud/conf"
-	"rasp-cloud/controllers"
 )
 
 func InitRouter() {
@@ -57,6 +58,11 @@ func InitRouter() {
 		beego.NSNamespace("/report",
 			beego.NSInclude(
 				&agent.ReportController{},
+			),
+		),
+		beego.NSNamespace("/dependency",
+			beego.NSInclude(
+				&agent.DependencyController{},
 			),
 		),
 		beego.NSNamespace("/crash",
@@ -99,6 +105,11 @@ func InitRouter() {
 				&api.RaspController{},
 			),
 		),
+		beego.NSNamespace("/strategy",
+			beego.NSInclude(
+				&api.StrategyController{},
+			),
+		),
 		beego.NSNamespace("/token",
 			beego.NSInclude(
 				&api.TokenController{},
@@ -119,20 +130,35 @@ func InitRouter() {
 				&api.ServerController{},
 			),
 		),
+		beego.NSNamespace("/dependency",
+			beego.NSInclude(
+				&api.DependencyController{},
+			),
+		),
+	)
+	iastNS := beego.NewNamespace("/iast",
+		beego.NSInclude(
+			&iast.WebsocketController{},
+		),
+		beego.NSInclude(
+			&iast.IastController{},
+		),
 	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
 	pingNS := beego.NewNamespace("/ping", beego.NSInclude(&controllers.PingController{}))
+	versionNS := beego.NewNamespace("/version", beego.NSInclude(&controllers.GeneralController{}))
 	ns := beego.NewNamespace("/v1")
 	ns.Namespace(pingNS)
+	ns.Namespace(versionNS)
 	startType := *conf.AppConfig.Flag.StartType
 	if startType == conf.StartTypeForeground {
-		ns.Namespace(foregroudNS, userNS)
+		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
 	} else if startType == conf.StartTypeAgent {
 		ns.Namespace(agentNS)
 	} else if startType == conf.StartTypeDefault {
-		ns.Namespace(foregroudNS, agentNS, userNS)
+		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
 	} else {
-		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
+		tools.Panic(tools.ErrCodeStartTypeNotSupport, "Unknown -type parameter provided: "+startType, nil)
 	}
 	if startType == conf.StartTypeForeground || startType == conf.StartTypeDefault {
 		beego.SetStaticPath("//", "dist")

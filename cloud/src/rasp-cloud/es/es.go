@@ -166,7 +166,6 @@ func CreateEsIndex(index string, alias string, template string) error {
 		}
 		logs.Info("create es index: " + createResult.Index)
 		if err != nil {
-			beego.Error("failed to create index with name " + index + ": " + err.Error())
 			return err
 		}
 	} else {
@@ -190,7 +189,7 @@ func Insert(index string, docType string, doc interface{}) (err error) {
 	return
 }
 
-func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
+func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) {
 	bulkService := ElasticClient.Bulk()
 	for _, doc := range docs {
 		if doc["app_id"] == nil {
@@ -229,7 +228,53 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) {
 	return err
 }
 
-func UpdateMapping (destIndex string, alias string, template string, ctx context.Context) error {
+func BulkInsert(index string, docType string, docs []map[string]interface{}) (err error) {
+	bulkService := ElasticClient.Bulk()
+	for _, doc := range docs {
+		bulkService.Add(elastic.NewBulkUpdateRequest().
+			Index(index).
+			Type(docType).
+			Id(fmt.Sprint(doc["upsert_id"])).
+			DocAsUpsert(true).
+			Doc(doc["content"]))
+	}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+	_, err = bulkService.Do(ctx)
+	return err
+}
+
+func DeleteIndex(indexName string) error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+	_, err := ElasticClient.DeleteIndex(indexName).Do(ctx)
+	return err
+}
+
+func DeleteByQuery(index string, docType string, query elastic.Query) error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+	_, err := ElasticClient.DeleteByQuery(index).Type(docType).Query(query).ProceedOnVersionConflict().Do(ctx)
+	if err != nil {
+		beego.Error("failed to delete by query", err)
+		return err
+	}
+	return nil
+}
+
+func GetIndex(base string, appId string) string {
+	return base + "-" + appId
+}
+
+func HandleSearchResult(result map[string]interface{}, id string) {
+	result["id"] = id
+	delete(result, "_@timestamp")
+	delete(result, "@version")
+	delete(result, "tags")
+	delete(result, "host")
+}
+
+func UpdateMapping(destIndex string, alias string, template string, ctx context.Context) error {
 	// 获取alias对应的index
 	res, err := ElasticClient.Aliases().Index(alias).Do(ctx)
 	if err != nil {
@@ -237,7 +282,7 @@ func UpdateMapping (destIndex string, alias string, template string, ctx context
 	}
 
 	if len(res.IndicesByAlias(alias)) == 0 {
-		return errors.New("alias:" + fmt.Sprintf("%s", res) + "is not exist!" )
+		return errors.New("alias:" + fmt.Sprintf("%s", res) + "is not exist!")
 	}
 	if len(res.IndicesByAlias(alias)) > 2 {
 		return errors.New("find duplicate alias:" + fmt.Sprintf("%s", res.IndicesByAlias(alias)))
@@ -245,9 +290,9 @@ func UpdateMapping (destIndex string, alias string, template string, ctx context
 
 	oldIndexFromEs := res.IndicesByAlias(alias)[0]
 	if len(res.IndicesByAlias(alias)) == 2 {
-			if oldIndexFromEs == destIndex{
-				oldIndexFromEs = res.IndicesByAlias(alias)[1]
-			}
+		if oldIndexFromEs == destIndex {
+			oldIndexFromEs = res.IndicesByAlias(alias)[1]
+		}
 	}
 
 	exists, err := ElasticClient.IndexExists(destIndex).Do(ctx)

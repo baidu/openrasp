@@ -33,6 +33,7 @@ const (
 	ErrCodeInitDefaultAppFailed
 	ErrCodeInitChildProcessFailed
 	ErrCodeChDirFailed
+	ErrCodeGetPidFailed
 )
 
 const (

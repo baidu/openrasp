@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -743,7 +743,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
      * @author Ceki G&uuml;lc&uuml;
      * @since 0.8.4
      */
-    class Connector extends Thread {
+    public class Connector extends Thread {
 
         boolean interrupted = false;
 

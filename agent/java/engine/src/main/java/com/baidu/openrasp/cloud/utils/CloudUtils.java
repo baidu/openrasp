@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,20 +178,6 @@ public class CloudUtils {
             return data.get(key);
         }
         return null;
-    }
-
-    public static String getMD5(String originalString) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(originalString.getBytes("UTF-8"));
-        byte[] byteArray = md.digest();
-        char[] resultCharArray = new char[byteArray.length * 2];
-        int index = 0;
-        for (byte b : byteArray) {
-            resultCharArray[index++] = hexArray[b >>> 4 & 0xf];
-            resultCharArray[index++] = hexArray[b & 0xf];
-        }
-        return new String(resultCharArray);
     }
 
     public static String handleError(ErrorType errorType, GenericResponse response) {

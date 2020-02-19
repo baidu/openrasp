@@ -18,7 +18,8 @@
 
 namespace openrasp
 {
-
+namespace request
+{
 Url::Url()
 {
 }
@@ -147,5 +148,6 @@ std::string Url::get_path() const
         return request_uri;
     }
 }
+} // namespace request
 
 } // namespace openrasp

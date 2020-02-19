@@ -25,6 +25,9 @@ const (
 	StartTypeAgent      = "agent"
 	StartTypeReset      = "reset"
 	StartTypeDefault    = "default"
+	RestartOperation 	= "restart"
+	StatusOperation 	= "status"
+	StopOperation 		= "stop"
 )
 
 type RaspAppConfig struct {
@@ -32,6 +35,11 @@ type RaspAppConfig struct {
 	EsUser                string
 	EsPwd                 string
 	EsTTL                 int64
+	KafkaAddr             string
+	KafkaUser             string
+	KafkaPwd              string
+	KafkaEnable           bool
+	KafkaTopic            string
 	MongoDBAddr           []string
 	MongoDBUser           string
 	MongoDBPwd            string
@@ -44,7 +52,11 @@ type RaspAppConfig struct {
 	CookieLifeTime        int
 	RegisterCallbackUrl   string
 	RegisterCallbackToken string
+	RequestBodyEnable     bool
+	ErrorLogEnable        bool
 	Flag                  *Flag
+	LogMaxSize            int64
+	LogMaxDays            int
 }
 
 type Flag struct {
@@ -52,6 +64,7 @@ type Flag struct {
 	Password  *string
 	Daemon    *bool
 	Version   *bool
+	Operation *string
 	Upgrade   *string
 }
 
@@ -66,6 +79,11 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.EsUser = beego.AppConfig.DefaultString("EsUser", "")
 	AppConfig.EsPwd = beego.AppConfig.DefaultString("EsPwd", "")
 	AppConfig.EsTTL = beego.AppConfig.DefaultInt64("EsTTL", 365)
+	AppConfig.KafkaAddr = beego.AppConfig.String("KafkaAddr")
+	AppConfig.KafkaUser = beego.AppConfig.DefaultString("KafkaUser", "")
+	AppConfig.KafkaPwd = beego.AppConfig.DefaultString("KafkaPwd", "")
+	AppConfig.KafkaEnable = beego.AppConfig.DefaultBool("KafkaEnable", false)
+	AppConfig.KafkaTopic = beego.AppConfig.DefaultString("KafkaTopic", "")
 	AppConfig.MongoDBAddr = initArrayConfig(strings.Split(beego.AppConfig.String("MongoDBAddr"), ","))
 	AppConfig.MongoDBPoolLimit = beego.AppConfig.DefaultInt("MongoDBPoolLimit", 1024)
 	AppConfig.MongoDBName = beego.AppConfig.DefaultString("MongoDBName", "openrasp")
@@ -78,6 +96,10 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.CookieLifeTime = beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
 	AppConfig.RegisterCallbackUrl = beego.AppConfig.DefaultString("RegisterCallbackUrl", "")
 	AppConfig.RegisterCallbackToken = beego.AppConfig.DefaultString("RegisterCallbackToken", "")
+	AppConfig.RequestBodyEnable = beego.AppConfig.DefaultBool("RequestBodyEnable", false)
+	AppConfig.ErrorLogEnable = beego.AppConfig.DefaultBool("ErrorLogEnable", false)
+	AppConfig.LogMaxSize = beego.AppConfig.DefaultInt64("LogMaxSize", 104857600)
+	AppConfig.LogMaxDays = beego.AppConfig.DefaultInt("LogMaxDays", 10)
 	ValidRaspConf(AppConfig)
 }
 

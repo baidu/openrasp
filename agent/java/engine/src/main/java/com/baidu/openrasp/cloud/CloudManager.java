@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
+import com.baidu.openrasp.dependency.DependencyReport;
 import com.baidu.openrasp.detector.ServerDetector;
 import org.apache.log4j.Logger;
 
@@ -40,7 +41,6 @@ public class CloudManager {
                 AppenderMappedLogger.HTTP_ALARM.getAppender());
         DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
                 AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
-        ServerDetector.checkServerPolicy();
         tasks.add(new KeepAlive());
         tasks.add(new StatisticsReport());
         for (CloudTimerTask task : tasks) {

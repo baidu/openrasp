@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ public class ServerDetectorManager {
         detectors.add(new WebsphereDetector());
         detectors.add(new UndertowDetector());
         detectors.add(new DubboDetector());
+        detectors.add(new SpringbootDetector());
         detectors.add(new TongWebDetector());
     }
 

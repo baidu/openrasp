@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ public class AttackInfo extends EventInfo {
     private String message;
     private String action;
     private String algorithm;
+    private Map params;
     private int confidence;
 
     public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action,
@@ -66,6 +67,12 @@ public class AttackInfo extends EventInfo {
     public AttackInfo(CheckParameter parameter, String action, String message,
                       String pluginName, String algorithm) {
         this(parameter, action, message, pluginName, algorithm, DEFAULT_CONFIDENCE_VALUE);
+    }
+
+    public AttackInfo(CheckParameter parameter, String action, String message, String pluginName, String algorithm,
+            int confidence, Map params) {
+        this(parameter, action, message, pluginName, algorithm, confidence);
+        this.params = params;
     }
 
     public AttackInfo(CheckParameter parameter, String action, String message,
@@ -98,7 +105,9 @@ public class AttackInfo extends EventInfo {
         // 攻击类型
         info.put("attack_type", parameter.getType().toString());
         // 攻击参数
-        Map params = parameter.getParams();
+        if (params == null) {
+            params = parameter.getParams();
+        }
         params.put("stack", StackTrace.getStackTraceArray(true, true));
         info.put("attack_params", params);
         // 检测插件

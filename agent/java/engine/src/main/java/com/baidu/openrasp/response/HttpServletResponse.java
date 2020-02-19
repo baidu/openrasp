@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.baidu.openrasp.response;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.hook.server.catalina.CatalinaXssHook;
+import com.baidu.openrasp.hook.server.catalina.CatalinaResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
@@ -185,7 +185,7 @@ public class HttpServletResponse {
                 }
                 if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)
                         && "tomcat".equals(ApplicationModel.getServerName())) {
-                    CatalinaXssHook.handleXssBlockBuffer(parameter, script);
+                    CatalinaResponseBodyHook.handleXssBlockBuffer(parameter, script);
                 } else {
                     if (!isCommitted) {
                         resetBuffer();

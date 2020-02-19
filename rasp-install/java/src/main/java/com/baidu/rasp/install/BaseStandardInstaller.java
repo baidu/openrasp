@@ -29,6 +29,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.baidu.rasp.RaspError.E10003;
 
@@ -61,6 +62,9 @@ public abstract class BaseStandardInstaller implements Installer {
             srcDir.mkdirs();
         }
         File installDir = new File(getInstallPath(serverRoot));
+        if (!installDir.exists()) {
+            installDir.mkdir();
+        }
 
         File configFile = new File(installDir.getCanonicalPath() + File.separator + "conf" + File.separator + "openrasp.yml");
         if (!configFile.exists()) {
@@ -69,6 +73,30 @@ public abstract class BaseStandardInstaller implements Installer {
         if (!srcDir.getCanonicalPath().equals(installDir.getCanonicalPath())) {
             // 拷贝rasp文件夹
             System.out.println("Duplicating \"rasp\" directory\n- " + installDir.getCanonicalPath());
+            File[] files = srcDir.listFiles();
+            String uuid = UUID.randomUUID().toString().replace("-", "");
+            if (files != null) {
+                for (File file : files) {
+                    File destFile = new File(installDir.getPath() + File.separator + file.getName());
+                    if (file.isDirectory()) {
+                        FileUtils.copyDirectory(file, destFile);
+                    } else {
+                        if (file.getName().endsWith(".jar") && destFile.exists()) {
+                            File tmpJarDirectory = new File(installDir.getPath() + File.separator + "jar_tmp");
+                            if (tmpJarDirectory.exists() && !tmpJarDirectory.isDirectory()) {
+                                tmpJarDirectory.delete();
+                            }
+                            if (!tmpJarDirectory.exists()) {
+                                tmpJarDirectory.mkdir();
+                            }
+                            String renameFileName = destFile.getName().
+                                    substring(0, destFile.getName().length() - 4) + "-" + uuid + ".jar";
+                            destFile.renameTo(new File(tmpJarDirectory.getPath() + File.separator + renameFileName));
+                        }
+                        FileUtils.copyFile(file, destFile);
+                    }
+                }
+            }
             FileUtils.copyDirectory(srcDir, installDir);
         }
 

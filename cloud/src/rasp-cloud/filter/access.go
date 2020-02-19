@@ -17,9 +17,11 @@ package filter
 import (
 	"github.com/astaxie/beego/logs"
 	"os"
+	"rasp-cloud/conf"
 	"rasp-cloud/tools"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
+	"strconv"
 	"time"
 )
 
@@ -40,9 +42,10 @@ func logAccess(ctx *context.Context) {
 	if ctx.Input.Referer() != "" {
 		cont += "[F]" + ctx.Input.Referer()
 	}
-
-	body := ctx.Input.RequestBody
-	cont += " - [B]" + string(body)
+	if conf.AppConfig.RequestBodyEnable {
+		body := ctx.Input.RequestBody
+		cont += " - [B]" + string(body)
+	}
 	accessLogger.Info(cont)
 }
 
@@ -58,6 +61,8 @@ func formatTime(timestamp int64, format string) (times string) {
 
 func initAccessLogger() {
 	logPath := "logs/access"
+	maxSize := strconv.FormatInt(conf.AppConfig.LogMaxSize, 10)
+	maxDays := strconv.Itoa(conf.AppConfig.LogMaxDays)
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
@@ -69,7 +74,7 @@ func initAccessLogger() {
 	accessLogger.EnableFuncCallDepth(true)
 	accessLogger.SetLogFuncCallDepth(4)
 	err := accessLogger.SetLogger(logs.AdapterFile,
-		`{"filename":"`+logPath+`/access.log","daily":true,"maxdays":10,"perm":"0777"}`)
+		`{"filename":"`+logPath+`/access.log","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init access log", err)
 	}

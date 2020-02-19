@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
@@ -141,17 +140,9 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param properties 连接属性
      */
     public static void checkSqlConnection(String url, Properties properties) {
-        //当服务器的cpu使用率超过90%，禁用全部hook点
-        if (Config.getConfig().getDisableHooks()) {
-            return;
-        }
-        //当云控注册成功之前，不进入任何hoo点
-        if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
-            return;
-        }
         HashMap<String, Object> params = new HashMap<String, Object>(4);
         params.put("url", url);
         params.put("properties", properties);
-        HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
     }
 }

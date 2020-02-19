@@ -46,6 +46,7 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 	idContent += fmt.Sprint(alarm["rasp_id"])
 	idContent += fmt.Sprint(alarm["policy_id"])
 	idContent += fmt.Sprint(alarm["stack_md5"])
+	idContent += fmt.Sprint(alarm["message"])
 	if alarm["policy_id"] == "3007" && alarm["policy_params"] != nil {
 		if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok && len(policyParam) > 0 {
 			idContent += fmt.Sprint(policyParam["type"])
@@ -59,7 +60,15 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 			idContent += fmt.Sprint(policyParam["socket"])
 			idContent += fmt.Sprint(policyParam["username"])
 		}
+	} else if alarm["policy_id"] == "3009" && alarm["policy_params"] != nil {
+		if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok && len(policyParam) > 0 {
+			idContent += fmt.Sprint(policyParam["webroot"])
+		}
 	}
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
+	err := AddLogWithKafka(AttackAlarmInfo.EsType, alarm)
+	if err != nil {
+		return err
+	}
 	return AddAlarmFunc(PolicyAlarmInfo.EsType, alarm)
 }

@@ -43,6 +43,11 @@ func CreateReportDataEsIndex(appId string) error {
 		AliasReportIndexName + "-" + appId, reportType + "-template")
 }
 
+func CreateDependencyEsIndex(appId string) error {
+	return es.CreateEsIndex(DependencyIndexName + "-" + appId,
+		AliasDependencyIndexName + "-" + appId,"dependency-data-template")
+}
+
 func AddReportData(reportData *ReportData, appId string) error {
 	reportData.InsertTime = time.Now().Unix() * 1000
 	return es.Insert(AliasReportIndexName+"-"+appId, reportType, reportData)

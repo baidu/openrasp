@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,11 +40,11 @@ import java.util.StringTokenizer;
 @HookAnnotation
 public class SQLConnectionHook extends AbstractClassHook {
     private static final String DEFAULT_MYSQL_PORT = "3306";
-    private String type;
+    private AbstractSqlHook.SqlType type;
 
     @Override
     public boolean isClassMatched(String className) {
-        this.type = "mysql";
+        this.type = AbstractSqlHook.SqlType.MYSQL;
         return "com/mysql/jdbc/NonRegisteringDriver".equals(className) ||
                 "com/mysql/cj/jdbc/NonRegisteringDriver".equals(className);
     }
@@ -71,11 +71,12 @@ public class SQLConnectionHook extends AbstractClassHook {
         if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
             return;
         }
-        if (Config.getConfig().getSqlErrorCodes().contains(e.getErrorCode())) {
+        String errorCode = AbstractSqlHook.filterErrorCode(e, server);
+        if (!StringUtils.isEmpty(errorCode)) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("server", server);
-            params.put("error_code", e.getErrorCode());
-            String message = server + " error " + e.getErrorCode() + " detected: " + e.getMessage();
+            params.put("error_code", errorCode);
+            String message = server + " error " + errorCode + " detected: " + e.getMessage();
             params.put("message", message);
             if (object != null && object.length >= 2) {
                 String username = null;
@@ -140,14 +141,12 @@ public class SQLConnectionHook extends AbstractClassHook {
      * 捕捉hook method抛出的异常
      */
     public void addCatch(CtClass ctClass, String methodName, String desc) throws NotFoundException, CannotCompileException {
-        if ("mysql".equals(this.type)) {
-            LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
-            if (methods != null && methods.size() > 0) {
-                for (CtBehavior method : methods) {
-                    if (method != null) {
-                        String errorSrc = "com.baidu.openrasp.hook.sql.SQLConnectionHook.checkSQLErrorCode(" + "\"" + type + "\"" + ",$e,$args);";
-                        method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
-                    }
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc, null);
+        if (methods != null && methods.size() > 0) {
+            for (CtBehavior method : methods) {
+                if (method != null) {
+                    String errorSrc = "com.baidu.openrasp.hook.sql.SQLConnectionHook.checkSQLErrorCode(" + "\"" + type.name + "\"" + ",$e,$args);";
+                    method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
                 }
             }
         }

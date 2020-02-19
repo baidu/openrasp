@@ -32,4 +32,9 @@ void BaseAgent::install_sigterm_handler(sighandler_t signal_handler)
 	sa_usr.sa_handler = signal_handler;
 	sigaction(SIGTERM, &sa_usr, NULL);
 }
+
+std::string BaseAgent::get_name() const
+{
+	return name;
+}
 } // namespace openrasp

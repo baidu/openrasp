@@ -15,6 +15,7 @@
 package logs
 
 import (
+	"net/url"
 	"rasp-cloud/es"
 	"github.com/olivere/elastic"
 	"time"
@@ -64,6 +65,7 @@ var (
 		"webshell_command":           "WebShell - 命令执行",
 		"webshell_file_put_contents": "WebShell - 后门上传",
 		"webshell_ld_preload":        "WebShell - LD_PRELOAD 后门",
+		"response":                   "HTTP 响应采样检测",
 	}
 
 	AttackInterceptMap = map[interface{}]string{
@@ -91,11 +93,23 @@ func AddAttackAlarm(alarm map[string]interface{}) error {
 	putStackMd5(alarm, "attack_params")
 	setAlarmLocation(alarm)
 	idContent := ""
-	idContent += fmt.Sprint(alarm["rasp_id"])
-	idContent += fmt.Sprint(alarm["request_id"])
-	idContent += fmt.Sprint(alarm["attack_type"])
-	idContent += fmt.Sprint(alarm["stack_md5"])
+	if alarm["plugin_algorithm"] == "response_dataLeak" {
+		urlParse, err := url.Parse(alarm["url"].(string))
+		if err != nil {
+			return err
+		}
+		idContent += fmt.Sprint(urlParse.Scheme + "://" + urlParse.Host + urlParse.Path)
+	} else {
+		idContent += fmt.Sprint(alarm["rasp_id"])
+		idContent += fmt.Sprint(alarm["request_id"])
+		idContent += fmt.Sprint(alarm["attack_type"])
+		idContent += fmt.Sprint(alarm["stack_md5"])
+	}
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
+	err := AddLogWithKafka(AttackAlarmInfo.EsType, alarm)
+	if err != nil {
+		return err
+	}
 	return AddAlarmFunc(AttackAlarmInfo.EsType, alarm)
 }
 

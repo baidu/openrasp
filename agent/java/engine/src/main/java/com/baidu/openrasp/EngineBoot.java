@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,12 @@ import com.baidu.openrasp.plugin.js.JS;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
-import com.baidu.openrasp.v8.Loader;
 import com.baidu.openrasp.v8.CrashReporter;
+import com.baidu.openrasp.v8.Loader;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 
@@ -72,9 +74,10 @@ public class EngineBoot implements Module {
         initTransformer(inst);
         if (CloudUtils.checkCloudControlEnter()) {
             CrashReporter.install(Config.getConfig().getCloudAddress() + "/v1/agent/crash/report",
-            Config.getConfig().getCloudAppId(), Config.getConfig().getCloudAppSecret(),
-            CloudCacheModel.getInstance().getRaspId());
+                    Config.getConfig().getCloudAppId(), Config.getConfig().getCloudAppSecret(),
+                    CloudCacheModel.getInstance().getRaspId());
         }
+        deleteTmpDir();
         String message = "[OpenRASP] Engine Initialized [" + Agent.projectVersion + " (build: GitCommit="
                 + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
         System.out.println(message);
@@ -93,6 +96,17 @@ public class EngineBoot implements Module {
         String message = "[OpenRASP] Engine Released [" + Agent.projectVersion + " (build: GitCommit="
                 + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
         System.out.println(message);
+    }
+
+    private void deleteTmpDir() {
+        try {
+            File file = new File(Config.baseDirectory + File.separator + "jar_tmp");
+            if (file.exists()) {
+                FileUtils.deleteDirectory(file);
+            }
+        } catch (Throwable t) {
+            Logger.getLogger(EngineBoot.class.getName()).warn("failed to delete jar_tmp directory: " + t.getMessage());
+        }
     }
 
     /**

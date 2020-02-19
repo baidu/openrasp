@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "openrasp_log.h"
 #include "utils/debug_trace.h"
+#include <unordered_set>
 #include "utils/regex.h"
 
 extern "C"
@@ -93,8 +94,9 @@ static std::vector<DebugTrace> build_debug_trace(long limit TSRMLS_DC)
     return array;
 }
 
-std::vector<std::string> format_source_code_arr(TSRMLS_D)
+std::vector<std::string> format_source_code_arr()
 {
+    TSRMLS_FETCH();
     std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(plugin.maxstack) TSRMLS_CC);
     std::vector<std::string> array;
     for (DebugTrace &item : trace)
@@ -104,40 +106,21 @@ std::vector<std::string> format_source_code_arr(TSRMLS_D)
     return array;
 }
 
-void format_source_code_arr(zval *source_code_arr TSRMLS_DC)
+std::vector<std::string> format_debug_backtrace_arr()
 {
-    auto array = format_source_code_arr(TSRMLS_C);
-    for (auto &str : array)
-    {
-        add_next_index_stringl(source_code_arr, str.c_str(), str.length(), 1);
-    }
+    TSRMLS_FETCH();
+    return format_debug_backtrace_arr(OPENRASP_CONFIG(plugin.maxstack) TSRMLS_CC);
 }
 
-std::vector<std::string> format_debug_backtrace_arr(TSRMLS_D)
+std::vector<std::string> format_debug_backtrace_arr(long limit TSRMLS_DC)
 {
-    std::vector<DebugTrace> trace = build_debug_trace(OPENRASP_CONFIG(plugin.maxstack) TSRMLS_CC);
+    std::vector<DebugTrace> trace = build_debug_trace(limit TSRMLS_CC);
     std::vector<std::string> array;
     for (DebugTrace &item : trace)
     {
         array.push_back(item.to_log_string());
     }
     return array;
-}
-
-void add_stack_to_params(zval *params TSRMLS_DC)
-{
-    if (params && Z_TYPE_P(params) == IS_ARRAY)
-    {
-        zval *stack = nullptr;
-        MAKE_STD_ZVAL(stack);
-        array_init(stack);
-        std::vector<std::string> arr = format_debug_backtrace_arr(TSRMLS_C);
-        for (const std::string &item : arr)
-        {
-            add_next_index_stringl(stack, item.c_str(), item.length(), 1);
-        }
-        add_assoc_zval(params, "stack", stack);
-    }
 }
 
 int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
@@ -169,7 +152,7 @@ int recursive_mkdir(const char *path, int len, int mode TSRMLS_DC)
     return 0;
 }
 
-const char *fetch_url_scheme(const char *filename)
+const char *determine_scheme_pos(const char *filename)
 {
     if (nullptr == filename)
     {
@@ -187,36 +170,15 @@ const char *fetch_url_scheme(const char *filename)
     return nullptr;
 }
 
-void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter, bool use_abs_path)
+std::string fetch_possible_protocol(const char *filename)
 {
-    DIR *dir = nullptr;
-    std::string result;
-    struct dirent *ent;
-    if ((dir = opendir(dir_abs.c_str())) != nullptr)
+    std::string protocol;
+    const char *scheme_pos = determine_scheme_pos(filename);
+    if (nullptr != scheme_pos)
     {
-        while ((ent = readdir(dir)) != nullptr)
-        {
-            if (file_filter)
-            {
-                if (file_filter(ent->d_name))
-                {
-                    plugins.push_back(use_abs_path ? (dir_abs + std::string(1, DEFAULT_SLASH) + std::string(ent->d_name)) : std::string(ent->d_name));
-                }
-            }
-        }
-        closedir(dir);
+        protocol = std::string(filename, scheme_pos - filename);
     }
-}
-
-bool get_entire_file_content(const char *file, std::string &content)
-{
-    std::ifstream ifs(file, std::ifstream::in | std::ifstream::binary);
-    if (ifs.is_open() && ifs.good())
-    {
-        content = {std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
-        return true;
-    }
-    return false;
+    return protocol;
 }
 
 std::string fetch_outmost_string_from_ht(HashTable *ht, const char *arKey)
@@ -264,6 +226,7 @@ char *fetch_request_body(size_t max_len TSRMLS_DC)
 bool need_alloc_shm_current_sapi()
 {
     static const char *supported_sapis[] = {
+        "cgi-fcgi",
         "fpm-fcgi",
         "apache2handler",
         nullptr};
@@ -315,27 +278,115 @@ std::string convert_to_header_key(char *key, size_t length)
     return result;
 }
 
-bool openrasp_parse_url(const std::string &origin_url, std::string &scheme, std::string &host, std::string &port)
+bool openrasp_parse_url(const std::string &origin_url, openrasp::Url &openrasp_url)
 {
     php_url *url = php_url_parse_ex(origin_url.c_str(), origin_url.length());
     if (url)
     {
         if (url->scheme)
         {
-            scheme = std::string(url->scheme);
+            openrasp_url.set_scheme(url->scheme);
         }
         if (url->host)
         {
-            host = std::string(url->host);
+            openrasp_url.set_host(url->host);
         }
         if (url->port)
         {
-            port = std::to_string(url->port);
+            openrasp_url.set_port(std::to_string(url->port));
+        }
+        if (url->path)
+        {
+            openrasp_url.set_path(url->path);
+        }
+        if (url->query)
+        {
+            openrasp_url.set_query(url->query);
         }
         php_url_free(url);
         return true;
     }
     return false;
+}
+
+bool make_openrasp_root_dir(const char *path TSRMLS_DC)
+{
+    if (!path)
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be an empty path"));
+        return false;
+    }
+    if (!IS_ABSOLUTE_PATH(path, strlen(path)))
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a relative path"));
+        return false;
+    }
+    char expand_root_path[MAXPATHLEN];
+    expand_filepath(path, expand_root_path TSRMLS_CC);
+    if (!expand_root_path || strnlen(expand_root_path, 2) == 1)
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("openrasp.root_dir must not be a root path"));
+        return false;
+    }
+    std::string root_dir(expand_root_path);
+    std::string default_slash(1, DEFAULT_SLASH);
+    std::vector<std::string> sub_dir_list{
+        "assets",
+        "conf",
+        "plugins",
+        "locale",
+        "logs" + default_slash + RaspLoggerEntry::ALARM_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::POLICY_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::PLUGIN_LOG_DIR_NAME,
+        "logs" + default_slash + RaspLoggerEntry::RASP_LOG_DIR_NAME,
+        "logs" + default_slash + "crash"};
+    for (auto dir : sub_dir_list)
+    {
+        std::string sub_path(root_dir + DEFAULT_SLASH + dir);
+        if (!recursive_mkdir(sub_path.c_str(), sub_path.length(), 0777 TSRMLS_CC))
+        {
+            openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("openrasp.root_dir must be a writable path"));
+            return false;
+        }
+    }
+    return true;
+}
+
+void openrasp_set_locale(const char *locale, const char *locale_path)
+{
+#ifdef HAVE_GETTEXT
+    static const char *GETTEXT_PACKAGE = "openrasp";
+    if (nullptr != setlocale(LC_ALL, locale ? locale : "C"))
+    {
+        if (!bindtextdomain(GETTEXT_PACKAGE, locale_path))
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("bindtextdomain() failed: %s"), strerror(errno));
+        }
+        if (!textdomain(GETTEXT_PACKAGE))
+        {
+            openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("textdomain() failed: %s"), strerror(errno));
+        }
+    }
+    else
+    {
+        openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("Unable to set OpenRASP locale to %s"), locale);
+    }
+#endif
+}
+
+bool current_sapi_supported()
+{
+    const static std::unordered_set<std::string> supported_sapis =
+        {
+#ifdef HAVE_CLI_SUPPORT
+            "cli",
+#endif
+            "cli-server",
+            "cgi-fcgi",
+            "fpm-fcgi",
+            "apache2handler"};
+    auto iter = supported_sapis.find(std::string(sapi_module.name));
+    return iter != supported_sapis.end();
 }
 
 std::map<std::string, std::string> get_env_map()
@@ -372,6 +423,40 @@ std::string get_phpversion()
     return version;
 }
 
+bool openrasp_call_user_function(HashTable *function_table, zval **object_pp, const std::string &function_name,
+                                 zval *retval_ptr, zend_uint param_count, zval *params[] TSRMLS_DC)
+{
+    zval z_function_name;
+    INIT_ZVAL(z_function_name);
+    ZVAL_STRING(&z_function_name, function_name.c_str(), 0);
+    if (call_user_function(EG(function_table), object_pp, &z_function_name, retval_ptr,
+                           param_count, params TSRMLS_CC) == SUCCESS)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool get_long_constant(const std::string &key, long &value)
+{
+    TSRMLS_FETCH();
+    bool found = false;
+    zval z_result;
+    if (zend_get_constant(key.c_str(), key.length(), &z_result TSRMLS_CC))
+    {
+        if (Z_TYPE(z_result) == IS_LONG)
+        {
+            value = Z_LVAL(z_result);
+            found = true;
+        }
+        zval_dtor(&z_result);
+    }
+    return found;
+}
+
 zval *fetch_http_globals(int vars_id TSRMLS_DC)
 {
     static std::map<int, std::string> pairs = {{TRACK_VARS_POST, "_POST"},
@@ -389,4 +474,31 @@ zval *fetch_http_globals(int vars_id TSRMLS_DC)
         }
     }
     return nullptr;
+}
+
+bool maybe_ssrf_vulnerability(zval *file)
+{
+    if (nullptr != file &&
+        Z_TYPE_P(file) == IS_STRING &&
+        Z_STRLEN_P(file) > 0)
+    {
+        std::string protocol = fetch_possible_protocol(Z_STRVAL_P(file));
+        return maybe_ssrf_vulnerability(protocol);
+    }
+    return false;
+}
+
+bool maybe_ssrf_vulnerability(std::string protocol)
+{
+    static std::unordered_set<std::string> protocols = {"http", "https", "ftp"};
+    if (protocol.empty())
+    {
+        return false;
+    }
+    for (auto &ch : protocol)
+    {
+        ch = std::tolower(ch);
+    }
+    auto found = protocols.find(protocol);
+    return found != protocols.end();
 }

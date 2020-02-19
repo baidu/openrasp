@@ -221,6 +221,7 @@ export default {
       srcip: '',
       url: '',
       request_id: '',
+      stack_md5: '',
       plugin_message: '',
       total: 0,
       attack_types,

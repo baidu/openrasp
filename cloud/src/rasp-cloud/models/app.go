@@ -15,6 +15,7 @@
 package models
 
 import (
+	"rasp-cloud/kafka"
 	"rasp-cloud/mongo"
 	"fmt"
 	"strconv"
@@ -41,6 +42,7 @@ import (
 	"net"
 	"rasp-cloud/conf"
 	"net/url"
+	"log"
 )
 
 type App struct {
@@ -60,11 +62,18 @@ type App struct {
 	DingAlarmConf       DingAlarmConf          `json:"ding_alarm_conf" bson:"ding_alarm_conf"`
 	HttpAlarmConf       HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
 	AlgorithmConfig     map[string]interface{} `json:"algorithm_config"`
+	GeneralAlarmConf    GeneralAlarmConf       `json:"general_alarm_conf" bson:"general_alarm_conf"`
+	KafkaConf           *kafka.Kafka           `json:"kafka_alarm_conf" bson:"kafka_alarm_conf"`
 }
 
 type WhitelistConfigItem struct {
 	Url  string          `json:"url" bson:"url"`
 	Hook map[string]bool `json:"hook" bson:"hook"`
+	Description string   `json:"description" bson:"description"`
+}
+
+type GeneralAlarmConf struct {
+	AlarmCheckInterval  int64                 `json:"alarm_check_interval" bson:"alarm_check_interval"`
 }
 
 type EmailAlarmConf struct {
@@ -110,6 +119,7 @@ var AlarmTypes = []string{"email", "ding", "http"}
 
 const (
 	appCollectionName = "app"
+	configCollectionName = "config"
 	defaultAppName    = "PHP 示例应用"
 	SecreteMask       = "************"
 	DefalutPluginName = "plugin.js"
@@ -133,6 +143,8 @@ var (
 			"X-Protected-By": "OpenRASP",
 		},
 		"plugin.filter":             true,
+		"cpu.usage.enable":          false,
+		"lru.compare_enable":        false,
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,
 		"log.maxstack":              50,
@@ -143,7 +155,27 @@ var (
 		"syslog.facility":           1,
 		"syslog.enable":             false,
 		"decompile.enable":          false,
+		"security.weak_passwords":   []string{
+			"111111","123","123123","123456","123456a",
+			"a123456","admin","both","manager","mysql",
+			"root","rootweblogic","tomcat","user",
+			"weblogic1","weblogic123","welcome1",
+		},
+		"request.param_encoding":    "UTF-8",
+		"debug.level":               0,
+		"lru.max_size":              1000,
+		"lru.compare_limit":         10240,
+		"fileleak_scan.name":        `"\.(git|svn|tar|gz|rar|zip|sql|log)$"`,
+		"fileleak_scan.interval":    21600,
+		"fileleak_scan.limit":       100,
+		"cpu.usage.interval":        5,
+		"cpu.usage.percent":         90,
+		"response.sampler_interval": 60,
+		"response.sampler_burst":    5,
+		"dependency_check.interval": 12 * 3600,
 	}
+	AlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
+	MinAlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
 )
 
 func init() {
@@ -173,7 +205,11 @@ func init() {
 		if count <= 0 {
 			createDefaultApp()
 		}
-		go startAlarmTicker(time.Second * time.Duration(conf.AppConfig.AlarmCheckInterval))
+		generalConf, _ := getGeneralConfig()
+		if generalConf != nil && generalConf.AlarmCheckInterval > MinAlarmCheckInterval {
+			AlarmCheckInterval = generalConf.AlarmCheckInterval
+		}
+		go startAlarmTicker()
 	}
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		initApp()
@@ -240,6 +276,10 @@ func createEsIndexWithAppId(appId string) error {
 	if err != nil {
 		return errors.New("failed to create report data es index, " + err.Error())
 	}
+	err = CreateDependencyEsIndex(appId)
+	if err != nil {
+		return errors.New("failed to create dependency data es index, " + err.Error())
+	}
 	return nil
 }
 
@@ -254,13 +294,14 @@ func createDefaultApp() {
 	}
 }
 
-func startAlarmTicker(interval time.Duration) {
-	ticker := time.NewTicker(interval)
+func startAlarmTicker() {
+	timer := time.NewTimer(time.Second * time.Duration(AlarmCheckInterval))
 	for {
 		select {
-		case <-ticker.C:
+		case <-timer.C:
 			HandleAttackAlarm()
 		}
+		timer.Reset(time.Second * time.Duration(AlarmCheckInterval))
 	}
 }
 
@@ -274,6 +315,7 @@ func HandleAttackAlarm() {
 	_, err := mongo.FindAllWithSelect(appCollectionName, nil, &apps, bson.M{"plugin": 0}, 0, 0)
 	if err != nil {
 		beego.Error("failed to get apps for the alarm: " + err.Error())
+		log.Println("failed to get apps for the alarm: " + err.Error())
 		return
 	}
 	now := time.Now().UnixNano() / 1000000
@@ -305,6 +347,7 @@ func HandleAttackAlarm() {
 				1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 			if err != nil {
 				beego.Error("failed to get alarm from es: " + err.Error())
+				log.Println("failed to get alarm from es: " + err.Error())
 				continue
 			}
 			if total > 0 {
@@ -363,7 +406,7 @@ func selectDefaultPlugin(app *App) {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to insert default plugin: "+err.Error())
 		return
 	}
-	_, err = SetSelectedPlugin(app.Id, plugin.Id)
+	_, err = SetSelectedPlugin(app.Id, plugin.Id, "")
 	if err != nil {
 		beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to select default plugin for app: " + err.Error()+
 			", app_id: "+ app.Id+ ", plugin_id: "+ plugin.Id)
@@ -431,6 +474,18 @@ func GetSecretByAppId(appId string) (secret string, err error) {
 	return
 }
 
+func getGeneralConfig() (conf *GeneralAlarmConf, err error) {
+	var result struct {
+		GeneralAlarmConf    GeneralAlarmConf       `json:"general_alarm_conf" bson:"general_alarm_conf"`
+	}
+	err = mongo.FindId(configCollectionName, "0", &result)
+	if err != nil && &result != nil {
+		return
+	}
+	conf = &result.GeneralAlarmConf
+	return
+}
+
 func RegenerateSecret(appId string) (secret string, err error) {
 	var app *App
 	err = mongo.FindId(appCollectionName, appId, &app)
@@ -443,6 +498,10 @@ func RegenerateSecret(appId string) (secret string, err error) {
 }
 
 func HandleApp(app *App, isCreate bool) error {
+	generalConf, _ := getGeneralConfig()
+	if generalConf != nil {
+		app.GeneralAlarmConf.AlarmCheckInterval = generalConf.AlarmCheckInterval
+	}
 	if app.EmailAlarmConf.RecvAddr == nil {
 		app.EmailAlarmConf.RecvAddr = make([]string, 0)
 	}
@@ -473,7 +532,11 @@ func HandleApp(app *App, isCreate bool) error {
 	if app.GeneralConfig == nil {
 		app.GeneralConfig = make(map[string]interface{})
 	}
-
+	if app.KafkaConf != nil {
+		if app.KafkaConf.KafkaPwd != "" {
+			app.KafkaConf.KafkaPwd = SecreteMask
+		}
+	}
 	app.AlgorithmConfig = make(map[string]interface{})
 	plugin, err := GetSelectedPlugin(app.Id, false)
 	if err != nil {
@@ -496,12 +559,24 @@ func UpdateAppById(id string, doc interface{}) (app *App, err error) {
 	return GetAppById(id)
 }
 
+func UpdateConfigById(collection string, id string, doc interface{}) (err error) {
+	err = mongo.UpsertId(collection, id, doc)
+	if err != nil {
+		return
+	}
+	return err
+}
+
 func UpdateGeneralConfig(appId string, config map[string]interface{}) (*App, error) {
 	return UpdateAppById(appId, bson.M{"general_config": config, "config_time": time.Now().UnixNano()})
 }
 
 func UpdateWhiteListConfig(appId string, config []WhitelistConfigItem) (app *App, err error) {
 	return UpdateAppById(appId, bson.M{"whitelist_config": config, "config_time": time.Now().UnixNano()})
+}
+
+func UpdateGeneralAlarmConfig(config *GeneralAlarmConf) (err error) {
+	return UpdateConfigById(configCollectionName, "0", bson.M{"general_alarm_conf": config})
 }
 
 func UpdateAppConfig(version string) error {
@@ -910,5 +985,31 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		return handleError("failed to send ding ding alarm: invalid ding ding alarm conf")
 	}
 	beego.Debug("succeed in pushing ding ding alarm for app: " + app.Name + " ,with corp id: " + dingCong.CorpId)
+	return nil
+}
+
+func PushKafkaAttackAlarm(app *App, alarms []map[string]interface{}, isTest bool) error {
+	var kafkaConf = app.KafkaConf
+	addrs := strings.Split(kafkaConf.KafkaAddr, ",")
+	if len(addrs) != 0 {
+		body := make(map[string]interface{})
+		body["app_id"] = app.Id
+		if isTest {
+			body["data"] = getTestAlarmData()
+		} else {
+			body["data"] = alarms
+		}
+
+		for _, addr := range addrs {
+			err := kafka.SendMessage(body["app_id"].(string), "kafka-test", body["data"].([]map[string]interface{})[0])
+			if err != nil {
+				return handleError("failed to push kafka alarms to: " + addr + ", with error: " + err.Error())
+			}
+		}
+	} else {
+		return handleError("failed to send kafka alarm: the http receiving address can not be empty")
+	}
+	beego.Debug("succeed in pushing kafka alarm for app: " + app.Name + " ,with urls: " +
+		fmt.Sprintf("%v", addrs))
 	return nil
 }

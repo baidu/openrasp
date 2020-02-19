@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ package com.baidu.openrasp.plugin.checker;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.local.SqlResultChecker;
 import com.baidu.openrasp.plugin.checker.local.XssChecker;
+import com.baidu.openrasp.plugin.checker.policy.LogChecker;
+import com.baidu.openrasp.plugin.checker.policy.MongoConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
 import com.baidu.openrasp.plugin.checker.policy.server.*;
-import com.baidu.openrasp.plugin.checker.v8.V8Checker;
+import com.baidu.openrasp.plugin.checker.v8.V8AttackChecker;
 import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
@@ -38,30 +40,35 @@ public class CheckParameter {
 
     public enum Type {
         // js插件检测
-        SQL("sql", new V8Checker(), 1),
-        COMMAND("command", new V8Checker(), 1 << 1),
-        DIRECTORY("directory", new V8Checker(), 1 << 2),
-        REQUEST("request", new V8Checker(), 1 << 3),
-        DUBBOREQUEST("dubboRequest", new V8Checker(), 1 << 4),
-        READFILE("readFile", new V8Checker(), 1 << 5),
-        WRITEFILE("writeFile", new V8Checker(), 1 << 6),
-        FILEUPLOAD("fileUpload", new V8Checker(), 1 << 7),
-        RENAME("rename", new V8Checker(), 1 << 8),
-        XXE("xxe", new V8Checker(), 1 << 9),
-        OGNL("ognl", new V8Checker(), 1 << 10),
-        DESERIALIZATION("deserialization", new V8Checker(), 1 << 11),
-        WEBDAV("webdav", new V8Checker(), 1 << 12),
-        INCLUDE("include", new V8Checker(), 1 << 13),
-        SSRF("ssrf", new V8Checker(), 1 << 14),
-        SQL_EXCEPTION("sql_exception", new V8Checker(), 1 << 15),
-        REQUESTEND("requestEnd", new V8Checker(), 1 << 17),
-        LOADLIBRARY("loadLibrary", new V8Checker(), 1 << 18),
+        SQL("sql", new V8AttackChecker(), 1),
+        COMMAND("command", new V8AttackChecker(), 1 << 1),
+        DIRECTORY("directory", new V8AttackChecker(), 1 << 2),
+        REQUEST("request", new V8AttackChecker(), 1 << 3),
+        READFILE("readFile", new V8AttackChecker(), 1 << 5),
+        WRITEFILE("writeFile", new V8AttackChecker(), 1 << 6),
+        FILEUPLOAD("fileUpload", new V8AttackChecker(), 1 << 7),
+        RENAME("rename", new V8AttackChecker(), 1 << 8),
+        XXE("xxe", new V8AttackChecker(), 1 << 9),
+        OGNL("ognl", new V8AttackChecker(), 1 << 10),
+        DESERIALIZATION("deserialization", new V8AttackChecker(), 1 << 11),
+        WEBDAV("webdav", new V8AttackChecker(), 1 << 12),
+        INCLUDE("include", new V8AttackChecker(), 1 << 13),
+        SSRF("ssrf", new V8AttackChecker(), 1 << 14),
+        SQL_EXCEPTION("sql_exception", new V8AttackChecker(), 1 << 15),
+        REQUESTEND("requestEnd", new V8AttackChecker(), 1 << 17),
+        DELETEFILE("deleteFile", new V8AttackChecker(), 1 << 18),
+        MONGO("mongodb", new V8AttackChecker(), 1 << 19),
+        LOADLIBRARY("loadLibrary", new V8AttackChecker(), 1 << 20),
+        SSRF_REDIRECT("ssrfRedirect", new V8AttackChecker(), 1 << 21),
+        RESPONSE("response", new V8AttackChecker(false), 1 << 23),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),
         SQL_SLOW_QUERY("sqlSlowQuery", new SqlResultChecker(false), 0),
 
         // 安全基线检测
+        POLICY_LOG("log", new LogChecker(false), 1 << 22),
+        POLICY_MONGO_CONNECTION("mongoConnection", new MongoConnectionChecker(false), 0),
         POLICY_SQL_CONNECTION("sqlConnection", new SqlConnectionChecker(false), 0),
         POLICY_SERVER_TOMCAT("tomcatServer", new TomcatSecurityChecker(false), 0),
         POLICY_SERVER_JBOSS("jbossServer", new JBossSecurityChecker(false), 0),

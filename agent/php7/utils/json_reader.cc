@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include "json_reader.h"
 #include "utils/json.h"
+#include "openrasp_log.h"
+#include "openrasp_error.h"
 
 namespace openrasp
 {
@@ -48,42 +50,76 @@ void JsonReader::load(const std::string &content)
   }
 }
 
-std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value)
+std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value,
+                                     const openrasp::validator::vstring::Base &validator)
 {
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
+    std::string result;
     if (j.at(ptr).is_string())
     {
-      return j.at(ptr).get<std::string>();
+      result = j.at(ptr).get<std::string>();
     }
     else if (j.at(ptr).is_number())
     {
-      return std::to_string(j.at(ptr).get<int64_t>());
+      result = std::to_string(j.at(ptr).get<int64_t>());
     }
+    else
+    {
+      throw nlohmann::detail::other_error::create(900, "type should be string");
+    }
+    std::string error_description = validator.check(result);
+    if (!error_description.empty())
+    {
+      throw nlohmann::detail::other_error::create(901, error_description);
+    }
+    return result;
   }
-  catch (...)
+  catch (const nlohmann::detail::exception &e)
   {
+    if (get_exception_report())
+    {
+      openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("%s, config \"%s\" use the default value \"%s\""),
+                     e.what(), BaseReader::stringfy_keys(keys).c_str(), default_value.c_str());
+    }
   }
   return default_value;
 }
 
-int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value)
+int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value,
+                                const openrasp::validator::vint64::Base &validator)
 {
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
   {
+    int64_t result = default_value;
     if (j.at(ptr).is_number())
     {
-      return j.at(ptr).get<int64_t>();
+      result = j.at(ptr).get<int64_t>();
     }
     else if (j.at(ptr).is_string())
     {
-      return atoi(j.at(ptr).get<std::string>().c_str());
+      result = atoi(j.at(ptr).get<std::string>().c_str());
     }
+    else
+    {
+      throw nlohmann::detail::other_error::create(900, "type should be number");
+    }
+    std::string error_description = validator.check(result);
+    if (!error_description.empty())
+    {
+      throw nlohmann::detail::other_error::create(901, error_description);
+    }
+    return result;
   }
-  catch (...)
+  catch (const nlohmann::detail::exception &e)
   {
+    if (get_exception_report())
+    {
+      openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("%s, config \"%s\" use the default value %" PRId64 " "),
+                     e.what(), BaseReader::stringfy_keys(keys).c_str(), default_value);
+    }
   }
   return default_value;
 }
@@ -97,17 +133,20 @@ bool JsonReader::fetch_bool(const std::vector<std::string> &keys, const bool &de
     {
       return j.at(ptr);
     }
+    else
+    {
+      throw nlohmann::detail::other_error::create(900, "type should be boolean");
+    }
   }
-  catch (...)
+  catch (const nlohmann::detail::exception &e)
   {
+    if (get_exception_report())
+    {
+      openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("%s, config \"%s\" use the default value \"%s\""),
+                     e.what(), BaseReader::stringfy_keys(keys).c_str(), default_value ? "true" : "false");
+    }
   }
   return default_value;
-}
-
-void JsonReader::erase(const std::vector<std::string> &keys)
-{
-  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
-  j.erase(ptr);
 }
 
 std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::string> &keys)
@@ -124,9 +163,18 @@ std::vector<std::string> JsonReader::fetch_object_keys(const std::vector<std::st
         result.push_back(it.key());
       }
     }
+    else
+    {
+      throw nlohmann::detail::other_error::create(900, "type should be object");
+    }
   }
-  catch (...)
+  catch (const nlohmann::detail::exception &e)
   {
+    if (get_exception_report())
+    {
+      openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("%s, config \"%s\""),
+                     e.what(), BaseReader::stringfy_keys(keys).c_str());
+    }
   }
   return result;
 }
@@ -140,9 +188,18 @@ std::vector<std::string> JsonReader::fetch_strings(const std::vector<std::string
     {
       return j.at(ptr);
     }
+    else
+    {
+      throw nlohmann::detail::other_error::create(900, "type should be array");
+    }
   }
-  catch (...)
+  catch (const nlohmann::detail::exception &e)
   {
+    if (get_exception_report())
+    {
+      openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("%s, config \"%s\" use the default value"),
+                     e.what(), BaseReader::stringfy_keys(keys).c_str());
+    }
   }
   return default_value;
 }
@@ -192,6 +249,33 @@ void JsonReader::write_map_to_array(const std::vector<std::string> &keys, const 
   j[ptr] = array;
 }
 
+size_t JsonReader::get_array_size(const std::vector<std::string> &keys)
+{
+  size_t result = 0;
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  try
+  {
+    json::reference ref = j.at(ptr);
+    if (ref.is_array())
+    {
+      result = ref.size();
+    }
+    else
+    {
+      throw nlohmann::detail::other_error::create(900, "type should be array");
+    }
+  }
+  catch (const nlohmann::detail::exception &e)
+  {
+    if (get_exception_report())
+    {
+      openrasp_error(LEVEL_WARNING, CONFIG_ERROR, _("%s, config \"%s\""),
+                     e.what(), BaseReader::stringfy_keys(keys).c_str());
+    }
+  }
+  return result;
+}
+
 void JsonReader::write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value)
 {
   json j_map(value);
@@ -206,9 +290,35 @@ void JsonReader::write_vector(const std::vector<std::string> &keys, const std::v
   j[ptr] = j_vec;
 }
 
+void JsonReader::write_int64_vector(const std::vector<std::string> &keys, const std::vector<int> &value)
+{
+  json j_vec(value);
+  json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+  j[ptr] = j_vec;
+}
+
 void JsonReader::merge(const JsonReader &patch)
 {
   j.merge_patch(patch.j);
+}
+
+void JsonReader::write_json_string(const std::vector<std::string> &keys, const std::string &value)
+{
+  try
+  {
+    json j_val = json::parse(value);
+    json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
+    j[ptr] = j_val;
+  }
+  catch (json::parse_error &e)
+  {
+    error = true;
+    std::ostringstream oss;
+    oss << "message: " << e.what() << ';'
+        << "exception id: " << e.id << ';'
+        << "byte position of error: " << e.byte;
+    error_msg = oss.str();
+  }
 }
 
 } // namespace openrasp

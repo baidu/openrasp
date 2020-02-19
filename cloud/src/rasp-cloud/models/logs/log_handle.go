@@ -21,14 +21,17 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/olivere/elastic"
+	"net/url"
 	"os"
 	"path"
 	"rasp-cloud/es"
 	"rasp-cloud/tools"
+	"strconv"
 	"time"
 	"rasp-cloud/conf"
 	"strings"
 	"crypto/md5"
+	"rasp-cloud/kafka"
 )
 
 type AggrTimeParam struct {
@@ -129,6 +132,8 @@ func registerAlarmInfo(info *AlarmLogInfo) {
 }
 
 func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
+	maxSize := strconv.FormatInt(conf.AppConfig.LogMaxSize, 10)
+	maxDays := strconv.Itoa(conf.AppConfig.LogMaxDays)
 	if isExists, _ := tools.PathExists(dirName); !isExists {
 		err := os.MkdirAll(dirName, os.ModePerm)
 		if err != nil {
@@ -139,7 +144,7 @@ func initAlarmFileLogger(dirName string, fileName string) *logs.BeeLogger {
 	logger := logs.NewLogger()
 	logPath := path.Join(dirName, fileName)
 	err := logger.SetLogger(tools.AdapterAlarmFile,
-		`{"filename":"`+logPath+`", "daily":true, "maxdays":10, "perm":"0777"}`)
+		`{"filename":"`+logPath+`", "daily":true, "maxdays":`+maxDays+`, "perm":"0777","maxsize": `+maxSize+`}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init alarm logger", err)
 	}
@@ -168,7 +173,7 @@ func handleEsLogPush() {
 			alarm := <-AttackAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(AttackAlarmInfo.EsType, alarms)
+		err := es.BulkInsertAlarm(AttackAlarmInfo.EsType, alarms)
 		if err != nil {
 			beego.Error("failed to execute es bulk insert for attack alarm: " + err.Error())
 		}
@@ -179,7 +184,7 @@ func handleEsLogPush() {
 			alarm := <-PolicyAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(PolicyAlarmInfo.EsType, alarms)
+		err := es.BulkInsertAlarm(PolicyAlarmInfo.EsType, alarms)
 		if err != nil {
 			beego.Error("failed to execute es bulk insert for policy alarm: " + err.Error())
 		}
@@ -190,7 +195,7 @@ func handleEsLogPush() {
 			alarm := <-ErrorAlarmInfo.AlarmBuffer
 			alarms = append(alarms, alarm)
 		}
-		err := es.BulkInsert(ErrorAlarmInfo.EsType, alarms)
+		err := es.BulkInsertAlarm(ErrorAlarmInfo.EsType, alarms)
 		if err != nil {
 			beego.Error("failed to execute es bulk insert for error alarm: " + err.Error())
 		}
@@ -210,6 +215,26 @@ func AddLogWithFile(alarmType string, alarm map[string]interface{}) error {
 		}
 	} else {
 		logs.Error("failed to write rasp log, unrecognized log type: " + alarmType)
+	}
+	return nil
+}
+
+func AddLogWithKafka(alarmType string, log map[string]interface{}) error {
+	if appId, ok := log["app_id"].(string); ok {
+		kafkaIndex := "real-openrasp-" + alarmType + "-" + appId
+		err := kafka.SendMessage(appId, kafkaIndex, log)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AddLogsWithKafka(alarmType string, appId string, logs []interface{}) error {
+	kafkaIndex := "real-openrasp-" + alarmType + "-" + appId
+	err := kafka.SendMessages(appId, kafkaIndex, logs)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -245,6 +270,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 	var total int64
 	var attackAggrName = "attack_aggr"
 	var attackTimeTopHitName = "attack_time_top_hit"
+	var typeIndex string
 	filterQueries := make([]elastic.Query, 0, len(query)+1)
 	shouldQueries := make([]elastic.Query, 0, len(query)+1)
 	if query != nil {
@@ -320,16 +346,29 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			result = make([]map[string]interface{}, len(hits))
 			for index, item := range hits {
 				result[index] = make(map[string]interface{})
+				var filterId string
 				err := json.Unmarshal(*item.Source, &result[index])
 				if err != nil {
 					return 0, nil, err
 				}
-				result[index]["id"] = item.Id
-				delete(result[index], "_@timestamp")
-				delete(result[index], "@timestamp")
-				delete(result[index], "@version")
-				delete(result[index], "tags")
-				delete(result[index], "host")
+				if typeIndex == "attack" {
+					requestId := result[index]["request_id"].(string)
+					stackMd5 := result[index]["stack_md5"].(string)
+					attackType := result[index]["attack_type"].(string)
+					pluginAlgorithm := result[index]["plugin_algorithm"].(string)
+					urlString := result[index]["url"].(string)
+					if pluginAlgorithm == "response_dataLeak" {
+						urlParse, err := url.Parse(urlString)
+						if err != nil {
+							return 0, nil, err
+						}
+						filterId = urlParse.Scheme + "://" + urlParse.Host + urlParse.Path
+					} else {
+						filterId = requestId + stackMd5 + attackType
+					}
+					result[index]["filter_id"] = filterId
+				}
+				es.HandleSearchResult(result[index], item.Id)
 			}
 		}
 	} else {
@@ -352,8 +391,8 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 							if err != nil {
 								return 0, nil, err
 							}
-							value["id"] = hits[0].Id
 							value["attack_count"] = terms.Buckets[index].DocCount
+							es.HandleSearchResult(value, hits[0].Id)
 							result = append(result, value)
 						}
 					}

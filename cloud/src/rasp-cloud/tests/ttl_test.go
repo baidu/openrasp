@@ -2,6 +2,7 @@ package test
 
 import (
 	_ "unsafe"
+	_ "rasp-cloud/tests/start"
 	_ "rasp-cloud/es"
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"

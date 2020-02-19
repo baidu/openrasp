@@ -16,10 +16,11 @@ package agent
 
 import (
 	"net/http"
+	"rasp-cloud/conf"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"time"
-	"rasp-cloud/conf"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/validation"
 )
@@ -72,6 +73,10 @@ func (o *RaspController) Post() {
 	if len(rasp.ServerVersion) >= 50 {
 		o.ServeError(http.StatusBadRequest, "the length of rasp server version must be less than 50")
 	}
+
+	if len(rasp.Description) >= 1024 {
+		o.ServeError(http.StatusBadRequest, "the length of rasp description less than 1024")
+	}
 	if len(rasp.HostType) >= 256 {
 		o.ServeError(http.StatusBadRequest, "the length of host type must be less than 256")
 	}
@@ -81,6 +86,7 @@ func (o *RaspController) Post() {
 	valid := validation.Validation{}
 	if result := valid.IP(rasp.RegisterIp, "IP"); !result.Ok {
 		o.ServeError(http.StatusBadRequest, "rasp register_ip format error: "+result.Error.Message)
+
 	}
 	if rasp.HeartbeatInterval <= 0 {
 		o.ServeError(http.StatusBadRequest, "heartbeat_interval must be greater than 0")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,9 @@ public enum ErrorType {
     HTTPAPPENDER_ERROR(20011, "Cloud Control Log Upload Failed"),
     DETECT_SERVER_ERROR(20012, "Detect Server Error"),
     REFLECTION_ERROR(20013, "Reflex Failed"),
-    CPU_ERROR(20014, "Count Cpu Usage Failed");
+    CPU_ERROR(20014, "Count Cpu Usage Failed"),
+    DEPENDENCY_ERROR(20015, "Find Dependency Information Failed"),
+    DEPENDENCY_REPORT_ERROR(20016, "Dependency Report Failed");
     private int code;
     private String message;
 

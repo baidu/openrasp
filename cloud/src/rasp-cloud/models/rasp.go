@@ -30,7 +30,9 @@ import (
 type Rasp struct {
 	Id                string            `json:"id" bson:"_id,omitempty"`
 	AppId             string            `json:"app_id" bson:"app_id,omitempty"`
+	StrategyId		  string			`json:"strategy_id" bson:"strategy_id,omitempty"`
 	Version           string            `json:"version" bson:"version,omitempty"`
+	Os                string            `json:"os" bson:"os,omitempty"`
 	HostName          string            `json:"hostname" bson:"hostname,omitempty"`
 	RegisterIp        string            `json:"register_ip" bson:"register_ip,omitempty"`
 	Language          string            `json:"language" bson:"language,omitempty"`
@@ -47,6 +49,7 @@ type Rasp struct {
 	LastHeartbeatTime int64             `json:"last_heartbeat_time" bson:"last_heartbeat_time,omitempty"`
 	RegisterTime      int64             `json:"register_time" bson:"register_time,omitempty"`
 	Environ           map[string]string `json:"environ" bson:"environ,omitempty"`
+	Description       string            `json:"description" bson:"description,omitempty"`
 }
 
 type RecordCount struct {
@@ -128,6 +131,24 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 					"$options": "$i",
 				},
 			},
+			{
+				"version": bson.M{
+					"$regex":   realHostname,
+					"$options": "$i",
+				},
+			},
+			{
+				"description": bson.M{
+					"$regex":   realHostname,
+					"$options": "$i",
+				},
+			},
+			{
+				"os": bson.M{
+					"$regex":   realHostname,
+					"$options": "$i",
+				},
+			},
 		}
 		delete(bsonModel, "hostname")
 	}
@@ -168,9 +189,40 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 	}
 	if bsonModel["app_id"] != nil {
 		app_id := strings.TrimSpace(fmt.Sprint(bsonModel["app_id"]))
-		Operations := []bson.M{
+		version := strings.TrimSpace(fmt.Sprint(bsonModel["version"]))
+		onlineFlag := bson.M{"$gt": 0}
+		if selector.Online != nil {
+			if *selector.Online {
+				onlineFlag = bson.M{"$gt": time.Now().Unix() - 180}
+			} else {
+				onlineFlag = bson.M{"$lt": time.Now().Unix() - 180}
+			}
+		}
+		var matchCase bson.M
+		if version != "<nil>" {
+			matchCase = bson.M{"$and": []bson.M{
+				{"app_id": app_id},
+				{"version": version},
+				{"onlineTime": onlineFlag},
+			}}
+		} else {
+			matchCase = bson.M{"$and": []bson.M{
+				{"app_id": app_id},
+				{"onlineTime": onlineFlag},
+			}}
+		}
+		Operations := []bson.M {
 			{
-				"$match": bson.M{"app_id": app_id},
+				"$project": bson.M {
+					"app_id": 1,
+					"version": 1,
+					"last_heartbeat_time": 1,
+					"heartbeat_interval": 1,
+					"onlineTime": bson.M {
+						"$add": []string{"$last_heartbeat_time", "$heartbeat_interval"}}},
+			},
+			{
+				"$match": matchCase,
 			},
 			{
 				"$group": bson.M{
@@ -224,7 +276,11 @@ func RemoveRaspById(id string) (err error) {
 	if *rasp.Online {
 		return errors.New("unable to delete online rasp")
 	}
-	return mongo.RemoveId(raspCollectionName, id)
+	err = mongo.RemoveId(raspCollectionName, id)
+	if err != nil {
+		return err
+	}
+	return RemoveDependencyByRasp(rasp.AppId, rasp.Id)
 }
 
 func RemoveRaspByIds(appId string, ids []string) (int, error) {
@@ -263,6 +319,10 @@ func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, e
 		return 0, err
 	}
 	return info.Removed, nil
+}
+
+func UpdateRaspDescription(raspId string, description string) error {
+	return mongo.UpdateId(raspCollectionName, raspId, bson.M{"description": description})
 }
 
 func RegisterCallback(url string, token string, rasp *Rasp) error {

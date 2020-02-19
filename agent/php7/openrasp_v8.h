@@ -18,21 +18,17 @@
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
+#include "hook/checker/check_result.h"
 #include "php/header.h"
 
 namespace openrasp
 {
-enum CheckResult {
-  kCache,
-  kNoCache,
-  kBlock
-};
 class openrasp_v8_process_globals
 {
 public:
   Snapshot *snapshot_blob = nullptr;
   std::mutex mtx;
-  std::string plugin_config;
+  std::string plugin_config = "global.checkPoints=['command','directory','fileUpload','readFile','request','requestEnd','sql','sql_exception','writeFile','xxe','ognl','deserialization','reflection','webdav','ssrf','include','eval','copy','rename','loadLibrary','ssrfRedirect','deleteFile','mongodb','response'];";
   std::vector<PluginFile> plugin_src_list;
   std::once_flag init_v8_once;
 };
@@ -41,7 +37,10 @@ CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Ob
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
 v8::Local<v8::ObjectTemplate> CreateRequestContextTemplate(Isolate *isolate);
 void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
-void extract_sql_error_codes(Isolate *isolate, std::vector<long> &sql_error_codes, int limit);
+std::vector<int64_t> extract_int64_array(Isolate *isolate, const std::string &value, int limit, const std::vector<int64_t> &default_value = std::vector<int64_t>());
+std::vector<std::string> extract_string_array(Isolate *isolate, const std::string &value, int limit, const std::vector<std::string> &default_value = std::vector<std::string>());
+int64_t extract_int64(Isolate *isolate, const std::string &value, const int64_t &default_value);
+std::string extract_string(Isolate *isolate, const std::string &value, const std::string &default_value);
 void load_plugins();
 void plugin_log(const std::string &message);
 } // namespace openrasp

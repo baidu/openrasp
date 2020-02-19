@@ -41,8 +41,6 @@ public:
   long GetLatestUpdateTime() const;
   void SetLatestUpdateTime(long latestUpdateTime);
 
-  bool updateAlgorithmConfig();
-
 public:
   PluginBlock plugin;
   LogBlock log;
@@ -53,10 +51,7 @@ public:
   ClientipBlock clientip;
   LruBlock lru;
   DecompileBlock decompile;
-
-  //plugin come from config
-  CallableBlock webshell_callable;
-  XssBlock xss;
+  ResponseBlock response;
 
 private:
   long latestUpdateTime = 0;

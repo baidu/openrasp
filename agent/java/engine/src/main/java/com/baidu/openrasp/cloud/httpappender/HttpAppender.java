@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -147,9 +147,11 @@ public class HttpAppender extends AppenderSkeleton {
             url = CloudRequestUrl.CLOUD_POLICY_ALARM_HTTP_APPENDER_URL;
         } else if ("alarm".equals(logger)) {
             url = CloudRequestUrl.CLOUD_ALARM_HTTP_APPENDER_URL;
-        } else if ("plugin".equals(logger)) {
-            url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
-        } else {
+        }
+//        else if ("plugin".equals(logger)) {
+//            url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
+//        }
+        else {
             url = CloudRequestUrl.CLOUD_EXCEPTION_HTTP_APPENDER_URL;
         }
         return url;

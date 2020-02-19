@@ -52,6 +52,10 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(REQUEST, "request");
   insert(REQUEST_END, "requestEnd");
   insert(EVAL, "eval");
+  insert(DELETE_FILE, "deleteFile");
+  insert(MONGO, "mongodb");
+  insert(SSRF_REDIRECT, "ssrfRedirect");
+  insert(RESPONSE, "response");
 }
 
 CheckTypeTransfer::~CheckTypeTransfer()
@@ -87,20 +91,16 @@ OpenRASPCheckType CheckTypeTransfer::name_to_type(const std::string &name) const
 std::map<std::string, std::string> CheckTypeTransfer::get_buildin_action_map() const
 {
   std::map<std::string, std::string> buildin_action_map;
-  for (OpenRASPCheckType buildin_type : buildin_check_type)
+  for (const OpenRASPCheckType &buildin_type : buildin_check_type)
   {
     buildin_action_map.insert({type_to_name(buildin_type), ""});
   }
   return buildin_action_map;
 }
 
-bool CheckTypeTransfer::is_buildin_check_type(OpenRASPCheckType type) const
+std::vector<OpenRASPCheckType> CheckTypeTransfer::get_buildin_check_types() const
 {
-  if (std::find(buildin_check_type.begin(), buildin_check_type.end(), type) != buildin_check_type.end())
-  {
-    return true;
-  }
-  return false;
+  return buildin_check_type;
 }
 
 CheckTypeTransfer &CheckTypeTransfer::instance()

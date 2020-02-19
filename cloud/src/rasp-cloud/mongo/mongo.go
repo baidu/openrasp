@@ -15,17 +15,17 @@
 package mongo
 
 import (
-	"gopkg.in/mgo.v2"
-	"time"
-	"github.com/astaxie/beego"
-	"rasp-cloud/tools"
-	"gopkg.in/mgo.v2/bson"
-	"strconv"
-	"math/rand"
-	"fmt"
 	"crypto/sha1"
-	"strings"
+	"fmt"
+	"github.com/astaxie/beego"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"rasp-cloud/conf"
+	"rasp-cloud/tools"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var (
@@ -48,16 +48,16 @@ func init() {
 	}
 	session, err = mgo.DialWithInfo(dialInfo)
 	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to find MongoDB server: ", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "Unable to connect to MongoDB server", err)
 	}
 	info, err := session.BuildInfo()
 	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get MongoDB version", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "Failed to get MongoDB version", err)
 	}
 	beego.Info("MongoDB version: " + info.Version)
 	if strings.Compare(info.Version, minMongoVersion) < 0 {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "unable to support the MongoDB with a version lower than "+
-			minMongoVersion+ ","+ " the current version is "+ info.Version, nil)
+		tools.Panic(tools.ErrCodeMongoInitFailed, "MongoDB version lower than "+
+			minMongoVersion+" is not supported, current version is "+info.Version, nil)
 	}
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "init MongoDB failed", err)

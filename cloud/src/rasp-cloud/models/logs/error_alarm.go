@@ -33,5 +33,9 @@ func AddErrorAlarm(alarm map[string]interface{}) error {
 	idContent += fmt.Sprint(alarm["message"])
 	idContent += fmt.Sprint(alarm["stack_trace"])
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
+	err := AddLogWithKafka(AttackAlarmInfo.EsType, alarm)
+	if err != nil {
+		return err
+	}
 	return AddAlarmFunc(ErrorAlarmInfo.EsType, alarm)
 }

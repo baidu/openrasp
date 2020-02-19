@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,17 @@ public abstract class AbstractRequest {
     public AbstractRequest(Object request) {
         this.request = request;
         this.requestId = UUID.randomUUID().toString().replace("-", "");
+        this.maxBodySize = Config.getConfig().getBodyMaxBytes();
+    }
+
+    /**
+     * constructor
+     *
+     * @param request 请求实体
+     */
+    public AbstractRequest(Object request, String requestId) {
+        this.request = request;
+        this.requestId = requestId;
         this.maxBodySize = Config.getConfig().getBodyMaxBytes();
     }
 

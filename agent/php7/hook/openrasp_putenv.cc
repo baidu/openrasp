@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "hook/data/putenv_object.h"
+#include "hook/checker/builtin_detector.h"
 #include "openrasp_hook.h"
 #include "agent/shared_config_manager.h"
 
@@ -21,22 +23,12 @@ PRE_HOOK_FUNCTION(putenv, WEBSHELL_LD_PRELOAD);
 
 void pre_global_putenv_WEBSHELL_LD_PRELOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zend_string *env = nullptr;
-    if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "S", &env) == FAILURE)
+    zval *env = nullptr;
+    if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "z", &env) == FAILURE)
     {
         return;
     }
-    if (!openrasp_check_type_ignored(check_type) &&
-        env != nullptr &&
-        strncmp(env->val, "LD_PRELOAD=", sizeof("LD_PRELOAD=") - 1) == 0)
-    {
-        zval attack_params;
-        array_init(&attack_params);
-        add_assoc_str(&attack_params, "env", env);
-        zend_string_addref(env);
-        zval plugin_message;
-        ZVAL_STRING(&plugin_message, _("WebShell activity - Detected LD_PRELOAD"));
-        OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
-        openrasp_buildin_php_risk_handle(action, check_type, 100, &attack_params, &plugin_message);
-    }
+    openrasp::data::PutenvObject putenv_obj(env);
+    openrasp::checker::BuiltinDetector builtin_detector(putenv_obj);
+    builtin_detector.run();
 }

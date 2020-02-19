@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,13 +59,6 @@ public class HookHandler {
         }
     };
 
-    public static ThreadLocal<Boolean> enableEnd = new ThreadLocal<Boolean>() {
-        @Override
-        protected Boolean initialValue() {
-            return true;
-        }
-    };
-
     private static ThreadLocal<Boolean> tmpEnableCurrThreadHook = new ThreadLocal<Boolean>() {
         @Override
         protected Boolean initialValue() {
@@ -116,6 +109,13 @@ public class HookHandler {
     public static void enableCurrThreadHook() {
         enableCurrThreadHook.set(true);
     }
+
+    public static ThreadLocal<Boolean> enableEnd = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
 
     public static boolean isEnableCurrThreadHook() {
         return enableCurrThreadHook.get();
@@ -181,7 +181,7 @@ public class HookHandler {
     public static void checkRequest(Object servlet, Object request, Object response) {
         if (servlet != null && request != null && !enableCurrThreadHook.get()
                 && CustomClassTransformer.isNecessaryHookComplete) {
-            // 默认是关闭hook的，只有处理过HTTP request的线程才打开
+            // 默认是关闭hook的，只有处理过HTTP requesst的线程才打开
             enableEnd.set(true);
             enableCurrThreadHook.set(true);
             //新的请求开启body xss hook点
@@ -339,12 +339,16 @@ public class HookHandler {
             return;
         }
         if (requestCache.get() != null) {
-            StringBuffer sb = requestCache.get().getRequestURL();
-            if (sb != null) {
-                String url = sb.substring(sb.indexOf("://") + 3);
-                if (HookWhiteModel.isContainURL(type.getCode(), url)) {
-                    return;
+            try {
+                StringBuffer sb = requestCache.get().getRequestURL();
+                if (sb != null) {
+                    String url = sb.substring(sb.indexOf("://") + 3);
+                    if (HookWhiteModel.isContainURL(type.getCode(), url)) {
+                        return;
+                    }
                 }
+            } catch (Exception e) {
+                LogTool.traceWarn(ErrorType.HOOK_ERROR, "white list check has failed: " + e.getMessage(), e);
             }
         }
         doRealCheckWithoutRequest(type, params);

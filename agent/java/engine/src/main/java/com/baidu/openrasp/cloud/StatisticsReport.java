@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,12 @@ public class StatisticsReport extends CloudTimerTask {
     private static final int STATISTICS_REPORT_INTERVAL = 3600;
 
     public StatisticsReport() {
-        super(STATISTICS_REPORT_INTERVAL);
+        super("OpenRASP Statistics Thread");
+    }
+
+    @Override
+    public long getSleepTime() {
+        return STATISTICS_REPORT_INTERVAL;
     }
 
     @Override

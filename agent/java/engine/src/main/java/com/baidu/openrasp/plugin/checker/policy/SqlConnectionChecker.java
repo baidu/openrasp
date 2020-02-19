@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,18 @@
 
 package com.baidu.openrasp.plugin.checker.policy;
 
-import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SqlConnectionChecker extends PolicyChecker {
-    public SqlConnectionChecker() {
-        super();
-    }
 
     public SqlConnectionChecker(boolean canBlock) {
         super(canBlock);
@@ -41,7 +37,6 @@ public class SqlConnectionChecker extends PolicyChecker {
     private static final String SQL_TYPE_ORACLE = "oracle";
     private static final String SQL_TYPE_POSTGRESQL = "postgresql";
     private static final String SQL_TYPE_MYSQL = "mysql";
-    private static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     private static final String CONNECTION_USER_KEY = "user";
     private static final int ALARM_TIME_CACHE_MAX_SIZE = 5000;
     private static final String DEFAULT_MYSQL_PORT = "3306";
@@ -77,7 +72,7 @@ public class SqlConnectionChecker extends PolicyChecker {
     }
 
     private boolean checkPassword(String password) {
-        List<String> checkList = Arrays.asList(WEAK_WORDS);
+        List<String> checkList = getSecurityWeakPasswords();
         return !checkList.contains(password);
     }
 
@@ -298,4 +293,11 @@ public class SqlConnectionChecker extends PolicyChecker {
         }
     }
 
+    /**
+     * 从配置获取弱口令列表
+     */
+    public List<String> getSecurityWeakPasswords() {
+        List<String> securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : Arrays.asList(WEAK_WORDS);
+    }
 }

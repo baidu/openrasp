@@ -19,6 +19,9 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
+#include <functional>
+#include <climits>
 
 namespace openrasp
 {
@@ -28,6 +31,10 @@ bool file_readable(const std::string &file_path);
 std::string get_line_content(const std::string &file_path, long num);
 bool write_string_to_file(const char *file, std::ios_base::openmode mode, const char *content, size_t content_len);
 bool read_entire_content(const std::string &file, std::string &content);
+void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins,
+                      std::function<bool(const char *filename)> file_filter, long limit = LONG_MAX,
+                      bool use_abs_path = false, std::string default_slash = "/");
+time_t get_last_modified(const std::string &file_path);
 
 } // namespace openrasp
 

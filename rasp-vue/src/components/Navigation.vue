@@ -55,10 +55,18 @@
                   <i class="dropdown-icon fe fe-settings"></i> 用户设置
                 </a>
                 <div class="dropdown-divider"></div> -->
+
+                <RouterLink class="dropdown-item" :to="{ name: 'exceptions', params: { app_id: current_app.id } }">
+                  <i class="dropdown-icon fe fe-alert-circle" />
+                  异常日志
+                </RouterLink>
                 <RouterLink class="dropdown-item" :to="{ name: 'audit', params: { app_id: current_app.id } }">
                   <i class="dropdown-icon fe fe-user-check" />
                   操作审计
                 </RouterLink>
+                <a class="dropdown-item" href="https://rasp.baidu.com/doc" target="_blank">
+                  <i class="dropdown-icon fe fe-file-text" /> 帮助文档
+                </a>
                 <a class="dropdown-item" href="https://rasp.baidu.com/#section-support" target="_blank">
                   <i class="dropdown-icon fa fa-qq" /> 技术支持
                 </a>
@@ -111,15 +119,21 @@
                 </RouterLink>
               </li>
               <li class="nav-item">
+                <RouterLink :to="{ name: 'iast', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fa fa-paper-plane-o" />
+                  扫描器
+                </RouterLink>
+              </li>
+              <li class="nav-item">
                 <RouterLink :to="{ name: 'plugins', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-zap" />
                   插件管理
                 </RouterLink>
               </li>
               <li class="nav-item">
-                <RouterLink :to="{ name: 'exceptions', params: { app_id: current_app.id } }" class="nav-link">
-                  <i class="fe fe-alert-circle" />
-                  异常日志
+                <RouterLink :to="{ name: 'dependency', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-code" />
+                  类库信息
                 </RouterLink>
               </li>
               <li class="nav-item dropdown">
@@ -127,12 +141,6 @@
                   <i class="fe fe-settings" />
                   系统设置
                 </RouterLink>
-              </li>
-              <li class="nav-item">
-                <a href="https://rasp.baidu.com/doc" target="_blank" class="nav-link">
-                  <i class="fe fe-file-text" />
-                  帮助文档
-                </a>
               </li>
               <!-- <li class="nav-item">
                 <a href="https://rasp.baidu.com/#section-support" target="_blank" class="nav-link">
@@ -148,28 +156,24 @@
 
     <div v-if="is_default_password" class="alert alert-warning" style="margin-bottom: 0">
       <div class="container">
-        你还没有修改默认的后台密码，可前往 <router-link :to="{name: 'settings', params: {setting_tab: 'auth'}}">
-登录认证
-</router-link> 设置
+        你还没有修改默认的后台密码，可前往 
+        <router-link :to="{name: 'settings', params: {setting_tab: 'auth'}}">登录认证</router-link> 设置
       </div>
     </div> 
 
     <div v-if="no_plugin" class="alert alert-warning">
       <div class="container">
-        <strong>注意!</strong> 当前应用没有配置任何检测插件，请前往 <router-link :to="{name: 'plugins'}">
-插件页面
-</router-link> 进行配置
+        <strong>注意!</strong> 当前应用没有配置任何检测插件，请前往 
+        <router-link :to="{name: 'plugins'}">插件页面</router-link> 进行配置
       </div>
     </div>
 
     <div v-if="all_log" class="alert alert-warning">
       <div class="container">
-        当前以「记录日志」模式运行，可前往 <router-link :to="{name: 'settings', params: {setting_tab: 'algorithm'}}">
-防护设置
-</router-link> 关闭
+        当前以「记录日志」模式运行，可前往 
+        <router-link :to="{name: 'settings', params: {setting_tab: 'algorithm'}}">防护设置</router-link> 关闭
       </div>
-    </div>
- 
+    </div> 
 
     <AddHostModal ref="addHost" />
   </div>

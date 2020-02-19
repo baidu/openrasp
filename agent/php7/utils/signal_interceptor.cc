@@ -21,11 +21,14 @@
 extern "C"
 {
 #include "php.h"
+#include "php_main.h"
 }
 #include "utils/hostname.h"
 #include "openrasp.h"
 #include "php/header.h"
 #include "signal_interceptor.h"
+#include "openrasp_utils.h"
+#include "openrasp_ini.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/crash_reporter.h"
 #include "agent/openrasp_agent_manager.h"

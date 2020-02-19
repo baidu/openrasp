@@ -212,12 +212,17 @@ func GetSelectedPlugin(appId string, hasContent bool) (plugin *Plugin, err error
 	return GetPluginById(app.SelectedPluginId, hasContent)
 }
 
-func SetSelectedPlugin(appId string, pluginId string) (plugin *Plugin, err error) {
+func SetSelectedPlugin(appId string, pluginId string, strategyId string) (plugin *Plugin, err error) {
 	plugin, err = GetPluginById(pluginId, false)
 	if err != nil {
 		return
 	}
-	return plugin, mongo.UpdateId(appCollectionName, appId, bson.M{"selected_plugin_id": pluginId})
+	query := bson.M{"selected_plugin_id": pluginId, "app_id": appId}
+	if strategyId == ""{
+		return plugin, mongo.UpdateId(appCollectionName, appId, bson.M{"selected_plugin_id": pluginId})
+	}else {
+		return plugin, mongo.UpdateId(strategyCollectionName, strategyId, query)
+	}
 }
 
 func RestoreDefaultConfiguration(pluginId string) (appId string, err error) {

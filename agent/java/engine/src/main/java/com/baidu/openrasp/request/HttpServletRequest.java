@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,15 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     public HttpServletRequest(Object request) {
         super(request);
+    }
+
+    /**
+     * 请求实体
+     *
+     * @param request 类型为javax.servlet.http.HttpServletRequest的请求实体
+     */
+    public HttpServletRequest(Object request, String requestId) {
+        super(request, requestId);
     }
 
     /**

@@ -13,6 +13,8 @@ import audit from '@/components/pages/audit'
 import events from '@/components/pages/events'
 import vulns from '@/components/pages/vulns'
 import exceptions from '@/components/pages/exceptions'
+import dependency from '@/components/pages/dependency'
+import iast from '@/components/pages/iast'
 import Layout from '@/views/layout'
 
 Vue.use(Router)
@@ -52,6 +54,14 @@ const router = new Router({
         name: 'audit',
         component: audit
       }, {
+        path: 'dependency/:app_id/',
+        name: 'dependency',
+        component: dependency
+      }, {
+          path: 'iast/:app_id/',
+          name: 'iast',
+          component: iast
+      },{
         path: 'settings/:setting_tab/:app_id/',
         name: 'settings',
         component: settings

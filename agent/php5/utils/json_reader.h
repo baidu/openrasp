@@ -17,6 +17,7 @@
 #ifndef _OPENRASP_UTILS_JSON_READER_H_
 #define _OPENRASP_UTILS_JSON_READER_H_
 
+#include "utils/json.h"
 #include "base_reader.h"
 #include "third_party/json/json.hpp"
 
@@ -27,30 +28,35 @@ using json = nlohmann::json;
 
 class JsonReader : public BaseReader
 {
-private:
+protected:
   json j;
 
 public:
   JsonReader();
   JsonReader(const std::string &json_str);
-  virtual std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value);
-  virtual int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value);
-  virtual bool fetch_bool(const std::vector<std::string> &keys, const bool &default_value);
+  virtual std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value = "",
+                                   const openrasp::validator::vstring::Base &validator = openrasp::validator::vstring::AllPass());
+  virtual int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value = 0,
+                              const openrasp::validator::vint64::Base &validator = openrasp::validator::vint64::LowerLimit());
+  virtual bool fetch_bool(const std::vector<std::string> &keys, const bool &default_value = false);
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
-  virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value);
+  virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value = std::vector<std::string>());
   virtual void load(const std::string &content);
+
+  size_t get_array_size(const std::vector<std::string> &keys);
   //Serialization
   virtual std::string dump(const std::vector<std::string> &keys, bool pretty = false);
   virtual std::string dump(bool pretty = false);
   //write op
-  void erase(const std::vector<std::string> &keys);
   void write_int64(const std::vector<std::string> &keys, const int64_t &value);
   void write_string(const std::vector<std::string> &keys, const std::string &value);
   void write_map(const std::vector<std::string> &keys, const std::map<std::string, std::string> &value);
   void write_map_to_array(const std::vector<std::string> &keys, const std::string fkey, const std::string skey,
                           const std::map<std::string, std::string> &value);
   void write_vector(const std::vector<std::string> &keys, const std::vector<std::string> &value);
+  void write_int64_vector(const std::vector<std::string> &keys, const std::vector<int> &value);
   void merge(const JsonReader &patch);
+  void write_json_string(const std::vector<std::string> &keys, const std::string &value);
 };
 
 } // namespace openrasp

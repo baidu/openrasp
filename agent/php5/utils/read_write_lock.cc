@@ -53,6 +53,11 @@ bool ReadWriteLock::read_try_lock()
   return pthread_rwlock_tryrdlock(rwlock) == 0;
 }
 
+bool ReadWriteLock::read_lock()
+{
+  return pthread_rwlock_rdlock(rwlock) == 0;
+}
+
 bool ReadWriteLock::write_unlock()
 {
   return pthread_rwlock_unlock(rwlock) == 0;
@@ -61,6 +66,11 @@ bool ReadWriteLock::write_unlock()
 bool ReadWriteLock::write_try_lock()
 {
   return pthread_rwlock_trywrlock(rwlock) == 0;
+}
+
+bool ReadWriteLock::write_lock()
+{
+  return pthread_rwlock_wrlock(rwlock) == 0;
 }
 
 } // namespace openrasp

@@ -18,6 +18,8 @@ import (
 	"github.com/astaxie/beego"
 	"net/http"
 	"encoding/json"
+	"github.com/astaxie/beego/validation"
+	"fmt"
 )
 
 // base controller
@@ -78,5 +80,20 @@ func (o *BaseController) ValidPage(page int, perpage int) {
 	}
 	if perpage > 100 {
 		o.ServeError(http.StatusBadRequest, "perpage must be less than 100")
+	}
+}
+
+func (o *BaseController) ValidParam(param interface{}) {
+	valid := validation.Validation{}
+	ok, err := valid.Valid(param)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "validation has error", err)
+	}
+	if !ok {
+		errMsg := make([]string, len(valid.Errors))
+		for i, err := range valid.Errors {
+			errMsg[i] = err.Key + " " + err.Message
+		}
+		o.ServeError(http.StatusBadRequest, fmt.Sprintf("%+v", errMsg))
 	}
 }

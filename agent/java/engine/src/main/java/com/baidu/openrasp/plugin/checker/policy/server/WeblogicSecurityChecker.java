@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -62,7 +63,7 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             }
             String encryptedPassword = getProperties(bootProperties, "password");
             String decryptedPassword = decrypt(encryptedPassword, domainPath);
-            List<String> checkList = Arrays.asList(WEAK_WORDS);
+            List<String> checkList = getSecurityWeakPasswords();
             if (checkList.contains(decryptedPassword)) {
                 String encryptedUserName = getProperties(bootProperties, "username");
                 String decryptedUserName = decrypt(encryptedUserName, domainPath);
@@ -133,5 +134,13 @@ public class WeblogicSecurityChecker extends ServerPolicyChecker {
             }
         }
         return result;
+    }
+
+    /**
+     * 从配置获取弱口令列表
+     */
+    public List<String> getSecurityWeakPasswords() {
+        List<String> securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : Arrays.asList(WEAK_WORDS);
     }
 }

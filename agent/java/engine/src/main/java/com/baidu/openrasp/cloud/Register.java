@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ public class Register {
     public Register(RegisterCallback callback) {
         this.callback = callback;
         Thread thread = new Thread(new RegisterThread());
+        thread.setName("OpenRASP Register Thread");
         thread.setDaemon(true);
         thread.start();
     }
@@ -90,6 +91,7 @@ public class Register {
         params.put("id", CloudCacheModel.getInstance().getRaspId());
         params.put("version", BuildRASPModel.getRaspVersion());
         params.put("hostname", OSUtil.getHostName());
+        params.put("os", OSUtil.getOs());
         params.put("language", "java");
         params.put("language_version", System.getProperty("java.version"));
         params.put("server_type", ApplicationModel.getServerName());

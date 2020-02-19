@@ -243,4 +243,42 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
     return false;
 }
 
+std::vector<std::string> lookup_host(const std::string &host)
+{
+    std::vector<std::string> ips;
+    struct addrinfo hints, *res;
+    int errcode;
+    char addrstr[100];
+    void *ptr;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_CANONNAME;
+
+    errcode = getaddrinfo(host.c_str(), nullptr, &hints, &res);
+    if (errcode == 0)
+    {
+        while (res)
+        {
+            inet_ntop(res->ai_family, res->ai_addr->sa_data, addrstr, 100);
+
+            switch (res->ai_family)
+            {
+            case AF_INET:
+                ptr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
+                break;
+            case AF_INET6:
+                ptr = &((struct sockaddr_in6 *)res->ai_addr)->sin6_addr;
+                break;
+            }
+            inet_ntop(res->ai_family, ptr, addrstr, 100);
+            ips.push_back(addrstr);
+            res = res->ai_next;
+        }
+    }
+    std::sort(ips.begin(), ips.end());
+    return ips;
+}
+
 } // namespace openrasp

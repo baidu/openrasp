@@ -69,6 +69,19 @@ bool SharedLogManager::shutdown()
 
 bool SharedLogManager::log_exist(long timestamp, ulong log_hash)
 {
+  if (rwlock != nullptr && rwlock->read_try_lock())
+  {
+    ReadUnLocker auto_unlocker(rwlock);
+    if (0 == shared_log_block->compare_date(timestamp) && shared_log_block->log_hash_exist(log_hash))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool SharedLogManager::log_update(long timestamp, ulong log_hash)
+{
   if (rwlock != nullptr && rwlock->write_try_lock())
   {
     WriteUnLocker auto_unlocker(rwlock);

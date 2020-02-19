@@ -7,6 +7,15 @@ import (
 
 func init() {
 
+    beego.GlobalControllerRouter["rasp-cloud/controllers/agent:DependencyController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/agent:DependencyController"],
+        beego.ControllerComments{
+            Method: "Post",
+            Router: `/`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["rasp-cloud/controllers/agent:CrashController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/agent:CrashController"],
         beego.ControllerComments{
             Method: "Post",

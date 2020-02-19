@@ -97,7 +97,22 @@
             <p>
                 {{ data.attack_params.realpath }}
             </p>
-        </div>          
+        </div>     
+
+        <div v-if="data.attack_type == 'deleteFile'">
+            <div class="h6">
+                删除的文件
+            </div>
+            <p>
+                {{ data.attack_params.path }}
+            </p>
+            <div class="h6">
+                删除的文件 - 真实路径
+            </div>
+            <p>
+                {{ data.attack_params.realpath }}
+            </p>
+        </div>      
 
         <div v-if="data.attack_type == 'include'">
             <div class="h6">
@@ -230,7 +245,31 @@
             <p v-if="data.attack_params.value">
                 {{ data.attack_params.value.length > 10000 ? data.attack_params.value + ' ...' : data.attack_params.value }}   
             </p>            
-        </div>        
+        </div>
+
+        <div v-if="data.attack_type == 'response' && data.plugin_algorithm == 'response_dataLeak'">
+            <div class="h6">
+                泄露的敏感信息样例
+            </div>
+            <div>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>未打码信息</th>
+                            <th>原始内容（片段）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, index) in data.attack_params.parts" :key="index">
+                            <td nowrap>{{ row.type }}</td>
+                            <td nowrap>{{ row.match }}</td>
+                            <td>{{ row.parts }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>            
+        </div>  
 
         <!-- 以下为 php 原生 -->
 

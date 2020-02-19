@@ -1,0 +1,12 @@
+[Unit]
+Description=OpenRASP Panel Server
+
+[Service]
+Type=notify
+ExecStart=/home/opt/rasp-cloud/rasp-cloud
+ExecReload=/home/opt/rasp-cloud/rasp-cloud -s restart
+ExecStop=/home/opt/rasp-cloud/rasp-cloud -s stop
+RemainAfterExit=yes
+KillMode=mixed
+Restart=on-failure
+RestartSec=10s

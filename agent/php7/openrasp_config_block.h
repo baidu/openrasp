@@ -125,36 +125,12 @@ public:
   void update(BaseReader *reader);
 };
 
-//read from plugin
-class CallableBlock
+class ResponseBlock
 {
 public:
-  const static vector<string> default_blacklist;
-  vector<string> blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-  void update();
-
-private:
-  void extract_callable_blacklist(Isolate *isolate);
-};
-
-// xss
-class XssBlock
-{
-public:
-  const static int64_t default_min_param_length;
-  const static int64_t default_max_detection_num;
-  const static std::string default_filter_regex;
-  const static std::string default_echo_filter_regex;
-
-  string echo_filter_regex;
-  string filter_regex;
-  int64_t min_param_length = 15;
-  int64_t max_detection_num = 10;
-  void update();
-
-private:
-  void extract_userinput_config(Isolate *isolate);
-  void extract_echo_config(Isolate *isolate);
+  int sampler_interval;
+  int sampler_burst;
+  void update(BaseReader *reader);
 };
 
 } // namespace openrasp

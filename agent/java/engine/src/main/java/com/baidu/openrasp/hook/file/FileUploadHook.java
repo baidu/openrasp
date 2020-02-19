@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -78,4 +79,17 @@ public class FileUploadHook extends AbstractClassHook {
         }
     }
 
+    private static String getCharSet(Object fileItem) {
+        String charSet = Reflection.invokeStringMethod(fileItem, "getCharSet", new Class[]{});
+        if (charSet == null) {
+            if (HookHandler.requestCache.get() != null) {
+                charSet = HookHandler.requestCache.get().getCharacterEncoding();
+            }
+        }
+        if (!StringUtils.isEmpty(charSet)) {
+            return charSet;
+        } else {
+            return "UTF-8";
+        }
+    }
 }

@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookie from 'js-cookie'
 import router from '@/router'
 
-export var rasp_version = '1.2.3'
+export var rasp_version = '1.3.0'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -22,8 +22,7 @@ export var audit_types = {
   1015: '重置插件配置'
 }
 
-export var browser_headers = [
-  {
+export var browser_headers = [{
   name: 'X-Frame-Options',
   descr: '点击劫持防护',
   options: [{
@@ -103,6 +102,8 @@ export var baseline_types = {
   3005: '开放目录检查',
   3006: '数据库连接账号审计',
   3007: 'JBoss 后台无认证检查',
+  // 3008: '日志泄露敏感信息',
+  3009: 'Web 根目录敏感文件泄露',
 
   4001: 'allow_url_include 配置审计',
   4002: 'expose_php 配置审计',
@@ -120,9 +121,11 @@ export var attack_types = {
   directory: '目录遍历',
   rename: '文件重命名',
   readFile: '任意文件下载',
+  deleteFile: '任意文件删除',
   include: '任意文件包含',
   writeFile: '任意文件写入',
-  ssrf: 'SSRF 服务端请求伪造',
+  ssrf: 'SSRF 请求伪造',
+  ssrfRedirect: 'SSRF 请求伪造(重定向后)',
   ognl: 'OGNL 代码执行',
   webdav: '任意文件上传 (PUT)',
   fileUpload: '任意文件上传',
@@ -134,8 +137,7 @@ export var attack_types = {
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
   webshell_ld_preload: 'WebShell - LD_PRELOAD 后门',
-  request: '请求起始',
-  requestEnd: '请求结束',
+  response: 'HTTP 响应采样检测'
 }
 
 export var status_types = {
@@ -174,6 +176,12 @@ export function getDefaultConfig() {
     },
     http_alarm_conf: {
       recv_addr: []
+    },
+    kafka_alarm_conf: {
+      
+    },
+    general_alarm_conf: {
+
     }
   }
 }

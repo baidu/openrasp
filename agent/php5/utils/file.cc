@@ -17,8 +17,10 @@
 #include "file.h"
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fstream>
 #include <limits>
+#include <dirent.h>
+#include <set>
+#include "string.h"
 
 namespace openrasp
 {
@@ -71,6 +73,40 @@ bool read_entire_content(const std::string &file, std::string &content)
         return true;
     }
     return false;
+}
+
+void openrasp_scandir(const std::string dir_abs, std::vector<std::string> &plugins, std::function<bool(const char *filename)> file_filter,
+                      long limit, bool use_abs_path, std::string default_slash)
+{
+    DIR *dir;
+    std::string result;
+    struct dirent *ent;
+    if ((dir = opendir(dir_abs.c_str())) != NULL)
+    {
+        long total = (limit >= 0) ? limit : LONG_MAX;
+        while ((ent = readdir(dir)) != NULL && total-- > 0)
+        {
+            if (file_filter)
+            {
+                if (file_filter(ent->d_name))
+                {
+                    plugins.push_back(use_abs_path ? (dir_abs + default_slash + std::string(ent->d_name)) : std::string(ent->d_name));
+                }
+            }
+        }
+        closedir(dir);
+    }
+}
+
+time_t get_last_modified(const std::string &file_path)
+{
+    time_t last_modified = 0;
+    struct stat result;
+    if (stat(file_path.c_str(), &result) == 0)
+    {
+        last_modified = result.st_mtime;
+    }
+    return last_modified;
 }
 
 } // namespace openrasp

@@ -1,16 +1,16 @@
 package inits
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/bouk/monkey"
+	. "github.com/smartystreets/goconvey/convey"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"rasp-cloud/tools"
-	"github.com/bouk/monkey"
-	"bytes"
-	"net/http/httptest"
-	"github.com/astaxie/beego"
-	"net/http"
-	"encoding/json"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 type Response struct {
@@ -20,7 +20,10 @@ type Response struct {
 }
 
 func init() {
-	tools.GetCurrentPath()
+	path, err := tools.GetCurrentPath()
+	if err != nil{
+		fmt.Println("path: ", path)
+	}
 	tools.PathExists("/xxx/xxx/xxxxxxx")
 	apppath, _ := filepath.Abs(filepath.Dir("./"))
 	monkey.Patch(tools.GetCurrentPath, func() (string, error) {
@@ -37,6 +40,15 @@ func GetResponse(method string, path string, body string) (*Response) {
 	So(w.Code, ShouldEqual, 200)
 	err := json.Unmarshal(w.Body.Bytes(), response)
 	So(err, ShouldEqual, nil)
+	return response
+}
+
+func GetResponseWithNoBody(method string, path string, body string) (*Response) {
+	r, _ := http.NewRequest(method, path, bytes.NewBuffer([]byte(body)))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+	response := &Response{}
+	So(w.Code, ShouldEqual, 200)
 	return response
 }
 

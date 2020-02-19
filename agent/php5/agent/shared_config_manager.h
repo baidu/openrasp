@@ -43,19 +43,28 @@ public:
   bool set_log_max_backup(long log_max_backup);
 
   long get_debug_level();
-  bool set_debug_level(long debug_level);
+  bool set_debug_level(BaseReader *br);
 
   int get_check_type_white_bit_mask(std::string url);
-  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
-  bool build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map);
+  bool build_check_type_white_array(BaseReader *br);
+
+  bool build_weak_password_array(BaseReader *br);
+  bool is_password_weak(std::string password);
+
+  bool build_pg_error_array(std::vector<std::string> &pg_errors);
+  bool build_pg_error_array(Isolate *isolate);
+  bool pg_error_filtered(std::string error);
 
   std::string get_rasp_id() const;
 
   bool set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map);
   OpenRASPActionType get_buildin_check_action(OpenRASPCheckType check_type);
 
-  void set_sql_error_codes(std::vector<long> error_codes);
-  bool sql_error_code_exist(long err_code);
+  void set_mysql_error_codes(std::vector<int64_t> error_codes);
+  bool mysql_error_code_exist(int64_t err_code);
+
+  void set_sqlite_error_codes(std::vector<int64_t> error_codes);
+  bool sqlite_error_code_exist(int64_t err_code);
 
 private:
   int meta_size;
@@ -63,8 +72,16 @@ private:
   SharedConfigBlock *shared_config_block;
   std::string rasp_id;
 
-private:
+  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
+  bool build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map);
+
+  bool build_weak_password_array(std::vector<std::string> &weak_passwords);
+
+  bool set_debug_level(long debug_level);
+
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
+  bool write_weak_password_array_to_shm(const void *source, size_t num);
+  bool write_pg_error_array_to_shm(const void *source, size_t num);
   bool build_rasp_id();
 };
 

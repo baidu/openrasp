@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,7 @@ public class ApplicationModel {
         applicationInfo.put("server", "");
         applicationInfo.put("version", "");
         applicationInfo.put("extra", "");
+        applicationInfo.put("StandardStart", "false");
     }
 
     public static synchronized void setServerInfo(String serverName, String version) {
@@ -75,7 +76,11 @@ public class ApplicationModel {
         applicationInfo.put("extra", extra);
         extraVersion = (extraVersion == null ? "" : extraVersion);
         applicationInfo.put("extraVersion", extraVersion);
-        HookHandler.LOGGER.info("detect extra server info: " + extra);
+        HookHandler.LOGGER.info("detect extra server info: " + extra + "/" + extraVersion);
+    }
+
+    public static synchronized void setStartUpInfo(String startUpInfo) {
+        applicationInfo.put("StandardStart", startUpInfo);
     }
 
     public static Map<String, String> getApplicationInfo() {
@@ -100,6 +105,11 @@ public class ApplicationModel {
             result = applicationInfo.get("extra");
         }
         return result;
+    }
+
+    public static boolean getStartUpInfo() {
+        String result = applicationInfo.get("StandardStart");
+        return Boolean.parseBoolean(result);
     }
 
     public static String getVMType() {
