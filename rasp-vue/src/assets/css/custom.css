@@ -21,3 +21,7 @@ td {
     background: white; 
     z-index: 9999
 }
+
+.modal-body p {
+    word-break: break-all
+}
