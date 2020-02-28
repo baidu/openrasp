@@ -165,7 +165,7 @@ var (
 		"debug.level":               0,
 		"lru.max_size":              1000,
 		"lru.compare_limit":         10240,
-		"fileleak_scan.name":        `"\.(git|svn|tar|gz|rar|zip|sql|log)$"`,
+		"fileleak_scan.name":        `\.(git|svn|tar|gz|rar|zip|sql|log)$`,
 		"fileleak_scan.interval":    21600,
 		"fileleak_scan.limit":       100,
 		"cpu.usage.interval":        5,
