@@ -209,6 +209,10 @@ PHP_MINIT_FUNCTION(openrasp)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (remote_active && openrasp::oam)
     {
+        if (sapi_module.name && strcmp(sapi_module.name, "cgi-fcgi") == 0)
+        {
+            signal(SIGCHLD, SIG_IGN);
+        }
         openrasp::oam->startup();
     }
 #endif
