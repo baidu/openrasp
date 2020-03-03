@@ -1176,11 +1176,6 @@ function get_all_parameter(context) {
             }
         }
     }
-    try {
-        context.json = context.json || {}
-    } catch (e) {
-        plugin.log(e.stack)
-    }
     var jsons = [
         [context.json || {}, "input_json"]
     ]
@@ -1360,12 +1355,6 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         var min_length      = algorithmConfig.sql_userinput.min_length
         var allow_full      = algorithmConfig.sql_userinput.allow_full
         var parameters      = context.parameter || {}
-        // TODO: remove at next version of openrasp-v8
-        try {
-            context.json = context.json || {}
-        } catch (e) {
-            plugin.log(e.stack)
-        }
         var json_parameters = context.json || {}
         var raw_tokens      = []
 
@@ -2234,12 +2223,6 @@ plugin.register('command', function (params, context) {
         var reason     = false
         var min_length = algorithmConfig.command_userinput.min_length
         var parameters = context.parameter || {}
-        // TODO: remove at next version of openrasp-v8
-        try {
-            context.json = context.json || {}
-        } catch (e) {
-            plugin.log(e.stack)
-        }
         var json_parameters = context.json || {}
 
         // 检查命令逻辑是否被用户参数所修改
