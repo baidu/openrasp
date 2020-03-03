@@ -1158,39 +1158,44 @@ function get_all_parameter(context) {
     context.get_all_parameter = true
     var key_num = 0
     var parameter = context.parameter || {}
-    if ( context.header != null) {
+    if (context.header != null) {
         for (name in context.header) {
-            if ( name.toLowerCase() == "cookie") {
+            if (name.toLowerCase() == "cookie") {
                 var cookies = get_cookies(context.header.cookie)
                 for (name in cookies) {
-                    while("cookie" + key_num + "_" + name in parameter) {
-                        key_num ++
+                    while ("cookie" + key_num + "_" + name in parameter) {
+                        key_num++
                     }
                     parameter["cookie" + key_num + "_" + name] = [cookies[name]]
                 }
-            }
-            else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
-                while("header" + key_num + "_" + name in parameter) {
-                    key_num ++
+            } else if (headerInjection.indexOf(name.toLowerCase()) != -1) {
+                while ("header" + key_num + "_" + name in parameter) {
+                    key_num++
                 }
                 parameter["header" + key_num + "_" + name] = [context.header[name]]
             }
         }
-        var jsons = [ [context.json || {}, "input_json"] ]
-        while (jsons.length > 0) {
-            var json_arr = jsons.pop()
-            var crt_json_key = json_arr[1]
-            var json_obj = json_arr[0]
-            for (item in json_obj) {
-                if (typeof json_obj[item] == "string") {
-                    while("json" + key_num + "_" + crt_json_key + "->" + item in parameter) {
-                        key_num ++
-                    }
-                    parameter["json" + key_num + "_" + crt_json_key + "->" + item] = [json_obj[item]]
+    }
+    try {
+        context.json = context.json || {}
+    } catch (e) {
+        plugin.log(e.stack)
+    }
+    var jsons = [
+        [context.json || {}, "input_json"]
+    ]
+    while (jsons.length > 0) {
+        var json_arr = jsons.pop()
+        var crt_json_key = json_arr[1]
+        var json_obj = json_arr[0]
+        for (item in json_obj) {
+            if (typeof json_obj[item] == "string") {
+                while ("json" + key_num + "_" + crt_json_key + "->" + item in parameter) {
+                    key_num++
                 }
-                else if (typeof json_obj[item] == "object") {
-                    jsons.push([json_obj[item], crt_json_key + "->" + item])
-                }
+                parameter["json" + key_num + "_" + crt_json_key + "->" + item] = [json_obj[item]]
+            } else if (typeof json_obj[item] == "object") {
+                jsons.push([json_obj[item], crt_json_key + "->" + item])
             }
         }
     }
@@ -1355,6 +1360,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
         var min_length      = algorithmConfig.sql_userinput.min_length
         var allow_full      = algorithmConfig.sql_userinput.allow_full
         var parameters      = context.parameter || {}
+        // TODO: remove at next version of openrasp-v8
+        try {
+            context.json = context.json || {}
+        } catch (e) {
+            plugin.log(e.stack)
+        }
         var json_parameters = context.json || {}
         var raw_tokens      = []
 
@@ -2223,6 +2234,12 @@ plugin.register('command', function (params, context) {
         var reason     = false
         var min_length = algorithmConfig.command_userinput.min_length
         var parameters = context.parameter || {}
+        // TODO: remove at next version of openrasp-v8
+        try {
+            context.json = context.json || {}
+        } catch (e) {
+            plugin.log(e.stack)
+        }
         var json_parameters = context.json || {}
 
         // 检查命令逻辑是否被用户参数所修改
