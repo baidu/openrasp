@@ -36,7 +36,9 @@ public abstract class CloudTimerTask implements Runnable {
     }
 
     public void start() {
-        taskThread.start();
+        if (!taskThread.isAlive()) {
+            taskThread.start();
+        }
     }
 
     public void interrupt() {
