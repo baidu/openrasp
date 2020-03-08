@@ -54,6 +54,7 @@ type RaspAppConfig struct {
 	RegisterCallbackToken string
 	RequestBodyEnable     bool
 	ErrorLogEnable        bool
+	DebugModeEnable       bool
 	Flag                  *Flag
 	LogMaxSize            int64
 	LogMaxDays            int
@@ -100,6 +101,7 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.ErrorLogEnable = beego.AppConfig.DefaultBool("ErrorLogEnable", false)
 	AppConfig.LogMaxSize = beego.AppConfig.DefaultInt64("LogMaxSize", 104857600)
 	AppConfig.LogMaxDays = beego.AppConfig.DefaultInt("LogMaxDays", 10)
+	AppConfig.DebugModeEnable = beego.AppConfig.DefaultBool("DebugModeEnable", false)
 	ValidRaspConf(AppConfig)
 }
 

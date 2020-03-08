@@ -83,7 +83,6 @@ public abstract class AbstractClassHook {
             hookMethod(ctClass);
             return ctClass.toBytecode();
         } catch (Throwable e) {
-            e.printStackTrace();
             if (Config.getConfig().isDebugEnabled()) {
                 LOGGER.info("transform class " + ctClass.getName() + " failed", e);
             }
@@ -279,7 +278,7 @@ public abstract class AbstractClassHook {
             method.insertBefore(src);
             LOGGER.info("insert before method " + method.getLongName());
         } catch (CannotCompileException e) {
-            LogTool.error(ErrorType.HOOK_ERROR,
+            LogTool.traceError(ErrorType.HOOK_ERROR,
                     "insert before method " + method.getLongName() + " failed: " + e.getMessage(), e);
             throw e;
         }
@@ -307,7 +306,7 @@ public abstract class AbstractClassHook {
             method.insertAfter(src, asFinally);
             LOGGER.info("insert after method: " + method.getLongName());
         } catch (CannotCompileException e) {
-            LogTool.error(ErrorType.HOOK_ERROR,
+            LogTool.traceError(ErrorType.HOOK_ERROR,
                     "insert after method " + method.getLongName() + " failed: " + e.getMessage(), e);
             throw e;
         }

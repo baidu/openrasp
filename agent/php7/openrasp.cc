@@ -53,7 +53,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
-const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.3.0";
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.3.1";
 bool is_initialized = false;
 bool remote_active = false;
 std::string openrasp_status = "Protected";
@@ -188,6 +188,10 @@ PHP_MINIT_FUNCTION(openrasp)
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (remote_active && openrasp::oam)
     {
+        if (sapi_module.name && strcmp(sapi_module.name, "cgi-fcgi") == 0)
+        {
+            signal(SIGCHLD, SIG_IGN);
+        }
         openrasp::oam->startup();
     }
 #endif

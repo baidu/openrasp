@@ -165,6 +165,7 @@ bool HeartBeatAgent::do_heartbeat()
 				{
 					//update log_max_backup only its value greater than zero
 					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::validator::vint64::LowerLimit(1));
+					scm->set_log_max_backup(log_max_backup);
 
 					//dependency check
 					int64_t dependency_interval = config_reader.fetch_int64({"dependency_check.interval"}, WebdirCtrlBlock::default_dependency_interval);

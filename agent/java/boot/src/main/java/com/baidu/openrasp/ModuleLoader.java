@@ -207,15 +207,25 @@ public class ModuleLoader {
     public static void setSystemProperty(String moduleBaseDir) {
 
         String pkgs = System.getProperty("jboss.modules.system.pkgs");
-        if (null != pkgs && false == pkgs.contains("baidu.openrasp")) {
+        System.out.println("origin pkgs = " + pkgs);
+        if (null == pkgs || !pkgs.contains("baidu.openrasp")) {
+            if (pkgs != null && !pkgs.isEmpty()) {
+                pkgs = System.setProperty("jboss.modules.system.pkgs",
+                        pkgs + ",org.jboss.logmanager,com.baidu.openrasp,com.sdwaf,javax.servlet,javax.el");
+            } else {
+                pkgs = System.setProperty("jboss.modules.system.pkgs",
+                        "org.jboss.logmanager,com.baidu.openrasp,com.sdwaf,javax.servlet,javax.el");
+            }
             pkgs = System.setProperty("jboss.modules.system.pkgs", pkgs + ",org.jboss.logmanager,com.baidu.openrasp,com.sdwaf,javax.servlet,javax.el");
             System.out.println("default pkgs = " + pkgs);
         }
 
         String logManager = System.getProperty("java.util.logging.manager");
+        System.out.println("origin java.util.logging.manager = " + logManager);
         if (null == logManager || logManager.isEmpty()) {
             System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
-        } else if (false == logManager.contains("org.jboss.logmanager.LogManager")) {
+            System.out.println("add org.jboss.logmanager.LogManager to java.util.logging.manager");
+        } else if (!logManager.contains("org.jboss.logmanager.LogManager")) {
             System.setProperty("java.util.logging.manager", logManager + ",org.jboss.logmanager.LogManager");
             System.out.println("add logmanager on old value=" + logManager);
         }

@@ -1,4 +1,4 @@
-const plugin_version = '2020-0202-2230'
+const plugin_version = '2020-0308-2330'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1158,39 +1158,39 @@ function get_all_parameter(context) {
     context.get_all_parameter = true
     var key_num = 0
     var parameter = context.parameter || {}
-    if ( context.header != null) {
+    if (context.header != null) {
         for (name in context.header) {
-            if ( name.toLowerCase() == "cookie") {
+            if (name.toLowerCase() == "cookie") {
                 var cookies = get_cookies(context.header.cookie)
                 for (name in cookies) {
-                    while("cookie" + key_num + "_" + name in parameter) {
-                        key_num ++
+                    while ("cookie" + key_num + "_" + name in parameter) {
+                        key_num++
                     }
                     parameter["cookie" + key_num + "_" + name] = [cookies[name]]
                 }
-            }
-            else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
-                while("header" + key_num + "_" + name in parameter) {
-                    key_num ++
+            } else if (headerInjection.indexOf(name.toLowerCase()) != -1) {
+                while ("header" + key_num + "_" + name in parameter) {
+                    key_num++
                 }
                 parameter["header" + key_num + "_" + name] = [context.header[name]]
             }
         }
-        var jsons = [ [context.json || {}, "input_json"] ]
-        while (jsons.length > 0) {
-            var json_arr = jsons.pop()
-            var crt_json_key = json_arr[1]
-            var json_obj = json_arr[0]
-            for (item in json_obj) {
-                if (typeof json_obj[item] == "string") {
-                    while("json" + key_num + "_" + crt_json_key + "->" + item in parameter) {
-                        key_num ++
-                    }
-                    parameter["json" + key_num + "_" + crt_json_key + "->" + item] = [json_obj[item]]
+    }
+    var jsons = [
+        [context.json || {}, "input_json"]
+    ]
+    while (jsons.length > 0) {
+        var json_arr = jsons.pop()
+        var crt_json_key = json_arr[1]
+        var json_obj = json_arr[0]
+        for (item in json_obj) {
+            if (typeof json_obj[item] == "string") {
+                while ("json" + key_num + "_" + crt_json_key + "->" + item in parameter) {
+                    key_num++
                 }
-                else if (typeof json_obj[item] == "object") {
-                    jsons.push([json_obj[item], crt_json_key + "->" + item])
-                }
+                parameter["json" + key_num + "_" + crt_json_key + "->" + item] = [json_obj[item]]
+            } else if (typeof json_obj[item] == "object") {
+                jsons.push([json_obj[item], crt_json_key + "->" + item])
             }
         }
     }
@@ -2124,6 +2124,8 @@ plugin.register('command', function (params, context) {
                 'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library (JSR 160)"),
                 'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
+                'org.apache.xbean.propertyeditor.JndiConverter':                                _("Reflected command execution - Using JNDI binding class"),
+                'com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig':                _("Reflected command execution - Using JTA transaction manager"),
                 'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  _("Reflected command execution - Using LDAP factory service"),
                 'com.alibaba.fastjson.JSON.parseObject':                                        _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
@@ -2662,7 +2664,7 @@ function findFirstIdentityCard(data) {
 
 // 匹配手机号
 function findFirstMobileNumber(data) {
-    const regexChinesePhone = /(?<!\d)(?:(?:00|\+)?86 ?)?(1\d{2})(?:[ -]?\d){8}(?!\d)/;
+    const regexChinesePhone = /(?<!\w)(?:(?:00|\+)?86 ?)?(1\d{2})(?:[ -]?\d){8}(?!\w)/;
     const prefixs = new Set([133, 149, 153, 173, 174, 177, 180,
         181, 189, 199, 130, 131, 132, 145, 146, 155, 156, 166, 175, 176, 185, 186, 134, 135, 136, 137, 138, 139,
         147, 148, 150, 151, 152, 157, 158, 159, 165, 178, 182, 183, 184, 187, 188, 198, 170

@@ -83,7 +83,7 @@ public abstract class AbstractSqlHook extends AbstractClassHook {
                         method.addCatch("{" + errorSrc + " throw $e;}", ClassPool.getDefault().get("java.sql.SQLException"));
                         HookHandler.LOGGER.info("add catch to method: " + method.getLongName());
                     } catch (Throwable t) {
-                        LogTool.error(ErrorType.HOOK_ERROR, "failed to add catch to method: " + method.getLongName(), t);
+                        LogTool.traceError(ErrorType.HOOK_ERROR, "failed to add catch to method: " + method.getLongName(), t);
                     }
                 }
             }

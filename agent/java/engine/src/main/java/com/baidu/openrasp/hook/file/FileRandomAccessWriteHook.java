@@ -49,6 +49,8 @@ public class FileRandomAccessWriteHook extends AbstractClassHook {
     }
 
     public static void checkWriteFile(File file) {
-        FileOutputStreamHook.checkWriteFile(file);
+        if (file != null && !file.getName().endsWith(".jar") && !file.getName().endsWith(".war")) {
+            FileOutputStreamHook.checkWriteFile(file);
+        }
     }
 }

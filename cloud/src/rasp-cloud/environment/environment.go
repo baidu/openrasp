@@ -15,7 +15,7 @@
 package environment
 
 import (
-    "bytes"
+	"bytes"
 	"flag"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -42,7 +42,7 @@ type PIDFile struct {
 var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
-	Version             = "1.3"
+	Version             = "1.3.1"
 	LogPath             = "logs/"
 	PidFileName         = LogPath + "pid.file"
 	OldPid              = ""
@@ -107,7 +107,7 @@ func handleVersionFlag() {
 	os.Exit(0)
 }
 
-func HandleOperation(operation string)  {
+func HandleOperation(operation string) {
 	switch operation {
 	case conf.RestartOperation:
 		restart()
@@ -138,11 +138,11 @@ func restart() {
 				log.Fatalln(err)
 			}
 			if !exist {
-				break;
+				break
 			}
 			restartCnt += 1
 			time.Sleep(1 * time.Second)
-			if restartCnt % 60 == 0{
+			if restartCnt%60 == 0 {
 				log.Println("this operation may spend about a few minutes")
 			}
 			if restartCnt >= 300 {
@@ -157,7 +157,7 @@ func restart() {
 	os.Exit(0)
 }
 
-func stop()  {
+func stop() {
 	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
 		log.Println("Stopping........")
@@ -325,7 +325,7 @@ func initEnvConf() {
 func processExists(pid string) (bool, error) {
 	if _, err := os.Stat(filepath.Join("/proc", pid)); err == nil {
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
-		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:" + strconv.Itoa(port))
+		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:"+strconv.Itoa(port))
 		out, _ := lsof.Output()
 		if strings.Index(string(out), "rasp-") != -1 {
 			return true, nil
@@ -338,7 +338,7 @@ func processExists(pid string) (bool, error) {
 
 func checkPIDAlreadyExists(path string, remove bool) bool {
 	//pid := readPIDFILE(path)
-	if res, err := processExists(OldPid); res && err == nil && OldPid != " "{
+	if res, err := processExists(OldPid); res && err == nil && OldPid != " " {
 		log.Printf("the main process %s has already exist!", OldPid)
 		return true
 	}
@@ -359,7 +359,7 @@ func CheckPIDAlreadyRunning(path string) bool {
 		return false
 	}
 
-	if res, err := processExists(OldPid); res && err == nil && OldPid != " "{
+	if res, err := processExists(OldPid); res && err == nil && OldPid != " " {
 		return true
 	}
 	return false

@@ -20,7 +20,7 @@
             <ul id="myTab" class="nav nav-tabs" role="tablist">
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#common-tab">
-                  参数信息
+                  手动安装
                 </a>
               </li>
               <li class="nav-item">
@@ -52,13 +52,28 @@
             <br>
             <div id="myTabContent" class="tab-content">
               <div id="common-tab" class="tab-pane fade">
-                <h4>AppID</h4>
+                <p>OpenRASP 自动安装程序可以覆盖绝大多数场景，如果你的环境无法自动安装，请参考 <a href="https://rasp.baidu.com/doc/install/software.html" target="_blank">安装客户端</a> 进行手动安装。以下是连接管理后台所需要的关键参数，Java 版本请附加到 conf/openrasp.yml，PHP 版本请附加到 ini 文件。</p>
+                <h4>Java 版本</h4>
+                <pre>cloud.enable: true
+cloud.backend_url: {{ agent_urls[0] }}
+cloud.app_id: {{ current_app.id }}
+cloud.app_secret: {{ current_app.secret }}
+cloud.heartbeat_interval: 90</pre>
+
+                <h4>PHP 版本</h4>
+                <pre>openrasp.app_id={{ current_app.id }}
+openrasp.app_secret={{ current_app.secret }}            
+openrasp.backend_url={{ agent_urls[0] }}
+openrasp.heartbeat_interval=90</pre>
+
+                <!-- <h4>AppID</h4>
                 <pre>{{ current_app.id }}</pre>
                 <h4>AppSecret</h4>
                 <pre>{{ current_app.secret }}</pre>
                 <h4>BackendURL<small v-if="agent_urls.length > 1" style="margin-left: 5px;">[任选一个即可]</small></h4>
-                <pre>{{ agent_urls.join("\n") }}</pre>
+                <pre>{{ agent_urls.join("\n") }}</pre> -->
               </div>
+
               <div id="batch-tab" class="tab-pane fade">
                 <div class="alert alert-warning">
                   批量部署脚本，会自动安装并重启应用，更多信息请看
