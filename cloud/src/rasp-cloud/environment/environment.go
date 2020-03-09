@@ -260,11 +260,15 @@ func HandleDaemon() {
 			}
 			time.Sleep(1 * time.Second)
 		}
+
 		if cnt == 29 {
 			log.Fatal("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
-		} else {
+		} else if CheckPort(port) {
 			log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+		} else {
+			log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
 		}
+
 	}
 	os.Exit(0)
 }
