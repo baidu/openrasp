@@ -46,6 +46,7 @@ var (
 	LogPath             = "logs/"
 	PidFileName         = LogPath + "pid.file"
 	OldPid              = ""
+	Status				string
 )
 
 func init() {
@@ -110,6 +111,7 @@ func handleVersionFlag() {
 func HandleOperation(operation string) {
 	switch operation {
 	case conf.RestartOperation:
+		Status = "restart"
 		restart()
 	case conf.StopOperation:
 		stop()
@@ -327,14 +329,16 @@ func initEnvConf() {
 }
 
 func processExists(pid string) (bool, error) {
-	if _, err := os.Stat(filepath.Join("/proc", pid)); err == nil {
-		port := beego.AppConfig.DefaultInt("httpport", 8080)
-		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:"+strconv.Itoa(port))
-		out, _ := lsof.Output()
-		if strings.Index(string(out), "rasp-") != -1 {
+	port := beego.AppConfig.DefaultInt("httpport", 8080)
+	cmd := "lsof -i tcp:"+strconv.Itoa(port) + "| tail -1"
+	lsof := exec.Command("/bin/bash", "-c", cmd)
+	out, _ := lsof.Output()
+	if outStr := string(out); strings.Index(outStr, "rasp-") != -1 {
+		if strings.Index(outStr, pid) != -1 {
 			return true, nil
-		} else {
-			return false, nil
+		} else if len(outStr) > 0 && Status == "restart" && strings.Index(outStr, pid) != -1 {
+			msg := "The current port "  + strconv.Itoa(port) +" to the pointing pid: " + pid+ " cannot be matched"
+			log.Println(msg)
 		}
 	}
 	return false, nil
