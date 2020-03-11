@@ -1,5 +1,6 @@
 package com.baidu.openrasp.hook.ssrf.redirect;
 
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -31,13 +32,17 @@ public class URLConnectionRedirectHook extends AbstractRedirectHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(URLConnectionRedirectHook.class, "cacheHttpRedirect",
-                "$0,($w)$_", URLConnection.class, Boolean.class);
+                "$0,($w)$_", Object.class, Boolean.class);
         insertAfter(ctClass, "followRedirect", "()Z", src, false);
     }
 
-    public static void cacheHttpRedirect(URLConnection connection, Boolean isRedirect) {
+    public static void cacheHttpRedirect(Object connection, Boolean isRedirect) {
         if (isRedirect) {
-            urlCache.set(connection.getURL());
+            try {
+                urlCache.set((URL) Reflection.invokeMethod(connection, "getURL", new Class[0]));
+            } catch (Throwable t) {
+                // ignore
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-const plugin_version = '2020-0202-2230'
+const plugin_version = '2020-0308-2330'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2124,6 +2124,8 @@ plugin.register('command', function (params, context) {
                 'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
                 'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library (JSR 160)"),
                 'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
+                'org.apache.xbean.propertyeditor.JndiConverter':                                _("Reflected command execution - Using JNDI binding class"),
+                'com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig':                _("Reflected command execution - Using JTA transaction manager"),
                 'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  _("Reflected command execution - Using LDAP factory service"),
                 'com.alibaba.fastjson.JSON.parseObject':                                        _("Reflected command execution - Using fastjson library"),
                 'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),

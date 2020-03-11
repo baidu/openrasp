@@ -1,12 +1,14 @@
 package agent
 
 import (
+	"rasp-cloud/conf"
 	"rasp-cloud/controllers"
 	"net/http"
 	"rasp-cloud/models"
 	"crypto/md5"
 	"fmt"
 	"github.com/astaxie/beego"
+	"strings"
 )
 
 // Operations about plugin
@@ -43,6 +45,11 @@ func (o *DependencyController) Post() {
 		dependencies := make([]*models.Dependency, 0, len(param.Dependency))
 		for _, item := range param.Dependency {
 			if isValid, errMsg := o.checkDependencyParamItem(item); !isValid {
+				if !conf.AppConfig.DebugModeEnable {
+						if len(strings.Split(strings.ToLower(errMsg), "empty")) > 1 {
+							 continue
+						}
+				}
 				beego.Error("failed to add dependency for rasp: "+rasp.Id, errMsg)
 				continue
 			}
