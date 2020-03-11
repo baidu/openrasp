@@ -325,20 +325,35 @@ func initEnvConf() {
 }
 
 func processExists(pid string) (bool, error) {
-	port := beego.AppConfig.DefaultInt("httpport", 8080)
-	cmd := "lsof -i tcp:"+strconv.Itoa(port) + "| tail -1"
-	lsof := exec.Command("/bin/bash", "-c", cmd)
-	out, _ := lsof.Output()
-	if outStr := strings.TrimSpace(string(out)); strings.Index(outStr, "rasp-") != -1 {
-		if strings.Index(outStr, pid) != -1 {
+	var err error
+	if _, err = os.Stat(filepath.Join("/proc", pid)); err == nil {
+		port := beego.AppConfig.DefaultInt("httpport", 8080)
+		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:" + strconv.Itoa(port))
+		out, _ := lsof.Output()
+		if strings.Index(string(out), "rasp-") != -1 {
 			return true, nil
-		} else if len(outStr) > 0 {
-			if beego.AppConfig.DefaultBool("DebugModeEnable", false) {
-				log.Println(outStr)
+		} else {
+			return false, nil
+		}
+	} else {
+		//port := beego.AppConfig.DefaultInt("httpport", 8080)
+		//cmd := "lsof -i tcp:"+strconv.Itoa(port) + "| tail -1"
+		cmd := "ps -ef|grep " + pid + "|grep -v grep"
+		lsof := exec.Command("/bin/bash", "-c", cmd)
+		out, _ := lsof.Output()
+		if outStr := strings.TrimSpace(string(out)); strings.Index(outStr, "rasp-") != -1 {
+			if strings.Index(outStr, pid) != -1 {
+				Status = "restart"
+				return true, nil
+			} else if len(outStr) > 0 {
+				if Status == "restart" {
+					log.Println(outStr)
+				}
+				return false, nil
 			}
 		}
 	}
-	return false, nil
+	return false, err
 }
 
 func checkPIDAlreadyExists(path string, remove bool) bool {
