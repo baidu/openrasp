@@ -336,9 +336,8 @@ func processExists(pid string) (bool, error) {
 	if outStr := string(out); strings.Index(outStr, "rasp-") != -1 {
 		if strings.Index(outStr, pid) != -1 {
 			return true, nil
-		} else if len(outStr) > 0 && Status == "restart" && strings.Index(outStr, pid) != -1 {
-			msg := "The current port "  + strconv.Itoa(port) +" to the pointing pid: " + pid+ " cannot be matched"
-			log.Println(msg)
+		} else if len(outStr) > 0 && Status == "restart" && strings.Index(outStr, OldPid) != -1 {
+			log.Println(outStr)
 		}
 	}
 	return false, nil
