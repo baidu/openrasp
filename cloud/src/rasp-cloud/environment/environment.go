@@ -111,7 +111,6 @@ func handleVersionFlag() {
 func HandleOperation(operation string) {
 	switch operation {
 	case conf.RestartOperation:
-		Status = "restart"
 		restart()
 	case conf.StopOperation:
 		stop()
@@ -135,10 +134,7 @@ func restart() {
 		}
 		restartCnt := 0
 		for {
-			exist, err := processExists(OldPid)
-			if err != nil {
-				log.Fatalln(err)
-			}
+			exist := CheckPIDAlreadyRunning(PidFileName)
 			if !exist {
 				break
 			}
@@ -333,11 +329,13 @@ func processExists(pid string) (bool, error) {
 	cmd := "lsof -i tcp:"+strconv.Itoa(port) + "| tail -1"
 	lsof := exec.Command("/bin/bash", "-c", cmd)
 	out, _ := lsof.Output()
-	if outStr := string(out); strings.Index(outStr, "rasp-") != -1 {
+	if outStr := strings.TrimSpace(string(out)); strings.Index(outStr, "rasp-") != -1 {
 		if strings.Index(outStr, pid) != -1 {
 			return true, nil
-		} else if len(outStr) > 0 && Status == "restart" && strings.Index(outStr, OldPid) != -1 {
-			log.Println(outStr)
+		} else if len(outStr) > 0 {
+			if beego.AppConfig.DefaultBool("DebugModeEnable", false) {
+				log.Println(outStr)
+			}
 		}
 	}
 	return false, nil
