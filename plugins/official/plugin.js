@@ -1,4 +1,4 @@
-const plugin_version = '2020-0308-2330'
+const plugin_version = '2020-0311-1630'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1770,7 +1770,7 @@ plugin.register('readFile', function (params, context) {
     // weblogic/tongweb 下面，所有war包读取操作全部忽略
     if (server['server'] === 'weblogic' || server['server'] == 'tongweb')
     {
-        if (params.realpath.endsWith('.war'))
+        if (params.realpath.endsWith('.war') || params.realpath.endsWith('.ear'))
         {
             return clean;
         }
