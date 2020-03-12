@@ -46,6 +46,7 @@ var (
 	LogPath             = "logs/"
 	PidFileName         = LogPath + "pid.file"
 	OldPid              = ""
+	Status				string
 )
 
 func init() {
@@ -133,10 +134,7 @@ func restart() {
 		}
 		restartCnt := 0
 		for {
-			exist, err := processExists(OldPid)
-			if err != nil {
-				log.Fatalln(err)
-			}
+			exist := CheckPIDAlreadyRunning(PidFileName)
 			if !exist {
 				break
 			}
@@ -260,11 +258,15 @@ func HandleDaemon() {
 			}
 			time.Sleep(1 * time.Second)
 		}
+
 		if cnt == 29 {
 			log.Fatal("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
-		} else {
+		} else if CheckPort(port) {
 			log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+		} else {
+			log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
 		}
+
 	}
 	os.Exit(0)
 }
@@ -323,17 +325,35 @@ func initEnvConf() {
 }
 
 func processExists(pid string) (bool, error) {
-	if _, err := os.Stat(filepath.Join("/proc", pid)); err == nil {
+	var err error
+	if _, err = os.Stat(filepath.Join("/proc", pid)); err == nil {
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
-		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:"+strconv.Itoa(port))
+		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:" + strconv.Itoa(port))
 		out, _ := lsof.Output()
 		if strings.Index(string(out), "rasp-") != -1 {
 			return true, nil
 		} else {
 			return false, nil
 		}
+	} else {
+		//port := beego.AppConfig.DefaultInt("httpport", 8080)
+		//cmd := "lsof -i tcp:"+strconv.Itoa(port) + "| tail -1"
+		cmd := "ps -ef|grep " + pid + "|grep -v grep"
+		lsof := exec.Command("/bin/bash", "-c", cmd)
+		out, _ := lsof.Output()
+		if outStr := strings.TrimSpace(string(out)); strings.Index(outStr, "rasp-") != -1 {
+			if strings.Index(outStr, pid) != -1 {
+				Status = "restart"
+				return true, nil
+			} else if len(outStr) > 0 {
+				if Status == "restart" {
+					log.Println(outStr)
+				}
+				return false, nil
+			}
+		}
 	}
-	return false, nil
+	return false, err
 }
 
 func checkPIDAlreadyExists(path string, remove bool) bool {
