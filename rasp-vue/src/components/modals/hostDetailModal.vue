@@ -37,6 +37,11 @@
               </div>
 
               <div class="h6">
+                注册时间
+              </div>
+              <p>{{ moment(data.register_time * 1000).format('YYYY-MM-DD HH:mm:ss') }}</p>              
+
+              <div class="h6">
                 注册 IP
               </div>
               <p style="word-break: break-all; ">
