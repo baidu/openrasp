@@ -52,9 +52,14 @@
 
             <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
               <div class="h6">
+                服务器版本
+              </div>
+              <pre>{{ data.language }}/{{ data.language_version }}</pre>
+
+              <div class="h6">
                 Agent 版本
               </div>
-              <pre>{{ data.language }}/{{ data.version }}</pre>
+              <pre>{{ data.version }}</pre>
 
               <div class="h6">
                 插件版本
