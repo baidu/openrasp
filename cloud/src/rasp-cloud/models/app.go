@@ -292,6 +292,13 @@ func createDefaultApp() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeInitDefaultAppFailed, "failed to create default app", err)
 	}
+	// 初始化全局配置
+	var config GeneralAlarmConf
+	config.AlarmCheckInterval = MinAlarmCheckInterval
+	err = UpdateGeneralAlarmConfig(&config)
+	if err != nil {
+		tools.Panic(tools.ErrCodeInitDefaultAppFailed, "failed to init general config", err)
+	}
 }
 
 func startAlarmTicker() {
