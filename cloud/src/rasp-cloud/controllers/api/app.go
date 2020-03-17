@@ -726,6 +726,10 @@ func (o *AppController) ConfigAlarm() {
 	}
 	if param.KafkaConf != nil {
 		o.validKafkaConf(param.KafkaConf)
+		err = kafka.PutKafkaConfig(param.AppId, param.KafkaConf)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to put kafka config", err)
+		}
 	}
 	if param.GeneralAlarmConf != nil {
 		models.AlarmCheckInterval = param.GeneralAlarmConf.AlarmCheckInterval
@@ -746,10 +750,6 @@ func (o *AppController) ConfigAlarm() {
 	err = models.UpdateGeneralAlarmConfig(param.GeneralAlarmConf)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
-	}
-	err = kafka.PutKafkaConfig(param.AppId, param.KafkaConf)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to put kafka config", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
 		"Alarm configuration updated for "+param.AppId)
