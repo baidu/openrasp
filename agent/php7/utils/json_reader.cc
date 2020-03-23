@@ -297,28 +297,4 @@ void JsonReader::write_int64_vector(const std::vector<std::string> &keys, const 
   j[ptr] = j_vec;
 }
 
-void JsonReader::merge(const JsonReader &patch)
-{
-  j.merge_patch(patch.j);
-}
-
-void JsonReader::write_json_string(const std::vector<std::string> &keys, const std::string &value)
-{
-  try
-  {
-    json j_val = json::parse(value);
-    json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
-    j[ptr] = j_val;
-  }
-  catch (json::parse_error &e)
-  {
-    error = true;
-    std::ostringstream oss;
-    oss << "message: " << e.what() << ';'
-        << "exception id: " << e.id << ';'
-        << "byte position of error: " << e.byte;
-    error_msg = oss.str();
-  }
-}
-
 } // namespace openrasp

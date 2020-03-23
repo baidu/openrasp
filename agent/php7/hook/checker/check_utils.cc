@@ -35,28 +35,6 @@ void builtin_alarm_info(openrasp::JsonReader &base_json)
     LOG_G(alarm_logger).log(LEVEL_INFO, base_json TSRMLS_CC);
 }
 
-void builtin_policy_info(openrasp::JsonReader &base_json, const std::string &hash_key)
-{
-    TSRMLS_FETCH();
-    bool skip = false;
-    if (!hash_key.empty() && slm != nullptr)
-    {
-        ulong connection_hash = std::hash<std::string>{}(hash_key);
-        long timestamp = (long)time(nullptr);
-        if (slm->log_update(timestamp, connection_hash))
-        {
-            skip = true;
-        }
-    }
-    if (!skip)
-    {
-        LOG_G(policy_logger).log(LEVEL_INFO, base_json TSRMLS_CC);
-    }
-#ifdef HAVE_LINE_COVERAGE
-    __gcov_flush();
-#endif
-}
-
 void builtin_policy_info(openrasp::JsonReader &base_json, ulong hash)
 {
     TSRMLS_FETCH();

@@ -361,6 +361,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int TS
                     tv.tv_usec = OPENRASP_CONFIG(syslog.read_timeout) * 1000;
                     php_stream_set_option(stream, PHP_STREAM_OPTION_READ_TIMEOUT, 0, &tv);
                     syslog_stream = stream;
+                    efree(res);
                     return true;
                 }
                 else

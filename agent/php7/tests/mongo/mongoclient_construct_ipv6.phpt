@@ -18,7 +18,7 @@ security.weak_passwords:
   - "mysql"
 CONF;
 include(__DIR__.'/../skipif.inc');
-if (!extension_loaded("mongodb")) die("Skipped: mongo extension required.");
+if (!extension_loaded("mongo")) die("Skipped: mongo extension required.");
 $fp = fsockopen('[::1]', 27015, $errCode, $errStr, 1);
 if ($fp == false) {
     die("Skipped: cannot attach [::1]:27015");
