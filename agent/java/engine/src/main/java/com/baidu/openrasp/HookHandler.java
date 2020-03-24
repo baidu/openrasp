@@ -352,7 +352,9 @@ public class HookHandler {
             }
             doRealCheckWithoutRequest(type, params);
         } catch (Throwable t) {
-            // ignore
+            if (t instanceof SecurityException) {
+                throw (SecurityException)t;
+            }
         } finally {
             enableCurrThreadHook.set(enableHookCache);
         }
