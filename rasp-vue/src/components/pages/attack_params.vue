@@ -216,7 +216,7 @@
             </p>
         </div>         
 
-        <div v-if="data.attack_type == 'ssrf'">
+        <div v-if="data.attack_type == 'ssrf' || data.attack_type == 'ssrfRedirect'">
             <div class="h6">
                 要访问的 URL
             </div>
