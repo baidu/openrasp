@@ -161,7 +161,7 @@ var (
 			"root","rootweblogic","tomcat","user",
 			"weblogic1","weblogic123","welcome1",
 		},
-		"request.param_encoding":    "UTF-8",
+		"request.param_encoding":    "",
 		"debug.level":               0,
 		"lru.max_size":              1000,
 		"lru.compare_limit":         10240,
