@@ -117,6 +117,13 @@
                   </div>
                   <pre>{{decodeMultipartForm(data.parameter.form)}}</pre>
                 </div>
+
+                <div v-if="data.parameter && data.parameter.json != '{}'">
+                  <div class="h6">
+                    JSON 参数
+                  </div>
+                  <pre>{{data.parameter.json}}</pre>
+                </div>
               </div>
 
               <!-- 兼容没有 header 字段的老版本 -->
