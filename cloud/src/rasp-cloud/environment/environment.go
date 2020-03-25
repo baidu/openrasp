@@ -42,7 +42,7 @@ type PIDFile struct {
 var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
-	Version             = "1.3.1"
+	Version             = "1.3.2"
 	LogPath             = "logs/"
 	PidFileName         = LogPath + "pid.file"
 	OldPid              = ""

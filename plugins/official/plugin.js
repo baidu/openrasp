@@ -1,4 +1,4 @@
-const plugin_version = '2020-0311-1630'
+const plugin_version = '2020-0325-2010'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1662,7 +1662,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             url: params.url2,
             hostname: params.hostname2,
             ip: params.ip2,
-            ip_origin: params.ip,
+            origin_ip: params.ip,
             port: params.port2,
             function: params.function
         }
