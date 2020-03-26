@@ -1,4 +1,4 @@
-const plugin_version = '2020-0325-2010'
+const plugin_version = '2020-0326-1310'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -653,6 +653,9 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/
 // 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4)
 var commaNumRegex   = /^[0-9, ]+$/
 
+// 匹配内网地址
+var internalRegex   = /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
+
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
@@ -1197,6 +1200,40 @@ function get_all_parameter(context) {
     return parameter
 }
 
+function check_internal_ip(ip, origin_ip) {
+    // origin_ip不为空且不存在非内网地址则跳过检测
+    if (origin_ip && ! origin_ip.some(function(value) {
+            return !internalRegex.test(value)
+        })){ return }
+
+    for (var i=0; i<ip.length; i++) {
+        if (internalRegex.test(ip[i]))
+        {
+            return {
+                action:     algorithmConfig.ssrf_userinput.action,
+                message:    _("SSRF - Requesting intranet address: %1%", [ ip[i] ]),
+                confidence: 100,
+                algorithm:  'ssrf_userinput'
+            }
+        }
+    }
+}
+
+function check_internal_hostname(hostname, origin_hostname) {
+    if ((origin_hostname) && (origin_hostname == '[::]' || origin_hostname == '::1' || origin_hostname == '0.0.0.0')) {
+        return
+    }
+    if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
+    {
+        return {
+            action:     algorithmConfig.ssrf_userinput.action,
+            message:    _("SSRF - Requesting intranet address: %1%", [ hostname ]),
+            confidence: 100,
+            algorithm:  'ssrf_userinput'
+        }
+    }
+}
+
 function check_ssrf(params, context, is_redirect) {
     var hostname  = params.hostname
     var url       = params.url
@@ -1206,32 +1243,20 @@ function check_ssrf(params, context, is_redirect) {
     // 算法1 - 当参数来自用户输入，且为内网IP，判定为SSRF攻击
     if (algorithmConfig.ssrf_userinput.action != 'ignore')
     {
+        var ret
         var all_parameter = get_all_parameter(context)
-        if (is_redirect || is_from_userinput(all_parameter, url))
-        {
-            for (var i=0; i<ip.length; i++) {
-                if (/^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(ip[i]))
-                {
-                    if (!(is_redirect && /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./.test(params.origin_ip))){
-                        return {
-                            action:     algorithmConfig.ssrf_userinput.action,
-                            message:    _("SSRF - Requesting intranet address: %1%", [ ip[i] ]),
-                            confidence: 100,
-                            algorithm:  'ssrf_userinput'
-                        }
-                    }
-                }
-            }
-            
-            if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
-            {
-                return {
-                    action:     algorithmConfig.ssrf_userinput.action,
-                    message:    _("SSRF - Requesting intranet address: %1%", [ hostname ]),
-                    confidence: 100,
-                    algorithm:  'ssrf_userinput'
-                }
-            }
+        if (is_redirect) {
+            ret = check_internal_ip(ip, params.origin_ip)
+            if (ret) {return ret}
+            ret = check_internal_hostname(hostname, params.origin_hostname)
+            if (ret) {return ret}
+        }
+        else if (is_from_userinput(all_parameter, url)) {
+            // 非重定向，判定用户输入
+            ret = check_internal_ip(ip, undefined)
+            if (ret) {return ret}
+            ret = check_internal_hostname(hostname, undefined)
+            if (ret) {return ret}
         }
     }
 
@@ -1659,10 +1684,12 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     plugin.register('ssrfRedirect', function(params, context) {
         var params2 = {
             // 使用原始url，用于检测用户输入
+            origin_hostname: params.hostname,
+            origin_ip: params.ip,
+
             url: params.url2,
             hostname: params.hostname2,
             ip: params.ip2,
-            origin_ip: params.ip,
             port: params.port2,
             function: params.function
         }
