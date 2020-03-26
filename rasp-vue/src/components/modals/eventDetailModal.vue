@@ -113,9 +113,16 @@
 
                 <div v-if="data.parameter && data.parameter.form != '{}'">
                   <div class="h6">
-                    Multipart Form 参数
+                    Form 参数
                   </div>
                   <pre>{{decodeMultipartForm(data.parameter.form)}}</pre>
+                </div>
+
+                <div v-if="data.parameter && data.parameter.json != '{}'">
+                  <div class="h6">
+                    JSON 参数
+                  </div>
+                  <pre>{{data.parameter.json}}</pre>
                 </div>
               </div>
 

@@ -124,6 +124,10 @@ std::string Url::get_path() const
 }
 std::string Url::get_query() const
 {
+  if (path.empty())
+  {
+    return "/";
+  }
   return query;
 }
 void Url::set_scheme(const std::string &scheme)
@@ -149,8 +153,7 @@ void Url::set_query(const std::string &query)
 
 bool operator==(const openrasp::Url &lhs, const openrasp::Url &rhs)
 {
-  return lhs.get_scheme() == rhs.get_scheme() &&
-         lhs.get_host() == rhs.get_host() &&
+  return lhs.get_host() == rhs.get_host() &&
          lhs.get_port() == rhs.get_port() &&
          lhs.get_path() == rhs.get_path() &&
          lhs.get_query() == rhs.get_query();
