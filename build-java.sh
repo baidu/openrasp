@@ -34,13 +34,12 @@ function buildRaspInstall {
 }
 
 # 编译 openrasp-v8
-function buildOpenraspV8 {
+function fetchV8Library {
 	cd $BASE_DIR
-	GIT_LFS_SKIP_SMUDGE=1 git submodule update --init
+	git submodule update --init
 	cd openrasp-v8/java
 	git fetch --tags
 	./fetch_native_libraries.sh
-	mvn clean install
 	cd $BASE_DIR
 }
 
@@ -71,11 +70,11 @@ buildPlugin
 log "[3] copy rasp.yaml"
 copyConf
 
-log "[4] build openrasp-v8"
+log "[4] fetch openrasp-v8 library"
 if [[ ! -z $SKIP_V8 ]]; then
-	echo Skipped buildOpenraspV8
+	echo Skipped fetchV8Library
 else
-	buildOpenraspV8
+	fetchV8Library
 fi
 
 log "[5] build OpenRASP"

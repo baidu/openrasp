@@ -21,19 +21,10 @@
     </scm>
 
     <modules>
+        <module>../../openrasp-v8/java</module>
         <module>boot</module>
         <module>engine</module>
     </modules>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.baidu.openrasp</groupId>
-                <artifactId>rasp-boot</artifactId>
-                <version>${rasp.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <build>
         <finalName>rasp</finalName>
