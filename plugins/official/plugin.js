@@ -1,4 +1,4 @@
-const plugin_version = '2020-0326-1310'
+const plugin_version = '2020-0330-1750'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -656,6 +656,9 @@ var commaNumRegex   = /^[0-9, ]+$/
 // 匹配内网地址
 var internalRegex   = /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
 
+// ssrf白名单主机名
+var whiteHostName   = /\.bcebos\.com$|(^|\.)oss-[\d\w\-]{0,30}\.aliyuncs\.com$/
+
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
@@ -1247,14 +1250,14 @@ function check_ssrf(params, context, is_redirect) {
         var all_parameter = get_all_parameter(context)
         if (is_redirect) {
             ret = check_internal_ip(ip, params.origin_ip)
-            if (ret) {return ret}
+            if (ret && !whiteHostName.test(hostname)) {return ret}
             ret = check_internal_hostname(hostname, params.origin_hostname)
             if (ret) {return ret}
         }
         else if (is_from_userinput(all_parameter, url)) {
             // 非重定向，判定用户输入
             ret = check_internal_ip(ip, undefined)
-            if (ret) {return ret}
+            if (ret && !whiteHostName.test(hostname)) {return ret}
             ret = check_internal_hostname(hostname, undefined)
             if (ret) {return ret}
         }
