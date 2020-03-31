@@ -560,7 +560,7 @@ var algorithmConfig = {
 
     response_dataLeak: {
         name:   '算法1 - 检查响应里是否有敏感信息（拦截等于记录日志）',
-        action: 'igore',
+        action: 'ignore',
 
         // 检查类型
         kind: {
