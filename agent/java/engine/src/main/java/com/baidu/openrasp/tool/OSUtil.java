@@ -18,6 +18,8 @@ package com.baidu.openrasp.tool;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.model.NicModel;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -104,21 +106,38 @@ public class OSUtil {
         return bigInt.toString(16);
     }
 
-    private static LinkedList<String> getMacAddress() throws Exception {
+    private static LinkedList<String> getMacAddress() throws SocketException {
         LinkedList<String> macs = new LinkedList<String>();
-        Enumeration<NetworkInterface> el = NetworkInterface.getNetworkInterfaces();
+
+        Enumeration<NetworkInterface> el = null;
+        try {
+            el = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            LogTool.error(ErrorType.RUNTIME_ERROR, "failed to get mac information", e);
+            throw e;
+        }
         while (el.hasMoreElements()) {
             NetworkInterface netInterface = el.nextElement();
-            if (!netInterface.isLoopback()) {
-                byte[] mac = netInterface.getHardwareAddress();
-                if (mac == null)
-                    continue;
-                String macString = "";
-                for (byte b : mac) {
-                    macString += (hexByte(b) + "-");
+            try {
+                if (!netInterface.isLoopback()) {
+                    byte[] mac = netInterface.getHardwareAddress();
+                    if (mac == null)
+                        continue;
+                    String macString = "";
+                    for (byte b : mac) {
+                        macString += (hexByte(b) + "-");
+                    }
+                    macs.add(macString.substring(0, macString.length() - 1));
                 }
-                macs.add(macString.substring(0, macString.length() - 1));
+            } catch (SocketException e) {
+                String message = "failed to handle mac information, name: " +
+                        netInterface.getName() + ", DisplayName:" + netInterface.getDisplayName();
+                System.out.println(message);
+                LogTool.error(ErrorType.RUNTIME_ERROR, message, e);
             }
+        }
+        if (macs.isEmpty()) {
+            throw new IllegalStateException("the mac information is empty");
         }
         Collections.sort(macs);
         return macs;
