@@ -44,6 +44,8 @@ public class ServerDetectorManager {
         detectors.add(new DubboDetector());
         detectors.add(new SpringbootDetector());
         detectors.add(new TongWebDetector());
+        detectors.add(new BESDetector());
+
     }
 
     public static ServerDetectorManager getInstance() {
