@@ -18,6 +18,7 @@ package com.baidu.openrasp.response;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.hook.server.bes.BESResponseBodyHook;
 import com.baidu.openrasp.hook.server.catalina.CatalinaResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
@@ -183,10 +184,13 @@ public class HttpServletResponse {
                 } else {
                     script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 }
-                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)
-                        && "tomcat".equals(ApplicationModel.getServerName())) {
-                    CatalinaResponseBodyHook.handleXssBlockBuffer(parameter, script);
-                } else {
+                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)) {
+                    if ("tomcat".equals(ApplicationModel.getServerName())) {
+                        CatalinaResponseBodyHook.handleXssBlockBuffer(parameter, script);
+                    } else if ("bes".equals(ApplicationModel.getServerName())) {
+                        BESResponseBodyHook.handleXssBlockBuffer(parameter, script);
+                    }
+                }else {
                     if (!isCommitted) {
                         resetBuffer();
                         Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
