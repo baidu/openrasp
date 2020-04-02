@@ -1223,10 +1223,10 @@ function check_internal_ip(ip, origin_ip) {
 }
 
 function check_internal_hostname(hostname, origin_hostname) {
-    if ((origin_hostname) && (origin_hostname == '[::]' || origin_hostname == '::1' || origin_hostname == '0.0.0.0')) {
+    if ((origin_hostname) && (origin_hostname == '[::]' || origin_hostname == '[::1]')) {
         return
     }
-    if (hostname == '[::]' || hostname == '::1' || hostname == '0.0.0.0') 
+    if (hostname == '[::]' || hostname == '[::1]') 
     {
         return {
             action:     algorithmConfig.ssrf_userinput.action,
@@ -1277,10 +1277,10 @@ function check_ssrf(params, context, is_redirect) {
         }
     }
 
-    // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
+    // 算法3 - 检测 AWS/Aliyun/GoogleCloud/0.0.0.0 私有地址: 拦截IP访问、绑定域名访问两种方式
     if (algorithmConfig.ssrf_aws.action != 'ignore')
     {
-        if (ip == '169.254.169.254' || ip == '100.100.100.200'
+        if (ip == '169.254.169.254' || ip == '100.100.100.200' || ip == '0.0.0.0'
             || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
         {
             return {
