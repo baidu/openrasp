@@ -67,7 +67,7 @@ func (o *UserController) CheckDefault() {
 		result, err = models.CheckDefaultPassword(cookie)
 	}
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to check default password: "+err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to check default password: ", err)
 	}
 	if result {
 		o.Serve(map[string]interface{}{
@@ -100,11 +100,11 @@ func (o *UserController) Update() {
 	}
 	err := models.RemoveAllCookie()
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to remove all cookies", err)
 	}
 	err = models.UpdatePassword(param.OldPwd, param.NewPwd)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, err.Error())
+		o.ServeError(http.StatusBadRequest, "failed to update password", err)
 	}
 	o.ServeWithEmptyData()
 }

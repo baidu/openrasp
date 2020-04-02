@@ -92,7 +92,7 @@ func (o *ServerController) ClearLogs() {
 		index := "real-openrasp-" + docType + "-" + param.AppId
 		err := es.DeleteLogs(index)
 		if err != nil {
-			o.ServeError(http.StatusBadRequest, err.Error())
+			o.ServeError(http.StatusBadRequest, "delete es logs err", err)
 		}
 	}
 

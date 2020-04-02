@@ -319,6 +319,9 @@ func (o *AppController) ConfigApp() {
 		o.ServeError(http.StatusBadRequest, "failed to update app config", err)
 	}
 	operationData, err := json.Marshal(updateData)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to Marshal updateData", err)
+	}
 	models.AddOperation(app.Id, models.OperationTypeEditApp, o.Ctx.Input.IP(), "Updated app info for "+param.AppId+": "+string(operationData))
 	o.Serve(app)
 }
@@ -464,7 +467,7 @@ func (o *AppController) Delete() {
 	online := true
 	raspCount, _, err := models.FindRasp(&models.Rasp{AppId: app.Id, Online: &online}, 1, 1)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to find rasps for this app")
+		o.ServeError(http.StatusBadRequest, "failed to find rasps for this app", err)
 	}
 	if raspCount > 0 {
 		o.ServeError(http.StatusBadRequest, "failed to remove this app, it also has online rasps")

@@ -72,7 +72,7 @@ func (o *CrashController) Post() {
 		return
 	}
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app")
+		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
 	raspId := o.GetString("rasp_id")
 	if raspId == "" {
