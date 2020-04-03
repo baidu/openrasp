@@ -1,4 +1,4 @@
-const plugin_version = '2020-0330-1750'
+const plugin_version = '2020-0403-1050'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -817,6 +817,12 @@ function is_hostname_dnslog(hostname) {
     return false
 }
 
+function is_black_ip(ip) {
+    if (ip == "0.0.0.0") {
+        return true
+    }
+}
+
 // function basename (path) {
 //     // 简单处理，同时支持 windows/linux
 //     var path2 = path.replaceAll('\\', '/')
@@ -1275,12 +1281,22 @@ function check_ssrf(params, context, is_redirect) {
                 algorithm:  'ssrf_common'
             }
         }
+
+        if (is_black_ip(ip))
+        {
+            return {
+                action:     algorithmConfig.ssrf_common.action,
+                message:    _("SSRF - Requesting black ip address: %1%", [ip]),
+                confidence: 100,
+                algorithm:  'ssrf_common'
+            }
+        }
     }
 
-    // 算法3 - 检测 AWS/Aliyun/GoogleCloud/0.0.0.0 私有地址: 拦截IP访问、绑定域名访问两种方式
+    // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
     if (algorithmConfig.ssrf_aws.action != 'ignore')
     {
-        if (ip == '169.254.169.254' || ip == '100.100.100.200' || ip == '0.0.0.0'
+        if (ip == '169.254.169.254' || ip == '100.100.100.200'
             || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
         {
             return {
