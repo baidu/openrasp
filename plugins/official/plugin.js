@@ -668,6 +668,10 @@ var sqliAntiDetect = new RegExp(algorithmConfig.sql_userinput.anti_detect_filter
 // SQL注入算法2 - 预过滤正则
 var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
+// SQL注入算法 - 管理器白名单
+var sqliWhiteManager  = new RegExp(/phpmyadmin/, 'i')
+
+
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
 
@@ -1360,6 +1364,7 @@ function check_ssrf(params, context, is_redirect) {
     return false
 }
 
+
 // 下个版本将会支持翻译，目前还需要暴露一个 getText 接口给插件
 function _(message, args) 
 {
@@ -1470,7 +1475,6 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
         // 算法1: 匹配用户输入，简单识别逻辑是否发生改变
         if (algorithmConfig.sql_userinput.action != 'ignore') {
-
             // 匹配 GET/POST/multipart 参数
             Object.keys(parameters).some(function (name) {
                 // 覆盖场景，后者仅PHP支持
@@ -1533,7 +1537,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 }
             }
 
-            if (reason !== false) {
+            if (reason !== false && !sqliWhiteManager.test(params.stack[0])) {
                 return {
                     action:     algorithmConfig.sql_userinput.action,
                     confidence: 90,
@@ -1663,7 +1667,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 }
             }
 
-            if (reason !== false) 
+            if (reason !== false && !sqliWhiteManager.test(params.stack[0])) 
             {
                 return {
                     action:     algorithmConfig.sql_policy.action,
@@ -1746,7 +1750,7 @@ plugin.register('sql_exception', function(params, context) {
             return clean
         }
     }
-    
+
     return {
         action:     algorithmConfig.sql_exception.action,
         message:    message,
