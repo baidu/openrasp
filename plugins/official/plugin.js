@@ -1746,7 +1746,7 @@ plugin.register('sql_exception', function(params, context) {
             return clean
         }
         // 过滤非语法错误
-        if (! /syntax/i.test(params.query)) {
+        if (! /syntax/i.test(params.error_msg)) {
             return clean
         }
     }
