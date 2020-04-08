@@ -1,4 +1,4 @@
-const plugin_version = '2020-0407-1930'
+const plugin_version = '2020-0408-1930'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1732,25 +1732,25 @@ plugin.register('sql_exception', function(params, context) {
     // mysql error 1367 detected: XXX
     var error_code = parseInt(params.error_code)
     var message    = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
-
-    // 1062 Duplicated key 错误会有大量误报问题，仅当语句里包含 rand 字样报警
-    if (error_code == 1062) {
-        // 忽略大小写匹配
-        if ( !/rand/i.test(params.query)) {
-            return clean
+    if (params.server == "mysql") {
+        // 1062 Duplicated key 错误会有大量误报问题，仅当语句里包含 rand 字样报警
+        if (error_code == 1062) {
+            // 忽略大小写匹配
+            if ( !/rand/i.test(params.query)) {
+                return clean
+            }
+        }
+        
+        else if (error_code == 1064) {
+            if ( /in\s*\(\s*\)/i.test(params.query)) {
+                return clean
+            }
+            // 过滤非语法错误
+            if (! /syntax/i.test(params.error_msg)) {
+                return clean
+            }
         }
     }
-
-    else if (error_code == 1064) {
-        if ( /in\s*\(\s*\)/i.test(params.query)) {
-            return clean
-        }
-        // 过滤非语法错误
-        if (! /syntax/i.test(params.error_msg)) {
-            return clean
-        }
-    }
-
     return {
         action:     algorithmConfig.sql_exception.action,
         message:    message,
