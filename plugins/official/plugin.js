@@ -654,7 +654,7 @@ var ntfsRegex       = /::\$(DATA|INDEX)$/
 var commaNumRegex   = /^[0-9, ]+$/
 
 // 匹配内网地址
-var internalRegex   = /^(127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
+var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
 
 // ssrf白名单主机名
 var whiteHostName   = /\.bcebos\.com$|(^|\.)oss-[\d\w\-]{0,30}\.aliyuncs\.com$/
@@ -821,11 +821,6 @@ function is_hostname_dnslog(hostname) {
     return false
 }
 
-function is_black_ip(ip) {
-    if (ip == "0.0.0.0") {
-        return true
-    }
-}
 
 // function basename (path) {
 //     // 简单处理，同时支持 windows/linux
@@ -1281,16 +1276,6 @@ function check_ssrf(params, context, is_redirect) {
             return {
                 action:     algorithmConfig.ssrf_common.action,
                 message:    _("SSRF - Requesting known DNSLOG address: %1%", [hostname]),
-                confidence: 100,
-                algorithm:  'ssrf_common'
-            }
-        }
-
-        if (is_black_ip(ip))
-        {
-            return {
-                action:     algorithmConfig.ssrf_common.action,
-                message:    _("SSRF - Requesting black ip address: %1%", [ip]),
                 confidence: 100,
                 algorithm:  'ssrf_common'
             }
