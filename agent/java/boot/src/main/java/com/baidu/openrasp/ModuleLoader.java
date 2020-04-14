@@ -45,6 +45,13 @@ public class ModuleLoader {
 
     // ModuleLoader 为 classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
+        // juli
+        try {
+            Class clazz = Class.forName("java.nio.file.FileSystems");
+            clazz.getMethod("getDefault", new Class[0]).invoke(null);
+        } catch (Throwable t) {
+            // ignore
+        }
         Class clazz = ModuleLoader.class;
         // path值示例：　file:/opt/apache-tomcat-xxx/rasp/rasp.jar!/com/fuxi/javaagent/Agent.class
         String path = clazz.getResource("/" + clazz.getName().replace(".", "/") + ".class").getPath();
