@@ -177,13 +177,17 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
 
 static const char *get_content_type(TSRMLS_D)
 {
-    for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
+    zend_llist *headers = &SG(sapi_headers).headers;
+    if (nullptr != headers && zend_llist_count(headers) > 0)
     {
-        sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
-        if (sapi_header->header_len > sizeof("content-type:") - 1 &&
-            strncasecmp(sapi_header->header, "content-type:", sizeof("content-type:") - 1) == 0)
+        for (zend_llist_element *element = headers->head; nullptr != element; element = element->next)
         {
-            return sapi_header->header + sizeof("content-type:") - 1;
+            sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
+            if (nullptr != sapi_header && sapi_header->header_len > sizeof("content-type:") - 1 &&
+                strncasecmp(sapi_header->header, "content-type:", sizeof("content-type:") - 1) == 0)
+            {
+                return sapi_header->header + sizeof("content-type:") - 1;
+            }
         }
     }
     return "";
