@@ -22,14 +22,30 @@ namespace openrasp
 
 bool regex_match(const char *str, const char *regex)
 {
-    const std::regex re(regex);
-    return std::regex_match(str, re);
+    try
+    {
+        const std::regex re(regex);
+        return std::regex_match(str, re);
+    }
+    catch (std::regex_error &e)
+    {
+        //skip
+    }
+    return false;
 }
 
 bool regex_search(const char *str, const char *regex)
 {
-    const std::regex re(regex);
-    return std::regex_search(str, re);
+    try
+    {
+        const std::regex re(regex);
+        return std::regex_search(str, re);
+    }
+    catch (std::regex_error &e)
+    {
+        //skip
+    }
+    return false;
 }
 
 } // namespace openrasp
