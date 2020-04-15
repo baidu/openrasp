@@ -120,14 +120,14 @@ std::string Url::get_port() const
 
 std::string Url::get_path() const
 {
-  return path;
-}
-std::string Url::get_query() const
-{
   if (path.empty())
   {
     return "/";
   }
+  return path;
+}
+std::string Url::get_query() const
+{
   return query;
 }
 void Url::set_scheme(const std::string &scheme)
