@@ -1,4 +1,4 @@
-const plugin_version = '2020-0410-1230'
+const plugin_version = '2020-0417-1830'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1727,7 +1727,7 @@ plugin.register('sql_exception', function(params, context) {
         }
         
         else if (error_code == 1064) {
-            if ( /in\s*\(\s*\)/i.test(params.query)) {
+            if ( /in\s*(\(\s*\)|[^\(\w])/i.test(params.query)) {
                 return clean
             }
             // 过滤非语法错误
