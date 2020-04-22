@@ -206,6 +206,13 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 
 // @router / [post]
 func (o *AppController) Post() {
+	c, err := models.GetAppCount()
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get app count", err)
+	}
+	if c >= models.MaxAppCount {
+		o.ServeError(http.StatusForbidden, "app quantity limit exceeded")
+	}
 	var app = &models.App{}
 
 	o.UnmarshalJson(app)
@@ -263,7 +270,7 @@ func (o *AppController) Post() {
 	} else {
 		app.WhitelistConfig = make([]models.WhitelistConfigItem, 0)
 	}
-	app, err := models.AddApp(app)
+	app, err = models.AddApp(app)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "create app failed", err)
 	}

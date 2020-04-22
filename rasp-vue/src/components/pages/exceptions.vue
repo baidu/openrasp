@@ -57,10 +57,8 @@
               {{ scope.item.server_hostname }}<br/>
               <span v-for="nic in scope.item.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}<br/></span>
             </template>
-            <template slot="button" slot-scope="scope">
-              <a href="javascript:" @click="showExceptionDetail(scope.item)">
-                查看详情
-              </a>
+            <template v-slot:cell(button)="scope">
+              <b-link @click="showExceptionDetail(scope.item)">查看详情</b-link>
             </template>
           </b-table>
 

@@ -120,6 +120,18 @@ func (o *AttackAlarmController) Search() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
 	}
+	// golang禁止循环导包，因此es.go中不能有访问mongo的操作
+  	// 遍历result，加入rasp_version
+	for idx, r := range result {
+		if r["rasp_id"] != nil {
+			raspId := r["rasp_id"].(string)
+			rasp, err := models.GetRaspById(raspId)
+			if err != nil {
+				o.ServeError(http.StatusBadRequest, "failed to search get rasp id", err)
+			}
+			result[idx]["rasp_version"] = rasp.Version
+		}
+	}
 	o.Serve(map[string]interface{}{
 		"total":      total,
 		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
@@ -137,6 +149,18 @@ func (o *AttackAlarmController) AggregationVuln() {
 		param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
+	}
+	// golang禁止循环导包，因此es.go中不能有访问mongo的操作
+	// 遍历result，加入rasp_version
+	for idx, r := range result {
+		if r["rasp_id"] != nil {
+			raspId := r["rasp_id"].(string)
+			rasp, err := models.GetRaspById(raspId)
+			if err != nil {
+				o.ServeError(http.StatusBadRequest, "failed to search get rasp id", err)
+			}
+			result[idx]["rasp_version"] = rasp.Version
+		}
 	}
 	o.Serve(map[string]interface{}{
 		"total":      total,
