@@ -2171,6 +2171,7 @@ plugin.register('command', function (params, context) {
                 'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
                 'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
                 'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
+                'payload.java.Cmd.RunCMD':                                                      _("Reflected command execution - Using BeHinder defineClass webshell (modified)"),
                 'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library"),
                 'bsh.Reflect.invokeMethod':                                                     _("Reflected command execution - Using BeanShell library"),
                 'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     _("Reflected Command execution - Using Nashorn engine")
