@@ -340,7 +340,7 @@ func HandleAttackAlarm() {
 			}
 			for k, v := range attackConf {
 				query := map[string]interface{}{"attack_type": v}
-				total, result, err := logs.SearchLogs(lastAlarmTime, now, false, query, "event_time",
+				total, result, err := logs.SearchLogs(lastAlarmTime, now, false, query, "@timestamp",
 					1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 				if err != nil {
 					beego.Error("failed to get alarm from es for alarm type " + k + ": " + err.Error())
@@ -351,7 +351,7 @@ func HandleAttackAlarm() {
 				}
 			}
 		} else {
-			total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "event_time",
+			total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "@timestamp",
 				1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 			if err != nil {
 				beego.Error("failed to get alarm from es: " + err.Error())
