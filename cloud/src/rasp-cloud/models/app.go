@@ -124,7 +124,7 @@ const (
 	SecreteMask       = "************"
 	DefalutPluginName = "plugin.js"
 	IastPluginName    = "iast.js"
-	MaxAppCount       = 500
+	MaxAppCount       = 1000
 )
 
 var (
