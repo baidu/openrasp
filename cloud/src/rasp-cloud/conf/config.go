@@ -58,6 +58,8 @@ type RaspAppConfig struct {
 	Flag                  *Flag
 	LogMaxSize            int64
 	LogMaxDays            int
+	AccessLogPath         string
+	AgentCloudLogPath     string
 }
 
 type Flag struct {
@@ -102,6 +104,8 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.LogMaxSize = beego.AppConfig.DefaultInt64("LogMaxSize", 104857600)
 	AppConfig.LogMaxDays = beego.AppConfig.DefaultInt("LogMaxDays", 10)
 	AppConfig.DebugModeEnable = beego.AppConfig.DefaultBool("DebugModeEnable", false)
+	AppConfig.AccessLogPath = beego.AppConfig.DefaultString("AccessLogPath", "logs/access/access.log")
+	AppConfig.AgentCloudLogPath = beego.AppConfig.DefaultString("AgentCloudLogPath", "logs/api/agent-cloud.log")
 	ValidRaspConf(AppConfig)
 }
 

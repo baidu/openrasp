@@ -296,9 +296,19 @@ func fork() (err error) {
 }
 
 func initLogger() {
-	logPath := "logs/api"
+	var logPathSplit []string
+	logFileName := "/agent-cloud.log"
+	logPath := beego.AppConfig.DefaultString("AgentCloudLogPath", "logs/api/agent-cloud.log")
 	maxSize := strconv.FormatInt(beego.AppConfig.DefaultInt64("LogMaxSize", 104857600), 10)
 	maxDays := strconv.Itoa(beego.AppConfig.DefaultInt("LogMaxDays", 10))
+	// 判断后缀名称
+	if strings.HasSuffix(logPath, ".log") {
+		logPathSplit = strings.Split(logPath, "/")
+		logFileName = "/" + logPathSplit[len(logPathSplit) - 1]
+		logPathSplitNoLogFileName := logPathSplit[:len(logPathSplit) - 1]
+		logPath = strings.Join(logPathSplitNoLogFileName, "/")
+	}
+	beego.Info("logPath1:", logPath)
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
@@ -306,8 +316,10 @@ func initLogger() {
 		}
 	}
 	logs.SetLogFuncCall(true)
+	logPath += logFileName
+	beego.Info("logPath2:", logPath)
 	err := logs.SetLogger(logs.AdapterFile,
-		`{"filename":"`+logPath+`/agent-cloud.log","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
+		`{"filename":"`+logPath+`","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
 	if err != nil {
 		beego.Error(err)
 		os.Exit(-1)

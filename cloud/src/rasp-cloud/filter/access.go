@@ -22,6 +22,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -60,9 +61,18 @@ func formatTime(timestamp int64, format string) (times string) {
 }
 
 func initAccessLogger() {
-	logPath := "logs/access"
+	var logPathSplit []string
+	logFileName := "/access.log"
 	maxSize := strconv.FormatInt(conf.AppConfig.LogMaxSize, 10)
 	maxDays := strconv.Itoa(conf.AppConfig.LogMaxDays)
+	logPath := conf.AppConfig.AccessLogPath
+	// 判断后缀名称
+	if strings.HasSuffix(logPath, ".log") {
+		logPathSplit = strings.Split(logPath, "/")
+		logFileName = "/" + logPathSplit[len(logPathSplit) - 1]
+		logPathSplitNoLogFileName := logPathSplit[:len(logPathSplit) - 1]
+		logPath = strings.Join(logPathSplitNoLogFileName, "/")
+	}
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
@@ -73,8 +83,9 @@ func initAccessLogger() {
 	accessLogger = logs.NewLogger()
 	accessLogger.EnableFuncCallDepth(true)
 	accessLogger.SetLogFuncCallDepth(4)
+	logPath += logFileName
 	err := accessLogger.SetLogger(logs.AdapterFile,
-		`{"filename":"`+logPath+`/access.log","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
+		`{"filename":"`+logPath+`","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
 	if err != nil {
 		tools.Panic(tools.ErrCodeLogInitFailed, "failed to init access log", err)
 	}
