@@ -308,7 +308,6 @@ func initLogger() {
 		logPathSplitNoLogFileName := logPathSplit[:len(logPathSplit) - 1]
 		logPath = strings.Join(logPathSplitNoLogFileName, "/")
 	}
-	beego.Info("logPath1:", logPath)
 	if isExists, _ := tools.PathExists(logPath); !isExists {
 		err := os.MkdirAll(logPath, os.ModePerm)
 		if err != nil {
@@ -317,7 +316,6 @@ func initLogger() {
 	}
 	logs.SetLogFuncCall(true)
 	logPath += logFileName
-	beego.Info("logPath2:", logPath)
 	err := logs.SetLogger(logs.AdapterFile,
 		`{"filename":"`+logPath+`","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
 	if err != nil {
