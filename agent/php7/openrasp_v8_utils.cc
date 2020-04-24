@@ -199,21 +199,30 @@ void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Obje
 {
     v8::HandleScope handle_scope(isolate);
     auto context = isolate->GetCurrentContext();
-    auto obj = v8::Object::New(isolate);
-    obj->Set(context, NewV8String(isolate, "attack_type"), type).IsJust();
-    obj->Set(context, NewV8String(isolate, "attack_params"), params).IsJust();
-    obj->Set(context, NewV8String(isolate, "intercept_state"), result->Get(context, NewV8String(isolate, "action")).ToLocalChecked()).IsJust();
-    obj->Set(context, NewV8String(isolate, "plugin_message"), result->Get(context, NewV8String(isolate, "message")).ToLocalChecked()).IsJust();
-    obj->Set(context, NewV8String(isolate, "plugin_confidence"), result->Get(context, NewV8String(isolate, "confidence")).ToLocalChecked()).IsJust();
-    obj->Set(context, NewV8String(isolate, "plugin_algorithm"), result->Get(context, NewV8String(isolate, "algorithm")).ToLocalChecked()).IsJust();
-    obj->Set(context, NewV8String(isolate, "plugin_name"), result->Get(context, NewV8String(isolate, "name")).ToLocalChecked()).IsJust();
+    auto undefined = v8::Undefined(isolate).As<v8::Value>();
+    result->Set(context, NewV8String(isolate, "attack_type"), type).IsJust();
+    result->Set(context, NewV8String(isolate, "intercept_state"), result->Get(context, NewV8String(isolate, "action")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_message"), result->Get(context, NewV8String(isolate, "message")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_confidence"), result->Get(context, NewV8String(isolate, "confidence")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_algorithm"), result->Get(context, NewV8String(isolate, "algorithm")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_name"), result->Get(context, NewV8String(isolate, "name")).FromMaybe(undefined)).IsJust();
     if (result->Has(context, NewV8String(isolate, "params")).FromMaybe(false))
     {
-        obj->Set(context, NewV8String(isolate, "attack_params"), result->Get(context, NewV8String(isolate, "params")).ToLocalChecked()).IsJust();
+        result->Set(context, NewV8String(isolate, "attack_params"), result->Get(context, NewV8String(isolate, "params")).FromMaybe(undefined)).IsJust();
     }
+    else
+    {
+        result->Set(context, NewV8String(isolate, "attack_params"), params).IsJust();
+    }
+    result->Delete(context, NewV8String(isolate, "action")).IsJust();
+    result->Delete(context, NewV8String(isolate, "message")).IsJust();
+    result->Delete(context, NewV8String(isolate, "confidence")).IsJust();
+    result->Delete(context, NewV8String(isolate, "algorithm")).IsJust();
+    result->Delete(context, NewV8String(isolate, "name")).IsJust();
+    result->Delete(context, NewV8String(isolate, "params")).IsJust();
 
     v8::Local<v8::Value> val;
-    if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
+    if (v8::JSON::Stringify(isolate->GetCurrentContext(), result).ToLocal(&val))
     {
         v8::String::Utf8Value msg(isolate, val);
         openrasp::JsonReader base_json(*msg);

@@ -302,6 +302,11 @@ void JsonReader::merge(const JsonReader &patch)
   j.merge_patch(patch.j);
 }
 
+void JsonReader::update(const JsonReader &obj)
+{
+  j.update(obj.j);
+}
+
 void JsonReader::write_json_string(const std::vector<std::string> &keys, const std::string &value)
 {
   try
