@@ -25,6 +25,9 @@ import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.decompile.Decompiler;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Timestamp;
@@ -32,6 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Created by zhuming01 on 7/11/17.
@@ -50,9 +54,10 @@ public class AttackInfo extends EventInfo {
     private String pluginName;
     private String message;
     private String action;
+    private int confidence;
     private String algorithm;
     private Map params;
-    private int confidence;
+    private JsonObject extras;
 
     public static AttackInfo createLocalAttackInfo(CheckParameter parameter, String action,
                                                    String message, String algorithm) {
@@ -69,10 +74,17 @@ public class AttackInfo extends EventInfo {
         this(parameter, action, message, pluginName, algorithm, DEFAULT_CONFIDENCE_VALUE);
     }
 
-    public AttackInfo(CheckParameter parameter, String action, String message, String pluginName, String algorithm,
-            int confidence, Map params) {
-        this(parameter, action, message, pluginName, algorithm, confidence);
+    public AttackInfo(CheckParameter parameter, String action, String message, String pluginName, int confidence,
+            String algorithm, Map params, JsonObject extras) {
+        this.parameter = parameter;
+        this.action = action;
+        this.message = message;
+        this.pluginName = pluginName;
+        this.confidence = confidence;
+        this.algorithm = algorithm;
         this.params = params;
+        this.extras = extras;
+        setBlock(CHECK_ACTION_BLOCK.equals(action));
     }
 
     public AttackInfo(CheckParameter parameter, String action, String message,
@@ -107,8 +119,8 @@ public class AttackInfo extends EventInfo {
         // 攻击参数
         if (params == null) {
             params = parameter.getParams();
+            params.put("stack", StackTrace.getStackTraceArray(true, true));
         }
-        params.put("stack", StackTrace.getStackTraceArray(true, true));
         info.put("attack_params", params);
         // 检测插件
         info.put("plugin_name", this.pluginName);
@@ -176,7 +188,9 @@ public class AttackInfo extends EventInfo {
                 info.put("source_code", "");
             }
         }
-
+        for (Entry<String, JsonElement> entry : extras.entrySet()) {
+            info.put(entry.getKey(), entry.getValue());
+        }
         return info;
     }
 
