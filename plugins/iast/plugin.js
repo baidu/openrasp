@@ -66,6 +66,9 @@ function get_stack_hash (stack) {
 }
 
 function add_hook(hook_type, params, context) {
+    if (context.header == null) {
+        return
+    }
     if ( context.header["scan-request-id"] != undefined) {
         if (is_scanning_hook(hook_type, params, context)) {
             params.stack = params.stack
@@ -129,6 +132,10 @@ function is_scanning_hook(hook_type, params, context) {
 }
 
 function send_rasp_result(context) {
+
+    if (context.header == null) {
+        return
+    }
 
     var hook_info  = context.hook_info || []
     delete context.hook_info
