@@ -42,11 +42,11 @@ type PIDFile struct {
 var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
-	Version             = "1.3.2"
+	Version             = "1.3.3"
 	LogPath             = "logs/"
 	PidFileName         = LogPath + "pid.file"
 	OldPid              = ""
-	Status				string
+	Status              string
 )
 
 func init() {
@@ -304,8 +304,8 @@ func initLogger() {
 	// 判断后缀名称
 	if strings.HasSuffix(logPath, ".log") {
 		logPathSplit = strings.Split(logPath, "/")
-		logFileName = "/" + logPathSplit[len(logPathSplit) - 1]
-		logPathSplitNoLogFileName := logPathSplit[:len(logPathSplit) - 1]
+		logFileName = "/" + logPathSplit[len(logPathSplit)-1]
+		logPathSplitNoLogFileName := logPathSplit[:len(logPathSplit)-1]
 		logPath = strings.Join(logPathSplitNoLogFileName, "/")
 	}
 	if isExists, _ := tools.PathExists(logPath); !isExists {
@@ -338,7 +338,7 @@ func processExists(pid string) (bool, error) {
 	var err error
 	if _, err = os.Stat(filepath.Join("/proc", pid)); err == nil {
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
-		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:" + strconv.Itoa(port))
+		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:"+strconv.Itoa(port))
 		out, _ := lsof.Output()
 		if strings.Index(string(out), "rasp-") != -1 {
 			return true, nil
