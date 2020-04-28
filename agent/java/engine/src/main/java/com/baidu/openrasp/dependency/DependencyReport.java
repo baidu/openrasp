@@ -40,8 +40,9 @@ import java.util.logging.Logger;
 public class DependencyReport extends CloudTimerTask {
 
     public static final Logger LOGGER = Logger.getLogger(DependencyReport.class.getName());
-    private static boolean firstReport = false;
-    private static final int FIRST_INTERNAL = 120;
+    private static int reportTimes = 0;
+    private static final int FIRST_INTERNAL = 15;
+    private static final int INIT_INTERNAL = 120;
 
     public DependencyReport() {
         super("OpenRASP Dependency Report Thread");
@@ -49,9 +50,12 @@ public class DependencyReport extends CloudTimerTask {
 
     @Override
     public long getSleepTime() {
-        if (!firstReport) {
-            firstReport = true;
+        if (reportTimes < 3) {
+            reportTimes++;
             return FIRST_INTERNAL;
+        } else if (reportTimes < 6) {
+            reportTimes++;
+            return INIT_INTERNAL;
         }
         return Config.getConfig().getDependencyCheckInterval();
     }

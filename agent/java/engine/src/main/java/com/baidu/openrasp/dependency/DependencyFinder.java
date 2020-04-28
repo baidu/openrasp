@@ -79,10 +79,12 @@ public class DependencyFinder {
                 Dependency dependency = loadDependencyFromPOM(jarFile, path);
                 if (dependency != null) {
                     dependencySet.add(dependency);
+                    LogTool.traceInfo("[Dependency] "+"find new dependency："+dependency);
                 } else {
                     dependency = loadDependencyFromManifest(jarFile, path);
                     if (dependency != null) {
                         dependencySet.add(dependency);
+                        LogTool.traceInfo("[Dependency] "+"find new dependency："+dependency);
                     }
                 }
             } catch (Exception e) {

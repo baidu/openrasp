@@ -22,6 +22,12 @@ public class LogTool {
         }
     }
 
+    public static void traceInfo(String message) {
+        if (Config.getConfig().isDebugEnabled()) {
+            LOGGER.info(message);
+        }
+    }
+
     public static void traceWarn(ErrorType errorType, String message) {
         if (Config.getConfig().isDebugEnabled()) {
             warn(errorType, message);
