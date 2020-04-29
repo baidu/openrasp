@@ -126,10 +126,9 @@ func (o *AttackAlarmController) Search() {
 		if r["rasp_id"] != nil {
 			raspId := r["rasp_id"].(string)
 			rasp, err := models.GetRaspById(raspId)
-			if err != nil {
-				o.ServeError(http.StatusBadRequest, "failed to search get rasp id", err)
+			if err == nil {
+				result[idx]["rasp_version"] = rasp.Version
 			}
-			result[idx]["rasp_version"] = rasp.Version
 		}
 	}
 	o.Serve(map[string]interface{}{
@@ -157,9 +156,10 @@ func (o *AttackAlarmController) AggregationVuln() {
 			raspId := r["rasp_id"].(string)
 			rasp, err := models.GetRaspById(raspId)
 			if err != nil {
-				o.ServeError(http.StatusBadRequest, "failed to search get rasp id", err)
+				result[idx]["rasp_version"] = "Unknown"
+			} else {
+				result[idx]["rasp_version"] = rasp.Version
 			}
-			result[idx]["rasp_version"] = rasp.Version
 		}
 	}
 	o.Serve(map[string]interface{}{

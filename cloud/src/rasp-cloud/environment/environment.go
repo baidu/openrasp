@@ -336,31 +336,45 @@ func initEnvConf() {
 
 func processExists(pid string) (bool, error) {
 	var err error
-	if _, err = os.Stat(filepath.Join("/proc", pid)); err == nil {
-		port := beego.AppConfig.DefaultInt("httpport", 8080)
-		lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:"+strconv.Itoa(port))
-		out, _ := lsof.Output()
-		if strings.Index(string(out), "rasp-") != -1 {
+	//if _, err = os.Stat(filepath.Join("/proc", pid)); err == nil {
+	//	port := beego.AppConfig.DefaultInt("httpport", 8080)
+	//	lsof := exec.Command("/bin/bash", "-c", "lsof -i tcp:"+strconv.Itoa(port))
+	//	out, _ := lsof.Output()
+	//	if strings.Index(string(out), "rasp-") != -1 {
+	//		return true, nil
+	//	} else {
+	//		return false, nil
+	//	}
+	//} else {
+	//	//port := beego.AppConfig.DefaultInt("httpport", 8080)
+	//	//cmd := "lsof -i tcp:"+strconv.Itoa(port) + "| tail -1"
+	//	cmd := "ps -ef|grep " + pid + "|grep -v grep"
+	//	lsof := exec.Command("/bin/bash", "-c", cmd)
+	//	out, _ := lsof.Output()
+	//	if outStr := strings.TrimSpace(string(out)); strings.Index(outStr, "rasp-") != -1 {
+	//		if strings.Index(outStr, pid) != -1 {
+	//			Status = "restart"
+	//			return true, nil
+	//		} else if len(outStr) > 0 {
+	//			if Status == "restart" {
+	//				log.Println(outStr)
+	//			}
+	//			return false, nil
+	//		}
+	//	}
+	//}
+	cmd := "ps -ef|grep " + pid + "|grep -v grep"
+	lsof := exec.Command("/bin/bash", "-c", cmd)
+	out, _ := lsof.Output()
+	if outStr := strings.TrimSpace(string(out)); strings.Index(outStr, "rasp-") != -1 {
+		if strings.Index(outStr, pid) != -1 {
+			Status = "restart"
 			return true, nil
-		} else {
-			return false, nil
-		}
-	} else {
-		//port := beego.AppConfig.DefaultInt("httpport", 8080)
-		//cmd := "lsof -i tcp:"+strconv.Itoa(port) + "| tail -1"
-		cmd := "ps -ef|grep " + pid + "|grep -v grep"
-		lsof := exec.Command("/bin/bash", "-c", cmd)
-		out, _ := lsof.Output()
-		if outStr := strings.TrimSpace(string(out)); strings.Index(outStr, "rasp-") != -1 {
-			if strings.Index(outStr, pid) != -1 {
-				Status = "restart"
-				return true, nil
-			} else if len(outStr) > 0 {
-				if Status == "restart" {
-					log.Println(outStr)
-				}
-				return false, nil
+		} else if len(outStr) > 0 {
+			if Status == "restart" {
+				log.Println(outStr)
 			}
+			return false, nil
 		}
 	}
 	return false, err
