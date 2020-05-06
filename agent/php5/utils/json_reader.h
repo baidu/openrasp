@@ -55,6 +55,7 @@ public:
                           const std::map<std::string, std::string> &value);
   void write_vector(const std::vector<std::string> &keys, const std::vector<std::string> &value);
   void write_int64_vector(const std::vector<std::string> &keys, const std::vector<int> &value);
+  void update(const JsonReader &obj);
 };
 
 } // namespace openrasp
