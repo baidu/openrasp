@@ -18,13 +18,15 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <b-form-input v-model.trim="hostname" type="text" class="form-control" placeholder="搜索主机或者IP" @keyup.enter="fetchData(1)" />
+            <b-form-input v-model.trim="hostname" type="text" class="form-control" placeholder="搜索主机\IP\OS"
+                          @keyup.enter="fetchData(1)" />
           </div>
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <b-form-input v-model.trim="key_word" type="text" class="form-control" placeholder="搜索厂商或者产品" @keyup.enter="fetchData(1)" />
+            <b-form-input v-model.trim="key_word" type="text" class="form-control" placeholder="搜索厂商或者产品"
+                          @keyup.enter="fetchData(1)" />
           </div>
           <button class="btn btn-primary ml-2" @click="fetchData(1)">
             搜索

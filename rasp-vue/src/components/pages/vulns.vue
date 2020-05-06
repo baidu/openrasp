@@ -139,7 +139,7 @@
                     {{ attack_type2name(row.attack_type) }}
                   </span>
                 </td>
-                <td>
+                <td style="word-break: break-all">
                   {{ row.plugin_message }}
                 </td>
                 <td nowrap>
