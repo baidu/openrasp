@@ -303,4 +303,9 @@ void JsonReader::write_int64_vector(const std::vector<std::string> &keys, const 
   j[ptr] = j_vec;
 }
 
+void JsonReader::update(const JsonReader &obj)
+{
+  j.update(obj.j);
+}
+
 } // namespace openrasp
