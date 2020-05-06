@@ -35,7 +35,7 @@ protected:
 
 public:
   virtual std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value = "",
-                                   const std::function<std::string(std::string value)> &validator = nullptr) = 0;
+                                   const std::function<std::string(const std::string &value)> &validator = nullptr) = 0;
   virtual int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value = 0,
                               const std::function<std::string(int64_t value)> &validator = nullptr) = 0;
   virtual bool fetch_bool(const std::vector<std::string> &keys, const bool &default_value = false) = 0;

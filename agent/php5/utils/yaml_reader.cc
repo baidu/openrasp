@@ -48,7 +48,7 @@ void YamlReader::load(const std::string &content)
 }
 
 std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value,
-                                     const std::function<std::string(std::string value)> &validator)
+                                     const std::function<std::string(const std::string &value)> &validator)
 {
     try
     {

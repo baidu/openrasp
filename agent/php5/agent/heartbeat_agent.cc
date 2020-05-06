@@ -164,7 +164,7 @@ bool HeartBeatAgent::do_heartbeat()
 
 				{
 					//update log_max_backup only its value greater than zero
-					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, std::bind(openrasp::limit_int64, std::placeholders::_1, 1, false));
+					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::g_zero_int64);
 					scm->set_log_max_backup(log_max_backup);
 
 					//dependency check

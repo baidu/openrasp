@@ -40,6 +40,16 @@ std::string limit_int64(int64_t value, int64_t lower_limit, bool zero_valid)
     return result;
 }
 
+std::string ge_zero_int64(int64_t value)
+{
+    return limit_int64(value, 0, false);
+}
+
+std::string g_zero_int64(int64_t value)
+{
+    return limit_int64(value, 1, false);
+}
+
 std::string nonempty_string(const std::string &value)
 {
     std::string result;

@@ -22,6 +22,8 @@
 namespace openrasp
 {
 std::string limit_int64(int64_t value, int64_t lower_limit, bool zero_valid);
+std::string ge_zero_int64(int64_t value);
+std::string g_zero_int64(int64_t value);
 std::string nonempty_string(const std::string &value);
 std::string regex_string(const std::string &value, const std::string &regex, const std::string &error_description);
 
