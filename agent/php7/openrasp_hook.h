@@ -313,7 +313,6 @@ void block_handle();
 void reset_response();
 
 OpenRASPActionType string_to_action(std::string action_string);
-std::string action_to_string(OpenRASPActionType type);
 void plugin_ssrf_check(zval *file, const std::string &funtion_name);
 
 #endif
