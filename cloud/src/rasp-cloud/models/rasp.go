@@ -50,6 +50,7 @@ type Rasp struct {
 	RegisterTime      int64             `json:"register_time" bson:"register_time,omitempty"`
 	Environ           map[string]string `json:"environ" bson:"environ,omitempty"`
 	Description       string            `json:"description" bson:"description,omitempty"`
+	HostNameList      []string          `json:"hostname_list" bson:"hostname_list,omitempty"`
 }
 
 type RecordCount struct {
@@ -151,6 +152,14 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 			},
 		}
 		delete(bsonModel, "hostname")
+	}
+	if bsonModel["hostname_list"] != nil {
+		delete(bsonModel, "hostname")
+		realHostnameList := selector.HostNameList
+		bsonModel["hostname"] = bson.M{
+			"$in":   realHostnameList,
+		}
+		delete(bsonModel, "hostname_list")
 	}
 	if selector.Online != nil {
 		delete(bsonModel, "online")
