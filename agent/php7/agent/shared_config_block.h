@@ -26,14 +26,14 @@ namespace openrasp
 class SharedConfigBlock
 {
 public:
-  static const int white_array_max_size = (200 * 200 * sizeof(DoubleArrayTrie::unit_t) * 2);
-  static const int weak_password_array_max_size = (200 * 16 * sizeof(DoubleArrayTrie::unit_t) * 2);
-  static const int pg_error_array_max_size = (200 * 5 * sizeof(DoubleArrayTrie::unit_t) * 2);
+  static const int WHITE_ARRAY_MAX_SIZE = (200 * 200 * (DoubleArrayTrie::unit_size()) * 2);
+  static const int WEAK_PASSWORD_ARRAY_MAX_SIZE = (200 * 16 * (DoubleArrayTrie::unit_size()) * 2);
+  static const int PG_ERROR_ARRAY_MAX_SIZE = (200 * 5 * (DoubleArrayTrie::unit_size()) * 2);
   static const int MYSQL_ERROR_CODE_MAX_SIZE = 100;
   static const int PGSQL_ERROR_CODE_MAX_SIZE = 100;
   static const int SQLITE_ERROR_CODE_MAX_SIZE = 100;
 
-  inline openrasp::DoubleArrayTrie::unit_t *get_check_type_white_array()
+  inline char *get_check_type_white_array()
   {
     return check_type_white_array;
   }
@@ -45,7 +45,7 @@ public:
 
   inline bool reset_white_array(const void *source, size_t num)
   {
-    if (num > white_array_max_size)
+    if (num > WHITE_ARRAY_MAX_SIZE)
     {
       return false;
     }
@@ -55,7 +55,7 @@ public:
     return true;
   }
 
-  inline openrasp::DoubleArrayTrie::unit_t *get_weak_password_array()
+  inline char *get_weak_password_array()
   {
     return weak_password_array;
   }
@@ -68,7 +68,7 @@ public:
   inline bool reset_weak_password_array(const void *source, size_t num)
   {
     memset(&weak_password_array, 0, sizeof(weak_password_array));
-    if (num > weak_password_array_max_size)
+    if (num > WEAK_PASSWORD_ARRAY_MAX_SIZE)
     {
       return false;
     }
@@ -183,7 +183,7 @@ public:
     return false;
   }
 
-  inline openrasp::DoubleArrayTrie::unit_t *get_pg_error_array()
+  inline char *get_pg_error_array()
   {
     return pg_error_array;
   }
@@ -195,7 +195,7 @@ public:
 
   inline bool reset_pg_error_array(const void *source, size_t num)
   {
-    if (num > pg_error_array_max_size)
+    if (num > PG_ERROR_ARRAY_MAX_SIZE)
     {
       return false;
     }
@@ -212,13 +212,13 @@ private:
   OpenRASPActionType actions[ALL_TYPE] = {AC_IGNORE};
 
   size_t white_array_size;
-  openrasp::DoubleArrayTrie::unit_t check_type_white_array[white_array_max_size + 1];
-  
+  char check_type_white_array[WHITE_ARRAY_MAX_SIZE + 1];
+
   size_t weak_password_array_size;
-  openrasp::DoubleArrayTrie::unit_t weak_password_array[weak_password_array_max_size + 1];
+  char weak_password_array[WEAK_PASSWORD_ARRAY_MAX_SIZE + 1];
 
   size_t pg_error_array_size;
-  openrasp::DoubleArrayTrie::unit_t pg_error_array[pg_error_array_max_size + 1];
+  char pg_error_array[PG_ERROR_ARRAY_MAX_SIZE + 1];
 
   int mysql_error_codes_size = 0;
   long mysql_error_codes[MYSQL_ERROR_CODE_MAX_SIZE] = {0};

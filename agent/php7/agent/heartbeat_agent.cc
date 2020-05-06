@@ -16,6 +16,7 @@
 
 #include "utils/json_reader.h"
 #include "utils/file.h"
+#include "utils/validator.h"
 #include "openrasp_agent.h"
 #include "openrasp_hook.h"
 #include "utils/digest.h"
@@ -26,7 +27,6 @@
 #include "shared_config_manager.h"
 #include "agent/utils/os.h"
 #include "openrasp_conf_holder.h"
-#include "validator/int64/lower_limit.h"
 
 namespace openrasp
 {
@@ -164,7 +164,7 @@ bool HeartBeatAgent::do_heartbeat()
 
 				{
 					//update log_max_backup only its value greater than zero
-					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::validator::vint64::LowerLimit(1));
+					int64_t log_max_backup = config_reader.fetch_int64({"log.maxbackup"}, 30, openrasp::g_zero_int64);
 					scm->set_log_max_backup(log_max_backup);
 
 					//dependency check

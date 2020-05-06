@@ -20,9 +20,8 @@
 #include <string>
 #include <vector>
 #include <set>
-#include "validator/int64/lower_limit.h"
-#include "validator/string/all_pass.h"
 #include <inttypes.h>
+#include <functional>
 
 namespace openrasp
 {
@@ -36,9 +35,9 @@ protected:
 
 public:
   virtual std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value = "",
-                                   const openrasp::validator::vstring::Base &validator = openrasp::validator::vstring::AllPass()) = 0;
+                                   const std::function<std::string(const std::string &value)> &validator = nullptr) = 0;
   virtual int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value = 0,
-                              const openrasp::validator::vint64::Base &validator = openrasp::validator::vint64::LowerLimit()) = 0;
+                              const std::function<std::string(int64_t value)> &validator = nullptr) = 0;
   virtual bool fetch_bool(const std::vector<std::string> &keys, const bool &default_value = false) = 0;
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys) = 0;
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value = std::vector<std::string>()) = 0;

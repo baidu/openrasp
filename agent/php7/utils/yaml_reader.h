@@ -33,9 +33,9 @@ public:
   YamlReader(const std::string &yaml_str);
 
   virtual std::string fetch_string(const std::vector<std::string> &keys, const std::string &default_value = "",
-                                   const openrasp::validator::vstring::Base &validator = openrasp::validator::vstring::AllPass());
+                                   const std::function<std::string(const std::string &value)> &validator = nullptr);
   virtual int64_t fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value = 0,
-                              const openrasp::validator::vint64::Base &validator = openrasp::validator::vint64::LowerLimit());
+                              const std::function<std::string(int64_t value)> &validator = nullptr);
   virtual bool fetch_bool(const std::vector<std::string> &keys, const bool &default_value = false);
   virtual std::vector<std::string> fetch_object_keys(const std::vector<std::string> &keys);
   virtual std::vector<std::string> fetch_strings(const std::vector<std::string> &keys, const std::vector<std::string> &default_value = std::vector<std::string>());
