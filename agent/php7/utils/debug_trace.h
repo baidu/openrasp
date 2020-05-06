@@ -36,7 +36,6 @@ class DebugTrace
     void set_file(const std::string &file);
     void set_line(long line);
     std::string to_log_string() const;
-    std::string to_plugin_string() const;
     std::string get_source_code() const;
 };
 
