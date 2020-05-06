@@ -529,9 +529,6 @@ int main() {
     hook/openrasp_file.cc \
     hook/openrasp_ssrf.cc \
     hook/openrasp_mongo.cc \
-    validator/int64/lower_limit.cc \
-    validator/string/regex.cc \
-    validator/string/all_pass.cc \
     openrasp_output_detect.cc \
     hook/openrasp_echo.cc \
     hook/openrasp_putenv.cc \
@@ -545,9 +542,9 @@ int main() {
     openrasp_v8_utils.cc \
     openrasp_security_policy.cc \
     openrasp_ini.cc \
+    utils/validator.cc \
     utils/signal_interceptor.cc \
     utils/read_write_lock.cc \
-    utils/double_array_trie.cc \
     utils/string.cc \
     utils/digest.cc \
     utils/regex.cc \

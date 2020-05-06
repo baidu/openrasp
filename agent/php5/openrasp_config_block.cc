@@ -16,9 +16,8 @@
 
 #include "openrasp_config_block.h"
 #include "utils/regex.h"
+#include "utils/validator.h"
 #include "openrasp_v8.h"
-#include "validator/int64/lower_limit.h"
-#include "validator/string/regex.h"
 
 namespace openrasp
 {
@@ -27,7 +26,7 @@ const int64_t PluginBlock::default_maxstack = 100;
 
 void PluginBlock::update(BaseReader *reader)
 {
-  timeout.millis = reader->fetch_int64({"plugin.timeout.millis"}, PluginBlock::default_timeout_millis, openrasp::validator::vint64::LowerLimit(1));
+  timeout.millis = reader->fetch_int64({"plugin.timeout.millis"}, PluginBlock::default_timeout_millis, std::bind(openrasp::limit_int64, std::placeholders::_1, 1, false));
   maxstack = reader->fetch_int64({"plugin.maxstack"}, PluginBlock::default_maxstack);
   filter = reader->fetch_bool({"plugin.filter"}, true);
 };
@@ -47,13 +46,13 @@ const int64_t SyslogBlock::default_reconnect_interval = 300;
 
 void SyslogBlock::update(BaseReader *reader)
 {
-  tag = reader->fetch_string({"syslog.tag"}, SyslogBlock::default_tag, openrasp::validator::vstring::Regex("^[0-9a-zA-Z]{1,32}$", "should be number and alphabeta, and length between 1 and 32"));
+  tag = reader->fetch_string({"syslog.tag"}, SyslogBlock::default_tag, std::bind(openrasp::regex_string, std::placeholders::_1, "^[0-9a-zA-Z]{1,32}$", "should be number and alphabeta, and length between 1 and 32"));
   url = reader->fetch_string({"syslog.url"}, std::string(""));
   enable = reader->fetch_bool({"syslog.enable"}, false);
   facility = reader->fetch_int64({"syslog.facility"}, SyslogBlock::default_facility);
-  connection_timeout = reader->fetch_int64({"syslog.connection_timeout"}, SyslogBlock::default_connection_timeout, openrasp::validator::vint64::LowerLimit(1));
-  read_timeout = reader->fetch_int64({"syslog.read_timeout"}, SyslogBlock::default_read_timeout, openrasp::validator::vint64::LowerLimit(1));
-  reconnect_interval = reader->fetch_int64({"syslog.reconnect_interval"}, SyslogBlock::default_reconnect_interval, openrasp::validator::vint64::LowerLimit(1));
+  connection_timeout = reader->fetch_int64({"syslog.connection_timeout"}, SyslogBlock::default_connection_timeout, std::bind(openrasp::limit_int64, std::placeholders::_1, 1, false));
+  read_timeout = reader->fetch_int64({"syslog.read_timeout"}, SyslogBlock::default_read_timeout, std::bind(openrasp::limit_int64, std::placeholders::_1, 1, false));
+  reconnect_interval = reader->fetch_int64({"syslog.reconnect_interval"}, SyslogBlock::default_reconnect_interval, std::bind(openrasp::limit_int64, std::placeholders::_1, 1, false));
 };
 
 const int64_t BlockBlock::default_status_code = 302;
@@ -111,7 +110,7 @@ void DecompileBlock::update(BaseReader *reader)
 
 void ResponseBlock::update(BaseReader *reader)
 {
-  sampler_interval = reader->fetch_int64({"response.sampler_interval"}, 60, openrasp::validator::vint64::LowerLimit(60, true));
+  sampler_interval = reader->fetch_int64({"response.sampler_interval"}, 60, std::bind(openrasp::limit_int64, std::placeholders::_1, 60, true));
   sampler_burst = reader->fetch_int64({"response.sampler_burst"}, 5);
 };
 

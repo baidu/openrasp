@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef _OPENRASP_UTILS_VALIDATOR_H_
+#define _OPENRASP_UTILS_VALIDATOR_H_
 
 #include <string>
 
 namespace openrasp
 {
-namespace validator
-{
-namespace vint64
-{
-class Base
-{
-public:
-    //if ok result is empty()
-    virtual std::string check(const int64_t value) const = 0;
-};
-} // namespace vint64
-
-} // namespace validator
+std::string limit_int64(int64_t value, int64_t lower_limit, bool zero_valid);
+std::string nonempty_string(const std::string &value);
+std::string regex_string(const std::string &value, const std::string &regex, const std::string &error_description);
 
 } // namespace openrasp
+
+#endif

@@ -14,21 +14,43 @@
  * limitations under the License.
  */
 
-#include "regex.h"
+#include "utils/validator.h"
 #include "utils/regex.h"
 
 namespace openrasp
 {
-namespace validator
+std::string limit_int64(int64_t value, int64_t lower_limit, bool zero_valid)
 {
-namespace vstring
-{
-
-Regex::Regex(const std::string &regex, const std::string &error_description)
-    : regex(regex), error_description(error_description)
-{
+    std::string result;
+    if (value < lower_limit)
+    {
+        result = "the value shoule be >= " + std::to_string(lower_limit);
+        if (zero_valid && lower_limit > 0)
+        {
+            if (0 == value)
+            {
+                result.clear();
+            }
+            else
+            {
+                result += " OR = 0";
+            }
+        }
+    }
+    return result;
 }
-std::string Regex::check(const std::string &value) const
+
+std::string nonempty_string(const std::string &value)
+{
+    std::string result;
+    if (value.empty())
+    {
+        result = "the string value shoule not be empty.";
+    }
+    return result;
+}
+
+std::string regex_string(const std::string &value, const std::string &regex, const std::string &error_description)
 {
     std::string result;
     if (!openrasp::regex_match(value.c_str(), regex.c_str()))
@@ -37,9 +59,4 @@ std::string Regex::check(const std::string &value) const
     }
     return result;
 }
-
-} // namespace vstring
-
-} // namespace validator
-
 } // namespace openrasp
