@@ -1,4 +1,4 @@
-const plugin_version = '2020-0417-1830'
+const plugin_version = '2020-0506-1710'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1815,6 +1815,13 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
+    // 获取协议，如果有
+    var path_parts = params.path.split('://')
+    var proto = ""
+    if (path_parts.length > 1) {
+        proto = path_parts[0].toLowerCase()
+    }
+
     //
     // 算法1: 简单用户输入识别，拦截任意文件下载漏洞
     //
@@ -1827,7 +1834,9 @@ plugin.register('readFile', function (params, context) {
 
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.readFile_userinput.lcs_search))
+        if ( (proto == "" || proto == "file" ) && 
+             is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.readFile_userinput.lcs_search)
+           )
         {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
@@ -1839,8 +1848,6 @@ plugin.register('readFile', function (params, context) {
         // @FIXME: 用户输入匹配了两次，需要提高效率
         if (is_from_userinput(all_parameter, params.path))
         {
-            // 获取协议，如果有
-            var proto = params.path.split('://')[0].toLowerCase()
             // 1. 读取 http(s):// 内容
             // ?file=http://www.baidu.com
             if (proto === 'http' || proto === 'https')
@@ -1896,7 +1903,7 @@ plugin.register('readFile', function (params, context) {
     //
     // 算法3: 检查文件遍历，看是否超出web目录范围 [容易误报~]
     //
-    if (algorithmConfig.readFile_outsideWebroot.action != 'ignore')
+    if ( (proto == "" || proto == "file" ) && algorithmConfig.readFile_outsideWebroot.action != 'ignore')
     {
         var path        = params.path
         var appBasePath = context.appBasePath
