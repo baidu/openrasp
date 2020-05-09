@@ -942,11 +942,11 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
                 value = value.replaceAll('/', '\\')
                 target = target.replaceAll('/', '\\')
                 realpath = realpath.replaceAll('/', '\\')
-                simplifiedTarget = target.replaceAll('\\\\','\\')
-                simplifiedValue = value.replaceAll('\\\\','\\')
+                simplifiedTarget = target.replaceAll('\\\\','\\').replaceAll('\\.\\', '\\')
+                simplifiedValue = value.replaceAll('\\\\','\\').replaceAll('\\.\\', '\\')
             } else{
-                simplifiedTarget = target.replaceAll('//','/')
-                simplifiedValue = value.replaceAll('//','/')
+                simplifiedTarget = target.replaceAll('//','/').replaceAll('/./', '/')
+                simplifiedValue = value.replaceAll('//','/').replaceAll('/./', '/')
             }
             var simplifiedValues
             if ( is_lcs_search ) {
@@ -978,8 +978,7 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
 {
     var verdict = false
     if (is_windows) {
-        target = target.replaceAll('/', '\\')
-        target = target.replaceAll('\\\\', '\\')
+        target = target.replaceAll('/', '\\').replaceAll('\\\\', '\\')
     }
     else{
         target = target.replaceAll('//', '/')
@@ -993,8 +992,7 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
                 return
             }
             if (is_windows) {
-                value = value.replaceAll('/', '\\')
-                value = value.replaceAll('\\\\', '\\')
+                value = value.replaceAll('/', '\\').replaceAll('\\\\', '\\')
             }
             else {
                 value = value.replaceAll('//', '/')
