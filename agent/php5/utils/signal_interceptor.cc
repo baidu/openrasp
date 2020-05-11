@@ -41,6 +41,13 @@ extern "C"
 
 namespace openrasp
 {
+extern "C"
+{
+#ifdef HAVE_LINE_COVERAGE
+    void __gcov_flush();
+#endif
+}
+
 typedef void (*sa_handler_t)(int);
 typedef void (*sa_sigaction_t)(int, siginfo_t *, void *);
 struct sigaction old_acts[SIGUSR2];
@@ -92,6 +99,9 @@ void report_crash_log(int sig)
     {
         CrashReporter cr(log_path);
     }
+#endif
+#ifdef HAVE_LINE_COVERAGE
+    __gcov_flush();
 #endif
 }
 
@@ -149,6 +159,9 @@ void call_old_signal_handler(struct sigaction *old_act, int sig, siginfo_t *info
             (*hand)(sig);
         }
     }
+#ifdef HAVE_LINE_COVERAGE
+    __gcov_flush();
+#endif
 }
 
 void signal_handler(int sig, siginfo_t *info, void *ctx)

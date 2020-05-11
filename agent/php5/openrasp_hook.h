@@ -308,7 +308,6 @@ bool fetch_name_in_request(zval *item, std::string &name, std::string &type);
 std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op);
 
 OpenRASPActionType string_to_action(std::string action_string);
-std::string action_to_string(OpenRASPActionType type);
 void plugin_ssrf_check(zval *file, const std::string &funtion_name TSRMLS_DC);
 
 #endif

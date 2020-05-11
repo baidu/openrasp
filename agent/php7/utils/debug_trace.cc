@@ -40,11 +40,6 @@ std::string DebugTrace::to_log_string() const
     return file + '@' + function + ':' + std::to_string(line);
 }
 
-std::string DebugTrace::to_plugin_string() const
-{
-    return file + '@' + function;
-}
-
 std::string DebugTrace::get_source_code() const
 {
     std::string source_code = get_line_content(file, line);
