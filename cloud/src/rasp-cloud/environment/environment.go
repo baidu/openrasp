@@ -180,10 +180,10 @@ func status() {
 		if err != nil {
 			tools.Panic(tools.ErrCodeGetPidFailed, "failed to get pid", err)
 		}
-		log.Printf("The rasp-cloud is running!")
+		log.Printf("rasp-cloud is already running")
 		os.Exit(0)
 	} else {
-		log.Printf("The rasp-cloud is dead!")
+		log.Printf("rasp-cloud is not running")
 		os.Exit(-1)
 	}
 }
