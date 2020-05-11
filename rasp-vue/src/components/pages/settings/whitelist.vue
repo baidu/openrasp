@@ -29,6 +29,7 @@
             </a>
           </template>
         </b-table>
+        <p v-if="data.length == 0" class="text-center">暂无数据</p>
       </div>
       <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
         <button class="btn btn-info" @click="showModal(-1)">
