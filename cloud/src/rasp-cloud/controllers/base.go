@@ -67,6 +67,7 @@ func (o *BaseController) ServeStatusCode(code int, status int, description ...st
 func (o *BaseController) UnmarshalJson(v interface{}) {
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, v)
 	if err != nil {
+		beego.Info("RequestBody:", string(o.Ctx.Input.RequestBody))
 		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
 	}
 }

@@ -94,9 +94,33 @@ func (o *RaspController) GeneralCsv() {
 	if appId == "" {
 		o.ServeError(http.StatusBadRequest, "the app_id can not be empty")
 	}
-	_, rasps, err := models.FindRasp(&models.Rasp{AppId: appId}, 0, 0)
+	var rasps []*models.Rasp
+	version := o.GetString("version")
+	online, err := o.GetBool("online")
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+		o.ServeError(http.StatusBadRequest, "online field err", err)
+	}
+	offline, err := o.GetBool("offline")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "offline field err", err)
+	}
+	hostname := o.GetString("hostname")
+	selector := &models.Rasp{AppId: appId}
+	if (!online || !offline) {
+		selector.Online = new(bool)
+		*selector.Online = online
+	}
+	if hostname != "" {
+		selector.HostName = hostname
+	}
+	if version != "" {
+		selector.Version = version
+	}
+	if (online || offline) {
+		_, rasps, err = models.FindRasp(selector, 0, 0)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+		}
 	}
 	o.Ctx.Output.Header("Content-Type", "text/plain")
 	o.Ctx.Output.Header("Content-Disposition", "attachment;filename=rasp.csv")

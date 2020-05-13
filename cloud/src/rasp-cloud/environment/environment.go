@@ -141,15 +141,18 @@ func restart() {
 			restartCnt += 1
 			time.Sleep(1 * time.Second)
 			if restartCnt%60 == 0 {
+				beego.Info("this operation may spend about a few minutes")
 				log.Println("this operation may spend about a few minutes")
 			}
 			if restartCnt >= 300 {
+				beego.Info("Restart timeout! Probably the process has been restarted immediately")
 				log.Fatalln("Restart timeout! Probably the process has been restarted immediately")
 			}
 		}
 		log.Println("Restart success!")
 	} else {
 		log.Printf("The process id:%s is not exists or not a rasp process!", OldPid)
+		beego.Info("The process id: " + OldPid + " is not exists or not a rasp process!")
 		os.Exit(-1)
 	}
 	os.Exit(0)
@@ -169,6 +172,7 @@ func stop() {
 			log.Println("Stop ok!")
 		}
 	} else {
+		beego.Info("The process id:" + OldPid + "is not exists!")
 		log.Printf("The process id:%s is not exists!", OldPid)
 	}
 	os.Exit(0)
@@ -222,6 +226,7 @@ func HandleReset(startFlag *conf.Flag) {
 	fmt.Println()
 	if err != nil {
 		fmt.Println("failed to read password from terminal: " + err.Error())
+		beego.Info("failed to read password from terminal: ", err)
 		os.Exit(tools.ErrCodeResetUserFailed)
 	}
 	fmt.Print("Retype new admin password: ")
@@ -229,6 +234,7 @@ func HandleReset(startFlag *conf.Flag) {
 	fmt.Println()
 	if err != nil {
 		fmt.Println("failed to read password from terminal: " + err.Error())
+		beego.Info("failed to read password from terminal: ", err)
 		os.Exit(tools.ErrCodeResetUserFailed)
 	}
 	if bytes.Compare(pwd1, pwd2) != 0 {
@@ -260,10 +266,13 @@ func HandleDaemon() {
 		}
 
 		if cnt == 29 {
+			beego.Error("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
 			log.Fatal("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
 		} else if CheckPort(port) {
+			beego.Error("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
 			log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
 		} else {
+			beego.Error("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
 			log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
 		}
 
@@ -274,6 +283,7 @@ func HandleDaemon() {
 func CheckForkStatus(remove bool) {
 	f, ret := newPIDFile(PidFileName, remove)
 	if ret == false && f == nil {
+		beego.Error("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
 		log.Fatalf("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
 	}
 }
@@ -383,6 +393,7 @@ func processExists(pid string) (bool, error) {
 func checkPIDAlreadyExists(path string, remove bool) bool {
 	//pid := readPIDFILE(path)
 	if res, err := processExists(OldPid); res && err == nil && OldPid != " " {
+		beego.Error("the main process %s has already exist!", OldPid)
 		log.Printf("the main process %s has already exist!", OldPid)
 		return true
 	}
@@ -396,6 +407,7 @@ func CheckPIDAlreadyRunning(path string) bool {
 	//pid := readPIDFILE(path)
 	cwd, err := os.Getwd()
 	if err != nil {
+		beego.Error("getwd error:", err)
 		log.Println("getwd error:", err)
 	}
 	ret := pidFileExists(filepath.Join(cwd, path))
@@ -437,10 +449,12 @@ func newPIDFile(path string, remove bool) (*PIDFile, bool) {
 
 	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
 		log.Println("Mkdir error:", err)
+		beego.Error("Mkdir error:", err)
 		return nil, false
 	}
 	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
 		log.Println("WriteFile error:", err)
+		beego.Error("WriteFile error:", err)
 		return nil, false
 	}
 	return &PIDFile{path: path}, true
@@ -475,10 +489,12 @@ func RecoverPid(path string, remove bool) (*PIDFile, bool) {
 
 	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
 		log.Println("Mkdir error:", err)
+		beego.Error("Mkdir error:", err)
 		return nil, false
 	}
 	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%s", OldPid)), 0644); err != nil {
 		log.Println("WriteFile error:", err)
+		beego.Error("WriteFile error:", err)
 		return nil, false
 	}
 	return &PIDFile{path: path}, true

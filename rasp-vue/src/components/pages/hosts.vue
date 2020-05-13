@@ -51,7 +51,7 @@
             搜索
           </button>
 
-          <a class="btn btn-primary ml-2" v-bind:href="'/v1/api/rasp/csv?app_id=' + current_app.id" target="_blank">
+          <a class="btn btn-primary ml-2" v-bind:href="getHref()" target="_blank">
             导出
           </a>
 
@@ -234,6 +234,10 @@ export default {
   },
   methods: {
     ceil: Math.ceil,
+    getHref() {
+        return '/v1/api/rasp/csv?app_id=' + this.current_app.id + '&version=' + this.currentVersion +
+            '&online=' + this.filter.online + '&offline=' +  this.filter.offline + '&hostname=' + this.hostname
+    },
     enumAgentVersion() {
       const body = {
           data: {
