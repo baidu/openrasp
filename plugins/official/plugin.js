@@ -1,4 +1,4 @@
-const plugin_version = '2020-0417-1830'
+const plugin_version = '2020-0513-1540'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -942,11 +942,11 @@ function is_path_endswith_userinput(parameter, target, realpath, is_windows, is_
                 value = value.replaceAll('/', '\\')
                 target = target.replaceAll('/', '\\')
                 realpath = realpath.replaceAll('/', '\\')
-                simplifiedTarget = target.replaceAll('\\\\','\\')
-                simplifiedValue = value.replaceAll('\\\\','\\')
+                simplifiedTarget = target.replaceAll('\\\\','\\').replaceAll('\\.\\', '\\')
+                simplifiedValue = value.replaceAll('\\\\','\\').replaceAll('\\.\\', '\\')
             } else{
-                simplifiedTarget = target.replaceAll('//','/')
-                simplifiedValue = value.replaceAll('//','/')
+                simplifiedTarget = target.replaceAll('//','/').replaceAll('/./', '/')
+                simplifiedValue = value.replaceAll('//','/').replaceAll('/./', '/')
             }
             var simplifiedValues
             if ( is_lcs_search ) {
@@ -978,8 +978,7 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
 {
     var verdict = false
     if (is_windows) {
-        target = target.replaceAll('/', '\\')
-        target = target.replaceAll('\\\\', '\\')
+        target = target.replaceAll('/', '\\').replaceAll('\\\\', '\\')
     }
     else{
         target = target.replaceAll('//', '/')
@@ -993,8 +992,7 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
                 return
             }
             if (is_windows) {
-                value = value.replaceAll('/', '\\')
-                value = value.replaceAll('\\\\', '\\')
+                value = value.replaceAll('/', '\\').replaceAll('\\\\', '\\')
             }
             else {
                 value = value.replaceAll('//', '/')
@@ -1815,6 +1813,13 @@ plugin.register('readFile', function (params, context) {
         }
     }
 
+    // 获取协议，如果有
+    var path_parts = params.path.split('://')
+    var proto = ""
+    if (path_parts.length > 1) {
+        proto = path_parts[0].toLowerCase()
+    }
+
     //
     // 算法1: 简单用户输入识别，拦截任意文件下载漏洞
     //
@@ -1827,7 +1832,9 @@ plugin.register('readFile', function (params, context) {
 
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
-        if (is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.readFile_userinput.lcs_search))
+        if ( (proto == "" || proto == "file" ) && 
+             is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.readFile_userinput.lcs_search)
+           )
         {
             return {
                 action:     algorithmConfig.readFile_userinput.action,
@@ -1839,8 +1846,6 @@ plugin.register('readFile', function (params, context) {
         // @FIXME: 用户输入匹配了两次，需要提高效率
         if (is_from_userinput(all_parameter, params.path))
         {
-            // 获取协议，如果有
-            var proto = params.path.split('://')[0].toLowerCase()
             // 1. 读取 http(s):// 内容
             // ?file=http://www.baidu.com
             if (proto === 'http' || proto === 'https')
@@ -1896,7 +1901,7 @@ plugin.register('readFile', function (params, context) {
     //
     // 算法3: 检查文件遍历，看是否超出web目录范围 [容易误报~]
     //
-    if (algorithmConfig.readFile_outsideWebroot.action != 'ignore')
+    if ( (proto == "" || proto == "file" ) && algorithmConfig.readFile_outsideWebroot.action != 'ignore')
     {
         var path        = params.path
         var appBasePath = context.appBasePath
@@ -2200,7 +2205,7 @@ plugin.register('command', function (params, context) {
 
                     // 用户代码，即非 JDK、com.baidu.openrasp 相关的函数
                     if (! method.startsWith('java.') 
-                        && ! method.startsWith('sun.') 
+                        && !method.startsWith('sun.') 
                         && !method.startsWith('com.sun.') 
                         && !method.startsWith('com.baidu.openrasp.')) 
                     {
@@ -2227,10 +2232,9 @@ plugin.register('command', function (params, context) {
                         break
                     }  else if (method == 'java.lang.reflect.Method.invoke') {
                         message = _("Reflected command execution - Unknown vulnerability detected")
-                        break
                     }
-                }                                       
-                
+                }
+
                 if (known[method]) {
                     message = known[method]
                 }
