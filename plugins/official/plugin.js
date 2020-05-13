@@ -1,4 +1,4 @@
-const plugin_version = '2020-0509-1410'
+const plugin_version = '2020-0513-1540'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2204,7 +2204,7 @@ plugin.register('command', function (params, context) {
 
                     // 用户代码，即非 JDK、com.baidu.openrasp 相关的函数
                     if (! method.startsWith('java.') 
-                        && ! method.startsWith('sun.') 
+                        && !method.startsWith('sun.') 
                         && !method.startsWith('com.sun.') 
                         && !method.startsWith('com.baidu.openrasp.')) 
                     {
@@ -2231,10 +2231,9 @@ plugin.register('command', function (params, context) {
                         break
                     }  else if (method == 'java.lang.reflect.Method.invoke') {
                         message = _("Reflected command execution - Unknown vulnerability detected")
-                        break
                     }
-                }                                       
-                
+                }
+
                 if (known[method]) {
                     message = known[method]
                 }
