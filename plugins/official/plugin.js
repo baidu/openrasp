@@ -1,4 +1,4 @@
-const plugin_version = '2020-0513-1540'
+const plugin_version = '2020-0520-0730'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -145,7 +145,7 @@ var algorithmConfig = {
 	            1064, // You have an error in your SQL syntax
 	            1105, // XPATH syntax error: '~root@localhost~'
 	            1367, // Illegal non geometric 'user()' value found during parsing
-	            1690  // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
+	            // 1690  // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
 	        ]
         },
         pgsql: {
@@ -497,7 +497,7 @@ var algorithmConfig = {
     // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截（v1.1.2 之后废弃）
     xss_userinput: {
         name:   '算法2 - 拦截输出在响应里的反射 XSS',
-        action: 'log',
+        action: 'ignore',
 
         filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]",
         min_length:   15,
