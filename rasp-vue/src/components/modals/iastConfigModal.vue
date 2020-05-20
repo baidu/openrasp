@@ -21,7 +21,7 @@
                       <div class="col">
                         <label class="custom-switch" style="min-width: 200px;">
                           <input v-model="value.enable" type="checkbox" class="custom-switch-input">
-                          <span class="custom-switch-indicator" @click="value.enable = !value.enable"></span>
+                          <span class="custom-switch-indicator"></span>
                           <span class="custom-switch-description">{{value.show_name}}</span>
                         </label>
                       </div>
