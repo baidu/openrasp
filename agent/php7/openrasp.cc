@@ -212,6 +212,10 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
 {
     if (is_initialized)
     {
+        sigset_t x;
+        sigemptyset(&x);
+        sigaddset(&x, SIGUSR1);
+        sigprocmask(SIG_BLOCK, &x, nullptr);
         int result;
         if (!remote_active)
         {
@@ -235,6 +239,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp)
         openrasp::scm.reset();
         remote_active = false;
         is_initialized = false;
+        sigprocmask(SIG_UNBLOCK, &x, nullptr);
     }
     UNREGISTER_INI_ENTRIES();
     ZEND_SHUTDOWN_MODULE_GLOBALS(openrasp, PHP_GSHUTDOWN(openrasp));
