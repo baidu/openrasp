@@ -1041,6 +1041,40 @@ function is_from_userinput(parameter, target)
     return verdict
 }
 
+// 是否来自用户输入 - 适合任意类型参数
+function is_from_userinput(parameter, target)
+{
+    var verdict = false
+    Object.keys(parameter).some(function (key) {
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理非数组、hash情况
+            if (value == target) {
+                verdict = true
+                return true
+            }
+        })
+    })
+    return verdict
+}
+
+// 是否包含于用户输入 - 适合任意类型参数
+function is_include_in_userinput(parameter, target)
+{
+    var verdict = false
+    Object.keys(parameter).some(function (key) {
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理非数组、hash情况
+            if (value.indexOf(target) != -1) {
+                verdict = true
+                return true
+            }
+        })
+    })
+    return verdict
+}
+
 // 检查逻辑是否被用户参数所修改
 function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance, is_sql)
 {
@@ -2478,9 +2512,11 @@ plugin.register('command', function (params, context) {
 
 // 注意: 由于libxml2无法挂钩，所以PHP暂时不支持XXE检测
 plugin.register('xxe', function (params, context) {
-    var server    = context.server
-    var is_win    = server.os.indexOf('Windows') != -1
-    var items     = params.entity.split('://')
+    var server      = context.server
+    var is_win      = server.os.indexOf('Windows') != -1
+    var items       = params.entity.split('://')
+    var parameters  = context.parameter || {}
+    var header      = context.header || {}
 
     if (algorithmConfig.xxe_protocol.action != 'ignore') {
         // 检查 windows + SMB 协议，防止泄露 NTLM 信息
@@ -2530,16 +2566,18 @@ plugin.register('xxe', function (params, context) {
                     address_lc = urlObj.pathname
                 }
                 catch (e) {}
-
-                // 过滤掉 xml、dtd
-                if (! address_lc.endsWith('.xml') &&
-                    ! address_lc.endsWith('.dtd'))
-                {
-                    return {
-                        action:     algorithmConfig.xxe_file.action,
-                        message:    _("XXE - Accessing file %1%", [address]),
-                        confidence: 90,
-                        algorithm:  'xxe_file'
+                var content_type = header["content-type"] || ""
+                if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
+                    // 过滤掉 xml、dtd
+                    if (! address_lc.endsWith('.xml') &&
+                        ! address_lc.endsWith('.dtd'))
+                    {
+                        return {
+                            action:     algorithmConfig.xxe_file.action,
+                            message:    _("XXE - Accessing file %1%", [address]),
+                            confidence: 90,
+                            algorithm:  'xxe_file'
+                        }
                     }
                 }
             }
