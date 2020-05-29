@@ -269,7 +269,7 @@ func HandleDaemon() {
 			beego.Error("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
 			log.Fatal("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
 		} else if CheckPort(port) {
-			beego.Error("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+			beego.Info("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
 			log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
 		} else {
 			beego.Error("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")

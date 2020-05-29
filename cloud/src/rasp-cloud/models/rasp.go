@@ -133,10 +133,7 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 				},
 			},
 			{
-				"rasp_id": bson.M{
-					"$regex":   realHostname,
-					"$options": "$i",
-				},
+				"rasp_id": realHostname
 			},
 			{
 				"version": bson.M{
