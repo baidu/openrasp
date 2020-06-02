@@ -1,4 +1,4 @@
-const plugin_version = '2020-0513-1540'
+const plugin_version = '2020-0528-1110'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -140,12 +140,12 @@ var algorithmConfig = {
         mysql: {
 	        error_code: [
 	            // 1045, // Access denied for user 'bae'@'10.10.1.1'
+                // 1690, // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
 	            1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
 	            1062, // Duplicate entry '::root@localhost::1' for key 'group_key'
 	            1064, // You have an error in your SQL syntax
 	            1105, // XPATH syntax error: '~root@localhost~'
-	            1367, // Illegal non geometric 'user()' value found during parsing
-	            1690  // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
+	            1367  // Illegal non geometric 'user()' value found during parsing
 	        ]
         },
         pgsql: {
@@ -464,7 +464,7 @@ var algorithmConfig = {
     command_common: {
         name:    '算法3 - 识别常用渗透命令（探针）',
         action:  'log',
-        pattern: 'cat.*/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh|([\\|\\&`;\\x0d\\x0a]|$\\([^\\(]).{0,3}(ping|nslookup|curl|wget|mail).{1,10}[a-zA-Z0-9_\\-]{1,15}\\.[a-zA-Z0-9_\\-]{1,15}'
+        pattern: 'cat.{1,5}/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh'
     },
     // 命令执行 - 语法错误和敏感操作
     command_error: {
@@ -497,7 +497,7 @@ var algorithmConfig = {
     // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截（v1.1.2 之后废弃）
     xss_userinput: {
         name:   '算法2 - 拦截输出在响应里的反射 XSS',
-        action: 'log',
+        action: 'ignore',
 
         filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]",
         min_length:   15,
@@ -1033,6 +1033,40 @@ function is_from_userinput(parameter, target)
         Object.values(values).some(function(value){
             // 只处理非数组、hash情况
             if (value == target) {
+                verdict = true
+                return true
+            }
+        })
+    })
+    return verdict
+}
+
+// 是否来自用户输入 - 适合任意类型参数
+function is_from_userinput(parameter, target)
+{
+    var verdict = false
+    Object.keys(parameter).some(function (key) {
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理非数组、hash情况
+            if (value == target) {
+                verdict = true
+                return true
+            }
+        })
+    })
+    return verdict
+}
+
+// 是否包含于用户输入 - 适合任意类型参数
+function is_include_in_userinput(parameter, target)
+{
+    var verdict = false
+    Object.keys(parameter).some(function (key) {
+        var values = parameter[key]
+        Object.values(values).some(function(value){
+            // 只处理非数组、hash情况
+            if (value.indexOf(target) != -1) {
                 verdict = true
                 return true
             }
@@ -2479,9 +2513,11 @@ plugin.register('command', function (params, context) {
 
 // 注意: 由于libxml2无法挂钩，所以PHP暂时不支持XXE检测
 plugin.register('xxe', function (params, context) {
-    var server    = context.server
-    var is_win    = server.os.indexOf('Windows') != -1
-    var items     = params.entity.split('://')
+    var server      = context.server
+    var is_win      = server.os.indexOf('Windows') != -1
+    var items       = params.entity.split('://')
+    var parameters  = context.parameter || {}
+    var header      = context.header || {}
 
     if (algorithmConfig.xxe_protocol.action != 'ignore') {
         // 检查 windows + SMB 协议，防止泄露 NTLM 信息
@@ -2531,16 +2567,18 @@ plugin.register('xxe', function (params, context) {
                     address_lc = urlObj.pathname
                 }
                 catch (e) {}
-
-                // 过滤掉 xml、dtd
-                if (! address_lc.endsWith('.xml') &&
-                    ! address_lc.endsWith('.dtd'))
-                {
-                    return {
-                        action:     algorithmConfig.xxe_file.action,
-                        message:    _("XXE - Accessing file %1%", [address]),
-                        confidence: 90,
-                        algorithm:  'xxe_file'
+                var content_type = header["content-type"] || ""
+                if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
+                    // 过滤掉 xml、dtd
+                    if (! address_lc.endsWith('.xml') &&
+                        ! address_lc.endsWith('.dtd'))
+                    {
+                        return {
+                            action:     algorithmConfig.xxe_file.action,
+                            message:    _("XXE - Accessing file %1%", [address]),
+                            confidence: 90,
+                            algorithm:  'xxe_file'
+                        }
                     }
                 }
             }
