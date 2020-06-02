@@ -8,7 +8,6 @@ import javassist.NotFoundException;
 
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLConnection;
 
 /**
  * Created by tyy on 19-11-27.
@@ -32,12 +31,12 @@ public class URLConnectionRedirectHook extends AbstractRedirectHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(URLConnectionRedirectHook.class, "cacheHttpRedirect",
-                "$0,($w)$_", Object.class, Boolean.class);
+                "$0,($w)$_", Object.class, Object.class);
         insertAfter(ctClass, "followRedirect", "()Z", src, false);
     }
 
-    public static void cacheHttpRedirect(Object connection, Boolean isRedirect) {
-        if (isRedirect) {
+    public static void cacheHttpRedirect(Object connection, Object isRedirect) {
+        if ((Boolean) isRedirect) {
             try {
                 urlCache.set((URL) Reflection.invokeMethod(connection, "getURL", new Class[0]));
             } catch (Throwable t) {
