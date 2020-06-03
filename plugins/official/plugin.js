@@ -1,4 +1,4 @@
-const plugin_version = '2020-0528-1110'
+const plugin_version = '2020-0603-1140'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -119,11 +119,11 @@ var algorithmConfig = {
             extractvalue:     true,
 
             // 盲注函数，如有误报可删掉一些函数
-            hex:              true,
-            mid:              true,
-            ord:              true,
-            ascii:            true,
-            bin:              true
+            hex:              false,
+            mid:              false,
+            ord:              false,
+            ascii:            false,
+            bin:              false
         },
         function_count: {
             chr:              5,
