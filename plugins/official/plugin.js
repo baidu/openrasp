@@ -1,4 +1,4 @@
-const plugin_version = '2020-0603-1140'
+const plugin_version = '2020-0605-1140'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -82,7 +82,7 @@ var algorithmConfig = {
             stacked_query:      false,
 
             // 是否禁止16进制字符串，select 0x41424344
-            no_hex:             true,
+            no_hex:             false,
 
             // 禁止版本号注释，select/*!500001,2,*/3
             version_comment:    true,
