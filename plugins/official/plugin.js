@@ -1,4 +1,4 @@
-const plugin_version = '2020-0605-1140'
+const plugin_version = '2020-0605-1240'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -312,6 +312,11 @@ var algorithmConfig = {
         action:    'block',
         userinput:  true,
         lcs_search: false
+    },
+
+    writeFile_reflect: {
+        name:      '算法3 - 拦截通过反射、反序列化执行的文件写入操作',
+        action:    'log'
     },
 
     // 任意文件删除 - 使用 ../跳出目录
@@ -839,6 +844,88 @@ function is_hostname_dnslog(hostname) {
 
 //     return false
 // }
+
+function validate_stack_java(stacks) {
+    var known    = {
+        'com.thoughtworks.xstream.XStream.unmarshal':                                   "Using xstream library",
+        'java.beans.XMLDecoder.readObject':                                             "Using WebLogic XMLDecoder library",
+        'org.apache.commons.collections4.functors.InvokerTransformer.transform':        "Using Transformer library (v4)",
+        'org.apache.commons.collections.functors.InvokerTransformer.transform':         "Using Transformer library",
+        'org.apache.commons.collections.functors.ChainedTransformer.transform':         "Using Transformer library",
+        'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   "Using JNDI library (JSR 160)",
+        'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             "Using JNDI registry service",
+        'org.apache.xbean.propertyeditor.JndiConverter':                                "Using JNDI binding class",
+        'com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig':                "Using JTA transaction manager",
+        'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  "Using LDAP factory service",
+        'com.alibaba.fastjson.JSON.parseObject':                                        "Using fastjson library",
+        'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': "Using SpEL expressions",
+        'freemarker.template.utility.Execute.exec':                                     "Using FreeMarker template",
+        'org.jboss.el.util.ReflectionUtil.invokeMethod':                                "Using JBoss EL method",
+        'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                "Using BeHinder defineClass webshell",
+        'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     "Using Groovy library",
+        'bsh.Reflect.invokeMethod':                                                     "Using BeanShell library",
+        'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     "Using Nashorn engine"
+    }
+
+    var userCode = false, reachedInvoke = false, i = 0, message = undefined
+
+    // v1.1.1 要求在堆栈里过滤 com.baidu.openrasp 相关的类，因为没有实现正确而产生了多余的反射堆栈，这里需要兼容下防止误报
+    // v1.1.2 修复了这个问题，即堆栈顶部为命令执行的方法
+    if (stacks.length > 3
+        && stacks[0].startsWith('sun.reflect.GeneratedMethodAccessor')
+        && stacks[1] == 'sun.reflect.GeneratedMethodAccessorImpl.invoke'
+        && stacks[2] == 'java.lang.reflect.Method.invoke')
+    {
+        i = 3
+    }
+
+    for (; i < stacks.length; i ++) {
+        var method = stacks[i]                
+
+        // 检查反射调用 -> 命令执行之间，是否包含用户代码
+        if (! reachedInvoke) {
+            if (method == 'java.lang.reflect.Method.invoke') {
+                reachedInvoke = true
+            }
+
+            // 用户代码，即非 JDK、com.baidu.openrasp 相关的函数
+            if (! method.startsWith('java.') 
+                && !method.startsWith('sun.') 
+                && !method.startsWith('com.sun.') 
+                && !method.startsWith('com.baidu.openrasp.')) 
+            {
+                userCode = true
+            }
+        }
+
+        if (method.startsWith('ysoserial.Pwner')) {
+            message = "Using YsoSerial tool"
+            break
+        }
+
+        if (method.startsWith('com.fasterxml.jackson.databind.')) {
+            message = "Using Jackson deserialze method"
+            break
+        }
+
+        // 对于如下类型的反射调用:
+        // 1. 仅当命令直接来自反射调用才拦截
+        // 2. 如果某个类是反射生成，这个类再主动执行命令，则忽略
+        if (! userCode) {
+            if (method == 'ognl.OgnlRuntime.invokeMethod') {
+                message = "Using OGNL library"
+                break
+            }  else if (method == 'java.lang.reflect.Method.invoke') {
+                message = "Unknown vulnerability detected"
+            }
+        }
+
+        if (known[method]) {
+            message = known[method]
+        }
+    }
+    return message
+}
 
 function validate_stack_php(stacks) {
     var verdict = false
@@ -2055,6 +2142,20 @@ plugin.register('writeFile', function (params, context) {
         }
     }
 
+    if (algorithmConfig.writeFile_reflect.action != 'ignore') {
+        if (context.server.language == 'java') {
+            var message = validate_stack_java(params.stack)
+            if (message) {
+                return {
+                    action:     algorithmConfig.writeFile_reflect.action,
+                    message:    _("Reflect file write - %1%, file is %2%", [message, params.realpath]),
+                    confidence: 85,
+                    algorithm:  'writeFile_reflect'
+                }
+            }
+        }
+    }
+
     return clean
 })
 
@@ -2194,83 +2295,9 @@ plugin.register('command', function (params, context) {
     if (algorithmConfig.command_reflect.action != 'ignore') {
         // Java 检测逻辑
         if (server.language == 'java') {
-            var known    = {
-                'com.thoughtworks.xstream.XStream.unmarshal':                                   _("Reflected command execution - Using xstream library"),
-                'java.beans.XMLDecoder.readObject':                                             _("Reflected command execution - Using WebLogic XMLDecoder library"),
-                'org.apache.commons.collections4.functors.InvokerTransformer.transform':        _("Reflected command execution - Using Transformer library (v4)"),
-                'org.apache.commons.collections.functors.InvokerTransformer.transform':         _("Reflected command execution - Using Transformer library"),
-                'org.apache.commons.collections.functors.ChainedTransformer.transform':         _("Reflected command execution - Using Transformer library"),
-                'org.jolokia.jsr160.Jsr160RequestDispatcher.dispatchRequest':                   _("Reflected command execution - Using JNDI library (JSR 160)"),
-                'com.sun.jndi.rmi.registry.RegistryContext.lookup':                             _("Reflected command execution - Using JNDI registry service"),
-                'org.apache.xbean.propertyeditor.JndiConverter':                                _("Reflected command execution - Using JNDI binding class"),
-                'com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig':                _("Reflected command execution - Using JTA transaction manager"),
-                'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  _("Reflected command execution - Using LDAP factory service"),
-                'com.alibaba.fastjson.JSON.parseObject':                                        _("Reflected command execution - Using fastjson library"),
-                'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': _("Reflected command execution - Using SpEL expressions"),
-                'freemarker.template.utility.Execute.exec':                                     _("Reflected command execution - Using FreeMarker template"),
-                'org.jboss.el.util.ReflectionUtil.invokeMethod':                                _("Reflected command execution - Using JBoss EL method"),
-                'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                _("Reflected command execution - Using BeHinder defineClass webshell"),
-                'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     _("Reflected command execution - Using Groovy library"),
-                'bsh.Reflect.invokeMethod':                                                     _("Reflected command execution - Using BeanShell library"),
-                'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     _("Reflected Command execution - Using Nashorn engine")
-            }
-
-            var userCode = false, reachedInvoke = false, i = 0
-
-            // v1.1.1 要求在堆栈里过滤 com.baidu.openrasp 相关的类，因为没有实现正确而产生了多余的反射堆栈，这里需要兼容下防止误报
-            // v1.1.2 修复了这个问题，即堆栈顶部为命令执行的方法
-            if (params.stack.length > 3
-                && params.stack[0].startsWith('sun.reflect.GeneratedMethodAccessor')
-                && params.stack[1] == 'sun.reflect.GeneratedMethodAccessorImpl.invoke'
-                && params.stack[2] == 'java.lang.reflect.Method.invoke')
-            {
-                i = 3
-            }
-
-            for (; i < params.stack.length; i ++) {
-                var method = params.stack[i]                
-
-                // 检查反射调用 -> 命令执行之间，是否包含用户代码
-                if (! reachedInvoke) {
-                    if (method == 'java.lang.reflect.Method.invoke') {
-                        reachedInvoke = true
-                    }
-
-                    // 用户代码，即非 JDK、com.baidu.openrasp 相关的函数
-                    if (! method.startsWith('java.') 
-                        && !method.startsWith('sun.') 
-                        && !method.startsWith('com.sun.') 
-                        && !method.startsWith('com.baidu.openrasp.')) 
-                    {
-                        userCode = true
-                    }
-                }
-
-                if (method.startsWith('ysoserial.Pwner')) {
-                    message = _("Reflected command execution - Using YsoSerial tool")
-                    break
-                }
-
-                if (method.startsWith('com.fasterxml.jackson.databind.')) {
-                    message = _("Reflected command execution - Using Jackson deserialze method")
-                    break
-                }
-
-                // 对于如下类型的反射调用:
-                // 1. 仅当命令直接来自反射调用才拦截
-                // 2. 如果某个类是反射生成，这个类再主动执行命令，则忽略
-                if (! userCode) {
-                    if (method == 'ognl.OgnlRuntime.invokeMethod') {
-                        message = _("Reflected command execution - Using OGNL library")
-                        break
-                    }  else if (method == 'java.lang.reflect.Method.invoke') {
-                        message = _("Reflected command execution - Unknown vulnerability detected")
-                    }
-                }
-
-                if (known[method]) {
-                    message = known[method]
-                }
+            message = validate_stack_java(params.stack)
+            if (message) {
+                message = _("Reflected command execution - %1%", message)
             }
         }
 
