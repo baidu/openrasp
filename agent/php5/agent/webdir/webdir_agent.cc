@@ -53,6 +53,11 @@ void WebDirAgent::run()
 		{
 			exit(0);
 		}
+		//skip while config has not been written into shm
+		if (0 == scm->get_config_last_update())
+		{
+			continue;
+		}
 		bool force = false;
 		if (collect_webroot_path())
 		{
