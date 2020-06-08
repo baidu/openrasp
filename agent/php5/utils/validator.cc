@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-#include "lower_limit.h"
+#include "utils/validator.h"
+#include "utils/regex.h"
 
 namespace openrasp
 {
-namespace validator
-{
-namespace vint64
-{
-
-LowerLimit::LowerLimit(int64_t lower_limit, bool zero_valid)
-{
-    this->lower_limit = lower_limit;
-    this->zero_valid = zero_valid;
-}
-
-std::string LowerLimit::check(const int64_t value) const
+std::string limit_int64(int64_t value, int64_t lower_limit, bool zero_valid)
 {
     std::string result;
     if (value < lower_limit)
@@ -50,8 +40,33 @@ std::string LowerLimit::check(const int64_t value) const
     return result;
 }
 
-} // namespace vint64
+std::string ge_zero_int64(int64_t value)
+{
+    return limit_int64(value, 0, false);
+}
 
-} // namespace validator
+std::string g_zero_int64(int64_t value)
+{
+    return limit_int64(value, 1, false);
+}
 
+std::string nonempty_string(const std::string &value)
+{
+    std::string result;
+    if (value.empty())
+    {
+        result = "the string value shoule not be empty.";
+    }
+    return result;
+}
+
+std::string regex_string(const std::string &value, const std::string &regex, const std::string &error_description)
+{
+    std::string result;
+    if (!openrasp::regex_match(value.c_str(), regex.c_str()))
+    {
+        result = error_description;
+    }
+    return result;
+}
 } // namespace openrasp

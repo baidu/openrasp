@@ -45,7 +45,7 @@ public:
   long get_debug_level();
   bool set_debug_level(BaseReader *br);
 
-  int get_check_type_white_bit_mask(std::string url);
+  dat_value get_check_type_white_bit_mask(std::string url);
   bool build_check_type_white_array(BaseReader *br);
 
   bool build_weak_password_array(BaseReader *br);
@@ -72,7 +72,7 @@ private:
   SharedConfigBlock *shared_config_block;
   std::string rasp_id;
 
-  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
+  bool build_check_type_white_array(std::map<std::string, dat_value> &url_mask_map);
   bool build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map);
 
   bool build_weak_password_array(std::vector<std::string> &weak_passwords);

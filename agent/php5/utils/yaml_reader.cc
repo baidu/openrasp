@@ -48,7 +48,7 @@ void YamlReader::load(const std::string &content)
 }
 
 std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value,
-                                     const openrasp::validator::vstring::Base &validator)
+                                     const std::function<std::string(const std::string &value)> &validator)
 {
     try
     {
@@ -61,10 +61,13 @@ std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const
         {
             std::string rst;
             *node >> rst;
-            std::string error_description = validator.check(rst);
-            if (!error_description.empty())
+            if (nullptr != validator)
             {
-                throw YAML::RepresentationException(node->GetMark(), error_description);
+                std::string error_description = validator(rst);
+                if (!error_description.empty())
+                {
+                    throw YAML::RepresentationException(node->GetMark(), error_description);
+                }
             }
             return rst;
         }
@@ -90,7 +93,7 @@ std::string YamlReader::fetch_string(const std::vector<std::string> &keys, const
     return default_value;
 }
 int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value,
-                                const openrasp::validator::vint64::Base &validator)
+                                const std::function<std::string(int64_t value)> &validator)
 {
     try
     {
@@ -104,12 +107,14 @@ int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int6
             int64_t rst;
             *node >> rst;
 
-            std::string error_description = validator.check(rst);
-            if (!error_description.empty())
+            if (nullptr != validator)
             {
-                throw YAML::RepresentationException(node->GetMark(), error_description);
+                std::string error_description = validator(rst);
+                if (!error_description.empty())
+                {
+                    throw YAML::RepresentationException(node->GetMark(), error_description);
+                }
             }
-
             return rst;
         }
         else
@@ -133,6 +138,7 @@ int64_t YamlReader::fetch_int64(const std::vector<std::string> &keys, const int6
     }
     return default_value;
 }
+
 bool YamlReader::fetch_bool(const std::vector<std::string> &keys, const bool &default_value)
 {
     try

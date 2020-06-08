@@ -42,14 +42,14 @@ SharedConfigManager::~SharedConfigManager()
     }
 }
 
-int SharedConfigManager::get_check_type_white_bit_mask(std::string url)
+dat_value SharedConfigManager::get_check_type_white_bit_mask(std::string url)
 {
     DoubleArrayTrie dat;
-    int white_bit_mask = 0;
+    dat_value white_bit_mask = 0;
     if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
-        dat.load_existing_array((void *)shared_config_block->get_check_type_white_array(), shared_config_block->get_white_array_size());
+        dat.set_array((void *)shared_config_block->get_check_type_white_array(), shared_config_block->get_white_array_size());
         std::vector<DoubleArrayTrie::result_pair_type> result_pairs = dat.prefix_search(url.c_str());
         for (DoubleArrayTrie::result_pair_type result_pair : result_pairs)
         {
@@ -70,26 +70,30 @@ bool SharedConfigManager::write_check_type_white_array_to_shm(const void *source
     return false;
 }
 
-bool SharedConfigManager::build_check_type_white_array(std::map<std::string, int> &url_mask_map)
+bool SharedConfigManager::build_check_type_white_array(std::map<std::string, dat_value> &url_mask_map)
 {
     std::vector<std::string> urls;
-    std::vector<int> values;
+    std::vector<dat_value> values;
     for (auto iter = url_mask_map.begin(); iter != url_mask_map.end(); iter++)
     {
         urls.push_back(iter->first);
         values.push_back(iter->second);
     }
     DoubleArrayTrie dat;
-    dat.build(urls.size(), &urls, 0, &values);
+    int error = dat.build(urls.size(), &urls, 0, &values);
+    if (error < 0 || dat.total_size() > SharedConfigBlock::WHITE_ARRAY_MAX_SIZE)
+    {
+        return false;
+    }
     return write_check_type_white_array_to_shm(dat.array(), dat.total_size());
 }
 
 bool SharedConfigManager::build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map)
 {
-    std::map<std::string, int> white_mask_map;
+    std::map<std::string, dat_value> white_mask_map;
     for (auto &white_item : url_type_map)
     {
-        int bit_mask = 0;
+        dat_value bit_mask = 0;
         if (std::find(white_item.second.begin(), white_item.second.end(), "all") != white_item.second.end())
         {
             bit_mask = (1 << ALL_TYPE) - 1;
@@ -232,7 +236,7 @@ bool SharedConfigManager::startup()
         rwlock = new ReadWriteLock((pthread_rwlock_t *)shm_block, LOCK_PROCESS);
         char *shm_config_block = shm_block + meta_size;
         shared_config_block = reinterpret_cast<SharedConfigBlock *>(shm_config_block);
-        std::map<std::string, int> all_type_white{{"", ~0}};
+        std::map<std::string, dat_value> all_type_white{{"", ~0}};
         build_check_type_white_array(all_type_white);
         build_rasp_id();
         initialized = true;
@@ -304,7 +308,11 @@ bool SharedConfigManager::build_weak_password_array(std::vector<std::string> &we
 {
     DoubleArrayTrie dat;
     std::sort(weak_passwords.begin(), weak_passwords.end());
-    dat.build(weak_passwords.size(), &weak_passwords, 0, 0);
+    int error = dat.build(weak_passwords.size(), &weak_passwords, 0, 0);
+    if (error < 0 || dat.total_size() > SharedConfigBlock::WEAK_PASSWORD_ARRAY_MAX_SIZE)
+    {
+        return false;
+    }
     return write_weak_password_array_to_shm(dat.array(), dat.total_size());
 }
 
@@ -342,7 +350,7 @@ bool SharedConfigManager::is_password_weak(std::string password)
     if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
-        dat.load_existing_array((void *)shared_config_block->get_weak_password_array(), shared_config_block->get_weak_password_array_size());
+        dat.set_array((void *)shared_config_block->get_weak_password_array(), shared_config_block->get_weak_password_array_size());
         DoubleArrayTrie::result_pair_type result_pair = dat.match_search(password.c_str());
         return result_pair.value != -1;
     }
@@ -401,7 +409,11 @@ bool SharedConfigManager::build_pg_error_array(std::vector<std::string> &pg_erro
 {
     DoubleArrayTrie dat;
     std::sort(pg_errors.begin(), pg_errors.end());
-    dat.build(pg_errors.size(), &pg_errors, 0, 0);
+    int error = dat.build(pg_errors.size(), &pg_errors, 0, 0);
+    if (error < 0 || dat.total_size() > SharedConfigBlock::PG_ERROR_ARRAY_MAX_SIZE)
+    {
+        return false;
+    }
     return write_pg_error_array_to_shm(dat.array(), dat.total_size());
 }
 
@@ -421,7 +433,7 @@ bool SharedConfigManager::pg_error_filtered(std::string error)
     if (rwlock != nullptr && rwlock->read_lock())
     {
         ReadUnLocker auto_unlocker(rwlock);
-        dat.load_existing_array((void *)shared_config_block->get_pg_error_array(), shared_config_block->get_pg_error_array_size());
+        dat.set_array((void *)shared_config_block->get_pg_error_array(), shared_config_block->get_pg_error_array_size());
         DoubleArrayTrie::result_pair_type result_pair = dat.match_search(error.c_str());
         return result_pair.value != -1;
     }
