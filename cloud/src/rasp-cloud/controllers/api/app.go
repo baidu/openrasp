@@ -165,6 +165,10 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
 	}
+	// clean up rasp config
+	if param.Config["offline_hosts.cleanup.interval"].(float64) > 0 {
+		models.HasOfflineHosts[app.Id] = param.Config["offline_hosts.cleanup.interval"].(float64)
+	}
 	//_, err = models.UpdateGeneralConfigForStrategy(param.StrategyId, param.AppId, param.Config)
 	//if err != nil {
 	//	o.ServeError(http.StatusBadRequest, "failed to update strategy general config", err)
@@ -471,7 +475,7 @@ func (o *AppController) Delete() {
 	online := true
 	raspCount, _, err := models.FindRasp(&models.Rasp{AppId: app.Id, Online: &online}, 1, 1)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to find rasps for this app")
+		o.ServeError(http.StatusBadRequest, "failed to find rasps for this app", err)
 	}
 	if raspCount > 0 {
 		o.ServeError(http.StatusBadRequest, "failed to remove this app, it also has online rasps")

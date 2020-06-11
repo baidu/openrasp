@@ -62,6 +62,10 @@ const (
 	raspCollectionName = "rasp"
 )
 
+var (
+	HasOfflineHosts   map[string]float64
+)
+
 func init() {
 	index := &mgo.Index{
 		Key:        []string{"app_id"},
@@ -363,4 +367,17 @@ func RegisterCallback(url string, token string, rasp *Rasp) error {
 		return errors.New("the message of response body is not ok: " + resBody.Msg)
 	}
 	return nil
+}
+
+func CleanOfflineHosts() {
+	for appId, interval := range HasOfflineHosts {
+		selector := map[string]interface{}{
+			"expire_time": interval * 24 * 3600,
+		}
+		removedCount, err := RemoveRaspBySelector(selector, appId)
+		if err != nil {
+			beego.Error("clear offline err:", err)
+		}
+		beego.Info("remove rasps for app:", appId, " remove counts:", removedCount)
+	}
 }

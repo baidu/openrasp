@@ -214,6 +214,7 @@ func init() {
 	}
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		initApp()
+		TaskCleanUpHosts()
 	}
 }
 
@@ -222,6 +223,9 @@ func initApp() error {
 	_, err := mongo.FindAllWithoutLimit(appCollectionName, nil, &apps)
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get all app", err)
+	}
+	if HasOfflineHosts == nil {
+		HasOfflineHosts = make(map[string]float64)
 	}
 	for _, app := range apps {
 		err := createEsIndexWithAppId(app.Id)
@@ -237,6 +241,9 @@ func initApp() error {
 			if err != nil {
 				beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init iast.js for app ["+app.Name+"]", err)
 			}
+		}
+		if dayInterval, ok := app.GeneralConfig["offline_hosts.cleanup.interval"].(float64); ok && dayInterval > 0 {
+			HasOfflineHosts[app.Id] = dayInterval
 		}
 	}
 	return nil
