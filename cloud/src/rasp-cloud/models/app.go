@@ -174,6 +174,7 @@ var (
 		"response.sampler_interval": 60,
 		"response.sampler_burst":    5,
 		"dependency_check.interval": 12 * 3600,
+		"offline_hosts.cleanup.interval": 0,
 	}
 	AlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
 	MinAlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
@@ -242,11 +243,27 @@ func initApp() error {
 				beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init iast.js for app ["+app.Name+"]", err)
 			}
 		}
+		if len(app.GeneralConfig) < len(DefaultGeneralConfig) {
+			err = initAppDefaultConfig(app)
+		}
 		if dayInterval, ok := app.GeneralConfig["offline_hosts.cleanup.interval"].(float64); ok && dayInterval > 0 {
 			HasOfflineHosts[app.Id] = dayInterval
 		}
 	}
 	return nil
+}
+
+func initAppDefaultConfig(app *App) error {
+	var err error
+	beego.Info("Detected new app config for this app:" + app.Name)
+	// 新增默认配置，在这里初始化。省去刷库的步骤（只初始化简单类型）
+	for key, value := range DefaultGeneralConfig {
+		if key != "inject.custom_headers" && app.GeneralConfig[key] == nil {
+			app.GeneralConfig[key] = value
+			err = mongo.UpsertId(appCollectionName, app.Id, app)
+		}
+	}
+	return err
 }
 
 func initPlugin(app *App, pluginName string) error {
