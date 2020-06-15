@@ -72,7 +72,7 @@ void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 	// 	Z_PARAM_VARIADIC('+', arrays, n_arrays)
 	// ZEND_PARSE_PARAMETERS_END();
 
-	if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "f", &fci, &fci_cache) != SUCCESS)
+	if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "f!", &fci, &fci_cache) != SUCCESS)
 	{
 		return;
 	}
