@@ -66,6 +66,12 @@ type App struct {
 	KafkaConf           *kafka.Kafka           `json:"kafka_alarm_conf" bson:"kafka_alarm_conf"`
 }
 
+type ExportAPP struct {
+	Id               string                 `json:"id" bson:"_id"`
+	Name             string                 `json:"name"  bson:"name"`
+	Secret           string                 `json:"secret"  bson:"secret"`
+}
+
 type WhitelistConfigItem struct {
 	Url  string          `json:"url" bson:"url"`
 	Hook map[string]bool `json:"hook" bson:"hook"`
@@ -1044,4 +1050,12 @@ func PushKafkaAttackAlarm(app *App, alarms []map[string]interface{}, isTest bool
 	beego.Debug("succeed in pushing kafka alarm for app: " + app.Name + " ,with urls: " +
 		fmt.Sprintf("%v", addrs))
 	return nil
+}
+
+func GetAllExportApp() (apps []*ExportAPP, err error){
+	_, err = mongo.FindAllWithoutLimit(appCollectionName, nil, &apps)
+	if err != nil {
+		return nil, err
+	}
+	return
 }

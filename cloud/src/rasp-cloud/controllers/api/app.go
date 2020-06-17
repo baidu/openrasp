@@ -20,11 +20,14 @@ import (
 	"github.com/astaxie/beego/validation"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
 	"math"
 	"net/http"
+	"os"
 	"rasp-cloud/controllers"
 	"rasp-cloud/kafka"
 	"rasp-cloud/models"
+	"rasp-cloud/tools"
 	"reflect"
 	"strconv"
 	"strings"
@@ -332,6 +335,30 @@ func (o *AppController) ConfigApp() {
 	operationData, err := json.Marshal(updateData)
 	models.AddOperation(app.Id, models.OperationTypeEditApp, o.Ctx.Input.IP(), "Updated app info for "+param.AppId+": "+string(operationData))
 	o.Serve(app)
+}
+
+// @router /export [post]
+func (o * AppController) ExportApp() {
+	fileName := "files/app.json"
+	pathName := "files"
+	apps, err := models.GetAllExportApp()
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get apps", err)
+	}
+	appBytes, err := json.Marshal(apps)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to convert apps", err)
+	}
+	if isExist, _ := tools.PathExists(pathName); !isExist {
+		err := os.MkdirAll(pathName, os.ModePerm)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "create dir failed", err)
+		}
+	}
+	if ioutil.WriteFile(fileName, appBytes, os.ModePerm) != nil {
+		o.ServeError(http.StatusBadRequest, "failed to write file", err)
+	}
+	o.ServeWithEmptyData()
 }
 
 func (o *AppController) validEmailConf(conf *models.EmailAlarmConf) {

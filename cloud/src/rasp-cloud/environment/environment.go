@@ -43,8 +43,9 @@ var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
 	Version             = "1.3.3"
-	LogPath             = "logs/"
-	PidFileName         = LogPath + "pid.file"
+	LogPath             = beego.AppConfig.DefaultString("LogPath", "/home/openrasp/logs")
+	LogApiPath			= LogPath + "/api"
+	PidFileName         = LogPath + "/pid.file"
 	OldPid              = ""
 	Status              string
 )
@@ -172,7 +173,7 @@ func stop() {
 			log.Println("Stop ok!")
 		}
 	} else {
-		beego.Info("The process id:" + OldPid + "is not exists!")
+		beego.Info("The process id:" + OldPid + " is not exists!")
 		log.Printf("The process id:%s is not exists!", OldPid)
 	}
 	os.Exit(0)
@@ -306,28 +307,28 @@ func fork() (err error) {
 }
 
 func initLogger() {
-	var logPathSplit []string
+	//var logPathSplit []string
 	logFileName := "/agent-cloud.log"
-	logPath := beego.AppConfig.DefaultString("AgentCloudLogPath", "logs/api/agent-cloud.log")
+	//logPath := beego.AppConfig.DefaultString("AgentCloudLogPath", "logs/api/agent-cloud.log")
 	maxSize := strconv.FormatInt(beego.AppConfig.DefaultInt64("LogMaxSize", 104857600), 10)
 	maxDays := strconv.Itoa(beego.AppConfig.DefaultInt("LogMaxDays", 10))
 	// 判断后缀名称
-	if strings.HasSuffix(logPath, ".log") {
-		logPathSplit = strings.Split(logPath, "/")
-		logFileName = "/" + logPathSplit[len(logPathSplit)-1]
-		logPathSplitNoLogFileName := logPathSplit[:len(logPathSplit)-1]
-		logPath = strings.Join(logPathSplitNoLogFileName, "/")
-	}
-	if isExists, _ := tools.PathExists(logPath); !isExists {
-		err := os.MkdirAll(logPath, os.ModePerm)
+	//if strings.HasSuffix(logPath, ".log") {
+	//	logPathSplit = strings.Split(logPath, "/")
+	//	logFileName = "/" + logPathSplit[len(logPathSplit) - 1]
+	//	logPathSplitNoLogFileName := logPathSplit[:len(logPathSplit) - 1]
+	//	logPath = strings.Join(logPathSplitNoLogFileName, "/")
+	//}
+	if isExists, _ := tools.PathExists(LogApiPath); !isExists {
+		err := os.MkdirAll(LogPath, os.ModePerm)
 		if err != nil {
-			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create logs/api dir", err)
+			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create " + LogApiPath + " dir", err)
 		}
 	}
 	logs.SetLogFuncCall(true)
-	logPath += logFileName
+	LogApiPath += logFileName
 	err := logs.SetLogger(logs.AdapterFile,
-		`{"filename":"`+logPath+`","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
+		`{"filename":"`+LogApiPath+`","daily":true,"maxdays":`+maxDays+`,"perm":"0777","maxsize": `+maxSize+`}`)
 	if err != nil {
 		beego.Error(err)
 		os.Exit(-1)
@@ -405,12 +406,12 @@ func checkPIDAlreadyExists(path string, remove bool) bool {
 
 func CheckPIDAlreadyRunning(path string) bool {
 	//pid := readPIDFILE(path)
-	cwd, err := os.Getwd()
-	if err != nil {
-		beego.Error("getwd error:", err)
-		log.Println("getwd error:", err)
-	}
-	ret := pidFileExists(filepath.Join(cwd, path))
+	//cwd, err := os.Getwd()
+	//if err != nil {
+	//	beego.Error("getwd error:", err)
+	//	log.Println("getwd error:", err)
+	//}
+	ret := pidFileExists(filepath.Join(path))
 	if ret == false {
 		return false
 	}

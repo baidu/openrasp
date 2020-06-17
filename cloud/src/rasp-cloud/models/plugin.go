@@ -217,12 +217,56 @@ func SetSelectedPlugin(appId string, pluginId string, strategyId string) (plugin
 	if err != nil {
 		return
 	}
+	// 获取当前app的selected_plugin_id
+	app, err := GetAppById(appId)
+	if err != nil {
+		return nil, err
+	}
+	oldPluginId := app.SelectedPluginId
+	newPluginId := pluginId
+	err = MergeAlgorithmPlugin(oldPluginId, newPluginId)
+	if err != nil {
+		return
+	}
 	query := bson.M{"selected_plugin_id": pluginId, "app_id": appId}
 	if strategyId == ""{
 		return plugin, mongo.UpdateId(appCollectionName, appId, bson.M{"selected_plugin_id": pluginId})
 	}else {
 		return plugin, mongo.UpdateId(strategyCollectionName, strategyId, query)
 	}
+}
+
+func MergeAlgorithmPlugin(oldId string, newId string) (err error) {
+	oldPlugin, err := GetPluginById(oldId, false)
+	if err != nil {
+		return
+	}
+	newPlugin, err := GetPluginById(newId, false)
+	if err != nil {
+		return
+	}
+	if oldPlugin.Name == newPlugin.Name {
+		// 将content合入，同时将algrithom_config合入。只合并action字段
+		newPluginConfig := newPlugin.AlgorithmConfig
+		oldPluginConfig := oldPlugin.AlgorithmConfig
+		hasReplace := false
+		// 获取oldPluginConfig中的action，并用new中的值进行替换。如果不存在则不用替换
+		for k, v := range oldPluginConfig {
+			if newMap, ok := newPluginConfig[k].(map[string]interface{}); ok {
+				if oldMap, ok :=v.(map[string]interface{}); ok {
+					if oldMap["action"] != nil{
+						newMap["action"] = oldMap["action"].(string)
+						newPluginConfig[k] = newMap
+						hasReplace = true
+					}
+				}
+			}
+		}
+		if hasReplace {
+			_, err = UpdateAlgorithmConfig(newId, newPlugin.AlgorithmConfig)
+		}
+	}
+	return
 }
 
 func RestoreDefaultConfiguration(pluginId string) (appId string, err error) {
