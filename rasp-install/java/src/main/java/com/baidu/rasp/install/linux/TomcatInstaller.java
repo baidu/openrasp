@@ -62,7 +62,11 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getScript(String installDir) {
-        return foundScriptPath(installDir);
+        String result = foundScriptPath(installDir);
+        if (result != null && result.endsWith(".conf")) {
+            isYum = true;
+        }
+        return result;
     }
 
     public static String foundScriptPath(String installDir) {
@@ -134,14 +138,18 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     private StringBuilder buildStartupScript(StringBuilder sb, boolean versionFlag) {
         sb.append(OPENRASP_START_TAG);
-        if (App.isPrepend) {
-            sb.append(PREPEND_JAVA_AGENT_CONFIG);
+        if (isYum) {
+            sb.append("JAVA_OPTS=\"-javaagent:" + new File(getInstallPath(serverRoot)).getAbsolutePath() + "/rasp.jar\"\n");
         } else {
-            sb.append(JAVA_AGENT_CONFIG);
-        }
-        //jdk版本8以上插入依赖包
-        if (versionFlag) {
-            sb.append(JDK_JAVA_OPTIONS);
+            if (App.isPrepend) {
+                sb.append(PREPEND_JAVA_AGENT_CONFIG);
+            } else {
+                sb.append(JAVA_AGENT_CONFIG);
+            }
+            //jdk版本8以上插入依赖包
+            if (versionFlag) {
+                sb.append(JDK_JAVA_OPTIONS);
+            }
         }
         sb.append(OPENRASP_END_TAG);
         return sb;
