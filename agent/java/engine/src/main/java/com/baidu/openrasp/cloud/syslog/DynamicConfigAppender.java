@@ -23,6 +23,7 @@ import com.baidu.openrasp.messaging.BurstFilter;
 import com.baidu.openrasp.messaging.OpenraspDailyRollingFileAppender;
 import com.baidu.openrasp.messaging.SyslogTcpAppender;
 import com.baidu.openrasp.tool.FileUtil;
+import com.baidu.openrasp.tool.FilterConstructor;
 import org.apache.log4j.*;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.helpers.OnlyOnceErrorHandler;
@@ -274,7 +275,7 @@ public class DynamicConfigAppender {
             File configFile = new File(configPath);
             if (configFile.exists()) {
                 try {
-                    Yaml yaml = new Yaml();
+                    Yaml yaml = new Yaml(new FilterConstructor());
                     Map<String, Object> configMap = yaml.loadAs(new FileInputStream(configPath), Map.class);
                     if (configMap != null) {
                         Boolean cloudEnable = (Boolean) configMap.get("cloud.enable");
