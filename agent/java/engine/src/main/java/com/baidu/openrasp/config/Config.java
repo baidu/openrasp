@@ -23,6 +23,7 @@ import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.FileUtil;
+import com.baidu.openrasp.tool.FilterConstructor;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
@@ -187,7 +188,7 @@ public class Config extends FileScanListener {
         Map<String, Object> properties = null;
         try {
             if (file.exists()) {
-                Yaml yaml = new Yaml();
+                Yaml yaml = new Yaml(new FilterConstructor());
                 properties = yaml.loadAs(new FileInputStream(file), Map.class);
                 if (properties != null) {
                     for (String key : properties.keySet()) {

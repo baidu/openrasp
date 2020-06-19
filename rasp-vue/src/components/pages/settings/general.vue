@@ -79,7 +79,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">
-            离线主机清理（天） [0表示关闭，1以上的值表示开启。每天零点执行清理任务]
+            自动清理离线超过N天的主机 [0表示关闭，1以上的值表示开启；每天零点执行清理任务]
           </label>
           <input v-model.number="data['offline_hosts.cleanup.interval']" type="number" min="0" class="form-control" placeholder="0">
         </div>

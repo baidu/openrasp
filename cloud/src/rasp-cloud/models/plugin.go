@@ -224,9 +224,11 @@ func SetSelectedPlugin(appId string, pluginId string, strategyId string) (plugin
 	}
 	oldPluginId := app.SelectedPluginId
 	newPluginId := pluginId
-	err = MergeAlgorithmPlugin(oldPluginId, newPluginId)
-	if err != nil {
-		return
+	if oldPluginId != "" {
+		err = MergeAlgorithmPlugin(oldPluginId, newPluginId)
+		if err != nil {
+			return
+		}
 	}
 	query := bson.M{"selected_plugin_id": pluginId, "app_id": appId}
 	if strategyId == ""{
@@ -250,14 +252,19 @@ func MergeAlgorithmPlugin(oldId string, newId string) (err error) {
 		newPluginConfig := newPlugin.AlgorithmConfig
 		oldPluginConfig := oldPlugin.AlgorithmConfig
 		hasReplace := false
-		// 获取oldPluginConfig中的action，并用new中的值进行替换。如果不存在则不用替换
+		// 获取oldPluginConfig中的action，并用new中的值进行替换。如果不存在则覆盖
 		for k, v := range oldPluginConfig {
 			if newMap, ok := newPluginConfig[k].(map[string]interface{}); ok {
 				if oldMap, ok :=v.(map[string]interface{}); ok {
-					if oldMap["action"] != nil{
-						newMap["action"] = oldMap["action"].(string)
-						newPluginConfig[k] = newMap
-						hasReplace = true
+					if oldMap["action"] != nil {
+						if newMap["action"] == nil {
+							// 完全复制
+							newMap["action"] = oldMap["action"]
+						} else {
+							newMap["action"] = oldMap["action"].(string)
+							newPluginConfig[k] = newMap
+							hasReplace = true
+						}
 					}
 				}
 			}

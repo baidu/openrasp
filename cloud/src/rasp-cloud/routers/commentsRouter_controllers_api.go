@@ -38,7 +38,7 @@ func init() {
         beego.ControllerComments{
             Method: "ExportApp",
             Router: `/export`,
-            AllowHTTPMethods: []string{"post"},
+            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

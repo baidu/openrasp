@@ -20,6 +20,7 @@ import (
 	"github.com/astaxie/beego/validation"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"io"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -213,13 +214,6 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 
 // @router / [post]
 func (o *AppController) Post() {
-	c, err := models.GetAppCount()
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get app count", err)
-	}
-	if c >= models.MaxAppCount {
-		o.ServeError(http.StatusForbidden, "app quantity limit exceeded")
-	}
 	var app = &models.App{}
 
 	o.UnmarshalJson(app)
@@ -277,7 +271,7 @@ func (o *AppController) Post() {
 	} else {
 		app.WhitelistConfig = make([]models.WhitelistConfigItem, 0)
 	}
-	app, err = models.AddApp(app)
+	app, err := models.AddApp(app)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "create app failed", err)
 	}
@@ -337,7 +331,7 @@ func (o *AppController) ConfigApp() {
 	o.Serve(app)
 }
 
-// @router /export [post]
+// @router /export [get]
 func (o * AppController) ExportApp() {
 	fileName := "files/app.json"
 	pathName := "files"
@@ -358,7 +352,22 @@ func (o * AppController) ExportApp() {
 	if ioutil.WriteFile(fileName, appBytes, os.ModePerm) != nil {
 		o.ServeError(http.StatusBadRequest, "failed to write file", err)
 	}
-	o.ServeWithEmptyData()
+	file, err := os.Open(fileName)
+	if err != nil {
+		if strings.Index(err.Error(), "no such file or directory") != -1 {
+			o.ServeWithEmptyData()
+		} else {
+			o.ServeError(http.StatusBadRequest, "open file err", err)
+		}
+	}
+	defer file.Close()
+	o.Ctx.Output.Header("Content-Type", "application/json")
+	o.Ctx.Output.Header("content-disposition", "attachment; filename=app.json")
+	_, err = io.Copy(o.Ctx.ResponseWriter, file)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "download file err:", err)
+		return
+	}
 }
 
 func (o *AppController) validEmailConf(conf *models.EmailAlarmConf) {
