@@ -59,9 +59,9 @@
           <button class="btn btn-primary" @click="editApp({language: 'java'})">
             添加
           </button>
-          <button class="btn btn-primary pull-right" @click="exportApp()" style="margin-left: auto">
+          <a class="btn btn-primary pull-right" href="v1/api/app/export" style="margin-left: auto" target="_blank">
             导出
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -140,12 +140,6 @@ export default {
         },
         is_edit
       );
-    },
-    exportApp: function() {
-      this.request.post("v1/api/app/export", {})
-        .then(() => {
-          alert("文件已导出")
-        });
     },
     onEdit({ is_edit, data }) {
       this.request

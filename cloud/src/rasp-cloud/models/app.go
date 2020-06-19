@@ -69,7 +69,9 @@ type App struct {
 type ExportAPP struct {
 	Id               string                 `json:"id" bson:"_id"`
 	Name             string                 `json:"name"  bson:"name"`
+	Language         string                 `json:"language"  bson:"language"`
 	Secret           string                 `json:"secret"  bson:"secret"`
+	Description      string                 `json:"description"  bson:"description"`
 }
 
 type WhitelistConfigItem struct {
@@ -130,7 +132,6 @@ const (
 	SecreteMask       = "************"
 	DefalutPluginName = "plugin.js"
 	IastPluginName    = "iast.js"
-	MaxAppCount       = 1000
 )
 
 var (
