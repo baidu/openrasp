@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookie from 'js-cookie'
 import router from '@/router'
 
-export var rasp_version = '1.3.3'
+export var rasp_version = '1.3.4'
 
 // 起始 type_id: 1001
 export var audit_types = {
