@@ -1,4 +1,4 @@
-const plugin_version = '2020-0605-1240'
+const plugin_version = '2020-0629-1120'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -646,6 +646,9 @@ var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml|sh|py|pl|rb)\.?$/i
 // 正常文件
 var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
 
+// 文件读取扩展名白名单，包含 压缩文件 office文件 图片文件
+var readFileWhiteExt = new RegExp(/\.(do[c|t][x|m|]?|xl[s|t][x|m|b]?|pp[t|s|a][x|m]?|pot[x|m]|7z|tar|gz|bz2|xz|rar|zip|jpg|jpeg|png|gif|bmp|txt|)$/, 'i')
+
 // 匹配 HTML/JS 等可以用于钓鱼、domain-fronting 的文件
 var htmlFileRegex   = /\.(htm|html|js)$/i
 
@@ -675,7 +678,6 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // SQL注入算法 - 管理器白名单
 var sqliWhiteManager  = new RegExp(/phpmyadmin/, 'i')
-
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
@@ -1954,6 +1956,7 @@ plugin.register('readFile', function (params, context) {
         // ?path=/etc/./hosts
         // ?path=../../../etc/passwd
         if ( (proto == "" || proto == "file" ) && 
+             !readFileWhiteExt.test(params.realpath) &&
              is_path_endswith_userinput(all_parameter, params.path, params.realpath, is_win, algorithmConfig.readFile_userinput.lcs_search)
            )
         {
