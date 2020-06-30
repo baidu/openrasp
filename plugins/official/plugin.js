@@ -1,4 +1,4 @@
-const plugin_version = '2020-0629-1120'
+const plugin_version = '2020-0630-1100'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -658,8 +658,8 @@ var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat)$/i
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/
 
-// 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4)
-var commaNumRegex   = /^[0-9, ]+$/
+// 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4) 和 传入 column_name, column_pass -> select column_name, column_pass from xxx
+var commaSeparatedRegex   = /^(([a-zA-Z_]\w*|[0-9]+) *, *)+([a-zA-Z_]\w*|[0-9]+)$/
 
 // 匹配内网地址
 var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
@@ -711,7 +711,7 @@ if (! RASP.is_unittest)
         algorithmConfig.sql_userinput.pre_enable = false
 
         // 关闭 1,2,3 误报过滤
-        commaNumRegex = /^$/
+        commaSeparatedRegex = /^$/
 
         // 关闭 xss_echo 非攻击过滤
         algorithmConfig.xss_echo.filter_regex = ""
@@ -1537,6 +1537,11 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 // 检查用户输入是否存在于SQL中
                 for(var i = 0, len = check_value.length; i < len; i++) {
                     value = check_value[i]
+
+                    // 过滤超短参数
+                    if (value.length < 3) {
+                        continue
+                    }
                 
                     var userinput_idx = params.query.indexOf(value)
                     if (userinput_idx == -1) {
@@ -1550,8 +1555,8 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     }
 
                     // 过滤已知误报
-                    // 1,2,3,4,5 -> IN(1,2,3,4,5)
-                    if (commaNumRegex.test(value)) {
+                    // 1,2,3,4,5 和 user_id, user_name, user_pass
+                    if (commaSeparatedRegex.test(value)) {
                         return false
                     }
 
