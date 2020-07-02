@@ -79,7 +79,7 @@ func (o *BaseController) ValidPage(page int, perpage int) {
 	if perpage <= 0 {
 		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
 	}
-	if perpage > 1000 {
+	if perpage > 100 {
 		o.ServeError(http.StatusBadRequest, "perpage must be less than 1000")
 	}
 }

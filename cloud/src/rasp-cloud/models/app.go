@@ -499,6 +499,21 @@ func GetAppById(id string) (app *App, err error) {
 	return
 }
 
+func GetAppByName(name string, page int, perpage int) (count int, result []*App, err error) {
+	// 支持模糊查询
+	selector :=  bson.M{"name": bson.M{
+		"$regex":   name,
+		"$options": "$i",
+	}}
+	count, err = mongo.FindAll(appCollectionName, selector, &result, perpage*(page-1), perpage)
+	if err == nil && result != nil {
+		for _, app := range result {
+			HandleApp(app, false)
+		}
+	}
+	return
+}
+
 func GetSecretByAppId(appId string) (secret string, err error) {
 	newSession := mongo.NewSession()
 	defer newSession.Close()
