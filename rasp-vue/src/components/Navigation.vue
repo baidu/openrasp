@@ -239,7 +239,7 @@ export default {
         clearTimeout(this.timeout);
         this.timeout = setTimeout(() => {
           this.loadApps(this.keyword)
-        }, 500);
+        }, 100);
       },
       deep: true
     },
@@ -254,7 +254,7 @@ export default {
           .post("v1/api/app/get", {
             name: name,
             page: 1,
-            perpage: 100
+            perpage: 50
           })
           .then(res => {
             this.apps = res.data;

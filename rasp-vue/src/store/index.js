@@ -29,7 +29,7 @@ const store = new Vuex.Store({
     loadAppList({ commit }, appId) {
       request.post('v1/api/app/get', {
         page: 1,
-        perpage: 100
+        perpage: 50
       }).then(res => {
         const { data, total } = res
         commit('setAppList', data)
