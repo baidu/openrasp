@@ -505,6 +505,14 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
         std::string time_RFC3339 = format_time(RaspLoggerEntry::rasp_rfc3339_format,
                                                strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(nullptr));
         complete_log.append(time_RFC3339 + " ");
+        if (in_request)
+        {
+            complete_log.append(OPENRASP_G(request).url.get_request_scheme())
+                .append("://")
+                .append(OPENRASP_G(request).url.get_real_host())
+                .append(OPENRASP_G(request).url.get_path())
+                .append(" ");
+        }
     }
     complete_log.append(message);
     if (separate)
