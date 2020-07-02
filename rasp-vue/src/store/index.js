@@ -36,11 +36,19 @@ const store = new Vuex.Store({
         commit('setAppListCount', total)
         if (appId) {
           const app = data.find(row => row.id === appId)
-          if (app) {
-            commit('setCurrentApp', app)
+          if (!app) {
+            request.post('v1/api/app/get', {
+              app_id: appId
+            }).then(res => {
+              if (res) {
+                commit('setCurrentApp', res)
+              } else {
+                alert('没有这个应用: ' + appId)
+                commit('setCurrentApp', data[0])
+              }
+            })
           } else {
-            alert('没有这个应用: ' + appId)
-            commit('setCurrentApp', data[0])
+            commit('setCurrentApp', app)
           }
         } else {
           commit('setCurrentApp', data[0])
