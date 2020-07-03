@@ -26,6 +26,7 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckParameter.Type;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
+import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
@@ -38,6 +39,7 @@ import com.jsoniter.extra.Base64Support;
 import com.jsoniter.output.JsonStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -67,7 +69,7 @@ public class JS {
             V8.SetLogger(new com.baidu.openrasp.v8.Logger() {
                 @Override
                 public void log(String msg) {
-                    PLUGIN_LOGGER.info(msg);
+                    pluginLog(msg);
                 }
             });
             V8.SetStackGetter(new com.baidu.openrasp.v8.StackGetter() {
@@ -94,6 +96,17 @@ public class JS {
             LOGGER.error(e);
             return false;
         }
+    }
+
+    private static void pluginLog(String msg) {
+        AbstractRequest request = HookHandler.requestCache.get();
+        if (request != null) {
+            StringBuffer url = request.getRequestURL();
+            if (!StringUtils.isEmpty(url)) {
+                msg = url + " " + msg;
+            }
+        }
+        PLUGIN_LOGGER.info(msg);
     }
 
     public synchronized static void Dispose() {
@@ -166,7 +179,7 @@ public class JS {
                 obj.remove("confidence");
                 obj.remove("params");
                 if (action.equals("exception")) {
-                    PLUGIN_LOGGER.info(message);
+                    pluginLog(message);
                 } else {
                     attackInfos
                             .add(new AttackInfo(checkParameter, action, message, name, confidence, algorithm, params, obj));
@@ -195,7 +208,7 @@ public class JS {
                 try {
                     String name = file.getName();
                     String source = FileUtils.readFileToString(file, "UTF-8");
-                    scripts.add(new String[] { name, source });
+                    scripts.add(new String[]{name, source});
                 } catch (Exception e) {
                     LogTool.error(ErrorType.PLUGIN_ERROR, e.getMessage(), e);
                 }
@@ -207,7 +220,7 @@ public class JS {
 
     public synchronized static boolean UpdatePlugin(String name, String content) {
         List<String[]> scripts = new ArrayList<String[]>();
-        scripts.add(new String[] { name, content });
+        scripts.add(new String[]{name, content});
         return UpdatePlugin(scripts);
     }
 

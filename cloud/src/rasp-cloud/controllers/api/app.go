@@ -43,6 +43,7 @@ type AppController struct {
 
 type pageParam struct {
 	AppId   string `json:"app_id"`
+	Name    string `json:"name"`
 	Page    int    `json:"page"`
 	Perpage int    `json:"perpage"`
 }
@@ -56,7 +57,28 @@ var (
 func (o *AppController) GetApp() {
 	var data pageParam
 	o.UnmarshalJson(&data)
-	if data.AppId == "" {
+	if data.AppId != "" {
+		app, err := models.GetAppById(data.AppId)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to get app", err)
+		}
+		o.Serve(app)
+	} else if data.Name != "" {
+		o.ValidPage(data.Page, data.Perpage)
+		var result = make(map[string]interface{})
+		count, apps, err := models.GetAppByName(data.Name, data.Page, data.Perpage)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to get app by name", err)
+		}
+		if apps == nil {
+			apps = make([]*models.App, 0)
+		}
+		result["total"] = count
+		result["page"] = data.Page
+		result["perpage"] = data.Perpage
+		result["data"] = apps
+		o.Serve(result)
+	} else {
 		o.ValidPage(data.Page, data.Perpage)
 		var result = make(map[string]interface{})
 		total, apps, err := models.GetAllApp(data.Page, data.Perpage, true)
@@ -72,12 +94,6 @@ func (o *AppController) GetApp() {
 		result["perpage"] = data.Perpage
 		result["data"] = apps
 		o.Serve(result)
-	} else {
-		app, err := models.GetAppById(data.AppId)
-		if err != nil {
-			o.ServeError(http.StatusBadRequest, "failed to get app", err)
-		}
-		o.Serve(app)
 	}
 }
 

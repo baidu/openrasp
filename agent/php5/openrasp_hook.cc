@@ -437,6 +437,7 @@ PHP_RINIT_FUNCTION(openrasp_hook)
 PHP_RSHUTDOWN_FUNCTION(openrasp_hook)
 {
     OPENRASP_HOOK_G(zend_ref_items).clear();
+    return SUCCESS;
 }
 
 void update_zend_ref_items(TSRMLS_D)

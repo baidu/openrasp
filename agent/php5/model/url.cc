@@ -119,21 +119,30 @@ int Url::get_port() const
 std::string Url::get_complete_url() const
 {
     std::string complete_url;
-    complete_url.append(request_scheme).append("://");
+    complete_url
+        .append(request_scheme)
+        .append("://")
+        .append(get_real_host())
+        .append(request_uri);
+    return complete_url;
+}
+
+std::string Url::get_real_host() const
+{
+    std::string real_host;
     if (!http_host.empty())
     {
-        complete_url.append(http_host);
+        real_host.append(http_host);
     }
     else
     {
-        complete_url.append((!server_name.empty() ? server_name : server_addr));
+        real_host.append((!server_name.empty() ? server_name : server_addr));
         if (80 != port)
         {
-            complete_url.append(":").append(std::to_string(port));
+            real_host.append(":").append(std::to_string(port));
         }
     }
-    complete_url.append(request_uri);
-    return complete_url;
+    return real_host;
 }
 
 std::string Url::get_path() const

@@ -138,6 +138,19 @@ public class AttackInfo extends EventInfo {
             // appId
             info.put("app_id", Config.getConfig().getCloudAppId());
         }
+        // 服务器ip
+        info.put("server_nic", OSUtil.getIpAddress());
+        // 被攻击目标服务器类型和版本
+        info.put("server_type", ApplicationModel.getServerName());
+        info.put("server_version", ApplicationModel.getVersion());
+        // Java反编译开关打开时，启用
+        if (Config.getConfig().getDecompileEnable() && checkTomcatVersion()) {
+            // 攻击调用栈
+            StackTraceElement[] trace = StackTrace.filter(new Throwable().getStackTrace());
+            info.put("source_code", Decompiler.getAlarmPoint(trace));
+        } else {
+            info.put("source_code", "");
+        }
         if (request != null) {
             // 请求ID
             info.put("request_id", request.getRequestId());
@@ -145,15 +158,10 @@ public class AttackInfo extends EventInfo {
             info.put("attack_source", request.getRemoteAddr());
             // 攻击真实IP
             info.put("client_ip", request.getClientIp());
-            // 服务器ip
-            info.put("server_nic", OSUtil.getIpAddress());
             // 被攻击目标域名
             info.put("target", request.getServerName());
             // 被攻击目标IP
             info.put("server_ip", request.getLocalAddr());
-            // 被攻击目标服务器类型和版本
-            info.put("server_type", ApplicationModel.getServerName());
-            info.put("server_version", ApplicationModel.getVersion());
             // 请求 header
             info.put("header", getRequestHeader(request));
             // 请求参数
@@ -179,14 +187,6 @@ public class AttackInfo extends EventInfo {
             // 请求方法
             String method = request.getMethod();
             info.put("request_method", method != null ? method.toLowerCase() : null);
-            // Java反编译开关打开时，启用
-            if (Config.getConfig().getDecompileEnable() && checkTomcatVersion()) {
-                // 攻击调用栈
-                StackTraceElement[] trace = StackTrace.filter(new Throwable().getStackTrace());
-                info.put("source_code", Decompiler.getAlarmPoint(trace));
-            } else {
-                info.put("source_code", "");
-            }
         }
         for (Entry<String, JsonElement> entry : extras.entrySet()) {
             info.put(entry.getKey(), entry.getValue());

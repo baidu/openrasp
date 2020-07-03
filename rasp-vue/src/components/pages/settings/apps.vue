@@ -96,6 +96,10 @@ export default {
     }
   },
   mounted: function() {
+    this.current_app.id = this.$route.params.app_id;
+    if (!this.current_app.id) {
+      return
+    }
     this.loadApps(1);
   },
   methods: {

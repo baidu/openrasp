@@ -136,6 +136,24 @@ std::string Url::get_complete_url() const
     return complete_url;
 }
 
+std::string Url::get_real_host() const
+{
+    std::string real_host;
+    if (!http_host.empty())
+    {
+        real_host.append(http_host);
+    }
+    else
+    {
+        real_host.append((!server_name.empty() ? server_name : server_addr));
+        if (80 != port)
+        {
+            real_host.append(":").append(std::to_string(port));
+        }
+    }
+    return real_host;
+}
+
 std::string Url::get_path() const
 {
     auto found = request_uri.find("?");
