@@ -578,7 +578,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 	returnConfig := make(map[string]interface{})
 	for key, v := range generalConfigTemplate {
 		value := config[key]
-		if value == nil {
+		if value == nil || value == "" {
 			config[key] = v
 		}
 		returnConfig[key] = config[key]
