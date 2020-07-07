@@ -55,6 +55,7 @@ public:
     std::string get_query_string() const;
     std::string get_complete_url() const;
     std::string get_path() const;
+    std::string get_real_host() const;
     int get_port() const;
 };
 } // namespace request

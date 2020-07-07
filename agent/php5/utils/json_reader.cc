@@ -51,7 +51,7 @@ void JsonReader::load(const std::string &content)
 }
 
 std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const std::string &default_value,
-                                     const openrasp::validator::vstring::Base &validator)
+                                     const std::function<std::string(const std::string &value)> &validator)
 {
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
@@ -69,10 +69,13 @@ std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const
     {
       throw nlohmann::detail::other_error::create(900, "type should be string");
     }
-    std::string error_description = validator.check(result);
-    if (!error_description.empty())
+    if (nullptr != validator)
     {
-      throw nlohmann::detail::other_error::create(901, error_description);
+      std::string error_description = validator(result);
+      if (!error_description.empty())
+      {
+        throw nlohmann::detail::other_error::create(901, error_description);
+      }
     }
     return result;
   }
@@ -88,7 +91,7 @@ std::string JsonReader::fetch_string(const std::vector<std::string> &keys, const
 }
 
 int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int64_t &default_value,
-                                const openrasp::validator::vint64::Base &validator)
+                                const std::function<std::string(int64_t value)> &validator)
 {
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   try
@@ -106,10 +109,13 @@ int64_t JsonReader::fetch_int64(const std::vector<std::string> &keys, const int6
     {
       throw nlohmann::detail::other_error::create(900, "type should be number");
     }
-    std::string error_description = validator.check(result);
-    if (!error_description.empty())
+    if (nullptr != validator)
     {
-      throw nlohmann::detail::other_error::create(901, error_description);
+      std::string error_description = validator(result);
+      if (!error_description.empty())
+      {
+        throw nlohmann::detail::other_error::create(901, error_description);
+      }
     }
     return result;
   }
@@ -297,28 +303,9 @@ void JsonReader::write_int64_vector(const std::vector<std::string> &keys, const 
   j[ptr] = j_vec;
 }
 
-void JsonReader::merge(const JsonReader &patch)
+void JsonReader::update(const JsonReader &obj)
 {
-  j.merge_patch(patch.j);
-}
-
-void JsonReader::write_json_string(const std::vector<std::string> &keys, const std::string &value)
-{
-  try
-  {
-    json j_val = json::parse(value);
-    json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
-    j[ptr] = j_val;
-  }
-  catch (json::parse_error &e)
-  {
-    error = true;
-    std::ostringstream oss;
-    oss << "message: " << e.what() << ';'
-        << "exception id: " << e.id << ';'
-        << "byte position of error: " << e.byte;
-    error_msg = oss.str();
-  }
+  j.update(obj.j);
 }
 
 } // namespace openrasp

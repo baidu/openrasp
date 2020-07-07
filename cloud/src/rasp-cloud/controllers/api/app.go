@@ -20,11 +20,15 @@ import (
 	"github.com/astaxie/beego/validation"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"io"
+	"io/ioutil"
 	"math"
 	"net/http"
+	"os"
 	"rasp-cloud/controllers"
 	"rasp-cloud/kafka"
 	"rasp-cloud/models"
+	"rasp-cloud/tools"
 	"reflect"
 	"strconv"
 	"strings"
@@ -39,6 +43,7 @@ type AppController struct {
 
 type pageParam struct {
 	AppId   string `json:"app_id"`
+	Name    string `json:"name"`
 	Page    int    `json:"page"`
 	Perpage int    `json:"perpage"`
 }
@@ -52,7 +57,28 @@ var (
 func (o *AppController) GetApp() {
 	var data pageParam
 	o.UnmarshalJson(&data)
-	if data.AppId == "" {
+	if data.AppId != "" {
+		app, err := models.GetAppById(data.AppId)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to get app", err)
+		}
+		o.Serve(app)
+	} else if data.Name != "" {
+		o.ValidPage(data.Page, data.Perpage)
+		var result = make(map[string]interface{})
+		count, apps, err := models.GetAppByName(data.Name, data.Page, data.Perpage)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to get app by name", err)
+		}
+		if apps == nil {
+			apps = make([]*models.App, 0)
+		}
+		result["total"] = count
+		result["page"] = data.Page
+		result["perpage"] = data.Perpage
+		result["data"] = apps
+		o.Serve(result)
+	} else {
 		o.ValidPage(data.Page, data.Perpage)
 		var result = make(map[string]interface{})
 		total, apps, err := models.GetAllApp(data.Page, data.Perpage, true)
@@ -68,12 +94,6 @@ func (o *AppController) GetApp() {
 		result["perpage"] = data.Perpage
 		result["data"] = apps
 		o.Serve(result)
-	} else {
-		app, err := models.GetAppById(data.AppId)
-		if err != nil {
-			o.ServeError(http.StatusBadRequest, "failed to get app", err)
-		}
-		o.Serve(app)
 	}
 }
 
@@ -164,6 +184,10 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	app, err := models.UpdateGeneralConfig(param.AppId, param.Config)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
+	}
+	// clean up rasp config
+	if param.Config["offline_hosts.cleanup.interval"].(float64) > 0 {
+		models.HasOfflineHosts[app.Id] = param.Config["offline_hosts.cleanup.interval"].(float64)
 	}
 	//_, err = models.UpdateGeneralConfigForStrategy(param.StrategyId, param.AppId, param.Config)
 	//if err != nil {
@@ -323,6 +347,45 @@ func (o *AppController) ConfigApp() {
 	o.Serve(app)
 }
 
+// @router /export [get]
+func (o * AppController) ExportApp() {
+	fileName := "files/app.json"
+	pathName := "files"
+	apps, err := models.GetAllExportApp()
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to get apps", err)
+	}
+	appBytes, err := json.Marshal(apps)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to convert apps", err)
+	}
+	if isExist, _ := tools.PathExists(pathName); !isExist {
+		err := os.MkdirAll(pathName, os.ModePerm)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "create dir failed", err)
+		}
+	}
+	if ioutil.WriteFile(fileName, appBytes, os.ModePerm) != nil {
+		o.ServeError(http.StatusBadRequest, "failed to write file", err)
+	}
+	file, err := os.Open(fileName)
+	if err != nil {
+		if strings.Index(err.Error(), "no such file or directory") != -1 {
+			o.ServeWithEmptyData()
+		} else {
+			o.ServeError(http.StatusBadRequest, "open file err", err)
+		}
+	}
+	defer file.Close()
+	o.Ctx.Output.Header("Content-Type", "application/json")
+	o.Ctx.Output.Header("content-disposition", "attachment; filename=app.json")
+	_, err = io.Copy(o.Ctx.ResponseWriter, file)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "download file err:", err)
+		return
+	}
+}
+
 func (o *AppController) validEmailConf(conf *models.EmailAlarmConf) {
 	var valid = validation.Validation{}
 	if conf.ServerAddr == "" {
@@ -464,7 +527,7 @@ func (o *AppController) Delete() {
 	online := true
 	raspCount, _, err := models.FindRasp(&models.Rasp{AppId: app.Id, Online: &online}, 1, 1)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to find rasps for this app")
+		o.ServeError(http.StatusBadRequest, "failed to find rasps for this app", err)
 	}
 	if raspCount > 0 {
 		o.ServeError(http.StatusBadRequest, "failed to remove this app, it also has online rasps")
@@ -515,7 +578,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 	returnConfig := make(map[string]interface{})
 	for key, v := range generalConfigTemplate {
 		value := config[key]
-		if value == nil {
+		if value == nil || value == "" {
 			config[key] = v
 		}
 		returnConfig[key] = config[key]

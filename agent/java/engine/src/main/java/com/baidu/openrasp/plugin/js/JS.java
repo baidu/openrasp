@@ -26,26 +26,27 @@ import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckParameter.Type;
 import com.baidu.openrasp.plugin.info.AttackInfo;
 import com.baidu.openrasp.plugin.info.EventInfo;
+import com.baidu.openrasp.request.AbstractRequest;
 import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.v8.ByteArrayOutputStream;
 import com.baidu.openrasp.v8.V8;
-import com.jsoniter.JsonIterator;
-import com.jsoniter.any.Any;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import com.jsoniter.extra.Base64Support;
 import com.jsoniter.output.JsonStream;
-import com.jsoniter.spi.TypeLiteral;
-import com.jsoniter.ValueType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +69,7 @@ public class JS {
             V8.SetLogger(new com.baidu.openrasp.v8.Logger() {
                 @Override
                 public void log(String msg) {
-                    PLUGIN_LOGGER.info(msg);
+                    pluginLog(msg);
                 }
             });
             V8.SetStackGetter(new com.baidu.openrasp.v8.StackGetter() {
@@ -97,6 +98,17 @@ public class JS {
         }
     }
 
+    private static void pluginLog(String msg) {
+        AbstractRequest request = HookHandler.requestCache.get();
+        if (request != null) {
+            StringBuffer url = request.getRequestURL();
+            if (!StringUtils.isEmpty(url)) {
+                msg = url + " " + msg;
+            }
+        }
+        PLUGIN_LOGGER.info(msg);
+    }
+
     public synchronized static void Dispose() {
         if (watchId != null) {
             boolean oldValue = HookHandler.enableHook.getAndSet(false);
@@ -113,7 +125,8 @@ public class JS {
         out.write(0);
 
         Object hashData = null;
-        if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL || type == Type.SSRF) {
+        if (type == Type.DIRECTORY || type == Type.READFILE || type == Type.WRITEFILE || type == Type.SQL
+                || type == Type.SSRF) {
             byte[] paramData = out.getByteArray();
             if (!Config.getConfig().getLruCompareEnable()) {
                 hashData = ByteBuffer.wrap(paramData).hashCode();
@@ -127,8 +140,8 @@ public class JS {
 
         byte[] results = null;
         try {
-            results = V8.Check(type.getName(), out.getByteArray(), out.size(),
-                    new Context(checkParameter.getRequest()), (int) Config.getConfig().getPluginTimeout());
+            results = V8.Check(type.getName(), out.getByteArray(), out.size(), new Context(checkParameter.getRequest()),
+                    (int) Config.getConfig().getPluginTimeout());
         } catch (Exception e) {
             LogTool.error(ErrorType.PLUGIN_ERROR, e.getMessage(), e);
             return null;
@@ -142,23 +155,34 @@ public class JS {
         }
 
         try {
-            Any any = JsonIterator.deserialize(results);
-            if (any == null) {
-                return null;
-            }
+            JsonArray j = new JsonParser().parse(new String(results, "UTF-8")).getAsJsonArray();
             ArrayList<EventInfo> attackInfos = new ArrayList<EventInfo>();
-            for (Any rst : any.asList()) {
-                if (rst.toString("action").equals("exception")) {
-                    PLUGIN_LOGGER.info(rst.toString("message"));
+            for (JsonElement e : j) {
+                JsonObject obj = e.getAsJsonObject();
+                String action = obj.get("action").getAsString();
+                String message = obj.get("message").getAsString();
+                String name = obj.get("name").getAsString();
+                int confidence = obj.get("confidence").getAsInt();
+                String algorithm = "";
+                if (obj.get("algorithm") != null) {
+                    algorithm = obj.get("algorithm").getAsString();
+                }
+                Map<String, Object> params = null;
+                if (obj.get("params") != null) {
+                    params = new Gson().fromJson(obj.get("params"), new TypeToken<HashMap<String, Object>>() {
+                    }.getType());
+                }
+                obj.remove("action");
+                obj.remove("message");
+                obj.remove("name");
+                obj.remove("algorithm");
+                obj.remove("confidence");
+                obj.remove("params");
+                if (action.equals("exception")) {
+                    pluginLog(message);
                 } else {
-                    // TODO: js add default params
-                    Map<String, Object> params = null;
-                    if (rst.get("params").valueType() == ValueType.OBJECT) {
-                        params = rst.get("params").as(new TypeLiteral<Map<String, Object>>() {
-                        });
-                    }
-                    attackInfos.add(new AttackInfo(checkParameter, rst.toString("action"), rst.toString("message"),
-                            rst.toString("name"), rst.toString("algorithm"), rst.toInt("confidence"), params));
+                    attackInfos
+                            .add(new AttackInfo(checkParameter, action, message, name, confidence, algorithm, params, obj));
                 }
             }
             return attackInfos;
@@ -204,7 +228,8 @@ public class JS {
         boolean rst = V8.CreateSnapshot(pluginConfig, scripts.toArray(), BuildRASPModel.getRaspVersion());
         if (rst) {
             try {
-                String jsonString = V8.ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})", "get-algorithm-config.js");
+                String jsonString = V8.ExecuteScript("JSON.stringify(RASP.algorithmConfig || {})",
+                        "get-algorithm-config.js");
                 Config.getConfig().setConfig(ConfigItem.ALGORITHM_CONFIG, jsonString, true);
             } catch (Exception e) {
                 LogTool.error(ErrorType.PLUGIN_ERROR, e.getMessage(), e);

@@ -16,14 +16,13 @@
 
 package com.baidu.openrasp.dependency;
 
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.ProtectionDomain;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -41,7 +40,7 @@ import java.util.zip.ZipEntry;
  */
 public class DependencyFinder {
     public static final Logger LOGGER = Logger.getLogger(DependencyFinder.class.getPackage().getName() + ".log");
-    private static final int MAX_DEPENDENCES_CACHE = 4096;
+    private static final int MAX_DEPENDENCES_CACHE = 10000;
     private static final String DEPENDENCY_SOURCE_MANEFEST_IMPL = "manifest_implementation";
     private static final String DEPENDENCY_SOURCE_MANEFEST_SPEC = "manifest_specification";
     private static final String DEPENDENCY_SOURCE_MANEFEST_BUNDLE = "manifest_bundle";
@@ -53,7 +52,16 @@ public class DependencyFinder {
         if (domain != null && domain.getCodeSource() != null && domain.getCodeSource().getLocation() != null) {
             String path = domain.getCodeSource().getLocation().getFile();
             if (!StringUtils.isEmpty(path)) {
-                if (path.endsWith(".jar") && !(loadedJarPaths.size() >= MAX_DEPENDENCES_CACHE)) {
+                if ((path.endsWith(".jar")
+                        || path.endsWith(".jar!")
+                        || path.endsWith(".jar!/")
+                        || path.endsWith(".jar/")
+                        || path.endsWith(".jar!" + File.separator))
+                        && !(loadedJarPaths.size() >= MAX_DEPENDENCES_CACHE)) {
+                    if (!path.endsWith(".jar")) {
+                        int start = path.contains("/") ? path.indexOf("/") : path.indexOf("\\");
+                        path = path.substring(start, path.lastIndexOf(".jar") + 4);
+                    }
                     loadedJarPaths.add(path);
                 }
             }
@@ -63,9 +71,21 @@ public class DependencyFinder {
     public static HashSet<Dependency> getDependencySet() {
         HashSet<Dependency> dependencySet = new HashSet<Dependency>();
         for (String path : loadedJarPaths) {
+            String realPath = path;
+            String subPath = null;
+            int step = 6;
+            int i = path.indexOf(".jar!");
+            if (i < 0) {
+                step = 5;
+                i = path.indexOf(".jar/");
+            }
+            if (i > 0) {
+                realPath = path.substring(0, i + 4);
+                subPath = path.substring(i + step, path.length());
+            }
             JarFile jarFile;
             try {
-                jarFile = new JarFile(path);
+                jarFile = new JarFile(realPath);
             } catch (IOException e) {
                 if (e instanceof FileNotFoundException) {
                     loadedJarPaths.remove(path);
@@ -76,11 +96,12 @@ public class DependencyFinder {
                 continue;
             }
             try {
-                Dependency dependency = loadDependencyFromPOM(jarFile, path);
+                Dependency dependency = loadDependencyFromJarFile(jarFile, path);
                 if (dependency != null) {
                     dependencySet.add(dependency);
-                } else {
-                    dependency = loadDependencyFromManifest(jarFile, path);
+                }
+                if (subPath != null) {
+                    dependency = loadDependencyFromJar(jarFile, path, subPath);
                     if (dependency != null) {
                         dependencySet.add(dependency);
                     }
@@ -98,6 +119,41 @@ public class DependencyFinder {
         }
 
         return dependencySet;
+    }
+
+    private static Dependency loadDependencyFromJarFile(JarFile jarFile, String path) throws Exception {
+        Dependency dependency = loadDependencyFromPOM(jarFile, path);
+        if (dependency != null) {
+            return dependency;
+        } else {
+            dependency = loadDependencyFromManifest(jarFile, path);
+            if (dependency != null) {
+                return dependency;
+            }
+        }
+        return null;
+    }
+
+    private static Dependency loadDependencyFromJar(JarFile jarFile, String path, String subPath) throws Exception {
+        InputStream in = jarFile.getInputStream(jarFile.getEntry(subPath));
+        File outFile = new File(Config.getConfig().getBaseDirectory() + File.separator + "tmp");
+        OutputStream out = new FileOutputStream(outFile);
+        byte[] buffer = new byte[1024];
+        int i;
+        while ((i = in.read(buffer)) != -1) {
+            out.write(buffer, 0, i);
+        }
+        out.flush();
+        try {
+            out.close();
+            in.close();
+        } catch (Throwable t) {
+            // ignore
+        }
+        JarFile file = new JarFile(outFile);
+        Dependency dependency = loadDependencyFromJarFile(file, path);
+        file.close();
+        return dependency;
     }
 
     private static Dependency loadDependencyFromPOM(JarFile jarFile, String path) throws Exception {

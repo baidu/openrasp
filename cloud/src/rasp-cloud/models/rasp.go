@@ -25,6 +25,7 @@ import (
 	"github.com/astaxie/beego/httplib"
 	"strings"
 	"fmt"
+	"github.com/astaxie/beego"
 )
 
 type Rasp struct {
@@ -50,6 +51,7 @@ type Rasp struct {
 	RegisterTime      int64             `json:"register_time" bson:"register_time,omitempty"`
 	Environ           map[string]string `json:"environ" bson:"environ,omitempty"`
 	Description       string            `json:"description" bson:"description,omitempty"`
+	HostNameList      []string          `json:"hostname_list" bson:"hostname_list,omitempty"`
 }
 
 type RecordCount struct {
@@ -59,6 +61,10 @@ type RecordCount struct {
 
 const (
 	raspCollectionName = "rasp"
+)
+
+var (
+	HasOfflineHosts   map[string]float64
 )
 
 func init() {
@@ -132,6 +138,9 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 				},
 			},
 			{
+				"_id": realHostname,
+			},
+			{
 				"version": bson.M{
 					"$regex":   realHostname,
 					"$options": "$i",
@@ -151,6 +160,14 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 			},
 		}
 		delete(bsonModel, "hostname")
+	}
+	if bsonModel["hostname_list"] != nil {
+		delete(bsonModel, "hostname")
+		realHostnameList := selector.HostNameList
+		bsonModel["hostname"] = bson.M{
+			"$in":   realHostnameList,
+		}
+		delete(bsonModel, "hostname_list")
 	}
 	if selector.Online != nil {
 		delete(bsonModel, "online")
@@ -351,4 +368,17 @@ func RegisterCallback(url string, token string, rasp *Rasp) error {
 		return errors.New("the message of response body is not ok: " + resBody.Msg)
 	}
 	return nil
+}
+
+func CleanOfflineHosts() {
+	for appId, interval := range HasOfflineHosts {
+		selector := map[string]interface{}{
+			"expire_time": interval * 24 * 3600,
+		}
+		removedCount, err := RemoveRaspBySelector(selector, appId)
+		if err != nil {
+			beego.Error("clear offline err:", err)
+		}
+		beego.Info("remove rasps for app:", appId, " remove counts:", removedCount)
+	}
 }

@@ -24,7 +24,6 @@ namespace openrasp
 {
 
 void builtin_alarm_info(openrasp::JsonReader &base_json);
-void builtin_policy_info(openrasp::JsonReader &base_json, const std::string &hash_key);
 void builtin_policy_info(openrasp::JsonReader &base_json, ulong hash = 0);
 CheckResult get_builtin_check_result(OpenRASPCheckType check_type);
 

@@ -13,13 +13,13 @@
           <div v-if="key == 'sql_userinput'">
             <label class="custom-switch m-0">
               <input type="checkbox" v-model="data.pre_enable" class="custom-switch-input">
-              <span class="custom-switch-indicator" @click="data.pre_enable = !data.pre_enable"></span>
+              <span class="custom-switch-indicator"></span>
               <span class="custom-switch-description">开启关键词过滤: 有漏洞但是没有攻击时不报警</span>              
             </label>
 
             <label class="custom-switch m-0">
               <input type="checkbox" v-model="data.allow_full" class="custom-switch-input">
-              <span class="custom-switch-indicator" @click="data.allow_full = !data.allow_full"></span>
+              <span class="custom-switch-indicator"></span>
               <span class="custom-switch-description">允许数据库查询: 通过接口传递完整SQL语句并执行</span>              
             </label>
           </div>
@@ -28,7 +28,7 @@
             <div v-for="row in sql_policy_keys" :key="row.key">
               <label class="custom-switch m-0">
                 <input type="checkbox" v-model="data.feature[row.key]" class="custom-switch-input">
-                <span class="custom-switch-indicator" @click="data.feature[row.key] = !data.feature[row.key]"></span>
+                <span class="custom-switch-indicator"></span>
                 <span class="custom-switch-description">{{row.descr}}</span>              
               </label>
               <br>
@@ -39,7 +39,7 @@
             <div v-for="row in command_error_keys" :key="row.key">
               <label class="custom-switch m-0">
                 <input type="checkbox" v-model="data[row.key]" class="custom-switch-input">
-                <span class="custom-switch-indicator" @click="data[row.key] = !data[row.key]"></span>
+                <span class="custom-switch-indicator"></span>
                 <span class="custom-switch-description">{{row.descr}}</span>              
               </label>
               <br>
@@ -86,21 +86,21 @@
           <div v-if="key == 'response_dataLeak'">
             <label class="custom-switch m-0">
               <input type="checkbox" v-model="data.kind.phone" class="custom-switch-input">
-              <span class="custom-switch-indicator" @click="data.kind.phone = !data.kind.phone"></span>
+              <span class="custom-switch-indicator"></span>
               <span class="custom-switch-description">检测手机号泄露</span>              
             </label>
             <br/>
 
             <label class="custom-switch m-0">
               <input type="checkbox" v-model="data.kind.identity_card" class="custom-switch-input">
-              <span class="custom-switch-indicator" @click="data.kind.identity_card = !data.kind.identity_card"></span>
+              <span class="custom-switch-indicator"></span>
               <span class="custom-switch-description">检测身份证泄露</span>              
             </label>
             <br/>
 
             <label class="custom-switch m-0">
               <input type="checkbox" v-model="data.kind.bank_card" class="custom-switch-input">
-              <span class="custom-switch-indicator" @click="data.kind.bank_card = !data.kind.bank_card"></span>
+              <span class="custom-switch-indicator"></span>
               <span class="custom-switch-description">检测银行卡、信用卡泄露</span>              
             </label>
           </div>

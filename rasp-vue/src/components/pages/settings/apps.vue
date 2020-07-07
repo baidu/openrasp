@@ -59,6 +59,9 @@
           <button class="btn btn-primary" @click="editApp({language: 'java'})">
             添加
           </button>
+          <a class="btn btn-primary pull-right" href="v1/api/app/export" style="margin-left: auto" target="_blank">
+            导出
+          </a>
         </div>
       </div>
     </div>
@@ -93,6 +96,10 @@ export default {
     }
   },
   mounted: function() {
+    this.current_app.id = this.$route.params.app_id;
+    if (!this.current_app.id) {
+      return
+    }
     this.loadApps(1);
   },
   methods: {

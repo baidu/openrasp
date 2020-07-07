@@ -361,6 +361,7 @@ bool RaspLoggerEntry::openrasp_log_stream_available(log_appender appender_int)
                     tv.tv_usec = OPENRASP_CONFIG(syslog.read_timeout) * 1000;
                     php_stream_set_option(stream, PHP_STREAM_OPTION_READ_TIMEOUT, 0, &tv);
                     syslog_stream = stream;
+                    efree(res);
                     return true;
                 }
                 else
@@ -504,6 +505,14 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
         std::string time_RFC3339 = format_time(RaspLoggerEntry::rasp_rfc3339_format,
                                                strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(nullptr));
         complete_log.append(time_RFC3339 + " ");
+        if (in_request)
+        {
+            complete_log.append(OPENRASP_G(request).url.get_request_scheme())
+                .append("://")
+                .append(OPENRASP_G(request).url.get_real_host())
+                .append(OPENRASP_G(request).url.get_path())
+                .append(" ");
+        }
     }
     complete_log.append(message);
     if (separate)
@@ -520,6 +529,7 @@ bool RaspLoggerEntry::log(severity_level level_int, const char *message, int mes
 
 bool RaspLoggerEntry::log(severity_level level_int, openrasp::JsonReader &base_json)
 {
+    openrasp::JsonReader j;
     bool in_request = OPENRASP_LOG_G(in_request_process);
     if (!in_request) //out of request
     {
@@ -528,48 +538,49 @@ bool RaspLoggerEntry::log(severity_level level_int, openrasp::JsonReader &base_j
     bool log_result = false;
     if (openrasp_ini.app_id)
     {
-        base_json.write_string({"app_id"}, openrasp_ini.app_id);
+        j.write_string({"app_id"}, openrasp_ini.app_id);
     }
-    base_json.write_string({"server_hostname"}, openrasp::get_hostname());
-    base_json.write_string({"server_type"}, "php");
-    base_json.write_string({"server_version"}, get_phpversion());
-    base_json.write_string({"rasp_id"}, openrasp::scm->get_rasp_id());
-    base_json.write_map_to_array({"server_nic"}, "name", "ip", _if_addr_map);
+    j.write_string({"server_hostname"}, openrasp::get_hostname());
+    j.write_string({"server_type"}, "php");
+    j.write_string({"server_version"}, get_phpversion());
+    j.write_string({"rasp_id"}, openrasp::scm->get_rasp_id());
+    j.write_map_to_array({"server_nic"}, "name", "ip", _if_addr_map);
     std::string event_time = format_time(RaspLoggerEntry::rasp_rfc3339_format,
                                          strlen(RaspLoggerEntry::rasp_rfc3339_format), (long)time(NULL));
-    base_json.write_string({"event_time"}, event_time);
+    j.write_string({"event_time"}, event_time);
     std::vector<std::string> source_code_vec;
     if (OPENRASP_CONFIG(decompile.enable))
     {
         source_code_vec = format_source_code_arr();
     }
-    base_json.write_vector({"source_code"}, source_code_vec);
+    j.write_vector({"source_code"}, source_code_vec);
     if (strcmp(name, RaspLoggerEntry::ALARM_LOG_DIR_NAME) == 0 &&
         (appender & appender_mask))
     {
-        base_json.write_string({"event_type"}, "attack");
-        base_json.write_string({"request_id"}, OPENRASP_G(request).get_id());
-        base_json.write_string({"request_method"}, OPENRASP_G(request).get_method());
-        base_json.write_string({"target"}, OPENRASP_G(request).url.get_server_name());
-        base_json.write_string({"server_ip"}, OPENRASP_G(request).url.get_server_addr());
-        base_json.write_string({"path"}, OPENRASP_G(request).url.get_path());
-        base_json.write_string({"url"}, OPENRASP_G(request).url.get_complete_url());
-        base_json.write_string({"attack_source"}, OPENRASP_G(request).get_remote_addr());
-        base_json.write_map({"header"}, OPENRASP_G(request).get_header());
+        j.write_string({"event_type"}, "attack");
+        j.write_string({"request_id"}, OPENRASP_G(request).get_id());
+        j.write_string({"request_method"}, OPENRASP_G(request).get_method());
+        j.write_string({"target"}, OPENRASP_G(request).url.get_server_name());
+        j.write_string({"server_ip"}, OPENRASP_G(request).url.get_server_addr());
+        j.write_string({"path"}, OPENRASP_G(request).url.get_path());
+        j.write_string({"url"}, OPENRASP_G(request).url.get_complete_url());
+        j.write_string({"attack_source"}, OPENRASP_G(request).get_remote_addr());
+        j.write_map({"header"}, OPENRASP_G(request).get_header());
         std::string clientip_header = OPENRASP_CONFIG(clientip.header);
         std::transform(clientip_header.begin(), clientip_header.end(), clientip_header.begin(), ::tolower);
-        base_json.write_string({"client_ip"}, OPENRASP_G(request).get_header(clientip_header));
-        base_json.write_string({"body"}, OPENRASP_G(request).get_parameter().get_body());
-        base_json.write_string({"parameter", "form"}, OPENRASP_G(request).get_parameter().get_form_str());
-        base_json.write_string({"parameter", "json"}, OPENRASP_G(request).get_parameter().get_json_str());
-        base_json.write_string({"parameter", "multipart"}, OPENRASP_G(request).get_parameter().get_multipart_str());
+        j.write_string({"client_ip"}, OPENRASP_G(request).get_header(clientip_header));
+        j.write_string({"body"}, OPENRASP_G(request).get_parameter().get_body());
+        j.write_string({"parameter", "form"}, OPENRASP_G(request).get_parameter().get_form_str());
+        j.write_string({"parameter", "json"}, OPENRASP_G(request).get_parameter().get_json_str());
+        j.write_string({"parameter", "multipart"}, OPENRASP_G(request).get_parameter().get_multipart_str());
     }
     else if (strcmp(name, RaspLoggerEntry::POLICY_LOG_DIR_NAME) == 0 &&
              (appender & appender_mask))
     {
-        base_json.write_string({"event_type"}, "security_policy");
+        j.write_string({"event_type"}, "security_policy");
     }
-    std::string str_message = base_json.dump();
+    j.update(base_json);
+    std::string str_message = j.dump();
     str_message.push_back('\n');
     log_result = raw_log(level_int, str_message.c_str(), str_message.length());
     if (!in_request) //out of request

@@ -66,6 +66,14 @@ type App struct {
 	KafkaConf           *kafka.Kafka           `json:"kafka_alarm_conf" bson:"kafka_alarm_conf"`
 }
 
+type ExportAPP struct {
+	Id               string                 `json:"id" bson:"_id"`
+	Name             string                 `json:"name"  bson:"name"`
+	Language         string                 `json:"language"  bson:"language"`
+	Secret           string                 `json:"secret"  bson:"secret"`
+	Description      string                 `json:"description"  bson:"description"`
+}
+
 type WhitelistConfigItem struct {
 	Url  string          `json:"url" bson:"url"`
 	Hook map[string]bool `json:"hook" bson:"hook"`
@@ -173,6 +181,7 @@ var (
 		"response.sampler_interval": 60,
 		"response.sampler_burst":    5,
 		"dependency_check.interval": 12 * 3600,
+		"offline_hosts.cleanup.interval": 0,
 	}
 	AlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
 	MinAlarmCheckInterval = conf.AppConfig.AlarmCheckInterval
@@ -213,6 +222,7 @@ func init() {
 	}
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 		initApp()
+		TaskCleanUpHosts()
 	}
 }
 
@@ -221,6 +231,9 @@ func initApp() error {
 	_, err := mongo.FindAllWithoutLimit(appCollectionName, nil, &apps)
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get all app", err)
+	}
+	if HasOfflineHosts == nil {
+		HasOfflineHosts = make(map[string]float64)
 	}
 	for _, app := range apps {
 		err := createEsIndexWithAppId(app.Id)
@@ -237,8 +250,27 @@ func initApp() error {
 				beego.Warn(tools.ErrCodeInitDefaultAppFailed, "failed to init iast.js for app ["+app.Name+"]", err)
 			}
 		}
+		if len(app.GeneralConfig) < len(DefaultGeneralConfig) {
+			err = initAppDefaultConfig(app)
+		}
+		if dayInterval, ok := app.GeneralConfig["offline_hosts.cleanup.interval"].(float64); ok && dayInterval > 0 {
+			HasOfflineHosts[app.Id] = dayInterval
+		}
 	}
 	return nil
+}
+
+func initAppDefaultConfig(app *App) error {
+	var err error
+	beego.Info("Detected new app config for this app:" + app.Name)
+	// 新增默认配置，在这里初始化。省去刷库的步骤（只初始化简单类型）
+	for key, value := range DefaultGeneralConfig {
+		if key != "inject.custom_headers" && app.GeneralConfig[key] == nil {
+			app.GeneralConfig[key] = value
+			err = mongo.UpsertId(appCollectionName, app.Id, app)
+		}
+	}
+	return err
 }
 
 func initPlugin(app *App, pluginName string) error {
@@ -339,7 +371,7 @@ func HandleAttackAlarm() {
 			}
 			for k, v := range attackConf {
 				query := map[string]interface{}{"attack_type": v}
-				total, result, err := logs.SearchLogs(lastAlarmTime, now, false, query, "event_time",
+				total, result, err := logs.SearchLogs(lastAlarmTime, now, false, query, "@timestamp",
 					1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 				if err != nil {
 					beego.Error("failed to get alarm from es for alarm type " + k + ": " + err.Error())
@@ -350,7 +382,7 @@ func HandleAttackAlarm() {
 				}
 			}
 		} else {
-			total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "event_time",
+			total, result, err := logs.SearchLogs(lastAlarmTime, now, false, nil, "@timestamp",
 				1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 			if err != nil {
 				beego.Error("failed to get alarm from es: " + err.Error())
@@ -463,6 +495,21 @@ func GetAppById(id string) (app *App, err error) {
 	err = mongo.FindId(appCollectionName, id, &app)
 	if err == nil && app != nil {
 		HandleApp(app, false)
+	}
+	return
+}
+
+func GetAppByName(name string, page int, perpage int) (count int, result []*App, err error) {
+	// 支持模糊查询
+	selector :=  bson.M{"name": bson.M{
+		"$regex":   name,
+		"$options": "$i",
+	}}
+	count, err = mongo.FindAll(appCollectionName, selector, &result, perpage*(page-1), perpage)
+	if err == nil && result != nil {
+		for _, app := range result {
+			HandleApp(app, false)
+		}
 	}
 	return
 }
@@ -1019,4 +1066,12 @@ func PushKafkaAttackAlarm(app *App, alarms []map[string]interface{}, isTest bool
 	beego.Debug("succeed in pushing kafka alarm for app: " + app.Name + " ,with urls: " +
 		fmt.Sprintf("%v", addrs))
 	return nil
+}
+
+func GetAllExportApp() (apps []*ExportAPP, err error){
+	_, err = mongo.FindAllWithoutLimit(appCollectionName, nil, &apps)
+	if err != nil {
+		return nil, err
+	}
+	return
 }

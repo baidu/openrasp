@@ -29,7 +29,7 @@
               <div class="dropdown-divider" />
               <router-link :class="{'dropdown-item': true, 'active': false}" :to="{name: 'settings', params: {setting_tab: 'app'}}">
                 <i class="dropdown-icon fe fe-settings" />
-                应用管理 ({{ app_list.length }})
+                应用管理 ({{ total }})
               </router-link>
             </div>
           </div>
@@ -193,16 +193,28 @@ export default {
       keyword: '',
       no_plugin: false,
       all_log: false,
-      is_default_password: false
+      is_default_password: false,
+      apps: [],
+      total: 0,
+      loading: false
     }
   },
   computed: {
-    ...mapGetters(['current_app', 'app_list', 'sticky']),
+    ...mapGetters(['current_app', 'app_list', 'app_count', 'sticky']),
     app_list_filtered: function() {
       var keyword = this.keyword.toLowerCase()
-      return this.app_list.filter(function(app) {
-        return app.name.toLowerCase().indexOf(keyword) != -1
-      })
+      if (keyword === "") {
+          this.total = this.app_count
+      }
+      if (this.apps.length > 0) {
+        return this.apps.filter(function(app) {
+          return app.name.toLowerCase().indexOf(keyword) != -1
+        })
+      } else {
+        return this.app_list.filter(function(app) {
+          return app.name.toLowerCase().indexOf(keyword) != -1
+        })
+      }
     }
   },
   watch: {
@@ -221,12 +233,35 @@ export default {
           app_id: app.id
         }
       })
-    }
+    },
+    keyword: {
+      handler: function() {
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(() => {
+          this.loadApps(this.keyword)
+        }, 100);
+      },
+      deep: true
+    },
   },
   methods: {
     ...mapActions(['loadAppList']),
     ...mapMutations(['setCurrentApp']),
     ...mapMutations(['setSticky']),
+    loadApps(name) {
+      this.loading = true;
+      return this.request
+          .post("v1/api/app/get", {
+            name: name,
+            page: 1,
+            perpage: 50
+          })
+          .then(res => {
+            this.apps = res.data;
+            this.total = res.total;
+            this.loading = false;
+          });
+    },
     showAddHostModal() {
       this.$refs.addHost.showModal()
     },

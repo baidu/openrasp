@@ -156,6 +156,9 @@ func CreateEsIndex(index string, alias string, template string) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
 	exists, err := ElasticClient.IndexExists(index).Do(ctx)
+	if exists {
+		return nil
+	}
 	if err != nil {
 		return err
 	}

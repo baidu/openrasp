@@ -75,11 +75,11 @@ bool fetch_name_in_request(zval *item, std::string &name, std::string &type)
         auto found = OPENRASP_HOOK_G(zend_ref_items).find(reinterpret_cast<uintptr_t>(Z_COUNTED_P(item)));
         if (found != OPENRASP_HOOK_G(zend_ref_items).end())
         {
-            static std::unordered_map<int, std::string>  id_names = 
-            {
-                {TRACK_VARS_POST, "_POST"},
-                {TRACK_VARS_GET, "_GET"},
-                {TRACK_VARS_COOKIE, "_COOKIE"}};
+            static std::unordered_map<int, std::string> id_names =
+                {
+                    {TRACK_VARS_POST, "_POST"},
+                    {TRACK_VARS_GET, "_GET"},
+                    {TRACK_VARS_COOKIE, "_COOKIE"}};
             name = found->second.get_name();
             int id = found->second.get_id();
             auto id_found = id_names.find(id);
@@ -271,14 +271,18 @@ void block_handle()
     {
         OpenRASPContentType::ContentType k_type = OpenRASPContentType::ContentType::cNull;
         std::string existing_content_type;
-        for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
+        zend_llist *headers = &SG(sapi_headers).headers;
+        if (nullptr != headers && zend_llist_count(headers) > 0)
         {
-            sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
-            if (sapi_header->header_len > 0 &&
-                strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0)
+            for (zend_llist_element *element = headers->head; nullptr != element; element = element->next)
             {
-                existing_content_type = std::string(sapi_header->header);
-                break;
+                sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
+                if (nullptr != sapi_header && sapi_header->header_len > 0 &&
+                    strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0)
+                {
+                    existing_content_type = std::string(sapi_header->header);
+                    break;
+                }
             }
         }
         k_type = OpenRASPContentType::classify_content_type(existing_content_type);
@@ -406,13 +410,14 @@ PHP_RINIT_FUNCTION(openrasp_hook)
 PHP_RSHUTDOWN_FUNCTION(openrasp_hook)
 {
     OPENRASP_HOOK_G(zend_ref_items).clear();
+    return SUCCESS;
 }
 
 void update_zend_ref_items()
 {
     static const track_vars_pair pairs[] = {{TRACK_VARS_POST, "_POST"},
-                                        {TRACK_VARS_GET, "_GET"},
-                                        {TRACK_VARS_COOKIE, "_COOKIE"}};
+                                            {TRACK_VARS_GET, "_GET"},
+                                            {TRACK_VARS_COOKIE, "_COOKIE"}};
     int size = sizeof(pairs) / sizeof(pairs[0]);
     for (int index = 0; index < size; ++index)
     {

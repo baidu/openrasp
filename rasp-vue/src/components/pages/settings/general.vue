@@ -79,6 +79,12 @@
         </div>
         <div class="form-group">
           <label class="form-label">
+            自动清理离线超过N天的主机 [0表示关闭，1以上的值表示开启；每天零点执行清理任务]
+          </label>
+          <input v-model.number="data['offline_hosts.cleanup.interval']" type="number" min="0" class="form-control" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">
             LRU 大小 [默认1000，若要关闭写 0]
           </label>
           <input v-model.number="data['lru.max_size']" type="number" min="0" class="form-control" placeholder="1000">
@@ -293,6 +299,11 @@ export default {
       if (this.data['response.sampler_interval'] < this.sampler_interval.min_period &&
           this.data['response.sampler_interval'] > this.sampler_interval.close) {
           alert('采样周期最低60s')
+          return
+      }
+
+      if (this.data['offline_hosts.cleanup.interval'] < 0) {
+          alert('离线主机清理时间必须大于0')
           return
       }
 

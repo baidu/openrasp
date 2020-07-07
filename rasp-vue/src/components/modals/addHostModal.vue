@@ -96,20 +96,24 @@ openrasp.heartbeat_interval=90</pre>
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
     && /jdk/bin/java -jar rasp-*/RaspInstall.jar -install /tomcat/ -heartbeat 90 -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} \
-    && rm -rf rasp-*</pre>
+    && rm -rf rasp-*
+# 对于Alpine Linux容器，需要安装系统依赖
+# RUN apk add --no-cache libcurl libstdc++</pre>
                 <h4>Java SpringBoot 容器示例</h4>
                 <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz /tmp
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
     && mv rasp-*/rasp/ /rasp/ \
     && rm -f rasp-java.tar.gz
+# 对于Alpine Linux容器，需要安装系统依赖
+# RUN apk add --no-cache libcurl libstdc++
 
 RUN echo "cloud.enable: true" >> /rasp/conf/openrasp.yml \
     && echo "cloud.backend_url: {{ agent_urls[agent_url_id] }}" >> /rasp/conf/openrasp.yml \
     && echo "cloud.app_id: {{ current_app.id }}" >> /rasp/conf/openrasp.yml \
     && echo "cloud.app_secret: {{ current_app.secret }}" >> /rasp/conf/openrasp.yml
 
-RUN java -javaagent:"/rasp/rasp.jar" -jar /springboot.jar</pre>
+CMD java -javaagent:"/rasp/rasp.jar" -jar /springboot.jar</pre>
 
                 <h4>PHP 容器示例</h4>
                 <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-php-linux.tar.bz2 /tmp/

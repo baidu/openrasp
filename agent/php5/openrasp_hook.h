@@ -24,6 +24,7 @@
 #include "openrasp_check_type.h"
 #include "utils/string.h"
 #include "model/zend_ref_item.h"
+#include "utils/double_array_trie.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -273,7 +274,7 @@ typedef void (*php_function)(INTERNAL_FUNCTION_PARAMETERS);
     POST_HOOK_FUNCTION_PRIORITY(name, type, PriorityType::pNormal)
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_hook)
-int check_type_white_bit_mask;
+openrasp::dat_value check_type_white_bit_mask;
 openrasp::LRU<std::string, bool> lru;
 long origin_pg_error_verbos;
 std::unordered_set<std::string> callable_blacklist;
@@ -308,7 +309,6 @@ bool fetch_name_in_request(zval *item, std::string &name, std::string &type);
 std::string openrasp_real_path(const char *filename, int filename_len, bool use_include_path, uint32_t w_op);
 
 OpenRASPActionType string_to_action(std::string action_string);
-std::string action_to_string(OpenRASPActionType type);
 void plugin_ssrf_check(zval *file, const std::string &funtion_name TSRMLS_DC);
 
 #endif

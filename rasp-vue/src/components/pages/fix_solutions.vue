@@ -21,8 +21,8 @@
         </div>
 
         <div v-if="data.attack_type == 'writeFile'">
-            暂无
-        </div>          
+            对要删除的文件名称进行过滤，比如限制目录等等，以避免对系统造成破坏。
+        </div>         
 
         <div v-if="data.attack_type == 'include'">
             请检查要包含的文件是否正常，否则表示服务器上存在文件包含漏洞。

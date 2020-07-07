@@ -122,7 +122,7 @@
                   </a>
                 </td>
 
-                <td nowrap>
+                <td>
                   <div v-if="row.attack_source">
                     <a target="_blank" :href="'https://www.virustotal.com/#/ip-address/' + (row.client_ip ? row.client_ip : row.attack_source)">
                       {{ row.client_ip ? row.client_ip : row.attack_source }}                  
@@ -139,7 +139,7 @@
                     {{ attack_type2name(row.attack_type) }}
                   </span>
                 </td>
-                <td>
+                <td style="word-break: break-all">
                   {{ row.plugin_message }}
                 </td>
                 <td nowrap>
