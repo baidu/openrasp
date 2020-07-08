@@ -113,6 +113,7 @@ RUN echo "cloud.enable: true" >> /rasp/conf/openrasp.yml \
     && echo "cloud.app_id: {{ current_app.id }}" >> /rasp/conf/openrasp.yml \
     && echo "cloud.app_secret: {{ current_app.secret }}" >> /rasp/conf/openrasp.yml
 
+# 对于 JDK9，需要额外增加 --add-opens java.base/jdk.internal.loader=ALL-UNNAMED 参数
 CMD java -javaagent:"/rasp/rasp.jar" -jar /springboot.jar</pre>
 
                 <h4>PHP 容器示例</h4>
