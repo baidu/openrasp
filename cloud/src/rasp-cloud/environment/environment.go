@@ -42,9 +42,9 @@ type PIDFile struct {
 var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
-	Version             = "1.3.3"
+	Version             = "1.3.4"
 	LogPath             = beego.AppConfig.DefaultString("LogPath", "/home/openrasp/logs")
-	LogApiPath			= LogPath + "/api"
+	LogApiPath          = LogPath + "/api"
 	PidFileName         = LogPath + "/pid.file"
 	OldPid              = ""
 	Status              string
@@ -322,7 +322,7 @@ func initLogger() {
 	if isExists, _ := tools.PathExists(LogApiPath); !isExists {
 		err := os.MkdirAll(LogPath, os.ModePerm)
 		if err != nil {
-			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create " + LogApiPath + " dir", err)
+			tools.Panic(tools.ErrCodeLogInitFailed, "failed to create "+LogApiPath+" dir", err)
 		}
 	}
 	logs.SetLogFuncCall(true)
