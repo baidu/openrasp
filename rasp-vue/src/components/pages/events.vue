@@ -156,7 +156,7 @@
                   </a>
                 </td>
 
-                <td nowrap>
+                <td>
                   <a target="_blank" :href="'https://www.virustotal.com/#/ip-address/' + (row.client_ip ? row.client_ip : row.attack_source)">
                     {{ row.client_ip ? row.client_ip : (row.attack_source ? row.attack_source : '-') }}
                   </a>
