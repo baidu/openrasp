@@ -1,4 +1,4 @@
-const plugin_version = '2020-0630-1100'
+const plugin_version = '2020-0708-1700'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -659,7 +659,7 @@ var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat)$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/
 
 // 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4) 和 传入 column_name, column_pass -> select column_name, column_pass from xxx
-var commaSeparatedRegex   = /^(([a-zA-Z_]\w*|[0-9]+) *, *)+([a-zA-Z_]\w*|[0-9]+)$/
+var commaSeparatedRegex   = /^(([a-zA-Z_]\w*|[0-9+\-x\.]+) *, *)+([a-zA-Z_]\w*|[0-9+\-x\.]+)$/
 
 // 匹配内网地址
 var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
