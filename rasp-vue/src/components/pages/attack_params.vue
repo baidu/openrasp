@@ -163,12 +163,12 @@
                 <div class="h6">
                     文件存储位置
                 </div>
-                <pre>{{ data.attack_params.dest_path }}</pre>
+                <p>{{ data.attack_params.dest_path }}</p>
 
                 <div class="h6">
                     文件存储位置（真实路径）
                 </div>
-                <pre>{{ data.attack_params.dest_realpath }}</pre>
+                <p>{{ data.attack_params.dest_realpath }}</p>
             </template>
             
             <div class="h6">
