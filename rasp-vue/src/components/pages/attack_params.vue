@@ -158,11 +158,25 @@
             <p>
                 {{ data.attack_params.filename }}
             </p>
+
+            <template v-if="data.attack_params.dest_path">
+                <div class="h6">
+                    文件存储位置
+                </div>
+                <pre>{{ data.attack_params.dest_path }}</pre>
+
+                <div class="h6">
+                    文件存储位置（真实路径）
+                </div>
+                <pre>{{ data.attack_params.dest_realpath }}</pre>
+            </template>
             
             <div class="h6">
                 上传的文件内容 - 前4KB
             </div>
             <pre>{{ data.attack_params.content }}</pre>
+
+            
         </div>
 
         <div v-if="data.attack_type == 'rename'">
