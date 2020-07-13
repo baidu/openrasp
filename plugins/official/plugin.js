@@ -667,9 +667,6 @@ var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
 // ssrf白名单主机名
 var whiteHostName   = /\.bcebos\.com$|(^|\.)oss-[\d\w\-]{0,30}\.aliyuncs\.com$/
 
-// ssrf白名单堆栈
-var whiteRemoteStack = ["com.alibaba.dubbo"]
-
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
@@ -1395,23 +1392,9 @@ function check_ssrf(params, context, is_redirect) {
     {
         var ret
         ret = check_internal(params, context, is_redirect)
-        if (ret) {
-            var stack = params.stack
-            var white_stack = false
-            for (var i=0; i < stack.length; i++) {
-                for (var j=0; j < whiteRemoteStack.length; j++) {
-                    if (stack[i].startsWith(whiteRemoteStack[j])) {
-                        white_stack = true
-                        break
-                    }
-                }
-                if (white_stack) {
-                    break
-                }
-            }
-            if (!white_stack) {
-                return ret
-            }
+        // 过滤非HTTP请求（dubbo）
+        if (ret && Object.keys(context.header).length === 0) {
+            return ret
         }
     }
 
