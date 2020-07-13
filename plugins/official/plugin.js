@@ -1,4 +1,4 @@
-const plugin_version = '2020-0708-1700'
+const plugin_version = '2020-0713-1300'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2151,7 +2151,7 @@ plugin.register('writeFile', function (params, context) {
     }
 
     if (algorithmConfig.writeFile_reflect.action != 'ignore') {
-        if (context.server.language == 'java') {
+        if (context.server.language == 'java' && params.realpath.endsWith(".jsp")) {
             var message = validate_stack_java(params.stack)
             if (message) {
                 return {
