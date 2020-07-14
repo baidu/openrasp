@@ -1,4 +1,4 @@
-const plugin_version = '2020-0708-1700'
+const plugin_version = '2020-0713-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1363,6 +1363,24 @@ function check_internal_hostname(hostname, origin_hostname) {
     }
 }
 
+function check_internal(params, context, is_redirect) {
+    var ret
+    var all_parameter = get_all_parameter(context)
+    if (is_redirect) {
+        ret = check_internal_ip(params.ip, params.origin_ip)
+        if (ret && !whiteHostName.test(params.hostname)) {return ret}
+        ret = check_internal_hostname(params.hostname, params.origin_hostname)
+        if (ret) {return ret}
+    }
+    else if (is_from_userinput(all_parameter, params.url)) {
+        // 非重定向，判定用户输入
+        ret = check_internal_ip(params.ip, undefined)
+        if (ret && !whiteHostName.test(params.hostname)) {return ret}
+        ret = check_internal_hostname(params.hostname, undefined)
+        if (ret) {return ret}
+    }
+}
+
 function check_ssrf(params, context, is_redirect) {
     var hostname  = params.hostname
     var url       = params.url
@@ -1373,19 +1391,10 @@ function check_ssrf(params, context, is_redirect) {
     if (algorithmConfig.ssrf_userinput.action != 'ignore')
     {
         var ret
-        var all_parameter = get_all_parameter(context)
-        if (is_redirect) {
-            ret = check_internal_ip(ip, params.origin_ip)
-            if (ret && !whiteHostName.test(hostname)) {return ret}
-            ret = check_internal_hostname(hostname, params.origin_hostname)
-            if (ret) {return ret}
-        }
-        else if (is_from_userinput(all_parameter, url)) {
-            // 非重定向，判定用户输入
-            ret = check_internal_ip(ip, undefined)
-            if (ret && !whiteHostName.test(hostname)) {return ret}
-            ret = check_internal_hostname(hostname, undefined)
-            if (ret) {return ret}
+        ret = check_internal(params, context, is_redirect)
+        // 过滤非HTTP请求（dubbo）
+        if (ret && Object.keys(context.header).length === 0) {
+            return ret
         }
     }
 
@@ -1825,7 +1834,8 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
             hostname: params.hostname2,
             ip: params.ip2,
             port: params.port2,
-            function: params.function
+            function: params.function,
+            stack: params.stack
         }
         var ret2 = check_ssrf(params2, context, true)
         if (ret2 !== false) {
@@ -2151,7 +2161,7 @@ plugin.register('writeFile', function (params, context) {
     }
 
     if (algorithmConfig.writeFile_reflect.action != 'ignore') {
-        if (context.server.language == 'java') {
+        if (context.server.language == 'java' && params.realpath.endsWith(".jsp")) {
             var message = validate_stack_java(params.stack)
             if (message) {
                 return {
