@@ -1392,8 +1392,9 @@ function check_ssrf(params, context, is_redirect) {
     {
         var ret
         ret = check_internal(params, context, is_redirect)
-        // 过滤非HTTP请求（dubbo）
-        if (ret && Object.keys(context.header).length === 0) {
+        // 过滤非HTTP请求（dubbo)
+        var header = context.header || {}
+        if (ret && Object.keys(header).length != 0) {
             return ret
         }
     }
@@ -1853,6 +1854,10 @@ plugin.register('sql_exception', function(params, context) {
     // mysql error 1367 detected: XXX
     var error_code = parseInt(params.error_code)
     var message    = _("%1% error %2% detected: %3%", [params.server, params.error_code, params.error_msg])
+    // 过滤phpmyadmin
+    if (sqliWhiteManager.test(params.stack[0])) {
+        return clean
+    }
     if (params.server == "mysql") {
         // 1062 Duplicated key 错误会有大量误报问题，仅当语句里包含 rand 字样报警
         if (error_code == 1062) {
