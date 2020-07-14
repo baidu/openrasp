@@ -42,7 +42,7 @@ type PIDFile struct {
 var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
-	Version             = "1.3.4"
+	Version             = "1.3.5"
 	LogPath             = beego.AppConfig.DefaultString("LogPath", "/home/openrasp/logs")
 	LogApiPath          = LogPath + "/api"
 	PidFileName         = LogPath + "/pid.file"
