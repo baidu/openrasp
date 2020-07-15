@@ -1,4 +1,4 @@
-const plugin_version = '2020-0713-1500'
+const plugin_version = '2020-0715-1600'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -463,7 +463,8 @@ var algorithmConfig = {
     command_userinput: {
         name:       '算法2 - 用户输入匹配算法，包括命令注入检测',
         action:     'block',
-        min_length: 2
+        min_length: 2,
+        java_unexploitable_filter: true,
     },
     // 命令注入 - 常见命令
     command_common: {
@@ -678,6 +679,9 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // SQL注入算法 - 管理器白名单
 var sqliWhiteManager  = new RegExp(/phpmyadmin/, 'i')
+
+// java 匹配可能可利用的命令注入
+var cmdJavaExploitable = new RegExp(/^[^ ]*sh.{1,12}-c/, 'i')
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
@@ -2353,6 +2357,7 @@ plugin.register('command', function (params, context) {
         var min_length = algorithmConfig.command_userinput.min_length
         var parameters = context.parameter || {}
         var json_parameters = context.json || {}
+        var unexploitable_filter = algorithmConfig.command_userinput.java_unexploitable_filter
 
         // 检查命令逻辑是否被用户参数所修改
         function _run(values, name)
@@ -2363,7 +2368,7 @@ plugin.register('command', function (params, context) {
                 if (value.length <= min_length) {
                     return false
                 }
-
+                
                 // 检查用户输入是否存在于命令中
                 var userinput_idx = cmd.indexOf(value)
                 if (userinput_idx == -1) {
@@ -2379,7 +2384,6 @@ plugin.register('command', function (params, context) {
                 if (raw_tokens.length == 0) {
                     raw_tokens = RASP.cmd_tokenize(cmd)
                 }
-
                 if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
                     reason = _("Command injection - command structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                     return true
@@ -2389,62 +2393,65 @@ plugin.register('command', function (params, context) {
             return reason
         }
 
-        // 匹配 GET/POST/multipart 参数
-        Object.keys(parameters).some(function (name) {
-            // 覆盖场景，后者仅PHP支持
-            // ?id=XXXX
-            // ?data[key1][key2]=XXX
-            var value_list = []
-            Object.values(parameters[name]).forEach(function (value){
-                if (typeof value == 'string') {
-                    value_list.push(value)
-                } else {
-                    value_list = value_list.concat(Object.values(value))
+        // 过滤java无法利用的命令注入
+        if (server.language != 'java' || !unexploitable_filter || cmdJavaExploitable.test(cmd)) {
+            // 匹配 GET/POST/multipart 参数
+            Object.keys(parameters).some(function (name) {
+                // 覆盖场景，后者仅PHP支持
+                // ?id=XXXX
+                // ?data[key1][key2]=XXX
+                var value_list = []
+                Object.values(parameters[name]).forEach(function (value){
+                    if (typeof value == 'string') {
+                        value_list.push(value)
+                    } else {
+                        value_list = value_list.concat(Object.values(value))
+                    }
+                })
+                reason = _run(value_list, name)
+                if (reason) {
+                    return true
                 }
             })
-            reason = _run(value_list, name)
-            if (reason) {
-                return true
-            }
-        })
-        // 匹配 header 参数
-        if (reason == false && context.header != null) {
-            Object.keys(context.header).some(function (name) {
-                if ( name.toLowerCase() == "cookie") {
-                    var cookies = get_cookies(context.header.cookie)
-                    for (name in cookies) {
-                        reason = _run([cookies[name]], "cookie:" + name)
+            // 匹配 header 参数
+            if (reason == false && context.header != null) {
+                Object.keys(context.header).some(function (name) {
+                    if ( name.toLowerCase() == "cookie") {
+                        var cookies = get_cookies(context.header.cookie)
+                        for (name in cookies) {
+                            reason = _run([cookies[name]], "cookie:" + name)
+                            if (reason) {
+                                return true
+                            }
+                        }
+                    }
+                    else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
+                        reason = _run([context.header[name]], "header:" + name)
                         if (reason) {
                             return true
                         }
                     }
-                }
-                else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
-                    reason = _run([context.header[name]], "header:" + name)
-                    if (reason) {
-                        return true
-                    }
-                }
-                
-            })
-        }
+                    
+                })
+            }
 
-        // 匹配json参数
-        if (reason == false && Object.keys(json_parameters).length > 0) {
-            var jsons = [ [json_parameters, "input_json"] ]
-            while (jsons.length > 0 && reason === false) {
-                var json_arr = jsons.pop()
-                var crt_json_key = json_arr[1]
-                var json_obj = json_arr[0]
-                for (item in json_obj) {
-                    if (typeof json_obj[item] == "string") {
-                        reason = _run([json_obj[item]], crt_json_key + "->" + item)
-                        if(reason !== false) {
-                            break;
+            // 匹配json参数
+            if (reason == false && Object.keys(json_parameters).length > 0) {
+                var jsons = [ [json_parameters, "input_json"] ]
+                while (jsons.length > 0 && reason === false) {
+                    var json_arr = jsons.pop()
+                    var crt_json_key = json_arr[1]
+                    var json_obj = json_arr[0]
+                    for (item in json_obj) {
+                        if (typeof json_obj[item] == "string") {
+                            reason = _run([json_obj[item]], crt_json_key + "->" + item)
+                            if(reason !== false) {
+                                break;
+                            }
                         }
-                    }
-                    else if (typeof json_obj[item] == "object") {
-                        jsons.push([json_obj[item], crt_json_key + "->" + item])
+                        else if (typeof json_obj[item] == "object") {
+                            jsons.push([json_obj[item], crt_json_key + "->" + item])
+                        }
                     }
                 }
             }
