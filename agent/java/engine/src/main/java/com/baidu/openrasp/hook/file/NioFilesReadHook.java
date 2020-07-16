@@ -84,8 +84,6 @@ public class NioFilesReadHook extends AbstractClassHook {
      * @param path 文件路径
      */
     public static void checkNioReadFile(Path path) {
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        System.out.println("checkNioReadFile in:"+df.format(System.currentTimeMillis()));
         boolean checkSwitch = Config.getConfig().getPluginFilter();
         File file= path.toFile();
         if (checkSwitch && !file.exists()) {
