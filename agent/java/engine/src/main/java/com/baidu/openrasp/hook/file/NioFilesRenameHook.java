@@ -17,7 +17,7 @@ import java.util.HashMap;
  * liergou
  * 2020.07.10
  */
-public class NioFilesMoveHook extends AbstractClassHook {
+public class NioFilesRenameHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
@@ -45,10 +45,11 @@ public class NioFilesMoveHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(NioFilesMoveHook.class, "checkFileRename", "$1,$2", Path.class,Path.class);
+        String src = getInvokeStaticSrc(NioFilesRenameHook.class, "checkFileRename", "$1,$2", Path.class,Path.class);
         insertBefore(ctClass, "copy", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;", src);
         insertBefore(ctClass, "move", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;", src);
-        String srcLink = getInvokeStaticSrc(NioFilesMoveHook.class, "checkFileLink", "$1,$2", Path.class,Path.class);
+
+        String srcLink = getInvokeStaticSrc(NioFilesRenameHook.class, "checkFileLink", "$1,$2", Path.class,Path.class);
         insertBefore(ctClass, "createSymbolicLink", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", srcLink);
         insertBefore(ctClass, "createLink", "(Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;", srcLink);
 
