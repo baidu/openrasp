@@ -44,13 +44,15 @@ public class FileRandomAccessWriteHook extends AbstractClassHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String writeSrc = getInvokeStaticSrc(FileRandomAccessWriteHook.class, "checkWriteFile", "$1", File.class);
+        String writeSrc = getInvokeStaticSrc(FileRandomAccessWriteHook.class, "checkWriteFile", "$1,$2", File.class, String.class);
         insertBefore(ctClass.getConstructor("(Ljava/io/File;Ljava/lang/String;)V"), writeSrc);
     }
 
-    public static void checkWriteFile(File file) {
-        if (file != null && !file.getName().endsWith(".jar") && !file.getName().endsWith(".war")) {
-            FileOutputStreamHook.checkWriteFile(file);
+    public static void checkWriteFile(File file, String mode) {
+        if (mode.startsWith("rw")) {
+            if (file != null && !file.getName().endsWith(".jar") && !file.getName().endsWith(".war")) {
+                FileOutputStreamHook.checkWriteFile(file);
+            }
         }
     }
 }

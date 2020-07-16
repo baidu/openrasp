@@ -31,8 +31,10 @@ import java.io.File;
 public class FileScanMonitor {
 
     static {
-        JnotifyWatcher watcher = new JnotifyWatcher();
-        JNotify.init(Config.baseDirectory, watcher);
+        if (!Config.getConfig().getCloudSwitch()) {
+            JnotifyWatcher watcher = new JnotifyWatcher();
+            JNotify.init(Config.baseDirectory, watcher);
+        }
     }
 
     /**
@@ -44,13 +46,16 @@ public class FileScanMonitor {
      * @throws JNotifyException {@link JNotifyException}
      */
     public static int addMonitor(String path, FileAlterationListener listener) throws JNotifyException {
-        File file = new File(path);
-        FileAlterationObserver observer = new FileAlterationObserver(file);
-        observer.checkAndNotify();
-        observer.addListener(listener);
-        int mask = JNotify.FILE_CREATED | JNotify.FILE_DELETED
-                | JNotify.FILE_MODIFIED;
-        return JNotify.addWatch(path, mask, false, new FileEventListener(observer));
+        if (!Config.getConfig().getCloudSwitch()) {
+            File file = new File(path);
+            FileAlterationObserver observer = new FileAlterationObserver(file);
+            observer.checkAndNotify();
+            observer.addListener(listener);
+            int mask = JNotify.FILE_CREATED | JNotify.FILE_DELETED
+                    | JNotify.FILE_MODIFIED;
+            return JNotify.addWatch(path, mask, false, new FileEventListener(observer));
+        }
+        return 0;
     }
 
     /**
@@ -59,10 +64,12 @@ public class FileScanMonitor {
      * @param watchId 增加文件夹监听的时候返回的监听器id
      */
     public static void removeMonitor(int watchId) {
-        try {
-            JNotify.removeWatch(watchId);
-        } catch (JNotifyException e) {
-            e.printStackTrace();
+        if (!Config.getConfig().getCloudSwitch()) {
+            try {
+                JNotify.removeWatch(watchId);
+            } catch (JNotifyException e) {
+                e.printStackTrace();
+            }
         }
     }
 

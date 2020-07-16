@@ -529,9 +529,9 @@ public enum ConfigItem {
         }
     }),
 
-    RESPONSE_HEADERS(new ConfigSetter<HashMap<Object, Object>>("inject.custom_headers") {
+    RESPONSE_HEADERS(new ConfigSetter<Map<Object, Object>>("inject.custom_headers") {
         @Override
-        public synchronized void setValue(HashMap<Object, Object> responseHeaders) {
+        public synchronized void setValue(Map<Object, Object> responseHeaders) {
             for (Map.Entry<Object, Object> entry : responseHeaders.entrySet()) {
                 Object k = entry.getKey();
                 Object v = entry.getValue();
@@ -558,7 +558,7 @@ public enum ConfigItem {
         }
 
         @Override
-        public HashMap<Object, Object> getDefaultValue() {
+        public Map<Object, Object> getDefaultValue() {
             HashMap<Object, Object> headers = new HashMap<Object, Object>();
             headers.put(HookHandler.OPEN_RASP_HEADER_KEY, HookHandler.OPEN_RASP_HEADER_VALUE);
             return headers;
