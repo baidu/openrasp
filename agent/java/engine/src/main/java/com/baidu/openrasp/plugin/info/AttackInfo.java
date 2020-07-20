@@ -188,8 +188,10 @@ public class AttackInfo extends EventInfo {
             String method = request.getMethod();
             info.put("request_method", method != null ? method.toLowerCase() : null);
         }
-        for (Entry<String, JsonElement> entry : extras.entrySet()) {
-            info.put(entry.getKey(), entry.getValue());
+        if(extras != null) {
+            for (Entry<String, JsonElement> entry : extras.entrySet()) {
+                info.put(entry.getKey(), entry.getValue());
+            }
         }
         return info;
     }
