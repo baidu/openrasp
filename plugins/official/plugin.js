@@ -1,4 +1,4 @@
-const plugin_version = '2020-0715-1600'
+const plugin_version = '2020-0720-1900'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -935,20 +935,28 @@ function validate_stack_java(stacks) {
 
 function validate_stack_php(stacks) {
     var verdict = false
+    var eval_count = 0
 
     for (var i = 0; i < stacks.length; i ++) {
         var stack = stacks[i]
 
         // 来自 eval/assert/create_function/...
-        if (stack.indexOf('eval()\'d code') != -1
-            || stack.indexOf('runtime-created function') != -1
-            || stack.indexOf('assert code@') != -1
+        if (stack.indexOf('runtime-created function') != -1
             || stack.indexOf('regexp code@') != -1) {
             verdict = true
             break
         }
+        // eval/assert 出现两次以上才认为是webshell
+        if (stack.indexOf('eval()\'d code') != -1
+            || stack.indexOf('assert code@') != -1) {
+            eval_count++
+            if (eval_count > 1) {
+                verdict = true
+                break
+            }
+        }
 
-        // call_user_func/call_user_func_array 两个函数调用很频繁
+            // call_user_func/call_user_func_array 两个函数调用很频繁
         // 必须是 call_user_func 直接调用 system/exec 等函数才拦截，否则会有很多误报
         if (stack.indexOf('@call_user_func') != -1) {
             if (i <= 1) {
@@ -1901,6 +1909,7 @@ plugin.register('directory', function (params, context) {
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
         // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
+        // 过滤已知误报(joomla)
         if (language == 'php' && validate_stack_php(params.stack))
         {
             return {
