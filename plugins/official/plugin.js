@@ -1,4 +1,4 @@
-const plugin_version = '2020-0720-1900'
+const plugin_version = '2020-0721-1630'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1706,11 +1706,19 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 if (features['union_null'] && tokens_lc[i] === 'select')
                 {
                     var null_count = 0
+                    var num_count = 0
 
                     // 寻找连续的逗号、NULL或者数字
                     for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
-                        if (tokens_lc[j] === ',' || tokens_lc[j] == 'null' || ! isNaN(parseInt(tokens_lc[j]))) {
+                        if ((tokens_lc[j] === ',' || tokens_lc[j] == 'null') && tokens_lc[j] != tokens_lc[j+1]) {
                             null_count ++
+                        } else {
+                            break
+                        }
+                    }
+                    for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
+                        if ((tokens_lc[j] === ',' || ! isNaN(parseInt(tokens_lc[j]))) && tokens_lc[j] != tokens_lc[j+1]) {
+                            num_count++
                         } else {
                             break
                         }
@@ -1718,7 +1726,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
                     // NULL,NULL,NULL == 5个token
                     // 1,2,3          == 5个token
-                    if (null_count >= 5) {
+                    if (null_count >= 5 || num_count >= 5) {
                         reason = _("SQLi - Detected UNION-NULL phrase in sql query")
                         break
                     }
