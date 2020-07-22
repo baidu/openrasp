@@ -142,8 +142,12 @@ public final class HttpServletRequest extends AbstractRequest {
      */
     @Override
     public StringBuffer getRequestURL() {
-        Object ret = Reflection.invokeMethod(request, "getRequestURL", EMPTY_CLASS);
-        return ret != null ? (StringBuffer) ret : null;
+        try {
+            Object ret = Reflection.invokeMethod(request, "getRequestURL", EMPTY_CLASS);
+            return ret != null ? (StringBuffer) ret : null;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     /**
