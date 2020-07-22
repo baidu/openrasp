@@ -6,7 +6,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <rasp.version>1.3.4</rasp.version>
+        <rasp.version>1.3.5</rasp.version>
     </properties>
 
     <groupId>com.baidu.openrasp</groupId>
