@@ -1,4 +1,4 @@
-const plugin_version = '2020-0721-1630'
+const plugin_version = '2020-0722-1530'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2534,7 +2534,7 @@ plugin.register('command', function (params, context) {
                     return {
                         action:     algorithmConfig.command_error.action,
                         confidence: 70,
-                        message:    _("Command execution - Sensitive command concat detect: %1% %2%", [raw_tokens[i].text], raw_tokens[i+1].text),
+                        message:    _("Command execution - Sensitive command concat detect: %1% %2%", [raw_tokens[i].text, raw_tokens[i+1].text]),
                         algorithm:  'command_error'
                     }
                 }
