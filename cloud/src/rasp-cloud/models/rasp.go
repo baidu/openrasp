@@ -98,7 +98,7 @@ func init() {
 	OfflineIntervalString = strconv.FormatInt(OfflineInterval, 10)
 	// check offline Interval valid
 	if OfflineInterval < 30 || OfflineInterval > 3600 {
-		beego.Warn("OfflineInterval must between 30 and 3600, set OfflineInterval to default value")
+		beego.Warning("OfflineInterval must between 30 and 3600, set OfflineInterval to default value")
 	}
 }
 
