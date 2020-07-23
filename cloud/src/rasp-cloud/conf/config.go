@@ -59,6 +59,7 @@ type RaspAppConfig struct {
 	LogMaxSize            int64
 	LogMaxDays            int
 	LogPath               string
+	OffLineInterval       int64
 }
 
 type Flag struct {
@@ -104,6 +105,7 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.LogMaxDays = beego.AppConfig.DefaultInt("LogMaxDays", 10)
 	AppConfig.DebugModeEnable = beego.AppConfig.DefaultBool("DebugModeEnable", false)
 	AppConfig.LogPath = beego.AppConfig.DefaultString("LogPath", "/home/openrasp/logs")
+	AppConfig.OffLineInterval = beego.AppConfig.DefaultInt64("OffLineInterval", 180)
 	ValidRaspConf(AppConfig)
 }
 
