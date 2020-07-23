@@ -254,6 +254,13 @@ void pre_splfileobject___construct_READ_WRITE_FILE_SSRF(INTERNAL_FUNCTION_PARAME
     {
         return;
     }
+
+    if (nullptr == mode)
+    {
+        mode = "r";
+        mode_len = 1;
+    }
+
     if (maybe_ssrf_vulnerability(file))
     {
         plugin_ssrf_check(file, "splfileobject::__construct" TSRMLS_CC);
