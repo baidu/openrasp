@@ -34,6 +34,7 @@ const (
 	ErrCodeInitChildProcessFailed
 	ErrCodeChDirFailed
 	ErrCodeGetPidFailed
+	ErrCodeHostOfflineIntervalValid
 )
 
 const (

@@ -96,6 +96,11 @@ func init() {
 	// read offline interval
 	OfflineInterval = conf.AppConfig.OffLineInterval
 	OfflineIntervalString = strconv.FormatInt(OfflineInterval, 10)
+	// check offline Interval valid
+	if OfflineInterval < 30 || OfflineInterval > 3600 * 24 * 366 {
+		tools.Panic(tools.ErrCodeHostOfflineIntervalValid,
+			"offline interval must between 30 and 31622400 seconds", err)
+	}
 }
 
 func UpsertRaspById(id string, rasp *Rasp) (error) {
