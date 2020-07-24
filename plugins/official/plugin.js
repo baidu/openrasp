@@ -1,4 +1,4 @@
-const plugin_version = '2020-0722-1530'
+const plugin_version = '2020-0724-1830'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2341,7 +2341,7 @@ plugin.register('command', function (params, context) {
         if (server.language == 'java') {
             message = validate_stack_java(params.stack)
             if (message) {
-                message = _("Reflected command execution - %1%", message)
+                message = _("Reflected command execution - %1%", [message])
             }
         }
 
