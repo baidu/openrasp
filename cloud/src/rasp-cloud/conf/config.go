@@ -77,6 +77,11 @@ var (
 
 func InitConfig(startFlag *Flag) {
 	initConstConfig()
+	path, err := tools.GetCurrentPath()
+	if err != nil {
+		beego.Warn(err)
+		path = "/home/openrasp/"
+	}
 	AppConfig.Flag = startFlag
 	AppConfig.EsAddr = initArrayConfig(strings.Split(beego.AppConfig.String("EsAddr"), ","))
 	AppConfig.EsUser = beego.AppConfig.DefaultString("EsUser", "")
@@ -104,7 +109,7 @@ func InitConfig(startFlag *Flag) {
 	AppConfig.LogMaxSize = beego.AppConfig.DefaultInt64("LogMaxSize", 104857600)
 	AppConfig.LogMaxDays = beego.AppConfig.DefaultInt("LogMaxDays", 10)
 	AppConfig.DebugModeEnable = beego.AppConfig.DefaultBool("DebugModeEnable", false)
-	AppConfig.LogPath = beego.AppConfig.DefaultString("LogPath", "/home/openrasp/logs")
+	AppConfig.LogPath = beego.AppConfig.DefaultString("LogPath", path + "logs")
 	AppConfig.OffLineInterval = beego.AppConfig.DefaultInt64("OffLineInterval", 180)
 	ValidRaspConf(AppConfig)
 }
