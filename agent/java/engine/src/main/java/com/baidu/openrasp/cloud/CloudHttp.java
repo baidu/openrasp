@@ -123,7 +123,12 @@ public class CloudHttp implements Request {
 
     public static void skipSSL(HttpsURLConnection conn) throws NoSuchProviderException, NoSuchAlgorithmException,
             KeyManagementException, MalformedURLException {
-        SSLContext sslcontext = SSLContext.getInstance("SSL", "SunJSSE");
+        SSLContext sslcontext;
+        try {
+            sslcontext = SSLContext.getInstance("SSL", "SunJSSE");
+        } catch (Exception e) {
+            sslcontext = SSLContext.getInstance("SSL");
+        }
         sslcontext.init(null, new TrustManager[]{new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate certificates[], String authType) throws CertificateException {
