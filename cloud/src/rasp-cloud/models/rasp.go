@@ -62,6 +62,7 @@ type RecordCount struct {
 
 const (
 	raspCollectionName = "rasp"
+	defaultOfflineInterval = 180
 )
 
 var (
@@ -95,11 +96,12 @@ func init() {
 	}
 	// read offline interval
 	OfflineInterval = conf.AppConfig.OffLineInterval
-	OfflineIntervalString = strconv.FormatInt(OfflineInterval, 10)
 	// check offline Interval valid
 	if OfflineInterval < 30 || OfflineInterval > 3600 {
 		beego.Warning("OfflineInterval must between 30 and 3600, set OfflineInterval to default value")
+		OfflineInterval = int64(defaultOfflineInterval)
 	}
+	OfflineIntervalString = strconv.FormatInt(OfflineInterval, 10)
 }
 
 func UpsertRaspById(id string, rasp *Rasp) (error) {
