@@ -142,7 +142,7 @@ function send_rasp_result(context) {
     delete context.filter
 
     // 不检测不包含hook_info的请求, xml类型除外
-    if (hook_info.length == 0){
+    if (hook_info.length == 0 && context.header["scan-request-id"] === undefined){
 		if(context.header["content-type"] === undefined){
 			return
 		}else if(context.header["content-type"].indexOf("application/xml") < 0){
