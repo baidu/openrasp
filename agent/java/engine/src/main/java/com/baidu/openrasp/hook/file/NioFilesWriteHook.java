@@ -72,7 +72,7 @@ public class NioFilesWriteHook extends AbstractClassHook {
         insertBefore(ctClass, "delete", "(Ljava/nio/file/Path;)V", src);
         insertBefore(ctClass, "newOutputStream", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/OutputStream;", src);
 
-        //读写channel,一般不会直接使用，不hook
+        //读写channel,一般不会直接使用，暂不hook
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;Ljava/util/Set;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/channels/SeekableByteChannel;", src);
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/SeekableByteChannel;", src);
     }
@@ -87,7 +87,6 @@ public class NioFilesWriteHook extends AbstractClassHook {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("path", path.toString());
             params.put("realpath", FileUtil.getRealPath(new File(path.toString())));
-            //System.out.println(path.toString());
             List<String> stackInfo = StackTrace.getParamStackTraceArray();
             params.put("stack", stackInfo);
             HookHandler.doCheck(CheckParameter.Type.WRITEFILE, params);

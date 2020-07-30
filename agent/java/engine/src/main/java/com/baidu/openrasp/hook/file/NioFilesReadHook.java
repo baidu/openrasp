@@ -72,8 +72,7 @@ public class NioFilesReadHook extends AbstractClassHook {
         insertBefore(ctClass, "readAllBytes", "(Ljava/nio/file/Path;)[B", src);
         insertBefore(ctClass, "newInputStream", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/InputStream;", src);
         insertBefore(ctClass, "lines", "(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/util/stream/Stream;", src);
-        insertBefore(ctClass, "lines", "(Ljava/nio/file/Path;)Ljava/util/stream/Stream;", src);
-        //读写channel
+        //读写channel,一般不会直接使用，暂不hook
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;Ljava/util/Set;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/channels/SeekableByteChannel;", src);
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/SeekableByteChannel;", src);
     }
