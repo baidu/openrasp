@@ -42,7 +42,10 @@
             <tbody>
               <tr v-for="row in data" :key="row.id">
                 <td>{{ moment(row.upload_time).format('YYYY-MM-DD HH:mm:ss') }}</td>
-                <td>{{ row.name }}: {{ row.version }}</td>
+                <td>{{ row.name }}: {{ row.version }} 
+                  <span v-if="row.name == 'official'">(防护插件)</span>
+                  <span v-else-if="row.name == 'iast'">(扫描插件)</span>
+                </td>
                 <td>
                   <span v-if="current_app.selected_plugin_id == row.id">
                     是
@@ -57,7 +60,8 @@
                   </a> &nbsp;
                   <a href="javascript:" @click="doDelete(row)">
                     删除
-                  </a>
+                  </a> &nbsp;
+                  <router-link v-if="current_app.selected_plugin_id == row.id" :to="{name: 'settings', params: {setting_tab: 'algorithm'}}">配置</router-link>
                 </td>
               </tr>
             </tbody>

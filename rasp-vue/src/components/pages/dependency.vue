@@ -18,7 +18,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <b-form-input v-model.trim="hostname" type="text" class="form-control" placeholder="搜索主机\IP\OS"
+            <b-form-input v-model.trim="hostname" type="text" class="form-control" placeholder="搜索主机/IP/OS"
                           @keyup.enter="fetchData(1)" />
           </div>
           <div class="input-icon ml-2">

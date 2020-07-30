@@ -4,7 +4,7 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          防护设置
+          {{ data.iast ? '扫描设置' : '防护设置' }}
         </h3>
       </div>
       <div class="card-body" v-if="! current_app.selected_plugin_id || ! current_app.selected_plugin_id.length">
