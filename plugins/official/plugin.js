@@ -1,4 +1,4 @@
-const plugin_version = '2020-0724-1830'
+const plugin_version = '2020-0804-1930'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -660,7 +660,7 @@ var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat)$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/
 
 // 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4) 和 传入 column_name, column_pass -> select column_name, column_pass from xxx
-var commaSeparatedRegex   = /^(([a-zA-Z_]\w*|[0-9+\-x\.]+) *, *)+([a-zA-Z_]\w*|[0-9+\-x\.]+)$/
+var commaSeparatedRegex   = /^(, *)?(([a-zA-Z_]\w*|[0-9+\-x\.]+) *, *)+([a-zA-Z_]\w*|[0-9+\-x\.]+)$/
 
 // 匹配内网地址
 var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
@@ -1701,36 +1701,50 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 return v.text.substr(0, 50).toLowerCase()
             })
 
+            // 是否在union select 语句中
+            var union_state = false
+
             for (var i = 1; i < tokens_lc.length; i ++)
             {
-                if (features['union_null'] && tokens_lc[i] === 'select')
+                if (features['union_null']) 
                 {
-                    var null_count = 0
-                    var num_count = 0
+                    if (tokens_lc[i] === 'union')
+                    {
+                        union_state = true
+                    }
+                    else if (tokens_lc[i] === 'from')
+                    {
+                        union_state = false
+                    }
+                    else if (tokens_lc[i] === 'select' && union_state)
+                    {
+                        var null_count = 0
+                        var num_count = 0
 
-                    // 寻找连续的逗号、NULL或者数字
-                    for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
-                        if ((tokens_lc[j] === ',' || tokens_lc[j] == 'null') && tokens_lc[j] != tokens_lc[j+1]) {
-                            null_count ++
-                        } else {
+                        // 寻找连续的逗号、NULL或者数字
+                        for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
+                            if ((tokens_lc[j] === ',' || tokens_lc[j] == 'null') && tokens_lc[j] != tokens_lc[j+1]) {
+                                null_count ++
+                            } else {
+                                break
+                            }
+                        }
+                        for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
+                            if ((tokens_lc[j] === ',' || ! isNaN(parseInt(tokens_lc[j]))) && tokens_lc[j] != tokens_lc[j+1]) {
+                                num_count++
+                            } else {
+                                break
+                            }
+                        }
+
+                        // NULL,NULL,NULL == 5个token
+                        // 1,2,3          == 5个token
+                        if (null_count >= 5 || num_count >= 5) {
+                            reason = _("SQLi - Detected UNION-NULL phrase in sql query")
                             break
                         }
+                        continue
                     }
-                    for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
-                        if ((tokens_lc[j] === ',' || ! isNaN(parseInt(tokens_lc[j]))) && tokens_lc[j] != tokens_lc[j+1]) {
-                            num_count++
-                        } else {
-                            break
-                        }
-                    }
-
-                    // NULL,NULL,NULL == 5个token
-                    // 1,2,3          == 5个token
-                    if (null_count >= 5 || num_count >= 5) {
-                        reason = _("SQLi - Detected UNION-NULL phrase in sql query")
-                        break
-                    }
-                    continue
                 }
 
                 if (features['stacked_query'] && tokens_lc[i] == ';' && i != tokens_lc.length - 1)
