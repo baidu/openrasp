@@ -148,8 +148,8 @@ function send_rasp_result(context) {
         }
         else {
             if(context.header["content-type"].indexOf("application/xml") < 0){
-                    return
-             }
+                return
+            }
         }
     }
 
