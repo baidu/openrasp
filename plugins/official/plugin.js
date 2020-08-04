@@ -1,4 +1,4 @@
-const plugin_version = '2020-0724-1830'
+const plugin_version = '2020-0713-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -463,8 +463,7 @@ var algorithmConfig = {
     command_userinput: {
         name:       '算法2 - 用户输入匹配算法，包括命令注入检测',
         action:     'block',
-        min_length: 2,
-        java_unexploitable_filter: true,
+        min_length: 2
     },
     // 命令注入 - 常见命令
     command_common: {
@@ -679,9 +678,6 @@ var sqliPrefilter2  = new RegExp(algorithmConfig.sql_policy.pre_filter, 'i')
 
 // SQL注入算法 - 管理器白名单
 var sqliWhiteManager  = new RegExp(/phpmyadmin/, 'i')
-
-// java 匹配可能可利用的命令注入
-var cmdJavaExploitable = new RegExp(/^[^ ]*sh.{1,12}-c/, 'i')
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
@@ -935,28 +931,20 @@ function validate_stack_java(stacks) {
 
 function validate_stack_php(stacks) {
     var verdict = false
-    var eval_count = 0
 
     for (var i = 0; i < stacks.length; i ++) {
         var stack = stacks[i]
 
         // 来自 eval/assert/create_function/...
-        if (stack.indexOf('runtime-created function') != -1
+        if (stack.indexOf('eval()\'d code') != -1
+            || stack.indexOf('runtime-created function') != -1
+            || stack.indexOf('assert code@') != -1
             || stack.indexOf('regexp code@') != -1) {
             verdict = true
             break
         }
-        // eval/assert 出现两次以上才认为是webshell
-        if (stack.indexOf('eval()\'d code') != -1
-            || stack.indexOf('assert code@') != -1) {
-            eval_count++
-            if (eval_count > 1) {
-                verdict = true
-                break
-            }
-        }
 
-            // call_user_func/call_user_func_array 两个函数调用很频繁
+        // call_user_func/call_user_func_array 两个函数调用很频繁
         // 必须是 call_user_func 直接调用 system/exec 等函数才拦截，否则会有很多误报
         if (stack.indexOf('@call_user_func') != -1) {
             if (i <= 1) {
@@ -1706,19 +1694,11 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 if (features['union_null'] && tokens_lc[i] === 'select')
                 {
                     var null_count = 0
-                    var num_count = 0
 
                     // 寻找连续的逗号、NULL或者数字
                     for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
-                        if ((tokens_lc[j] === ',' || tokens_lc[j] == 'null') && tokens_lc[j] != tokens_lc[j+1]) {
+                        if (tokens_lc[j] === ',' || tokens_lc[j] == 'null' || ! isNaN(parseInt(tokens_lc[j]))) {
                             null_count ++
-                        } else {
-                            break
-                        }
-                    }
-                    for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
-                        if ((tokens_lc[j] === ',' || ! isNaN(parseInt(tokens_lc[j]))) && tokens_lc[j] != tokens_lc[j+1]) {
-                            num_count++
                         } else {
                             break
                         }
@@ -1726,7 +1706,7 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
 
                     // NULL,NULL,NULL == 5个token
                     // 1,2,3          == 5个token
-                    if (null_count >= 5 || num_count >= 5) {
+                    if (null_count >= 5) {
                         reason = _("SQLi - Detected UNION-NULL phrase in sql query")
                         break
                     }
@@ -1917,7 +1897,6 @@ plugin.register('directory', function (params, context) {
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
         // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
-        // 过滤已知误报(joomla)
         if (language == 'php' && validate_stack_php(params.stack))
         {
             return {
@@ -2341,7 +2320,7 @@ plugin.register('command', function (params, context) {
         if (server.language == 'java') {
             message = validate_stack_java(params.stack)
             if (message) {
-                message = _("Reflected command execution - %1%", [message])
+                message = _("Reflected command execution - %1%", message)
             }
         }
 
@@ -2374,7 +2353,6 @@ plugin.register('command', function (params, context) {
         var min_length = algorithmConfig.command_userinput.min_length
         var parameters = context.parameter || {}
         var json_parameters = context.json || {}
-        var unexploitable_filter = algorithmConfig.command_userinput.java_unexploitable_filter
 
         // 检查命令逻辑是否被用户参数所修改
         function _run(values, name)
@@ -2385,7 +2363,7 @@ plugin.register('command', function (params, context) {
                 if (value.length <= min_length) {
                     return false
                 }
-                
+
                 // 检查用户输入是否存在于命令中
                 var userinput_idx = cmd.indexOf(value)
                 if (userinput_idx == -1) {
@@ -2401,6 +2379,7 @@ plugin.register('command', function (params, context) {
                 if (raw_tokens.length == 0) {
                     raw_tokens = RASP.cmd_tokenize(cmd)
                 }
+
                 if (is_token_changed(raw_tokens, userinput_idx, value.length)) {
                     reason = _("Command injection - command structure altered by user input, request parameter name: %1%, value: %2%", [name, value])
                     return true
@@ -2410,65 +2389,62 @@ plugin.register('command', function (params, context) {
             return reason
         }
 
-        // 过滤java无法利用的命令注入
-        if (server.language != 'java' || !unexploitable_filter || cmdJavaExploitable.test(cmd)) {
-            // 匹配 GET/POST/multipart 参数
-            Object.keys(parameters).some(function (name) {
-                // 覆盖场景，后者仅PHP支持
-                // ?id=XXXX
-                // ?data[key1][key2]=XXX
-                var value_list = []
-                Object.values(parameters[name]).forEach(function (value){
-                    if (typeof value == 'string') {
-                        value_list.push(value)
-                    } else {
-                        value_list = value_list.concat(Object.values(value))
-                    }
-                })
-                reason = _run(value_list, name)
-                if (reason) {
-                    return true
+        // 匹配 GET/POST/multipart 参数
+        Object.keys(parameters).some(function (name) {
+            // 覆盖场景，后者仅PHP支持
+            // ?id=XXXX
+            // ?data[key1][key2]=XXX
+            var value_list = []
+            Object.values(parameters[name]).forEach(function (value){
+                if (typeof value == 'string') {
+                    value_list.push(value)
+                } else {
+                    value_list = value_list.concat(Object.values(value))
                 }
             })
-            // 匹配 header 参数
-            if (reason == false && context.header != null) {
-                Object.keys(context.header).some(function (name) {
-                    if ( name.toLowerCase() == "cookie") {
-                        var cookies = get_cookies(context.header.cookie)
-                        for (name in cookies) {
-                            reason = _run([cookies[name]], "cookie:" + name)
-                            if (reason) {
-                                return true
-                            }
-                        }
-                    }
-                    else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
-                        reason = _run([context.header[name]], "header:" + name)
+            reason = _run(value_list, name)
+            if (reason) {
+                return true
+            }
+        })
+        // 匹配 header 参数
+        if (reason == false && context.header != null) {
+            Object.keys(context.header).some(function (name) {
+                if ( name.toLowerCase() == "cookie") {
+                    var cookies = get_cookies(context.header.cookie)
+                    for (name in cookies) {
+                        reason = _run([cookies[name]], "cookie:" + name)
                         if (reason) {
                             return true
                         }
                     }
-                    
-                })
-            }
+                }
+                else if ( headerInjection.indexOf(name.toLowerCase()) != -1) {
+                    reason = _run([context.header[name]], "header:" + name)
+                    if (reason) {
+                        return true
+                    }
+                }
+                
+            })
+        }
 
-            // 匹配json参数
-            if (reason == false && Object.keys(json_parameters).length > 0) {
-                var jsons = [ [json_parameters, "input_json"] ]
-                while (jsons.length > 0 && reason === false) {
-                    var json_arr = jsons.pop()
-                    var crt_json_key = json_arr[1]
-                    var json_obj = json_arr[0]
-                    for (item in json_obj) {
-                        if (typeof json_obj[item] == "string") {
-                            reason = _run([json_obj[item]], crt_json_key + "->" + item)
-                            if(reason !== false) {
-                                break;
-                            }
+        // 匹配json参数
+        if (reason == false && Object.keys(json_parameters).length > 0) {
+            var jsons = [ [json_parameters, "input_json"] ]
+            while (jsons.length > 0 && reason === false) {
+                var json_arr = jsons.pop()
+                var crt_json_key = json_arr[1]
+                var json_obj = json_arr[0]
+                for (item in json_obj) {
+                    if (typeof json_obj[item] == "string") {
+                        reason = _run([json_obj[item]], crt_json_key + "->" + item)
+                        if(reason !== false) {
+                            break;
                         }
-                        else if (typeof json_obj[item] == "object") {
-                            jsons.push([json_obj[item], crt_json_key + "->" + item])
-                        }
+                    }
+                    else if (typeof json_obj[item] == "object") {
+                        jsons.push([json_obj[item], crt_json_key + "->" + item])
                     }
                 }
             }
@@ -2534,7 +2510,7 @@ plugin.register('command', function (params, context) {
                     return {
                         action:     algorithmConfig.command_error.action,
                         confidence: 70,
-                        message:    _("Command execution - Sensitive command concat detect: %1% %2%", [raw_tokens[i].text, raw_tokens[i+1].text]),
+                        message:    _("Command execution - Sensitive command concat detect: %1% %2%", [raw_tokens[i].text], raw_tokens[i+1].text),
                         algorithm:  'command_error'
                     }
                 }
