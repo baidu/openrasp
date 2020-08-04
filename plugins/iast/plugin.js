@@ -143,15 +143,15 @@ function send_rasp_result(context) {
 
     // 不检测不包含hook_info的请求, xml类型除外
     if (hook_info.length == 0 && context.header["scan-request-id"] === undefined){
-		if(context.header["content-type"] === undefined){
-			return
-		}
-		else {
+        if(context.header["content-type"] === undefined){
+            return
+        }
+        else {
             if(context.header["content-type"].indexOf("application/xml") < 0){
-                return
-            }
-		}
-	}
+                    return
+             }
+        }
+    }
 
     var default_port
     if (context.url.toLowerCase().startsWith("https")) {
