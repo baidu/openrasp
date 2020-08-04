@@ -68,8 +68,9 @@ public class NioFilesRenameHook extends AbstractClassHook {
         insertBefore(ctClass, "move", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;", src);
 
         String srcLink = getInvokeStaticSrc(NioFilesRenameHook.class, "checkFileLink", "$1,$2", Path.class,Path.class);
-        insertBefore(ctClass, "createSymbolicLink", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", srcLink);
         insertBefore(ctClass, "createLink", "(Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;", srcLink);
+        //软连接  待确认
+        //insertBefore(ctClass, "createSymbolicLink", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", srcLink);
 
     }
 

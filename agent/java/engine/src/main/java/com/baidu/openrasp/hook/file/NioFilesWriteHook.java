@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * nio files write and delete hook
+ * nio files write hook
  * liergou
  * 2020.7.9
  */
@@ -68,10 +68,9 @@ public class NioFilesWriteHook extends AbstractClassHook {
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(NioFilesWriteHook.class, "checkNioWriteFile", "$1", Path.class);
         insertBefore(ctClass, "createFile", "(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", src);
-        insertBefore(ctClass, "createDirectory", "(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", src);
-        insertBefore(ctClass, "delete", "(Ljava/nio/file/Path;)V", src);
         insertBefore(ctClass, "newOutputStream", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/OutputStream;", src);
-
+        //创建目录  待确认
+        //insertBefore(ctClass, "createDirectory", "(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", src);
         //读写channel,一般不会直接使用，暂不hook
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;Ljava/util/Set;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/channels/SeekableByteChannel;", src);
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/SeekableByteChannel;", src);
