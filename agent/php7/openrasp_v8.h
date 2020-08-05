@@ -18,7 +18,8 @@
 #define OPENRASP_V8_H
 
 #include "openrasp.h"
-#include "openrasp_v8_bundle.h"
+#include "hook/checker/check_result.h"
+#include "php/header.h"
 
 namespace openrasp
 {
@@ -27,12 +28,21 @@ class openrasp_v8_process_globals
 public:
   Snapshot *snapshot_blob = nullptr;
   std::mutex mtx;
-  std::string plugin_config;
+  std::string plugin_config = "global.checkPoints=['command','directory','fileUpload','readFile','request','requestEnd','sql','sql_exception','writeFile','xxe','ognl','deserialization','reflection','webdav','ssrf','include','eval','copy','rename','loadLibrary','ssrfRedirect','deleteFile','mongodb','response'];";
   std::vector<PluginFile> plugin_src_list;
+  std::once_flag init_v8_once;
 };
 extern openrasp_v8_process_globals process_globals;
+CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout = 100);
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val);
+v8::Local<v8::ObjectTemplate> CreateRequestContextTemplate(Isolate *isolate);
+void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string> &buildin_action_map);
+std::vector<int64_t> extract_int64_array(Isolate *isolate, const std::string &value, int limit, const std::vector<int64_t> &default_value = std::vector<int64_t>());
+std::vector<std::string> extract_string_array(Isolate *isolate, const std::string &value, int limit, const std::vector<std::string> &default_value = std::vector<std::string>());
+int64_t extract_int64(Isolate *isolate, const std::string &value, const int64_t &default_value);
+std::string extract_string(Isolate *isolate, const std::string &value, const std::string &default_value);
 void load_plugins();
+void plugin_log(const std::string &message);
 } // namespace openrasp
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_v8)

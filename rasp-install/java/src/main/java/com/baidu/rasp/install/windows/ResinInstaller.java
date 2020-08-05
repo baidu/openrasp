@@ -28,25 +28,25 @@ import java.util.regex.Pattern;
 import static com.baidu.rasp.RaspError.E10001;
 
 /**
-　　* @Description: resin自动安装
-　　* @author anyang
-　　* @date 2018/4/25 19:31
-　　*/
+ * 　　* @Description: resin自动安装
+ * 　　* @author anyang
+ * 　　* @date 2018/4/25 19:31
+ */
 public class ResinInstaller extends BaseStandardInstaller {
 
     private static Pattern OPENRASP_REGEX_WINDOWS = Pattern.compile(".*(\\s*OPENRASP\\s*|\\s*<jvm-arg>.*\\\\rasp\\\\).*");
     private static Pattern OPENRASP_REGEX_LINUX = Pattern.compile(".*(\\s*OPENRASP\\s*|\\s*<jvm-arg>.*/rasp/).*");
+
     public ResinInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
 
     public String getOpenRASPConfig() {
-        String configStart ="\t<!-- BEGIN OPENRASP - DO NOT MODIFY -->";
+        String configStart = "\t<!-- BEGIN OPENRASP - DO NOT MODIFY -->";
         String configEnd = "\t<!-- END OPENRASP -->";
-        String path1 = "\t<jvm-arg>-javaagent:" +BaseStandardInstaller.resinPath + File.separator + "rasp" + File.separator + "rasp.jar</jvm-arg>";
-        String path2 = "\t<jvm-arg>-Dlog4j.rasp.configuration=file:" + BaseStandardInstaller.resinPath + File.separator + "rasp" + File.separator + "conf" + File.separator + "rasp-log4j.xml</jvm-arg>";
+        String path = "\t<jvm-arg>-javaagent:" + BaseStandardInstaller.resinPath + File.separator + "rasp" + File.separator + "rasp.jar</jvm-arg>";
 
-        return configStart + LINE_SEP + path1 + LINE_SEP + path2 + LINE_SEP + configEnd + LINE_SEP;
+        return configStart + LINE_SEP + path + LINE_SEP + configEnd + LINE_SEP;
     }
 
     public static int getVersion(String installPath) {
@@ -80,7 +80,6 @@ public class ResinInstaller extends BaseStandardInstaller {
             version = Integer.valueOf(sb.reverse().toString());
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
         return version;
@@ -122,13 +121,9 @@ public class ResinInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getScript(String installPath) {
-
         if (getVersion(installPath) == 3) {
-
             return new File(installPath).getParent() + File.separator + "conf" + File.separator + "resin.conf";
-
         } else {
-
             return new File(installPath).getParent() + File.separator + "conf" + File.separator + "cluster-default.xml";
         }
     }

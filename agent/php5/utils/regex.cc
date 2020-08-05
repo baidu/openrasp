@@ -14,39 +14,38 @@
  * limitations under the License.
  */
 
-#include "openrasp.h"
 #include "regex.h"
-#include <string.h>
-
-extern "C"
-{
-#include "ext/pcre/php_pcre.h"
-}
+#include <regex>
 
 namespace openrasp
 {
 
-const static size_t OVECCOUNT = 30; /* should be a multiple of 3 */
-
-bool regex_match(const char *str, const char *regex, int options)
+bool regex_match(const char *str, const char *regex)
 {
-    pcre *re = nullptr;
-    int ovector[OVECCOUNT];
-    const char *error = nullptr;
-    int erroffset = 0;
-    int rc = 0;
-    re = pcre_compile(regex, options, &error, &erroffset, nullptr);
-    if (re == nullptr)
+    try
     {
-        return false;
+        const std::regex re(regex);
+        return std::regex_match(str, re);
     }
-    rc = pcre_exec(re, nullptr, str, strlen(str), 0, 0, ovector, OVECCOUNT);
-    if (rc < 0)
+    catch (std::regex_error &e)
     {
-        pcre_free(re);
-        return false;
+        //skip
     }
-    pcre_free(re);
-    return true;
+    return false;
 }
+
+bool regex_search(const char *str, const char *regex)
+{
+    try
+    {
+        const std::regex re(regex);
+        return std::regex_search(str, re);
+    }
+    catch (std::regex_error &e)
+    {
+        //skip
+    }
+    return false;
+}
+
 } // namespace openrasp

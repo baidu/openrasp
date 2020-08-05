@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.18.1",
     "chai": "^4.1.1",
     "chai-as-promised": "^7.1.1",
     "form-data": "^2.2.0",

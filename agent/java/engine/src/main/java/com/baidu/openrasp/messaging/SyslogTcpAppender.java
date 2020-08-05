@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ package com.baidu.openrasp.messaging;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
 import org.apache.log4j.helpers.LogLog;
-import org.apache.log4j.helpers.SyslogQuietWriter;
 import org.apache.log4j.net.SocketNode;
 import org.apache.log4j.net.ZeroConfSupport;
 import org.apache.log4j.spi.ErrorCode;
@@ -28,9 +27,7 @@ import org.apache.log4j.spi.LoggingEvent;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -171,6 +168,8 @@ public class SyslogTcpAppender extends AppenderSkeleton {
      */
     static final int DEFAULT_RECONNECTION_DELAY = 30000;
 
+    static final int DEFAULT_SOCKET_TIMEOUT = 3 * 1000;
+
     /**
      * We remember host name as String in addition to the resolved
      * InetAddress so that it can be returned via getOption().
@@ -185,6 +184,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
     InetAddress address;
     int port = DEFAULT_PORT;
     int reconnectionDelay = DEFAULT_RECONNECTION_DELAY;
+    int socketTimeout = DEFAULT_SOCKET_TIMEOUT;
 
     private Connector connector;
     private boolean advertiseViaMulticastDNS;
@@ -200,23 +200,17 @@ public class SyslogTcpAppender extends AppenderSkeleton {
         this.address = address;
         this.remoteHost = address.getHostName();
         this.port = port;
-        this.syslogFacility = syslogFacility*8;
+        this.syslogFacility = syslogFacility * 8;
         this.layout = layout;
         this.initSyslogFacilityStr();
-        connect(address, port);
+        this.connect();
     }
 
     /**
      * Connects to remote server at <code>host</code> and <code>port</code>.
      */
     public SyslogTcpAppender(String host, int port, int syslogFacility, Layout layout) {
-        this.port = port;
-        this.address = getAddressByName(host);
-        this.remoteHost = host;
-        this.syslogFacility = syslogFacility*8;
-        this.layout = layout;
-        this.initSyslogFacilityStr();
-        connect(address, port);
+        this(getAddressByName(host), port, syslogFacility, layout);
     }
 
     /**
@@ -231,7 +225,7 @@ public class SyslogTcpAppender extends AppenderSkeleton {
             zeroConf = new ZeroConfSupport(ZONE, port, getName());
             zeroConf.advertise();
         }
-        connect(address, port);
+        connect();
     }
 
     /**
@@ -402,17 +396,15 @@ public class SyslogTcpAppender extends AppenderSkeleton {
         }
     }
 
-    void connect(InetAddress address, int port) {
+    void connect() {
         if (this.address == null)
             return;
         try {
             // First, close the previous connection if any.
             cleanUp();
-            stw = new SyslogTcpWriter(new Socket(address, port).getOutputStream(), syslogFacility);
+            Socket socket = getConnectedSocket();
+            stw = new SyslogTcpWriter(socket.getOutputStream(), syslogFacility);
         } catch (IOException e) {
-            if (e instanceof InterruptedIOException) {
-                Thread.currentThread().interrupt();
-            }
             String msg = "Could not connect to remote log4j server at ["
                     + address.getHostName() + "].";
             if (reconnectionDelay > 0) {
@@ -476,11 +468,11 @@ public class SyslogTcpAppender extends AppenderSkeleton {
                 if (layout == null || layout.ignoresThrowable()) {
                     String[] s = event.getThrowableStrRep();
                     if (s != null) {
-                        for(int i = 0; i < s.length; i++) {
+                        for (int i = 0; i < s.length; i++) {
                             if (s[i].startsWith("\t")) {
-                                stw.write(hdr+TAB+s[i].substring(1));
+                                stw.write(hdr + TAB + s[i].substring(1));
                             } else {
-                                stw.write(hdr+s[i]);
+                                stw.write(hdr + s[i]);
                             }
                         }
                     }
@@ -751,17 +743,16 @@ public class SyslogTcpAppender extends AppenderSkeleton {
      * @author Ceki G&uuml;lc&uuml;
      * @since 0.8.4
      */
-    class Connector extends Thread {
+    public class Connector extends Thread {
 
         boolean interrupted = false;
 
         public void run() {
-            Socket socket;
             while (!interrupted) {
                 try {
                     sleep(reconnectionDelay);
                     LogLog.debug("Attempting connection to " + address.getHostName());
-                    socket = new Socket(address, port);
+                    Socket socket = getConnectedSocket();
                     synchronized (this) {
                         stw = new SyslogTcpWriter(socket.getOutputStream(), syslogFacility);
                         connector = null;
@@ -784,6 +775,14 @@ public class SyslogTcpAppender extends AppenderSkeleton {
             }
             //LogLog.debug("Exiting Connector.run() method.");
         }
+    }
+
+    private Socket getConnectedSocket() throws IOException {
+        Socket socket = new Socket();
+        SocketAddress socketAddress = new InetSocketAddress(address, port);
+        socket.setSoTimeout(socketTimeout);
+        socket.connect(socketAddress, socketTimeout);
+        return socket;
     }
 
 }

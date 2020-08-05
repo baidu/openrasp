@@ -19,12 +19,14 @@ import (
 	"rasp-cloud/mongo"
 	"rasp-cloud/tools"
 	"gopkg.in/mgo.v2"
-	"github.com/astaxie/beego"
+	"rasp-cloud/conf"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Cookie struct {
-	Id   string    `json:"id" bson:"_id"`
-	Time time.Time `json:"time" bson:"time"`
+	Id     string    `json:"id" bson:"_id"`
+	UserId string    `json:"user_id" bson:"user_id"`
+	Time   time.Time `json:"time" bson:"time"`
 }
 
 const (
@@ -33,30 +35,20 @@ const (
 )
 
 func init() {
-	count, err := mongo.Count(cookieCollectionName)
-	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get cookie collection count", err)
+	index := &mgo.Index{
+		Key:         []string{"time"},
+		Background:  true,
+		Name:        "time",
+		ExpireAfter: time.Duration(conf.AppConfig.CookieLifeTime) * time.Hour,
 	}
-	if count <= 0 {
-		expireTime := beego.AppConfig.DefaultInt("CookieLifeTime", 7*24)
-		if expireTime <= 0 {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "the 'CookieLifeTime' config must be greater than 0", nil)
-		}
-		index := &mgo.Index{
-			Key:         []string{"time"},
-			Background:  true,
-			Name:        "time",
-			ExpireAfter: time.Duration(expireTime) * time.Hour,
-		}
-		err = mongo.CreateIndex(cookieCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
-		}
+	err := mongo.CreateIndex(cookieCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create index for app collection", err)
 	}
 }
 
-func NewCookie(id string) error {
-	return mongo.Insert(cookieCollectionName, &Cookie{Id: id, Time: time.Now()})
+func NewCookie(id string, userId string) error {
+	return mongo.Insert(cookieCollectionName, &Cookie{Id: id, UserId: userId, Time: time.Now()})
 }
 
 func HasCookie(id string) (bool, error) {
@@ -70,4 +62,9 @@ func HasCookie(id string) (bool, error) {
 
 func RemoveCookie(id string) error {
 	return mongo.RemoveId(cookieCollectionName, id)
+}
+
+func RemoveAllCookie() error {
+	_, err := mongo.RemoveAll(cookieCollectionName, bson.M{})
+	return err
 }

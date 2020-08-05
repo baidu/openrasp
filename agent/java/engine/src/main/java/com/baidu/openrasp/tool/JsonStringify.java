@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ public class JsonStringify {
 
     /**
      * 处理字符串中的特殊字符，进行转义处理
+     *
      * @param jsonString 待处理的字符串
      * @return 处理后的字符串
      */
@@ -61,6 +62,7 @@ public class JsonStringify {
                     break;
                 default:
                     tmpString.append(c);
+                    break;
             }
         }
         return tmpString.toString();

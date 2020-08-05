@@ -2,6 +2,7 @@
 hook pcntl_exec (webshell)
 --SKIPIF--
 <?php
+if (!function_exists("pcntl_exec")) die("Skipped: pcntl is disabled.");
 $plugin = <<<EOF
 RASP.algorithmConfig = {
     webshell_command: {

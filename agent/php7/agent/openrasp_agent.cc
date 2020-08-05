@@ -23,14 +23,18 @@ BaseAgent::BaseAgent(std::string name)
 	: default_slash(1, DEFAULT_SLASH)
 {
 	this->name = name;
-	this->is_alive = false;
 }
 
-void BaseAgent::install_signal_handler(sighandler_t signal_handler)
+void BaseAgent::install_sigterm_handler(sighandler_t signal_handler)
 {
 	struct sigaction sa_usr = {0};
 	sa_usr.sa_flags = 0;
 	sa_usr.sa_handler = signal_handler;
 	sigaction(SIGTERM, &sa_usr, NULL);
+}
+
+std::string BaseAgent::get_name() const
+{
+	return name;
 }
 } // namespace openrasp

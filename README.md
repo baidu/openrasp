@@ -26,14 +26,15 @@ We also provide a few test cases that are corresponding to OWASP TOP 10 attacks,
 We've fully tested OpenRASP on the following application servers for Linux platforms:
 
 * Java
-  * Tomcat 6-8
+  * Tomcat 6-9
   * JBoss 4.X
   * Jetty 7-9
   * Resin 3-4
   * SpringBoot 1-2
   * IBM WebSphpere 8.5, 9.0
+  * WebLogic 10.3.6, 12.2.1
 * PHP
-  * 5.3-5.6, 7.0-7.2
+  * 5.3-5.6, 7.0-7.3
 
 The support of other web application servers will also be soon included in the coming releases.
 

@@ -11,6 +11,10 @@ import settings from '@/components/pages/settings'
 import plugins from '@/components/pages/plugins'
 import audit from '@/components/pages/audit'
 import events from '@/components/pages/events'
+import vulns from '@/components/pages/vulns'
+import exceptions from '@/components/pages/exceptions'
+import dependency from '@/components/pages/dependency'
+import iast from '@/components/pages/iast'
 import Layout from '@/views/layout'
 
 Vue.use(Router)
@@ -26,7 +30,7 @@ const router = new Router({
       path: '/',
       beforeEnter(to, from, next) {
         if (!Cookie.get('RASP_AUTH_ID') && process.env.NODE_ENV === 'production') {
-          next({ name: 'login' })
+          next({ name: 'login', query: { next: location.href } })
         } else {
           store.dispatch('loadAppList', to.params.app_id)
             .then(() => next())
@@ -50,6 +54,14 @@ const router = new Router({
         name: 'audit',
         component: audit
       }, {
+        path: 'dependency/:app_id/',
+        name: 'dependency',
+        component: dependency
+      }, {
+          path: 'iast/:app_id/',
+          name: 'iast',
+          component: iast
+      },{
         path: 'settings/:setting_tab/:app_id/',
         name: 'settings',
         component: settings
@@ -65,6 +77,14 @@ const router = new Router({
         path: 'events/:app_id/',
         name: 'events',
         component: events
+      }, {
+        path: 'vulns/:app_id/',
+        name: 'vulns',
+        component: vulns
+      }, {
+        path: 'exceptions/:app_id/',
+        name: 'exceptions',
+        component: exceptions
       }, {
         path: '*',
         redirect: {

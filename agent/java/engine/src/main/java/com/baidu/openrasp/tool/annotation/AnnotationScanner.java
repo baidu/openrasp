@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 
 package com.baidu.openrasp.tool.annotation;
 
-import com.baidu.openrasp.exception.AnnotationScannerException;
-import com.baidu.openrasp.transformer.CustomClassTransformer;
+import com.baidu.openrasp.exceptions.AnnotationScannerException;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -74,7 +75,7 @@ public class AnnotationScanner {
                 }
             }
         } catch (Exception e) {
-            CustomClassTransformer.LOGGER.error("find and add class failed", e);
+            LogTool.warn(ErrorType.HOOK_ERROR, "find and add class failed: " + e.getMessage(), e);
             throw new AnnotationScannerException(e);
         }
         for (Class clazz : classes) {
@@ -106,7 +107,7 @@ public class AnnotationScanner {
                     try {
                         classes.add(AnnotationScanner.class.getClassLoader().loadClass(packageName + '.' + className));
                     } catch (Exception e) {
-                        CustomClassTransformer.LOGGER.error("find and add class failed", e);
+                        LogTool.warn(ErrorType.HOOK_ERROR, "find and add class failed: " + e.getMessage(), e);
                         throw new AnnotationScannerException(e);
 
                     }

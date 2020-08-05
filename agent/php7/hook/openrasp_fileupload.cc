@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "hook/data/fileupload_object.h"
+#include "hook/checker/v8_detector.h"
 #include "openrasp_hook.h"
 
 /**
@@ -23,70 +25,35 @@ PRE_HOOK_FUNCTION(move_uploaded_file, FILE_UPLOAD);
 
 void pre_global_move_uploaded_file_FILE_UPLOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *name, *dest;
-    int argc = MIN(2, ZEND_NUM_ARGS());
-
-    if (argc < 2 ||
-        zend_get_parameters_ex(argc, &name, &dest) != SUCCESS ||
-        Z_TYPE_P(name) != IS_STRING ||
-        Z_TYPE_P(dest) != IS_STRING ||
-        !zend_hash_exists(SG(rfc1867_uploaded_files), Z_STR_P(name)) ||
-        php_check_open_basedir_ex(Z_STRVAL_P(dest), 0) ||
-        (Z_TYPE(PG(http_globals)[TRACK_VARS_FILES]) != IS_STRING && !zend_is_auto_global_str(ZEND_STRL("_FILES"))))
+    zval *path = nullptr;
+    zval *new_path = nullptr;
+    if (!SG(rfc1867_uploaded_files))
+    {
+        return;
+    }
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "zz", &path, &new_path) == FAILURE)
     {
         return;
     }
 
-    zval *realname = nullptr, *file;
-    ZEND_HASH_FOREACH_VAL(Z_ARRVAL(PG(http_globals)[TRACK_VARS_FILES]), file)
+    if (path != nullptr &&
+        Z_TYPE_P(path) == IS_STRING &&
+        zend_hash_str_exists(SG(rfc1867_uploaded_files), Z_STRVAL_P(path), Z_STRLEN_P(path)))
     {
-        zval *tmp_name = NULL;
-        if (Z_TYPE_P(file) != IS_ARRAY ||
-            (tmp_name = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("tmp_name"))) == NULL ||
-            Z_TYPE_P(tmp_name) != IS_STRING ||
-            zend_binary_strcmp(Z_STRVAL_P(tmp_name), Z_STRLEN_P(tmp_name), Z_STRVAL_P(name), Z_STRLEN_P(name)) != 0)
+        std::string file_content;
+        php_stream *stream = php_stream_open_wrapper(Z_STRVAL_P(path), "rb", 0, nullptr);
+        if (stream)
         {
-            continue;
+            zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);
+            if (buffer)
+            {
+                file_content = std::string(ZSTR_VAL(buffer), ZSTR_LEN(buffer));
+                zend_string_release(buffer);
+            }
+            stream->is_persistent ? php_stream_pclose(stream) : php_stream_close(stream);
         }
-        if ((realname = zend_hash_str_find(Z_ARRVAL_P(file), ZEND_STRL("name"))) != NULL)
-        {
-            break;
-        }
-    }
-    ZEND_HASH_FOREACH_END();
-    if (!realname)
-    {
-        realname = dest;
-    }
-    php_stream *stream = php_stream_open_wrapper(Z_STRVAL_P(name), "rb", 0, NULL);
-    if (!stream)
-    {
-        return;
-    }
-    zend_string *buffer = php_stream_copy_to_mem(stream, 4 * 1024, 0);
-    stream->is_persistent ? php_stream_pclose(stream) : php_stream_close(stream);
-    if (!buffer)
-    {
-        return;
-    }
-
-    openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-    if (!isolate)
-    {
-        zend_string_release(buffer);
-        return;
-    }
-    bool is_block = false;
-    {
-        v8::HandleScope handle_scope(isolate);
-        auto params = v8::Object::New(isolate);
-        params->Set(openrasp::NewV8String(isolate, "filename"), openrasp::NewV8String(isolate, Z_STRVAL_P(realname), Z_STRLEN_P(realname)));
-        params->Set(openrasp::NewV8String(isolate, "content"), openrasp::NewV8String(isolate, buffer->val, MIN(buffer->len, 4 * 1024)));
-        zend_string_release(buffer);
-        is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-    }
-    if (is_block)
-    {
-        handle_block();
+        openrasp::data::FileuploadObject fileupload_obj(OPENRASP_G(request).get_parameter(), path, new_path, file_content);
+        openrasp::checker::V8Detector v8_detector(fileupload_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+        v8_detector.run();
     }
 }

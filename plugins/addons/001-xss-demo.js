@@ -1,6 +1,8 @@
 const plugin_version = '2018-1000-1000'
 const plugin_name    = '001-xss-demo'
 
+// 本demo插件已经废弃
+//
 // Java 版本需要设置 request.param_encoding 之后才能使用
 // PHP  版本不支持 request hook 点，所以没有这个检测
 //  
@@ -12,6 +14,12 @@ var clean  = {
     message: '无风险',
     confidence: 0
 }
+
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
 
 plugin.register('request', function(params, context) {
 

@@ -11,14 +11,27 @@
               </ul>
             </div>
             <div class="col-auto">
-              <a href="https://github.com/baidu/openrasp" class="btn btn-outline-primary btn-sm">源代码</a>
+              <a href="https://github.com/baidu/openrasp" target="_blank" class="btn btn-outline-primary btn-sm">源代码</a>
             </div>
           </div>
         </div>
         <div class="col-12 col-lg-auto mt-3 mt-lg-0 text-center">
-          Copyright © 2018 Baidu, Inc. 当前版本 1.0.0 RC1
+          Copyright © 2017-2020 Baidu, Inc. 当前版本 {{rasp_version}}
         </div>
       </div>
     </div>
   </footer>
 </template>
+
+<script>
+import { rasp_version } from '@/util'
+
+export default {
+  name: 'Footer',
+  data: function() {
+    return {
+      rasp_version: rasp_version
+    }
+  }
+}
+</script>

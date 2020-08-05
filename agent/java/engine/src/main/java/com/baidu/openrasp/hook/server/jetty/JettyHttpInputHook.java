@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,11 +51,11 @@ public class JettyHttpInputHook extends ServerInputHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String srcRead1 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
+        String srcRead1 = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
                 "$_,$0", int.class, Object.class);
         insertAfter(ctClass, "read", "()I", srcRead1);
-        String src2Read2 = getInvokeStaticSrc(HookHandler.class, "onInputStreamRead",
-                "$_,$0,$1,$2,$3", int.class, Object.class, byte[].class, int.class, int.class);
+        String src2Read2 = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
+                "$_,$0,$1,$2", int.class, Object.class, byte[].class, int.class);
         insertAfter(ctClass, "read", "([BII)I", src2Read2);
     }
 

@@ -13,19 +13,19 @@
           <label class="form-label">
             原密码
           </label>
-          <input v-model="oldpass" type="password" class="form-control">
+          <input v-model="oldpass" type="password" class="form-control" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             新密码
           </label>
-          <input v-model="newpass1" type="password" class="form-control">
+          <input v-model="newpass1" type="password" class="form-control" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">
             再次输入新密码
           </label>
-          <input v-model="newpass2" type="password" class="form-control">
+          <input v-model="newpass2" type="password" class="form-control" autocomplete="off">
         </div>
       </div>
       <div class="card-footer text-right">
@@ -40,7 +40,8 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          TOKEN 管理
+          TOKEN 管理 
+          <a href="https://rasp.baidu.com/doc/hacking/cloud-api.html#panel-api-description" target="_blank" style="color: #467fcf">[帮助文档]</a>
         </h3>
       </div>
       <div class="card-body">
@@ -115,38 +116,37 @@ export default {
   methods: {
     changePass: function() {
       if (this.oldpass.length > 0 && this.newpass1.length > 0 && this.newpass1 == this.newpass2) {
-        this.api_request('v1/user/update', {
+        this.request.post('v1/user/update', {
           old_password: this.oldpass,
           new_password: this.newpass1
-        }, function(data) {
-          alert('密码修改成功')
+        }).then(() => {
+          alert('密码修改成功，点击确认重新登录')
+          location.href = '/#/login'
         })
       } else {
         alert('两次密码输入不一致，请重新输入')
       }
     },
     createToken: function() {
-      var self = this
       var descr = prompt('请输入备注信息')
 
       if (descr && descr.length) {
-        self.api_request('v1/api/token', {
+        this.request.post('v1/api/token', {
           description: descr
-        }, function(data) {
-          self.loadTokens(1)
+        }).then(() => {
+          this.loadTokens(1)
         })
       }
     },
     editToken: function(data) {
-      var self = this
       var descr = prompt('请输入新的备注信息')
       if (!descr) { return }
 
-      this.api_request('v1/api/token', {
+      this.request.post('v1/api/token', {
         description: descr,
         token: data.token
-      }, function(data) {
-        self.loadTokens(1)
+      }).then(() => {
+        this.loadTokens(1)
       })
     },
     deleteToken: function(data) {
@@ -154,13 +154,12 @@ export default {
         return
       }
 
-      var self = this
       var body = {
         token: data.token
       }
 
-      this.api_request('v1/api/token/delete', body, function(data) {
-        self.loadTokens(1)
+      this.request.post('v1/api/token/delete', body).then(() => {
+        this.loadTokens(1)
       })
     },
     loadTokens(page) {

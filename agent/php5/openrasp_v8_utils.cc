@@ -25,8 +25,66 @@ extern "C"
 
 namespace openrasp
 {
+void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result);
+void get_stack(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info);
+CheckResult Check(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, int timeout)
+{
+    auto context = isolate->GetCurrentContext();
+    auto data = isolate->GetData();
+    params->SetLazyDataProperty(context, NewV8String(isolate, "stack", 5), get_stack).FromJust();
+    v8::Local<v8::Object> request_context;
+    if (data->request_context.IsEmpty())
+    {
+        request_context = data->request_context_templ.Get(isolate)->NewInstance(context).ToLocalChecked();
+        data->request_context.Reset(isolate, request_context);
+    }
+    else
+    {
+        request_context = data->request_context.Get(isolate);
+    }
+    auto rst = isolate->Check(type, params, request_context, timeout);
+    auto len = rst->Length();
+    if (len == 0)
+    {
+        return CheckResult::kCache;
+    }
+    CheckResult check_result = CheckResult::kNoCache;
+    for (int i = 0; i < len; i++)
+    {
+        v8::HandleScope handle_scope(isolate);
+        v8::Local<v8::Value> val;
+        if (!rst->Get(context, i).ToLocal(&val) || !val->IsObject())
+        {
+            continue;
+        }
+        auto obj = val.As<v8::Object>();
+        auto action = obj->Get(context, NewV8String(isolate, "action")).FromMaybe(v8::Local<v8::Value>());
+        if (action.IsEmpty() || !action->IsString())
+        {
+            continue;
+        }
+        std::string str = *v8::String::Utf8Value(isolate, action);
+        if (str == "exception")
+        {
+            auto message = obj->Get(context, NewV8String(isolate, "message")).FromMaybe(v8::Local<v8::Value>());
+            if (!message.IsEmpty() && message->IsString())
+            {
+                plugin_log(std::string(*v8::String::Utf8Value(isolate, message)) + "\n");
+            }
+            continue;
+        }
+        if (str == "block")
+        {
+            check_result = CheckResult::kBlock;
+        }
+        alarm_info(isolate, type, params, obj);
+    }
+    return check_result;
+}
+
 v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
 {
+    auto context = isolate->GetCurrentContext();
     v8::Local<v8::Value> rst = v8::Undefined(isolate);
     switch (Z_TYPE_P(val))
     {
@@ -74,7 +132,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
             {
                 if (type == HASH_KEY_IS_LONG && index == idx)
                 {
-                    arr->Set(index++, v8_value);
+                    arr->Set(context, index++, v8_value).IsJust();
                 }
                 else
                 {
@@ -83,7 +141,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
                     rst = obj;
                     for (int i = 0; i < index; i++)
                     {
-                        obj->Set(i, arr->Get(i));
+                        obj->Set(context, i, arr->Get(context, i).ToLocalChecked()).IsJust();
                     }
                 }
             }
@@ -91,11 +149,11 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
             {
                 if (type == HASH_KEY_IS_LONG)
                 {
-                    obj->Set(idx, v8_value);
+                    obj->Set(context, idx, v8_value).IsJust();
                 }
                 else
                 {
-                    obj->Set(NewV8String(isolate, key), v8_value);
+                    obj->Set(context, NewV8String(isolate, key), v8_value).IsJust();
                 }
             }
         }
@@ -103,7 +161,7 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     }
     case IS_STRING:
     {
-        bool avoidwarning = v8::String::NewFromOneByte(isolate, (uint8_t *)Z_STRVAL_P(val), v8::NewStringType::kNormal, Z_STRLEN_P(val)).ToLocal(&rst);
+        rst = NewV8String(isolate, Z_STRVAL_P(val), Z_STRLEN_P(val));
         break;
     }
     case IS_LONG:
@@ -132,64 +190,64 @@ v8::Local<v8::Value> NewV8ValueFromZval(v8::Isolate *isolate, zval *val)
     return rst;
 }
 
-void plugin_info(const char *message, size_t length)
+void plugin_log(const std::string &message)
 {
     TSRMLS_FETCH();
-    LOG_G(plugin_logger).log(LEVEL_INFO, message, length TSRMLS_CC, false, true);
+    LOG_G(plugin_logger).log(LEVEL_INFO, message.c_str(), message.length() TSRMLS_CC, false, true);
+}
+
+void get_stack(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
+{
+    TSRMLS_FETCH();
+    auto isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
+    v8::HandleScope handle_scope(isolate);
+    auto arr = format_debug_backtrace_arr();
+    size_t len = arr.size();
+    auto stack = v8::Array::New(isolate, len);
+    for (size_t i = 0; i < len; i++)
+    {
+        stack->Set(context, i, openrasp::NewV8String(isolate, arr[i])).IsJust();
+    }
+    info.GetReturnValue().Set(stack);
 }
 
 void alarm_info(Isolate *isolate, v8::Local<v8::String> type, v8::Local<v8::Object> params, v8::Local<v8::Object> result)
 {
     TSRMLS_FETCH();
-    auto key_action = isolate->GetData()->key_action.Get(isolate);
-    auto key_message = isolate->GetData()->key_message.Get(isolate);
-    auto key_confidence = isolate->GetData()->key_confidence.Get(isolate);
-    auto key_algorithm = isolate->GetData()->key_algorithm.Get(isolate);
-    auto key_name = isolate->GetData()->key_name.Get(isolate);
-
-    auto stack_trace = NewV8String(isolate, format_debug_backtrace_str(TSRMLS_C));
-
-    std::time_t t = std::time(nullptr);
-    char buffer[100] = {0};
-    size_t size = std::strftime(buffer, sizeof(buffer), RaspLoggerEntry::rasp_rfc3339_format, std::localtime(&t));
-    auto event_time = NewV8String(isolate, buffer, size);
-
-    auto obj = v8::Object::New(isolate);
-    obj->Set(NewV8String(isolate, "attack_type"), type);
-    obj->Set(NewV8String(isolate, "attack_params"), params);
-    obj->Set(NewV8String(isolate, "intercept_state"), result->Get(key_action));
-    obj->Set(NewV8String(isolate, "plugin_message"), result->Get(key_message));
-    obj->Set(NewV8String(isolate, "plugin_confidence"), result->Get(key_confidence));
-    obj->Set(NewV8String(isolate, "plugin_algorithm"), result->Get(key_algorithm));
-    obj->Set(NewV8String(isolate, "plugin_name"), result->Get(key_name));
-    obj->Set(NewV8String(isolate, "stack_trace"), stack_trace);
-    obj->Set(NewV8String(isolate, "event_time"), event_time);
-    zval *alarm_common_info = LOG_G(alarm_logger).get_common_info(TSRMLS_C);
-    HashTable *ht = Z_ARRVAL_P(alarm_common_info);
-    for (zend_hash_internal_pointer_reset(ht);
-         zend_hash_has_more_elements(ht) == SUCCESS;
-         zend_hash_move_forward(ht))
+    v8::HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto undefined = v8::Undefined(isolate).As<v8::Value>();
+    result->Set(context, NewV8String(isolate, "attack_type"), type).IsJust();
+    result->Set(context, NewV8String(isolate, "intercept_state"), result->Get(context, NewV8String(isolate, "action")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_message"), result->Get(context, NewV8String(isolate, "message")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_confidence"), result->Get(context, NewV8String(isolate, "confidence")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_algorithm"), result->Get(context, NewV8String(isolate, "algorithm")).FromMaybe(undefined)).IsJust();
+    result->Set(context, NewV8String(isolate, "plugin_name"), result->Get(context, NewV8String(isolate, "name")).FromMaybe(undefined)).IsJust();
+    if (result->Has(context, NewV8String(isolate, "params")).FromMaybe(false))
     {
-        char *key;
-        ulong idx;
-        int type;
-        zval **value;
-        type = zend_hash_get_current_key(ht, &key, &idx, 0);
-        if (type != HASH_KEY_IS_STRING ||
-            zend_hash_get_current_data(ht, (void **)&value) != SUCCESS ||
-            (Z_TYPE_PP(value) != IS_STRING &&
-             Z_TYPE_PP(value) != IS_LONG &&
-             Z_TYPE_PP(value) != IS_ARRAY))
-        {
-            continue;
-        }
-        obj->Set(NewV8String(isolate, key), NewV8ValueFromZval(isolate, *value));
+        result->Set(context, NewV8String(isolate, "attack_params"), result->Get(context, NewV8String(isolate, "params")).FromMaybe(undefined)).IsJust();
     }
-    v8::Local<v8::String> val;
-    if (v8::JSON::Stringify(isolate->GetCurrentContext(), obj).ToLocal(&val))
+    else
     {
-        v8::String::Utf8Value msg(val);
-        LOG_G(alarm_logger).log(LEVEL_INFO, *msg, msg.length() TSRMLS_CC, true, false);
+        result->Set(context, NewV8String(isolate, "attack_params"), params).IsJust();
+    }
+    result->Delete(context, NewV8String(isolate, "action")).IsJust();
+    result->Delete(context, NewV8String(isolate, "message")).IsJust();
+    result->Delete(context, NewV8String(isolate, "confidence")).IsJust();
+    result->Delete(context, NewV8String(isolate, "algorithm")).IsJust();
+    result->Delete(context, NewV8String(isolate, "name")).IsJust();
+    result->Delete(context, NewV8String(isolate, "params")).IsJust();
+
+    v8::Local<v8::String> val;
+    if (v8::JSON::Stringify(isolate->GetCurrentContext(), result).ToLocal(&val))
+    {
+        v8::String::Utf8Value msg(isolate, val);
+        openrasp::JsonReader base_json(*msg);
+        if (!base_json.has_error())
+        {
+            LOG_G(alarm_logger).log(LEVEL_INFO, base_json TSRMLS_CC);
+        }
     }
 }
 
@@ -224,7 +282,7 @@ void load_plugins()
                 }
                 else
                 {
-                    openrasp_error(E_WARNING, CONFIG_ERROR, _("Ignored Javascript plugin file '%s', as it exceeds 10 MB in file size."), filename.c_str());
+                    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR, _("Ignored Javascript plugin file '%s', as it exceeds 10 MB in file size."), filename.c_str());
                 }
             }
         }
@@ -242,7 +300,8 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
         Object.keys(RASP.algorithmConfig || {})
             .filter(key => typeof key === 'string' && typeof RASP.algorithmConfig[key] === 'object' && typeof RASP.algorithmConfig[key].action === 'string')
             .map(key => [key, RASP.algorithmConfig[key].action])
-    )", "extract_buildin_action");
+    )",
+                                   "extract_buildin_action");
     if (rst.IsEmpty())
     {
         return;
@@ -253,18 +312,183 @@ void extract_buildin_action(Isolate *isolate, std::map<std::string, std::string>
     {
         v8::HandleScope handle_scope(isolate);
         v8::Local<v8::Value> item;
-        if (!arr->Get(context, i).ToLocal(&item) || ! item->IsArray())
+        if (!arr->Get(context, i).ToLocal(&item) || !item->IsArray())
         {
             continue;
         }
-        v8::String::Utf8Value key(item.As<v8::Array>()->Get(0));
-        v8::String::Utf8Value value(item.As<v8::Array>()->Get(1));
+        v8::String::Utf8Value key(isolate, item.As<v8::Array>()->Get(context, 0).ToLocalChecked());
+        v8::String::Utf8Value value(isolate, item.As<v8::Array>()->Get(context, 1).ToLocalChecked());
         auto iter = buildin_action_map.find({*key, key.length()});
         if (iter != buildin_action_map.end())
         {
             iter->second = std::string(*value, value.length());
         }
     }
+}
+
+std::vector<int64_t> extract_int64_array(Isolate *isolate, const std::string &value, int limit, const std::vector<int64_t> &default_value)
+{
+    if (nullptr != isolate)
+    {
+        std::string script = R"(
+        (function () 
+        {
+            try {
+                    return )" +
+                             value + R"(.filter(value => typeof value === 'number');
+                } catch (_) {}
+        })()
+        )";
+        v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto rst = isolate->ExecScript(script, "extract_int64_array_" + value);
+        if (!rst.IsEmpty())
+        {
+            std::vector<int64_t> result;
+            auto v8_arr = rst.ToLocalChecked();
+            if (!v8_arr.IsEmpty() && v8_arr->IsArray())
+            {
+                auto arr = v8_arr.As<v8::Array>();
+                auto len = arr->Length();
+                if (len > limit)
+                {
+                    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
+                                   _("Size of %s must <= %d."), value.c_str(), limit);
+                }
+                for (size_t i = 0; i < len; i++)
+                {
+                    v8::HandleScope handle_scope(isolate);
+                    auto item = arr->Get(context, i).ToLocalChecked();
+                    if (!item.IsEmpty() && item->IsInt32())
+                    {
+                        v8::Local<v8::Integer> err_code_local = item.As<v8::Integer>();
+                        int64_t err_code = err_code_local->Value();
+                        result.push_back(err_code);
+                    }
+                }
+                return result;
+            }
+        }
+    }
+    return default_value;
+}
+
+std::vector<std::string> extract_string_array(Isolate *isolate, const std::string &value, int limit, const std::vector<std::string> &default_value)
+{
+    if (nullptr != isolate)
+    {
+        std::string script;
+        script.append(R"( 
+        (function () 
+        {
+            try {
+                return )")
+            .append(value)
+            .append(R"(.filter(value => typeof value === 'string')
+            } catch (_) {}
+        })()
+        )");
+        v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto rst = isolate->ExecScript(script, "extract_string_array_" + value);
+        if (!rst.IsEmpty())
+        {
+            std::vector<std::string> result;
+            auto v8_arr = rst.ToLocalChecked();
+            if (!v8_arr.IsEmpty() && v8_arr->IsArray())
+            {
+                auto arr = v8_arr.As<v8::Array>();
+                auto len = arr->Length();
+                if (len > limit)
+                {
+                    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR,
+                                   _("Size of %s must <= %d."), value.c_str(), limit);
+                }
+                for (size_t i = 0; i < len; i++)
+                {
+                    v8::HandleScope handle_scope(isolate);
+                    v8::Local<v8::Value> item;
+                    if (!arr->Get(context, i).ToLocal(&item) || !item->IsString())
+                    {
+                        continue;
+                    }
+                    v8::String::Utf8Value value(isolate, item);
+                    result.push_back(std::string(*value, value.length()));
+                }
+                return result;
+            }
+        }
+    }
+    return default_value;
+}
+
+int64_t extract_int64(Isolate *isolate, const std::string &value, const int64_t &default_value)
+{
+    if (nullptr != isolate)
+    {
+        std::string script = R"(
+        (function () 
+        {
+            try {
+                    if (Number.isInteger()" +
+                             value + R"())
+                    {
+                        return )" +
+                             value + R"(
+                    }
+                } catch (_) {}
+        })()
+        )";
+        v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto rst = isolate->ExecScript(script, "extract_int64_" + value);
+        if (!rst.IsEmpty())
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto v8_value = rst.ToLocalChecked();
+            if (!v8_value.IsEmpty() && v8_value->IsInt32())
+            {
+                v8::Local<v8::Integer> v8_result = v8_value.As<v8::Integer>();
+                return v8_result->Value();
+            }
+        }
+    }
+    return default_value;
+}
+
+std::string extract_string(Isolate *isolate, const std::string &value, const std::string &default_value)
+{
+    if (nullptr != isolate)
+    {
+        std::string script = R"(
+        (function () 
+        {
+            try {
+                    if (typeof )" +
+                             value + R"( === 'string')
+                    {
+                        return )" +
+                             value + R"(
+                    }
+                } catch (_) {}
+        })()
+        )";
+        v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto rst = isolate->ExecScript(script, "extract_string_" + value);
+        if (!rst.IsEmpty())
+        {
+            v8::HandleScope handle_scope(isolate);
+            auto v8_value = rst.ToLocalChecked();
+            if (!v8_value.IsEmpty() && v8_value->IsString())
+            {
+                v8::Local<v8::String> v8_result = v8_value.As<v8::String>();
+                v8::String::Utf8Value value(isolate, v8_result);
+                return std::string(*value, value.length());
+            }
+        }
+    }
+    return default_value;
 }
 
 } // namespace openrasp

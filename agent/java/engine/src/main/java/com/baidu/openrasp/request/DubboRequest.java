@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.baidu.openrasp.request;
 
+
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -53,7 +55,7 @@ public class DubboRequest extends AbstractRequest {
 
     @Override
     public String getProtocol() {
-        return null;
+        return "dubbo";
     }
 
     @Override
@@ -113,9 +115,7 @@ public class DubboRequest extends AbstractRequest {
 
     @Override
     public Map<String, String> getServerContext() {
-        HashMap<String, String> serverContext = new HashMap<String, String>(4);
-        serverContext.put("language", "java");
-        return serverContext;
+        return ApplicationModel.getApplicationInfo();
     }
 
     @Override
@@ -124,7 +124,17 @@ public class DubboRequest extends AbstractRequest {
     }
 
     @Override
-    public String getClinetIp() {
+    public String getClientIp() {
+        return null;
+    }
+
+    @Override
+    public String getContentType() {
+        return null;
+    }
+
+    @Override
+    public String getCharacterEncoding() {
         return null;
     }
 }

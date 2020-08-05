@@ -28,7 +28,7 @@ std::vector<char> inject_html;
 void openrasp_load_inject_html()
 {
     std::vector<char> inject;
-    char *path;
+    char *path = nullptr;
     spprintf(&path, 0, "%s%cassets%cinject.html", openrasp_ini.root_dir, DEFAULT_SLASH, DEFAULT_SLASH);
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     efree(path);
@@ -72,12 +72,8 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_inject)
 PHP_RINIT_FUNCTION(openrasp_inject)
 {
     {
-        auto time_point = std::chrono::steady_clock::now();
-        long long nano = time_point.time_since_epoch().count();
-        unsigned long hash = zend_inline_hash_func(reinterpret_cast<const char *>(&nano), sizeof(nano));
-        spprintf(&OPENRASP_INJECT_G(request_id), 32, "%016lx%016llx", hash, nano);
         char *uuid_header = nullptr;
-        int uuid_header_len = spprintf(&uuid_header, 0, "X-Request-ID: %s", OPENRASP_INJECT_G(request_id));
+        int uuid_header_len = spprintf(&uuid_header, 0, "X-Request-ID: %s", OPENRASP_G(request).get_id().c_str());
         if (uuid_header)
         {
             sapi_header_line header;
@@ -88,10 +84,11 @@ PHP_RINIT_FUNCTION(openrasp_inject)
         }
         efree(uuid_header);
     }
+    for (const auto &it : OPENRASP_CONFIG(inject.headers))
     {
         sapi_header_line header;
-        header.line = "X-Protected-By: OpenRASP";
-        header.line_len = sizeof("X-Protected-By: OpenRASP") - 1;
+        header.line = const_cast<char *>(it.c_str());
+        header.line_len = it.length();
         header.response_code = 0;
         sapi_header_op(SAPI_HEADER_REPLACE, &header);
     }
@@ -118,20 +115,11 @@ PHP_RSHUTDOWN_FUNCTION(openrasp_inject)
         }
         if (is_match_inject_prefix)
         {
-            char target_header[] = "text/html";
-            for (zend_llist_element *element = SG(sapi_headers).headers.head; element; element = element->next)
+            if (strncasecmp(SG(sapi_headers).mimetype, "text/html", sizeof("text/html") - 1) == 0)
             {
-                sapi_header_struct *sapi_header = (sapi_header_struct *)element->data;
-                if (sapi_header->header_len > 0 &&
-                    strncasecmp(sapi_header->header, "content-type", sizeof("content-type") - 1) == 0 &&
-                    php_stristr(sapi_header->header, target_header, sapi_header->header_len, strlen(target_header)) != nullptr)
-                {
-                    php_output_write(inject_html.data(), inject_html.size());
-                    break;
-                }
+                php_output_write(inject_html.data(), inject_html.size());
             }
         }
     }
-    efree(OPENRASP_INJECT_G(request_id));
     return SUCCESS;
 }

@@ -20,6 +20,8 @@ import com.baidu.rasp.uninstall.Uninstaller;
 import com.baidu.rasp.uninstall.UninstallerFactory;
 import com.baidu.rasp.uninstall.windows.ResinUninstaller;
 
+import static com.baidu.rasp.App.*;
+
 /**
  * @author anyang
  * @Description:
@@ -37,6 +39,15 @@ public class LinuxUninstallerFactory extends UninstallerFactory {
         }
         if (serverName.equals(RESIN)) {
             return new ResinUninstaller(serverName, serverRoot);
+        }
+        if (serverName.equals(WEBLOGIC)) {
+            return new WeblogicUninstaller(serverName, serverRoot);
+        }
+        if (serverName.equals(JBOSSEAP)) {
+            return new JbossEAPUninstaller(serverName, serverRoot);
+        }
+        if (serverName.equals(WILDFLY)) {
+            return new WildflyUninstaller(serverName, serverRoot);
         }
         System.out.println("Invalid server name: " + serverName);
         return null;

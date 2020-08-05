@@ -80,7 +80,7 @@ EOF
 		if [[ ! -z "$tomcat_home" ]] && [[ ! -z "$tomcat_user" ]]; then
 
 			if [[ $(id -u) == 0 ]]; then
-				tomcat_version=$(su - "$tomcat_user" -c "JAVA_HOME=$java_home JRE_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version | awk '/Server number/ {print $3}'")
+				tomcat_version=$(su - "$tomcat_user" -c "JAVA_HOME=$java_home JRE_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version | awk '/Server number/ {print \$3}'")
 			else
 				tomcat_version=$(JAVA_HOME=$java_home JRE_HOME=$java_home bash ${tomcat_home}/bin/catalina.sh version | awk '/Server number/ {print $3}')
 			fi
@@ -115,7 +115,7 @@ EOF
 		fi
 
 		# 检查参数
-		if [[ -z "$java_path" ]] || [[ -z "$java_home" ]] || [[ -z "$java_version" ]] || [[ -z "$tomcat_home" ]] || [[ -z "$tomcat_version" ]]
+		if [[ -z "$java_path" ]] || [[ -z "$java_version" ]] || [[ -z "$tomcat_home" ]] || [[ -z "$tomcat_version" ]]
 		then
 			echo
 			echo Unsupported Java application server: not a Tomcat server.
@@ -324,6 +324,15 @@ do
 			;;
 	esac
 done
+
+# reject default parameter
+if [[ $flag_appid == "APPID" ]]; then
+	echo ERROR: bad app id: APPID
+	exit
+elif [[ $flag_appsecret == "APPSECRET" ]]; then
+	echo ERROR: bad app secret: APPSECRET
+	exit
+fi
 
 if [[ $(id -u) != "0" ]]; then
 	echo

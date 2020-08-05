@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
+#include "hook/checker/builtin_detector.h"
+#include "hook/data/callable_object.h"
 #include "openrasp_hook.h"
+#include "openrasp_v8.h"
 #include "agent/shared_config_manager.h"
 
 /**
@@ -33,29 +36,14 @@ static void check_callable_function(zend_fcall_info fci TSRMLS_DC)
         return;
     }
     zval *function_name = fci.function_name;
-    if (Z_TYPE_P(function_name) == IS_STRING && Z_STRLEN_P(function_name) > 0)
-    {
-        if (openrasp_check_callable_black(Z_STRVAL_P(function_name), Z_STRLEN_P(function_name) TSRMLS_CC))
-        {
-            zval *attack_params = NULL;
-            MAKE_STD_ZVAL(attack_params);
-            array_init(attack_params);
-            add_assoc_string(attack_params, "function", Z_STRVAL_P(function_name), 1);
-            zval *plugin_message = NULL;
-            MAKE_STD_ZVAL(plugin_message);
-            char *message_str = NULL;
-            spprintf(&message_str, 0, _("WebShell activity - Using dangerous callback method %s()"), Z_STRVAL_P(function_name));
-            ZVAL_STRING(plugin_message, message_str, 1);
-            efree(message_str);
-            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(CALLABLE);
-            openrasp_buildin_php_risk_handle(action, CALLABLE, 100, attack_params, plugin_message TSRMLS_CC);
-        }
-    }
+    openrasp::data::CallableObject callable_obj(function_name, OPENRASP_HOOK_G(callable_blacklist));
+    openrasp::checker::BuiltinDetector builtin_detector(callable_obj);
+    builtin_detector.run();
 }
 
 void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *array;
+    zval *array = nullptr;
     long use_type = 0;
     zend_fcall_info fci = empty_fcall_info;
     zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
@@ -72,7 +60,7 @@ void pre_global_array_filter_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval ***arrays = NULL;
+    zval ***arrays = nullptr;
     int n_arrays = 0;
     zend_fcall_info fci = empty_fcall_info;
     zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
@@ -87,8 +75,8 @@ void pre_global_array_map_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    HashTable *array;
-    zval *userdata = NULL;
+    HashTable *array = nullptr;
+    zval *userdata = nullptr;
     zend_fcall_info fci;
     zend_fcall_info_cache fci_cache;
 
@@ -101,51 +89,17 @@ void pre_global_array_walk_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_reflectionfunction___construct_CALLABLE(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *name;
-    zval *closure = NULL;
-    char *lcname;
-    zend_function *fptr;
-    char *name_str;
-    int name_len;
+    zval *closure = nullptr;
+    zval *name_str = nullptr;
 
     if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS() TSRMLS_CC, "o", &closure) == SUCCESS)
     {
         return;
     }
-    else if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name_str, &name_len) == SUCCESS)
+    else if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &name_str) == SUCCESS)
     {
-        char *nsname;
-
-        lcname = zend_str_tolower_dup(name_str, name_len);
-
-        /* Ignore leading "\" */
-        nsname = lcname;
-        if (lcname[0] == '\\')
-        {
-            nsname = &lcname[1];
-            name_len--;
-        }
-
-        if (zend_hash_find(EG(function_table), nsname, name_len + 1, (void **)&fptr) == FAILURE)
-        {
-            efree(lcname);
-            return;
-        }
-        if (openrasp_check_callable_black(nsname, name_len TSRMLS_CC))
-        {
-            zval *attack_params = NULL;
-            MAKE_STD_ZVAL(attack_params);
-            array_init(attack_params);
-            add_assoc_string(attack_params, "function", nsname, 1);
-            zval *plugin_message = NULL;
-            MAKE_STD_ZVAL(plugin_message);
-            char *message_str = NULL;
-            spprintf(&message_str, 0, _("Webshell detected: using '%s' function"), nsname);
-            ZVAL_STRING(plugin_message, message_str, 1);
-            efree(message_str);
-            OpenRASPActionType action = openrasp::scm->get_buildin_check_action(check_type);
-            openrasp_buildin_php_risk_handle(action, check_type, 100, attack_params, plugin_message TSRMLS_CC);
-        }
-        efree(lcname);
+        openrasp::data::CallableObject callable_obj(name_str, OPENRASP_HOOK_G(callable_blacklist));
+        openrasp::checker::BuiltinDetector builtin_detector(callable_obj);
+        builtin_detector.run();
     }
 }

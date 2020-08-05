@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,7 @@ package com.baidu.openrasp.hook.server;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import javassist.CannotCompileException;
-import javassist.CtClass;
-import javassist.NotFoundException;
-
-import java.io.IOException;
+import com.baidu.openrasp.tool.Reflection;
 
 /**
  * Created by tyy on 18-2-8.
@@ -30,6 +26,10 @@ import java.io.IOException;
  * 服务器请求 hook 点基类
  */
 public abstract class ServerRequestHook extends AbstractClassHook {
+
+    public ServerRequestHook() {
+        isNecessary = true;
+    }
 
     /**
      * (none-javadoc)
@@ -53,4 +53,23 @@ public abstract class ServerRequestHook extends AbstractClassHook {
         HookHandler.checkFilterRequest(filter, request, response);
     }
 
+    public static void checkRequest(Object undertow, Object http) {
+        try {
+            ClassLoader classLoader = undertow.getClass().getClassLoader();
+            if (classLoader == null) {
+                classLoader = ClassLoader.getSystemClassLoader();
+            }
+            Class attachmentKeyClass = classLoader.loadClass("io.undertow.util.AttachmentKey");
+            Class serverRequest = classLoader.loadClass("io.undertow.servlet.handlers.ServletRequestContext");
+            Object attachmentKey = serverRequest.getField("ATTACHMENT_KEY").get(null);
+            Object context = Reflection.invokeMethod(http, "getAttachment", new Class[]{attachmentKeyClass}, attachmentKey);
+            Object filter = Reflection.invokeMethod(context, "getCurrentServlet", new Class[]{});
+            Object request = Reflection.invokeMethod(context, "getServletRequest", new Class[]{});
+            Object response = Reflection.invokeMethod(context, "getServletResponse", new Class[]{});
+
+            HookHandler.checkFilterRequest(filter, request, response);
+        } catch (Exception e) {
+            HookHandler.LOGGER.warn("handle undertow request failed", e);
+        }
+    }
 }

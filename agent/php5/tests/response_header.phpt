@@ -5,10 +5,14 @@ response header
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'echo test')
-    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack[0].indexOf('exec') != -1)
     return block
 })
 EOF;
+$conf = <<<CONF
+inject.custom_headers:
+  X-Protected-By: OpenRASP
+CONF;
 include(__DIR__.'/skipif.inc');
 ?>
 --INI--
@@ -25,7 +29,6 @@ exec('echo test');
 ?>
 ok
 --EXPECTHEADERS--
-X-Protected-By: OpenRASP
 X-Request-ID: 001ae04bbf142185000147562aecaebe
 --EXPECTREGEX--
 <\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

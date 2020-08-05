@@ -19,6 +19,9 @@
 /plugin/
 /logs/
 /openrasp-logs/
+/tests/logs/
+/tests/openrasp-logs/
 /dist/
 rasp-cloud*
 lastupdate.tmp
+/tools/git.go

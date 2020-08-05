@@ -8,19 +8,15 @@
         </div>
         <div class="modal-body" style="padding-top: 0">
           <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item">
-              <a class="nav-link active" id="home-tab" data-toggle="tab" href="#vuln">报警信息</a>
+            <li class="nav-item" v-for="(tab, index) in tabs" :key="index">
+              <a href="javascript:" :class="{'nav-link': true, 'active': tabIndex == index}" @click="tabIndex = index">
+                {{ tab }}
+              </a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab">资产信息</a>
-            </li>
-            <!-- <li class="nav-item">
-              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab">修复建议</a>
-            </li> -->
           </ul>
           <br>
           <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="vuln" role="tabpanel" aria-labelledby="home-tab">
+            <div :class="{'tab-pane': true, 'fade': true, 'show': tabIndex == 0, 'active': tabIndex == 0}">
               <div class="h6">
                 报警时间
               </div>
@@ -33,7 +29,7 @@
               </p>
               <baseline_params ref="baseline_params"></baseline_params>
             </div>
-            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <div :class="{'tab-pane': true, 'fade': true, 'show': tabIndex == 1, 'active': tabIndex == 1}">
               <div class="h6">
                 主机名称
               </div>
@@ -44,6 +40,12 @@
               <ul>
                 <li v-for="nic in data.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}</li>
               </ul>
+              <div class="h6">
+                RASP 版本
+              </div>
+              <p>
+                {{ data.rasp_version }}
+              </p>
               <div class="h6">
                 应用版本
               </div>
@@ -70,11 +72,14 @@ export default {
   name: "baselineDetailModal",
   data: function () {
     return {
+      tabIndex: 0,
+      tabs: ['报警信息', '资产信息'],
       data: {}
     };
   },
   methods: {    
     showModal(data) {
+      this.tabIndex = 0
       this.data = data
       this.$refs.baseline_params.setData(data)
       $("#showBaselineDetailModal").modal();

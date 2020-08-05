@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -43,7 +42,7 @@ public class SQLResultSetHook extends AbstractSqlHook {
          /* MySQL */
         if ("com/mysql/jdbc/ResultSetImpl".equals(className)
                 || "com/mysql/cj/jdbc/result/ResultSetImpl".equals(className)) {
-            this.type = SQL_TYPE_MYSQL;
+            this.type = SqlType.MYSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -51,21 +50,21 @@ public class SQLResultSetHook extends AbstractSqlHook {
         /* SQLite */
         if ("org/sqlite/RS".equals(className)
                 || "org/sqlite/jdbc3/JDBC3ResultSet".equals(className)) {
-            this.type = SQL_TYPE_SQLITE;
+            this.type = SqlType.SQLITE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
        /* Oracle */
         if ("oracle/jdbc/driver/OracleResultSetImpl".equals(className)) {
-            this.type = SQL_TYPE_ORACLE;
+            this.type = SqlType.ORACLE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* SQL Server */
         if ("com/microsoft/sqlserver/jdbc/SQLServerResultSet".equals(className)) {
-            this.type = SQL_TYPE_SQLSERVER;
+            this.type = SqlType.SQLSERVER;
             this.exceptions = new String[]{"com/microsoft/sqlserver/jdbc/SQLServerException"};
             return true;
         }
@@ -77,14 +76,14 @@ public class SQLResultSetHook extends AbstractSqlHook {
                 || "org/postgresql/jdbc3/AbstractJdbc3ResultSet".equals(className)
                 || "org/postgresql/jdbc3g/AbstractJdbc3gResultSet".equals(className)
                 || "org/postgresql/jdbc4/AbstractJdbc4ResultSet".equals(className)) {
-            this.type = SQL_TYPE_PGSQL;
+            this.type = SqlType.PGSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* DB2 */
         if (className.startsWith("com/ibm/db2/jcc/am")) {
-            this.type = SQL_TYPE_DB2;
+            this.type = SqlType.DB2;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -110,7 +109,7 @@ public class SQLResultSetHook extends AbstractSqlHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         CtClass[] interfaces = ctClass.getInterfaces();
-        if (this.type.equals(SQL_TYPE_DB2) && interfaces != null) {
+        if (this.type.equals(SqlType.DB2) && interfaces != null) {
             for (CtClass inter : interfaces) {
                 if (inter.getName().equals("com.ibm.db2.jcc.DB2ResultSet")) {
                     if (interfaces.length > 3) {
@@ -130,7 +129,7 @@ public class SQLResultSetHook extends AbstractSqlHook {
      */
     private void hookSqlResultMethod(CtClass ctClass) throws NotFoundException, CannotCompileException {
         String src = getInvokeStaticSrc(SQLResultSetHook.class, "checkSqlQueryResult",
-                "\"" + type + "\"" + ",$0", String.class, Object.class);
+                "\"" + type.name + "\"" + ",$0", String.class, Object.class);
         insertBefore(ctClass, "next", "()Z", src);
     }
 
@@ -140,11 +139,10 @@ public class SQLResultSetHook extends AbstractSqlHook {
      * @param sqlResultSet 数据库查询结果
      */
     public static void checkSqlQueryResult(String server, Object sqlResultSet) {
-        HashMap<String, Object> params = null;
+        HashMap<String, Object> params = new HashMap<String, Object>();
         try {
             ResultSet resultSet = (ResultSet) sqlResultSet;
             int queryCount = resultSet.getRow();
-            params = new HashMap<String, Object>(4);
             params.put("query_count", queryCount);
             params.put("server", server);
         } catch (Exception e) {

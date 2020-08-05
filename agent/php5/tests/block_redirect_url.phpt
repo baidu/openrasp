@@ -5,12 +5,12 @@ block redirect url
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'echo test')
-    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack[0].indexOf('exec') != -1)
     return block
 })
 EOF;
 $conf = <<<CONF
-block.redirect_url="/block?request_id="
+block.redirect_url: "/block?request_id="
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

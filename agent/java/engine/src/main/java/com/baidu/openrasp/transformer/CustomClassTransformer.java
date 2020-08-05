@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,31 @@ package com.baidu.openrasp.transformer;
 
 import com.baidu.openrasp.ModuleLoader;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.hook.*;
+import com.baidu.openrasp.dependency.DependencyFinder;
+import com.baidu.openrasp.detector.ServerDetectorManager;
+import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.annotation.AnnotationScanner;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import javassist.*;
+import javassist.ClassClassPath;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.LoaderClassPath;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
+import java.lang.instrument.Instrumentation;
+import java.lang.ref.SoftReference;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * 自定义类字节码转换器，用于hook类德 方法
@@ -37,22 +50,60 @@ import java.util.*;
 public class CustomClassTransformer implements ClassFileTransformer {
     public static final Logger LOGGER = Logger.getLogger(CustomClassTransformer.class.getName());
     private static final String SCAN_ANNOTATION_PACKAGE = "com.baidu.openrasp.hook";
-    private static ArrayList<String> list = new ArrayList<String>();
-    private static HashMap<String, ClassLoader> classLoaderCache = new HashMap<String, ClassLoader>();
+    private static HashSet<String> jspClassLoaderNames = new HashSet<String>();
+    private static ConcurrentSkipListSet<String> necessaryHookType = new ConcurrentSkipListSet<String>();
+    private static ConcurrentSkipListSet<String> dubboNecessaryHookType = new ConcurrentSkipListSet<String>();
+    public static ConcurrentHashMap<String, SoftReference<ClassLoader>> jspClassLoaderCache = new ConcurrentHashMap<String, SoftReference<ClassLoader>>();
 
-    private HashSet<AbstractClassHook> hooks;
+    private Instrumentation inst;
+    private HashSet<AbstractClassHook> hooks = new HashSet<AbstractClassHook>();
+    private ServerDetectorManager serverDetector = ServerDetectorManager.getInstance();
+
+    public static volatile boolean isNecessaryHookComplete = false;
+    public static volatile boolean isDubboNecessaryHookComplete = false;
 
     static {
-        list.add("org/apache/catalina/util/ServerInfo");
-        list.add("org/apache/commons/fileupload/servlet/ServletFileUpload");
+        jspClassLoaderNames.add("org.apache.jasper.servlet.JasperLoader");
+        jspClassLoaderNames.add("com.caucho.loader.DynamicClassLoader");
+        jspClassLoaderNames.add("com.ibm.ws.jsp.webcontainerext.JSPExtensionClassLoader");
+        jspClassLoaderNames.add("weblogic.servlet.jsp.JspClassLoader");
+        dubboNecessaryHookType.add("dubbo_preRequest");
+        dubboNecessaryHookType.add("dubboRequest");
     }
 
-    public CustomClassTransformer() {
-        hooks = new HashSet<AbstractClassHook>();
+    public CustomClassTransformer(Instrumentation inst) {
+        this.inst = inst;
+        inst.addTransformer(this, true);
         addAnnotationHook();
     }
 
+    public void release() {
+        inst.removeTransformer(this);
+        retransform();
+    }
+
+    public void retransform() {
+        LinkedList<Class> retransformClasses = new LinkedList<Class>();
+        Class[] loadedClasses = inst.getAllLoadedClasses();
+        for (Class clazz : loadedClasses) {
+            if (isClassMatched(clazz.getName().replace(".", "/"))) {
+                if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
+                    try {
+                        // hook已经加载的类，或者是回滚已经加载的类
+                        inst.retransformClasses(clazz);
+                    } catch (Throwable t) {
+                        LogTool.error(ErrorType.HOOK_ERROR,
+                                "failed to retransform class " + clazz.getName() + ": " + t.getMessage(), t);
+                    }
+                }
+            }
+        }
+    }
+
     private void addHook(AbstractClassHook hook, String className) {
+        if (hook.isNecessary()) {
+            necessaryHookType.add(hook.getType());
+        }
         String[] ignore = Config.getConfig().getIgnoreHooks();
         for (String s : ignore) {
             if (hook.couldIgnore() && (s.equals("all") || s.equals(hook.getType()))) {
@@ -72,7 +123,7 @@ public class CustomClassTransformer implements ClassFileTransformer {
                     addHook((AbstractClassHook) object, clazz.getName());
                 }
             } catch (Exception e) {
-                LOGGER.error("add hook failed", e);
+                LogTool.error(ErrorType.HOOK_ERROR, "add hook failed: " + e.getMessage(), e);
             }
         }
     }
@@ -85,6 +136,12 @@ public class CustomClassTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain domain, byte[] classfileBuffer) throws IllegalClassFormatException {
+        if (loader != null) {
+            DependencyFinder.addJarPath(domain);
+        }
+        if (loader != null && jspClassLoaderNames.contains(loader.getClass().getName())) {
+            jspClassLoaderCache.put(className.replace("/", "."), new SoftReference<ClassLoader>(loader));
+        }
         for (final AbstractClassHook hook : hooks) {
             if (hook.isClassMatched(className)) {
                 CtClass ctClass = null;
@@ -96,6 +153,9 @@ public class CustomClassTransformer implements ClassFileTransformer {
                         hook.setLoadedByBootstrapLoader(true);
                     }
                     classfileBuffer = hook.transformClass(ctClass);
+                    if (classfileBuffer != null) {
+                        checkNecessaryHookType(hook.getType());
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -105,8 +165,34 @@ public class CustomClassTransformer implements ClassFileTransformer {
                 }
             }
         }
-        handleClassLoader(loader, className);
+        serverDetector.detectServer(className, loader, domain);
         return classfileBuffer;
+    }
+
+    private void checkNecessaryHookType(String type) {
+        if (!isNecessaryHookComplete && necessaryHookType.contains(type)) {
+            necessaryHookType.remove(type);
+            if (necessaryHookType.isEmpty()) {
+                isNecessaryHookComplete = true;
+            }
+        }
+
+        if (!isDubboNecessaryHookComplete && dubboNecessaryHookType.contains(type)) {
+            dubboNecessaryHookType.remove(type);
+            if (dubboNecessaryHookType.isEmpty()) {
+                isDubboNecessaryHookComplete = true;
+            }
+        }
+    }
+
+
+    public boolean isClassMatched(String className) {
+        for (final AbstractClassHook hook : getHooks()) {
+            if (hook.isClassMatched(className)) {
+                return true;
+            }
+        }
+        return serverDetector.isClassMatched(className);
     }
 
     private void addLoader(ClassPool classPool, ClassLoader loader) {
@@ -114,17 +200,6 @@ public class CustomClassTransformer implements ClassFileTransformer {
         classPool.appendClassPath(new ClassClassPath(ModuleLoader.class));
         if (loader != null) {
             classPool.appendClassPath(new LoaderClassPath(loader));
-        }
-    }
-
-    public static ClassLoader getClassLoader(String className) {
-        return classLoaderCache.get(className);
-    }
-
-    private static void handleClassLoader(ClassLoader loader, String className) {
-
-        if (list.contains(className)) {
-            classLoaderCache.put(className.replace('/', '.'), loader);
         }
     }
 

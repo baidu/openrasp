@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package com.baidu.openrasp.plugin.info;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.tool.OSUtil;
-import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.model.ApplicationModel;
 
 import java.text.SimpleDateFormat;
@@ -36,7 +35,9 @@ public class SecurityPolicyInfo extends EventInfo {
         DEFAULT_APP(3004),
         DIRECTORY_LISTING(3005),
         SQL_CONNECTION(3006),
-        JBOSS_JMX_CONSOLE(3007);
+        JBOSS_JMX_CONSOLE(3007),
+        SENSITIVE_LOG(3008),
+        SENSITIVE_OUTOUT(3009);
 
 
         private int id;
@@ -62,7 +63,7 @@ public class SecurityPolicyInfo extends EventInfo {
         this.policy = policy;
         this.message = message;
         this.params = params;
-        setBlock(isBlock && Config.getConfig().getEnforcePolicy());
+        setBlock(false);
     }
 
     public SecurityPolicyInfo(Type policy, String message, boolean isBlock) {
@@ -94,14 +95,12 @@ public class SecurityPolicyInfo extends EventInfo {
         info.put("message", message);
         // 检测参数信息
         if (params != null) {
+            params.put("stack", StackTrace.getStackTraceArray(false, true));
             info.put("policy_params", params);
         }
-        // 攻击调用栈
-        StackTraceElement[] trace = filter(new Throwable().getStackTrace());
-        info.put("stack_trace", stringify(trace));
-        if (Config.getConfig().getCloudSwitch()){
+        if (Config.getConfig().getCloudSwitch()) {
             // raspId
-            info.put("rasp_id",CloudCacheModel.getInstance().getRaspId());
+            info.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
             // appId
             info.put("app_id", Config.getConfig().getCloudAppId());
         }

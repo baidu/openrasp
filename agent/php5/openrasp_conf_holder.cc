@@ -19,38 +19,23 @@
 
 namespace openrasp
 {
-ConfigHolder::ConfigHolder(string &config, OpenraspConfig::FromType type)
-{
-  init(config, type);
-}
 
-bool ConfigHolder::init(string &config, OpenraspConfig::FromType type)
+bool ConfigHolder::update(BaseReader *reader)
 {
-  OpenraspConfig openrasp_config(config, type);
-  if (openrasp_config.HasError())
+  if (!reader || reader->has_error())
   {
     return false;
   }
-  return update(&openrasp_config);
-}
-
-bool ConfigHolder::update(OpenraspConfig *openrasp_config)
-{
-  if (!openrasp_config)
-  {
-    return false;
-  }
-  plugin.update(openrasp_config);
-  log.update(openrasp_config);
-  syslog.update(openrasp_config);
-  block.update(openrasp_config);
-  inject.update(openrasp_config);
-  body.update(openrasp_config);
-  clientip.update(openrasp_config);
-  security.update(openrasp_config);
-  sql.update(openrasp_config);
-  lru.update(openrasp_config);
-  webshell_callable.update(openrasp_config);
+  plugin.update(reader);
+  log.update(reader);
+  syslog.update(reader);
+  block.update(reader);
+  inject.update(reader);
+  body.update(reader);
+  clientip.update(reader);
+  lru.update(reader);
+  decompile.update(reader);
+  response.update(reader);
   return true;
 }
 

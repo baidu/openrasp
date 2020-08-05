@@ -16,7 +16,7 @@ include(__DIR__.'/../skipif.inc');
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --GET--
-a=cd
+a=1
 --FILE--
 <?php
 assert($_GET['a']);

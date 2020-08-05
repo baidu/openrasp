@@ -22,15 +22,18 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"os"
-	"rasp-cloud/environment"
 	"rasp-cloud/mongo"
 	"rasp-cloud/tools"
 	"regexp"
+	"rasp-cloud/conf"
+	"math/rand"
+	"time"
 )
 
 const (
 	userCollectionName = "user"
-	userName           = "openrasp"
+	defaultUserName    = "openrasp"
+	defaultPassword    = "admin@123"
 )
 
 type User struct {
@@ -48,27 +51,26 @@ func init() {
 	if err != nil {
 		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get the count of user collection", err)
 	}
-
+	index := &mgo.Index{
+		Key:        []string{"name"},
+		Unique:     true,
+		Background: true,
+		Name:       "name",
+	}
+	err = mongo.CreateIndex(userCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create name index for user collection", err)
+	}
 	if count <= 0 {
-
-		index := &mgo.Index{
-			Key:        []string{"name"},
-			Unique:     true,
-			Background: true,
-			Name:       "name",
-		}
-		err = mongo.CreateIndex(userCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to create name index for user collection", err)
-		}
-		hash, err := generateHashedPassword("admin@123")
+		//initPassword := generateRandomPassword(15, 20)
+		hash, err := generateHashedPassword(defaultPassword)
 		if err != nil {
 			tools.Panic(tools.ErrCodeGeneratePasswdFailed, "failed to generate the default hashed password", err)
 		}
 		userId = mongo.GenerateObjectId()
 		user := User{
 			Id:       userId,
-			Name:     userName,
+			Name:     defaultUserName,
 			Password: hash,
 		}
 		err = mongo.Insert(userCollectionName, user)
@@ -78,18 +80,18 @@ func init() {
 
 	} else {
 		var user *User
-		err := mongo.FindOne(userCollectionName, bson.M{}, &user)
+		err = mongo.FindOne(userCollectionName, bson.M{}, &user)
 		if err != nil {
 			tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get admin user", err)
 		}
 		userId = user.Id
 	}
 
-	if *environment.StartFlag.StartType == environment.StartTypeReset {
-		if *environment.StartFlag.Password == "" {
+	if *conf.AppConfig.Flag.StartType == conf.StartTypeReset {
+		if *conf.AppConfig.Flag.Password == "" {
 			tools.Panic(tools.ErrCodeResetUserFailed, "the password can not be empty", err)
 		}
-		err := resetUser(*environment.StartFlag.Password)
+		err := ResetUser(*conf.AppConfig.Flag.Password)
 		if err != nil {
 			tools.Panic(tools.ErrCodeResetUserFailed, "failed to reset administrator", err)
 		}
@@ -98,7 +100,7 @@ func init() {
 	}
 }
 
-func resetUser(newPwd string) error {
+func ResetUser(newPwd string) error {
 	err := validPassword(newPwd)
 	if err != nil {
 		return errors.New("invalid password: " + err.Error())
@@ -107,7 +109,7 @@ func resetUser(newPwd string) error {
 	if err != nil {
 		return errors.New("failed to generate password: " + err.Error())
 	}
-	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd, "name": userName})
+	err = mongo.UpdateId(userCollectionName, userId, bson.M{"password": pwd, "name": defaultUserName})
 	return err
 }
 
@@ -120,12 +122,32 @@ func generateHashedPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
+func generateRandomPassword(minLength int, maxLength int) string {
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	length := minLength + random.Intn(maxLength-minLength+1)
+	result := make([]byte, length)
+	alphaNumeric := "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz"
+	characters := "%@$!&#*"
+	for i := 0; i < length; i++ {
+		result[i] = alphaNumeric[random.Intn(len(alphaNumeric))]
+	}
+	for i := 0; i < length/4; i++ {
+		character := characters[random.Intn(len(characters))]
+		index := random.Intn(length)
+		result[index] = character
+	}
+	return string(result)
+}
+
 func ComparePassword(hashedPassword string, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil && err != bcrypt.ErrMismatchedHashAndPassword {
 		logs.Error("CompareHashAndPassword function error: " + err.Error())
 	}
-	return err
+	if err != nil {
+		return errors.New("username or password is incorrect")
+	}
+	return nil
 }
 
 func validPassword(password string) error {
@@ -146,29 +168,63 @@ func GetLoginUserName() (userName string, err error) {
 	return user.Name, nil
 }
 
-func GetHashedLoginPassword() (pwd string, err error) {
-	var user *User
-	err = mongo.FindId(userCollectionName, userId, &user)
-	if err != nil {
-		return
-	}
-	return user.Password, nil
+func CheckDefaultPasswordWithDefaultUser() (result bool, err error) {
+	return checkDefaultPasswordWithUser(defaultUserName)
 }
 
-func VerifyUser(userName string, pwd string) error {
+func CheckDefaultPassword(cookie string) (result bool, err error) {
+	var user *User
+	var cookieObject *Cookie
+	err = mongo.FindId(cookieCollectionName, cookie, &cookieObject)
+	if err != nil || cookieObject == nil {
+		return false, errors.New("failed to find cookie: " + err.Error())
+	}
+	// 旧版本还没有把 user id 绑定到 cookie，所以此处需要判断兼容一下
+	if cookieObject.UserId == "" {
+		return false, nil
+	}
+	err = mongo.FindId(userCollectionName, cookieObject.UserId, &user)
+	if err != nil {
+		return false, errors.New("failed to find user: " + err.Error())
+	}
+	return checkDefaultPasswordWithUser(user.Name)
+}
+
+func checkDefaultPasswordWithUser(userName string) (result bool, err error) {
+	_, err = VerifyUser(userName, defaultPassword)
+	if err != nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+//func GetHashedLoginPassword() (pwd string, err error) {
+//	var user *User
+//	err = mongo.FindId(userCollectionName, userId, &user)
+//	if err != nil {
+//		return
+//	}
+//	return user.Password, nil
+//}
+
+func VerifyUser(userName string, pwd string) (*User, error) {
 	var user *User
 	err := mongo.FindId(userCollectionName, userId, &user)
 	if err != nil {
-		return err
+		return nil, errors.New("mongodb has error, " + err.Error())
 	}
 	if userName != user.Name {
-		return errors.New("username is incorrect")
+		return nil, errors.New("username or password is incorrect")
 	}
-	return ComparePassword(user.Password, pwd)
+	err = ComparePassword(user.Password, pwd)
+	if err != nil {
+		return nil, err
+	}
+	return user, err
 }
 
 func UpdatePassword(oldPwd string, newPwd string) error {
-	err := VerifyUser(userName, oldPwd)
+	_, err := VerifyUser(defaultUserName, oldPwd)
 	if err != nil {
 		return errors.New("old password is incorrect")
 	}

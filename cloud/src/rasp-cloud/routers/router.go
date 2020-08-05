@@ -16,12 +16,14 @@ package routers
 
 import (
 	"github.com/astaxie/beego"
+	"rasp-cloud/conf"
+	"rasp-cloud/controllers"
 	"rasp-cloud/controllers/agent"
 	"rasp-cloud/controllers/agent/agent_logs"
 	"rasp-cloud/controllers/api"
 	"rasp-cloud/controllers/api/fore_logs"
+	"rasp-cloud/controllers/iast"
 	"rasp-cloud/tools"
-	"rasp-cloud/environment"
 )
 
 func InitRouter() {
@@ -42,6 +44,11 @@ func InitRouter() {
 					&agent_logs.PolicyAlarmController{},
 				),
 			),
+			beego.NSNamespace("/error",
+				beego.NSInclude(
+					&agent_logs.ErrorController{},
+				),
+			),
 		),
 		beego.NSNamespace("/rasp",
 			beego.NSInclude(
@@ -51,6 +58,16 @@ func InitRouter() {
 		beego.NSNamespace("/report",
 			beego.NSInclude(
 				&agent.ReportController{},
+			),
+		),
+		beego.NSNamespace("/dependency",
+			beego.NSInclude(
+				&agent.DependencyController{},
+			),
+		),
+		beego.NSNamespace("/crash",
+			beego.NSInclude(
+				&agent.CrashController{},
 			),
 		),
 	)
@@ -72,6 +89,11 @@ func InitRouter() {
 					&fore_logs.PolicyAlarmController{},
 				),
 			),
+			beego.NSNamespace("/error",
+				beego.NSInclude(
+					&fore_logs.ErrorController{},
+				),
+			),
 		),
 		beego.NSNamespace("/app",
 			beego.NSInclude(
@@ -81,6 +103,11 @@ func InitRouter() {
 		beego.NSNamespace("/rasp",
 			beego.NSInclude(
 				&api.RaspController{},
+			),
+		),
+		beego.NSNamespace("/strategy",
+			beego.NSInclude(
+				&api.StrategyController{},
 			),
 		),
 		beego.NSNamespace("/token",
@@ -98,25 +125,42 @@ func InitRouter() {
 				&api.OperationController{},
 			),
 		),
-		beego.NSNamespace("/agentdomain",
+		beego.NSNamespace("/server",
 			beego.NSInclude(
-				&api.AgentDomainController{},
+				&api.ServerController{},
+			),
+		),
+		beego.NSNamespace("/dependency",
+			beego.NSInclude(
+				&api.DependencyController{},
 			),
 		),
 	)
+	iastNS := beego.NewNamespace("/iast",
+		beego.NSInclude(
+			&iast.WebsocketController{},
+		),
+		beego.NSInclude(
+			&iast.IastController{},
+		),
+	)
 	userNS := beego.NewNamespace("/user", beego.NSInclude(&api.UserController{}))
+	pingNS := beego.NewNamespace("/ping", beego.NSInclude(&controllers.PingController{}))
+	versionNS := beego.NewNamespace("/version", beego.NSInclude(&controllers.GeneralController{}))
 	ns := beego.NewNamespace("/v1")
-	startType := *environment.StartFlag.StartType
-	if startType == environment.StartTypeForeground {
-		ns.Namespace(foregroudNS, userNS)
-	} else if startType == environment.StartTypeAgent {
+	ns.Namespace(pingNS)
+	ns.Namespace(versionNS)
+	startType := *conf.AppConfig.Flag.StartType
+	if startType == conf.StartTypeForeground {
+		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
+	} else if startType == conf.StartTypeAgent {
 		ns.Namespace(agentNS)
-	} else if startType == environment.StartTypeDefault {
-		ns.Namespace(foregroudNS, agentNS, userNS)
+	} else if startType == conf.StartTypeDefault {
+		ns.Namespace(foregroudNS, agentNS, userNS, iastNS)
 	} else {
-		tools.Panic(tools.ErrCodeStartTypeNotSupport, "The start type is not supported: "+startType, nil)
+		tools.Panic(tools.ErrCodeStartTypeNotSupport, "Unknown -type parameter provided: "+startType, nil)
 	}
-	if startType == environment.StartTypeForeground || startType == environment.StartTypeDefault {
+	if startType == conf.StartTypeForeground || startType == conf.StartTypeDefault {
 		beego.SetStaticPath("//", "dist")
 	}
 	beego.AddNamespace(ns)

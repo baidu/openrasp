@@ -27,7 +27,9 @@ extern "C"
 #include <sstream>
 #include <fstream>
 #include "openrasp_v8.h"
+#include "openrasp_hook.h"
 #include "openrasp_ini.h"
+#include "openrasp_output_detect.h"
 #include "agent/shared_config_manager.h"
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
 #include "agent/openrasp_agent_manager.h"
@@ -53,6 +55,7 @@ PHP_GSHUTDOWN_FUNCTION(openrasp_v8)
 {
     if (openrasp_v8_globals->isolate)
     {
+        Platform::Get()->Startup();
         openrasp_v8_globals->isolate->Dispose();
         openrasp_v8_globals->isolate = nullptr;
     }
@@ -65,13 +68,15 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 {
     ZEND_INIT_MODULE_GLOBALS(openrasp_v8, PHP_GINIT(openrasp_v8), PHP_GSHUTDOWN(openrasp_v8));
 
-    // It can be called multiple times,
-    // but intern code initializes v8 only once
-    v8::V8::Initialize();
+    // initializes v8 only once
+    std::call_once(process_globals.init_v8_once, []() {
+        Initialize(1, plugin_log);
+    });
 
 #ifdef HAVE_OPENRASP_REMOTE_MANAGER
     if (openrasp_ini.remote_management_enable && oam != nullptr)
     {
+        Platform::Get()->Shutdown();
         return SUCCESS;
     }
 #endif
@@ -80,28 +85,35 @@ PHP_MINIT_FUNCTION(openrasp_v8)
 
     if (!process_globals.snapshot_blob)
     {
-        Platform::Initialize();
-        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list);
+        Platform::Get()->Startup();
+        auto duration = std::chrono::system_clock::now().time_since_epoch();
+        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+        Snapshot *snapshot = new Snapshot(process_globals.plugin_config, process_globals.plugin_src_list, OpenRASPInfo::PHP_OPENRASP_VERSION, millis, nullptr);
         if (!snapshot->IsOk())
         {
             delete snapshot;
-            openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code."));
+            openrasp_error(LEVEL_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code."));
         }
         else
         {
             process_globals.snapshot_blob = snapshot;
             std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
-            std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
-            Isolate *isolate = Isolate::New(snapshot);
+            std::map<std::string, std::string> buildin_action_map = CheckTypeTransfer::instance().get_buildin_action_map();
+            auto duration = std::chrono::system_clock::now().time_since_epoch();
+            auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+            Isolate *isolate = Isolate::New(snapshot, millis);
             extract_buildin_action(isolate, buildin_action_map);
-            isolate->Dispose();
             for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
             {
-                type_action_map.insert({check_type_transfer->name_to_type(iter->first), string_to_action(iter->second)});
+                type_action_map.insert({CheckTypeTransfer::instance().name_to_type(iter->first), string_to_action(iter->second)});
             }
             openrasp::scm->set_buildin_check_action(type_action_map);
+            openrasp::scm->set_mysql_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.mysql.error_code", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE));
+            openrasp::scm->set_sqlite_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.sqlite.error_code", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE));
+            openrasp::scm->build_pg_error_array(isolate);
+            isolate->Dispose();
         }
-        Platform::Shutdown();
+        Platform::Get()->Shutdown();
     }
     return SUCCESS;
 }
@@ -114,7 +126,7 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_v8)
     // it should generally not be necessary to dispose v8 before exiting a process,
     // so skip this step for module graceful reload
     // v8::V8::Dispose();
-    Platform::Shutdown();
+    // Platform::Get()->Shutdown();
     delete process_globals.snapshot_blob;
     process_globals.snapshot_blob = nullptr;
 
@@ -146,6 +158,7 @@ PHP_RINIT_FUNCTION(openrasp_v8)
                 {
                     delete process_globals.snapshot_blob;
                     process_globals.snapshot_blob = blob;
+                    OPENRASP_HOOK_G(lru).clear();
                 }
             }
         }
@@ -158,12 +171,29 @@ PHP_RINIT_FUNCTION(openrasp_v8)
             std::unique_lock<std::mutex> lock(process_globals.mtx, std::try_to_lock);
             if (lock)
             {
+                Platform::Get()->Startup();
                 if (OPENRASP_V8_G(isolate))
                 {
                     OPENRASP_V8_G(isolate)->Dispose();
                 }
-                Platform::Initialize();
-                OPENRASP_V8_G(isolate) = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
+                auto isolate = Isolate::New(process_globals.snapshot_blob, process_globals.snapshot_blob->timestamp);
+                v8::HandleScope handle_scope(isolate);
+                isolate->GetData()->request_context_templ.Reset(isolate, CreateRequestContextTemplate(isolate));
+                OPENRASP_V8_G(isolate) = isolate;
+                {
+                    static const std::vector<std::string> default_callable_blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
+                    static const std::string default_echo_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
+                    static const std::string default_filter_regex = "<![\\\\-\\\\[A-Za-z]|<([A-Za-z]{1,12})[\\\\/ >]";
+                    static const int64_t default_min_param_length = 15;
+                    static const int64_t default_max_detection_num = 10;
+
+                    std::vector<std::string> callable_blacklist_vector = extract_string_array(isolate, "RASP.algorithmConfig.webshell_callable.functions", 100, default_callable_blacklist);
+                    OPENRASP_HOOK_G(callable_blacklist) = std::unordered_set<std::string>(callable_blacklist_vector.begin(), callable_blacklist_vector.end());
+                    OPENRASP_HOOK_G(echo_filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_echo.filter_regex", default_echo_filter_regex);
+                    OUTPUT_G(filter_regex) = extract_string(isolate, "RASP.algorithmConfig.xss_userinput.filter_regex", default_filter_regex);
+                    OUTPUT_G(min_param_length) = extract_int64(isolate, "RASP.algorithmConfig.xss_userinput.min_length", default_min_param_length);
+                    OUTPUT_G(max_detection_num) = extract_int64(isolate, "RASP.algorithmConfig.xss_userinput.max_detection_num", default_max_detection_num);
+                }
             }
         }
     }

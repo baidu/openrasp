@@ -22,8 +22,10 @@ namespace openrasp
 
 const std::map<OpenRASPContentType::ContentType, std::vector<std::string>> OpenRASPContentType::type_map =
     {
+        {OpenRASPContentType::ContentType::cApplicationForm, {"application/x-www-form-urlencoded"}},
         {OpenRASPContentType::ContentType::cApplicationJson, {"application/json"}},
         {OpenRASPContentType::ContentType::cApplicationXml, {"application/xml"}},
+        {OpenRASPContentType::ContentType::cMultipartForm, {"multipart/form-data"}},
         {OpenRASPContentType::ContentType::cTextXml, {"text/xml"}},
         {OpenRASPContentType::ContentType::cTextHtml, {"text/html"}}};
 

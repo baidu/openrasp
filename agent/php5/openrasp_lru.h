@@ -6,7 +6,6 @@
 
 namespace openrasp
 {
-using namespace std;
 
 template <typename T, typename U>
 class LRU
@@ -18,9 +17,9 @@ private:
     size_t key_hash;
     U value;
   };
-  hash<T> hasher;
-  list<Item> item_list;
-  unordered_map<size_t, typename list<Item>::iterator> item_map;
+  std::hash<T> hasher;
+  std::list<Item> item_list;
+  std::unordered_map<size_t, typename list<Item>::iterator> item_map;
   size_t max;
 
   void reorder(const typename list<Item>::iterator it)
@@ -85,6 +84,16 @@ public:
   bool empty() const
   {
     return item_list.empty();
+  }
+  void clear()
+  {
+    item_list.clear();
+    item_map.clear();
+  }
+  void reset(size_t max = 10)
+  {
+    clear();
+    this->max = max;
   }
   size_t size() const
   {

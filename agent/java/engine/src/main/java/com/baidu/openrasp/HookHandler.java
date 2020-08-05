@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,21 +18,24 @@ package com.baidu.openrasp;
 
 import com.baidu.openrasp.cloud.model.HookWhiteModel;
 import com.baidu.openrasp.config.Config;
-import com.baidu.openrasp.exception.SecurityException;
-import com.baidu.openrasp.hook.XXEHook;
-import com.baidu.openrasp.request.DubboRequest;
+import com.baidu.openrasp.exceptions.SecurityException;
+import com.baidu.openrasp.hook.xxe.XXEHook;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.baidu.openrasp.request.AbstractRequest;
+import com.baidu.openrasp.request.DubboRequest;
 import com.baidu.openrasp.request.HttpServletRequest;
 import com.baidu.openrasp.response.HttpServletResponse;
-import com.baidu.openrasp.tool.LRUCache;
+import com.baidu.openrasp.transformer.CustomClassTransformer;
 import org.apache.log4j.Logger;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by zhuming01 on 5/16/17.
@@ -44,10 +47,10 @@ public class HookHandler {
     public static final String OPEN_RASP_HEADER_KEY = "X-Protected-By";
     public static final String OPEN_RASP_HEADER_VALUE = "OpenRASP";
     public static final String REQUEST_ID_HEADER_KEY = "X-Request-ID";
-    public static AtomicInteger TOTAL_REQUEST_NUM = new AtomicInteger(0);
+    public static AtomicLong requestSum = new AtomicLong(0);
     public static final Logger LOGGER = Logger.getLogger(HookHandler.class.getName());
     // 全局开关
-    public static AtomicBoolean enableHook = new AtomicBoolean(false);
+    public static final AtomicBoolean enableHook = new AtomicBoolean(false);
     // 当前线程开关
     private static ThreadLocal<Boolean> enableCurrThreadHook = new ThreadLocal<Boolean>() {
         @Override
@@ -83,10 +86,15 @@ public class HookHandler {
             return true;
         }
     };
+
+    public static ThreadLocal<Boolean> enableCmdHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
+
     private static final Map<String, Object> EMPTY_MAP = new HashMap<String, Object>();
-    private static final int DEFAULT_LRU_CACHE_CAPACITY = 100;
-    //全局lru的缓存
-    public static LRUCache<String, String> commonLRUCache = new LRUCache<String, String>(DEFAULT_LRU_CACHE_CAPACITY);
 
     /**
      * 用于关闭当前的线程的hook点
@@ -102,6 +110,13 @@ public class HookHandler {
         enableCurrThreadHook.set(true);
     }
 
+    public static ThreadLocal<Boolean> enableEnd = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
+
     public static boolean isEnableCurrThreadHook() {
         return enableCurrThreadHook.get();
     }
@@ -109,14 +124,14 @@ public class HookHandler {
     /**
      * 用于关闭xss的hook点
      */
-    public static void disableXssHook() {
+    public static void disableBodyXssHook() {
         enableXssHook.set(false);
     }
 
     /**
      * 用于开启xss的hook点
      */
-    public static void enableXssHook() {
+    public static void enableBodyXssHook() {
         enableXssHook.set(true);
     }
 
@@ -164,17 +179,22 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkRequest(Object servlet, Object request, Object response) {
-        if (servlet != null && request != null && !enableCurrThreadHook.get()) {
-            // 默认是关闭hook的，只有处理过HTTP request的线程才打开
+        if (servlet != null && request != null && !enableCurrThreadHook.get()
+                && CustomClassTransformer.isNecessaryHookComplete) {
+            // 默认是关闭hook的，只有处理过HTTP requesst的线程才打开
+            enableEnd.set(true);
             enableCurrThreadHook.set(true);
+            //新的请求开启body xss hook点
+            enableBodyXssHook();
             HttpServletRequest requestContainer = new HttpServletRequest(request);
             HttpServletResponse responseContainer = new HttpServletResponse(response);
-            responseContainer.setHeader(OPEN_RASP_HEADER_KEY, OPEN_RASP_HEADER_VALUE);
             responseContainer.setHeader(REQUEST_ID_HEADER_KEY, requestContainer.getRequestId());
+            //设置响应的用户自定义头部
+            setUserDefinedResponseHeader(responseContainer);
             requestCache.set(requestContainer);
             responseCache.set(responseContainer);
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.REQUEST, JSContext.getUndefinedValue());
+            doCheck(CheckParameter.Type.REQUEST, EMPTY_MAP);
         }
     }
 
@@ -184,12 +204,14 @@ public class HookHandler {
      * @param request 请求实体
      */
     public static void checkDubboRequest(Object request) {
-        if (request != null && !enableCurrThreadHook.get()) {
+        if (request != null && !enableCurrThreadHook.get() && CustomClassTransformer.isDubboNecessaryHookComplete) {
             enableCurrThreadHook.set(true);
+            //新的请求开启body xss hook点
+            enableBodyXssHook();
             DubboRequest requestContainer = new DubboRequest(request);
             requestCache.set(requestContainer);
             XXEHook.resetLocalExpandedSystemIds();
-            doCheck(CheckParameter.Type.DUBBOREQUEST, JSContext.getUndefinedValue());
+            doCheck(CheckParameter.Type.REQUEST, EMPTY_MAP);
         }
     }
 
@@ -219,7 +241,7 @@ public class HookHandler {
      * @param response 响应实体
      */
     public static void checkFilterRequest(Object filter, Object request, Object response) {
-        TOTAL_REQUEST_NUM.incrementAndGet();
+        requestSum.incrementAndGet();
         checkRequest(filter, request, response);
     }
 
@@ -232,42 +254,6 @@ public class HookHandler {
         checkDubboRequest(request);
     }
 
-    public static void onInputStreamRead(int ret, Object inputStream) {
-        if (ret != -1 && requestCache.get() != null) {
-            AbstractRequest request = requestCache.get();
-            if (request.getInputStream() == null) {
-                request.setInputStream(inputStream);
-            }
-            if (request.getInputStream() == inputStream) {
-                request.appendBody(ret);
-            }
-        }
-    }
-
-    public static void onInputStreamRead(int ret, Object inputStream, byte[] bytes) {
-        if (ret != -1 && requestCache.get() != null) {
-            AbstractRequest request = requestCache.get();
-            if (request.getInputStream() == null) {
-                request.setInputStream(inputStream);
-            }
-            if (request.getInputStream() == inputStream) {
-                request.appendBody(bytes, 0, ret);
-            }
-        }
-    }
-
-    public static void onInputStreamRead(int ret, Object inputStream, byte[] bytes, int offset, int len) {
-        if (ret != -1 && requestCache.get() != null) {
-            AbstractRequest request = requestCache.get();
-            if (request.getInputStream() == null) {
-                request.setInputStream(inputStream);
-            }
-            if (request.getInputStream() == inputStream) {
-                request.appendBody(bytes, offset, ret);
-            }
-        }
-    }
-
     public static void onParseParameters() {
         AbstractRequest request = requestCache.get();
         if (request != null) {
@@ -275,12 +261,26 @@ public class HookHandler {
         }
     }
 
-    private static void handleBlock() {
+    private static void handleBlock(CheckParameter parameter) {
         SecurityException securityException = new SecurityException("Request blocked by OpenRASP");
         if (responseCache.get() != null) {
-            responseCache.get().sendError();
+            responseCache.get().sendError(parameter);
         }
         throw securityException;
+    }
+
+    /**
+     * 设置用户的自定义header
+     *
+     * @param response http请求的response
+     */
+    private static void setUserDefinedResponseHeader(HttpServletResponse response) {
+        Map<Object, Object> headers = Config.getConfig().getResponseHeaders();
+        if (headers != null && !headers.isEmpty()) {
+            for (Map.Entry<Object, Object> entry : headers.entrySet()) {
+                response.setHeader(entry.getKey().toString(), entry.getValue().toString());
+            }
+        }
     }
 
     /**
@@ -289,31 +289,33 @@ public class HookHandler {
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    public static void doPolicyCheckWithoutRequest(CheckParameter.Type type, Object params) {
+    public static void doRealCheckWithoutRequest(CheckParameter.Type type, Map params) {
+        if (!enableHook.get()) {
+            return;
+        }
         long a = 0;
         if (Config.getConfig().getDebugLevel() > 0) {
             a = System.currentTimeMillis();
         }
-        boolean enableHookCache = enableCurrThreadHook.get();
         boolean isBlock = false;
+        CheckParameter parameter = new CheckParameter(type, params);
         try {
-            enableCurrThreadHook.set(false);
-            CheckParameter parameter = new CheckParameter(type, params);
             isBlock = CheckerManager.check(type, parameter);
-        } catch (Exception e) {
-            LOGGER.warn("plugin check error: " + e.getClass().getName()
-                    + " because: " + e.getMessage() + " stacktrace: " + e.getStackTrace());
-        } finally {
-            enableCurrThreadHook.set(enableHookCache);
+        } catch (Throwable e) {
+            LogTool.error(ErrorType.PLUGIN_ERROR,
+                    "plugin check error: " + e.getClass().getName() + " because: " + e.getMessage(), e);
         }
         if (a > 0) {
             long t = System.currentTimeMillis() - a;
+            String message = "type=" + type.getName() + " " + "time=" + t;
             if (requestCache.get() != null) {
-                LOGGER.info("request_id=" + requestCache.get().getRequestId() + " " + "type=" + type.getName() + " " + "time=" + t);
+                LOGGER.info("request_id=" + requestCache.get().getRequestId() + " " + message);
+            } else {
+                LOGGER.info(message);
             }
         }
         if (isBlock) {
-            handleBlock();
+            handleBlock(parameter);
         }
     }
 
@@ -323,18 +325,39 @@ public class HookHandler {
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    public static void doCheckWithoutRequest(CheckParameter.Type type, Object params) {
-        if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
-            return;
-        }
-        if (requestCache.get() != null) {
-            StringBuffer sb = requestCache.get().getRequestURL();
-            String url = sb.substring(sb.indexOf("://") + 3);
-            if (HookWhiteModel.isContainURL(type.getCode(), url)) {
+    public static void doCheckWithoutRequest(CheckParameter.Type type, Map params) {
+        boolean enableHookCache = enableCurrThreadHook.get();
+        try {
+            enableCurrThreadHook.set(false);
+            //当服务器的cpu使用率超过90%，禁用全部hook点
+            if (Config.getConfig().getDisableHooks()) {
                 return;
             }
+            //当云控注册成功之前，不进入任何hook点
+            if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
+                return;
+            }
+            if (requestCache.get() != null) {
+                try {
+                    StringBuffer sb = requestCache.get().getRequestURL();
+                    if (sb != null) {
+                        String url = sb.substring(sb.indexOf("://") + 3);
+                        if (HookWhiteModel.isContainURL(type.getCode(), url)) {
+                            return;
+                        }
+                    }
+                } catch (Exception e) {
+                    LogTool.traceWarn(ErrorType.HOOK_ERROR, "white list check has failed: " + e.getMessage(), e);
+                }
+            }
+            doRealCheckWithoutRequest(type, params);
+        } catch (Throwable t) {
+            if (t instanceof SecurityException) {
+                throw (SecurityException)t;
+            }
+        } finally {
+            enableCurrThreadHook.set(enableHookCache);
         }
-        doPolicyCheckWithoutRequest(type, params);
     }
 
     /**
@@ -343,8 +366,8 @@ public class HookHandler {
      * @param type   检测类型
      * @param params 检测参数map，key为参数名，value为检测参数值
      */
-    public static void doCheck(CheckParameter.Type type, Object params) {
-        if (enableHook.get() && enableCurrThreadHook.get()) {
+    public static void doCheck(CheckParameter.Type type, Map params) {
+        if (enableCurrThreadHook.get()) {
             doCheckWithoutRequest(type, params);
         }
     }

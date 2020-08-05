@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,29 @@
 
 package com.baidu.openrasp.tool;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.model.NicModel;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.*;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 
 public class OSUtil {
 
-    private static InetAddress inetAddress;
-
     public static String getHostName() {
+        InetAddress inetAddress;
         try {
-            if (inetAddress == null) {
-                inetAddress = InetAddress.getLocalHost();
-            }
+            inetAddress = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             inetAddress = null;
         }
@@ -50,9 +52,6 @@ public class OSUtil {
     public static LinkedList<NicModel> getIpAddress() {
         LinkedList<NicModel> ipList = new LinkedList<NicModel>();
         try {
-            if (inetAddress == null) {
-                inetAddress = InetAddress.getLocalHost();
-            }
             Enumeration allNetInterfaces = null;
             allNetInterfaces = NetworkInterface.getNetworkInterfaces();
 
@@ -93,6 +92,9 @@ public class OSUtil {
     }
 
     public static String getRaspId() throws Exception {
+        if (!StringUtils.isEmpty(Config.getConfig().getRaspId())) {
+            return Config.getConfig().getRaspId();
+        }
         LinkedList<String> macs = OSUtil.getMacAddress();
         String macString = "";
         for (String mac : macs) {
@@ -104,21 +106,38 @@ public class OSUtil {
         return bigInt.toString(16);
     }
 
-    private static LinkedList<String> getMacAddress() throws Exception {
+    private static LinkedList<String> getMacAddress() throws SocketException {
         LinkedList<String> macs = new LinkedList<String>();
-        Enumeration<NetworkInterface> el = NetworkInterface.getNetworkInterfaces();
+
+        Enumeration<NetworkInterface> el = null;
+        try {
+            el = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            LogTool.error(ErrorType.RUNTIME_ERROR, "failed to get mac information", e);
+            throw e;
+        }
         while (el.hasMoreElements()) {
             NetworkInterface netInterface = el.nextElement();
-            if (!netInterface.isLoopback()) {
-                byte[] mac = netInterface.getHardwareAddress();
-                if (mac == null)
-                    continue;
-                String macString = "";
-                for (byte b : mac) {
-                    macString += (hexByte(b) + "-");
+            try {
+                if (!netInterface.isLoopback()) {
+                    byte[] mac = netInterface.getHardwareAddress();
+                    if (mac == null)
+                        continue;
+                    String macString = "";
+                    for (byte b : mac) {
+                        macString += (hexByte(b) + "-");
+                    }
+                    macs.add(macString.substring(0, macString.length() - 1));
                 }
-                macs.add(macString.substring(0, macString.length() - 1));
+            } catch (SocketException e) {
+                String message = "failed to handle mac information, name: " +
+                        netInterface.getName() + ", DisplayName:" + netInterface.getDisplayName();
+                System.out.println(message);
+                LogTool.error(ErrorType.RUNTIME_ERROR, message, e);
             }
+        }
+        if (macs.isEmpty()) {
+            throw new IllegalStateException("the mac information is empty");
         }
         Collections.sort(macs);
         return macs;
@@ -144,7 +163,7 @@ public class OSUtil {
     public static String getMasterIp(String requestUrl) throws Exception {
         URL url = new URL(requestUrl);
         Socket socket = new Socket();
-        socket.connect(new InetSocketAddress(url.getHost(), getPort(url)), 2000);
+        socket.connect(new InetSocketAddress(url.getHost(), getPort(url)), 10000);
         String ip = socket.getLocalAddress().getHostAddress();
         return ip != null ? ip : "";
     }
@@ -163,11 +182,22 @@ public class OSUtil {
 
     private static String execReadToString() {
         try {
+            HookHandler.enableCmdHook.set(false);
             InputStream in = Runtime.getRuntime().exec("hostname").getInputStream();
             return IOUtils.toString(in);
         } catch (Exception e) {
             return "im-not-resolvable";
+        } finally {
+            HookHandler.enableCmdHook.set(true);
         }
     }
+
+    public static String getDigestMd5(String data) throws NoSuchAlgorithmException {
+        MessageDigest md5 = MessageDigest.getInstance("md5");
+        md5.update(data.getBytes());
+        BigInteger bigInt = new BigInteger(1, md5.digest());
+        return bigInt.toString(16);
+    }
+
 
 }

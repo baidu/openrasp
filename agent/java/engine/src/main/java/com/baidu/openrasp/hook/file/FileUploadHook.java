@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,17 @@ package com.baidu.openrasp.hook.file;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
+import com.baidu.openrasp.request.RequestFileItem;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -43,7 +46,7 @@ public class FileUploadHook extends AbstractClassHook {
 
     @Override
     public String getType() {
-        return "Multipart";
+        return "fileUploadParam";
     }
 
     @Override
@@ -56,18 +59,37 @@ public class FileUploadHook extends AbstractClassHook {
 
     public static void cacheFileUploadParam(Object object) {
         List<Object> list = (List<Object>) object;
-        if (!list.isEmpty()) {
-            HashMap<String, String[]> fileUploadCache = HookHandler.requestCache.get().getFileUploadCache();
-            for (Object o : list) {
-                boolean isFormField = (Boolean) Reflection.invokeMethod(o, "isFormField", new Class[]{});
-                //只获取multipart中的非文件字段值
+        if (list != null && !list.isEmpty()) {
+            HashMap<String, String[]> formItemCache = new HashMap<String, String[]>();
+            LinkedList<RequestFileItem> fileItemCache = new LinkedList<RequestFileItem>();
+            for (Object item : list) {
+                boolean isFormField = (Boolean) Reflection.invokeMethod(item, "isFormField", new Class[]{});
                 if (isFormField) {
-                    String fieldName = Reflection.invokeStringMethod(o, "getFieldName", new Class[]{});
-                    String fieldValue = Reflection.invokeStringMethod(o, "getString", new Class[]{});
-                    fileUploadCache.put(fieldName, new String[]{fieldValue});
+                    String fieldName = Reflection.invokeStringMethod(item, "getFieldName", new Class[]{});
+                    String fieldValue = Reflection.invokeStringMethod(item, "getString", new Class[]{});
+                    formItemCache.put(fieldName, new String[]{fieldValue});
+                } else {
+                    String name = Reflection.invokeStringMethod(item, "getFieldName", new Class[]{});
+                    String filename = Reflection.invokeStringMethod(item, "getName", new Class[]{});
+                    fileItemCache.add(new RequestFileItem(name, filename));
                 }
             }
+            HookHandler.requestCache.get().setFormItemCache(formItemCache);
+            HookHandler.requestCache.get().setFileParamCache(fileItemCache);
         }
+    }
 
+    private static String getCharSet(Object fileItem) {
+        String charSet = Reflection.invokeStringMethod(fileItem, "getCharSet", new Class[]{});
+        if (charSet == null) {
+            if (HookHandler.requestCache.get() != null) {
+                charSet = HookHandler.requestCache.get().getCharacterEncoding();
+            }
+        }
+        if (!StringUtils.isEmpty(charSet)) {
+            return charSet;
+        } else {
+            return "UTF-8";
+        }
     }
 }

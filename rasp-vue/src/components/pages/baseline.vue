@@ -5,19 +5,55 @@
         <h1 class="page-title">
           基线检查
         </h1>
-        <div class="page-options d-flex">
-          <div class="input-icon ml-2 w-50">
+        <div class="page-options d-flex">         
+
+          <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-calendar" />
             </span>
             <DatePicker ref="datePicker" @selected="loadEvents(1)" />
           </div>
 
+          <b-dropdown text="基线类型" class="ml-2" left>
+            <b-container style="width: 500px;">
+              <b-form-row>
+                <b-col>
+                  <label class="custom-switch">
+                    <input type="checkbox" class="custom-switch-input" checked @change="selectAll">
+                    <span class="custom-switch-indicator" />
+                    <span class="custom-switch-description">
+                      全选
+                    </span>
+                  </label>
+                </b-col>
+                <div class="w-100" />
+                <template v-for="(value, key, index) in baseline_types">
+                  <b-col :key="key">
+                    <label class="custom-switch">
+                      <input v-model="selected" type="checkbox" class="custom-switch-input" :value="key">
+                      <span class="custom-switch-indicator" />
+                      <span class="custom-switch-description">
+                        {{ value }}
+                      </span>
+                    </label>
+                  </b-col>
+                  <div v-if="index % 2 === 1" class="w-100" />
+                </template>
+              </b-form-row>
+            </b-container>
+          </b-dropdown>          
+
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadEvents(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="搜索主机或者IP" @keyup.enter="loadEvents(1)">
+          </div>
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <input v-model.trim="message" type="text" class="form-control w-10" placeholder="过滤消息" @keyup.enter="loadEvents(1)">
           </div>
           <button class="btn btn-primary ml-2" @click="loadEvents(1)">
             搜索
@@ -27,6 +63,17 @@
       <div class="card">
         <div class="card-body">
           <vue-loading v-if="loading" type="spiningDubbles" color="rgb(90, 193, 221)" :size="{ width: '50px', height: '50px' }" />
+          
+          <nav v-if="! loading && total > 0">
+            <ul class="pagination pull-left">
+              <li class="active">
+                <span style="margin-top: 0.5em; display: block; ">
+                  <strong>{{ total }}</strong> 结果，显示 {{ currentPage }} / {{ ceil(total / 10) }} 页
+                </span>
+              </li>
+            </ul>
+            <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadEvents($event)" />
+          </nav>
 
           <table v-if="! loading" class="table table-hover table-bordered">
             <thead>
@@ -72,9 +119,19 @@
               </tr>
             </tbody>
           </table>
-          <nav v-if="! loading">
-            <b-pagination v-model="currentPage" align="center" :total-rows="total" :per-page="10" @change="loadEvents($event)" />
+
+          <nav v-if="! loading && total > 10">
+            <ul class="pagination pull-left">
+              <li class="active">
+                <span style="margin-top: 0.5em; display: block; ">
+                  <strong>{{ total }}</strong> 结果，显示 {{ currentPage }} / {{ ceil(total / 10) }} 页
+                </span>
+              </li>
+            </ul>
+            <b-pagination v-model="currentPage" align="right" :total-rows="total" :per-page="10" @change="loadEvents($event)" />
           </nav>
+
+          <p v-if="! loading && total == 0" class="text-center">暂无数据</p>
         </div>
       </div>
     </div>
@@ -88,6 +145,7 @@ import baselineDetailModal from '@/components/modals/baselineDetailModal'
 import DatePicker from '@/components/DatePicker'
 import isIp from 'is-ip'
 import { mapGetters } from 'vuex'
+import { baseline_types } from '@/util'
 
 export default {
   name: 'Baseline',
@@ -101,14 +159,18 @@ export default {
       loading: false,
       currentPage: 1,
       hostname: '',
-      total: 0
+      total: 0,
+      baseline_types,
+      message: '',
+      selected: Object.keys(baseline_types)
     }
   },
   computed: {
     ...mapGetters(['current_app'])
   },
   watch: {
-    current_app() { this.loadEvents(1) }
+    current_app() { this.loadEvents(1) },
+    selected() { this.loadEvents(1) }
   },
   mounted() {
     if (!this.current_app.id) {
@@ -117,6 +179,10 @@ export default {
     this.loadEvents(1)
   },
   methods: {
+    ceil: Math.ceil,
+    selectAll({ target }) {
+      this.selected = target.checked ? Object.keys(this.baseline_types) : []
+    },
     showBaselineDetailModal: function(data) {
       this.$refs.baselineDetailModal.showModal(data)
     },
@@ -125,7 +191,9 @@ export default {
         data: {
           app_id: this.current_app.id,
           start_time: this.$refs.datePicker.start.valueOf(),
-          end_time: this.$refs.datePicker.end.valueOf()
+          end_time: this.$refs.datePicker.end.valueOf(),
+          policy_id: this.selected,
+          message: this.message
         },
         page: page,
         perpage: 10

@@ -17,13 +17,19 @@
 package com.baidu.rasp.install;
 
 import com.baidu.rasp.App;
+import com.baidu.rasp.Attacher;
 import com.baidu.rasp.RaspError;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.ReaderInputStream;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
-import java.util.Properties;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.baidu.rasp.RaspError.E10003;
 
@@ -33,7 +39,8 @@ import static com.baidu.rasp.RaspError.E10003;
  */
 public abstract class BaseStandardInstaller implements Installer {
     private String serverName;
-    private String serverRoot;
+    protected String serverRoot;
+    protected boolean needModifyScript = true;
     public static String resinPath;
     public static int NOTFOUND = 0;
     public static int FOUND = 1;
@@ -48,29 +55,83 @@ public abstract class BaseStandardInstaller implements Installer {
 
     @Override
     public void install() throws RaspError, IOException {
-        String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        boolean firstInstall = false;
+        String jarPath = getLocalJarPath();
         File srcDir = new File(new File(jarPath).getParent() + File.separator + "rasp");
         if (!(srcDir.exists() && srcDir.isDirectory())) {
-            srcDir = new File("rasp");
+            srcDir.mkdirs();
         }
         File installDir = new File(getInstallPath(serverRoot));
+        if (!installDir.exists()) {
+            installDir.mkdir();
+        }
 
+        File configFile = new File(installDir.getCanonicalPath() + File.separator + "conf" + File.separator + "openrasp.yml");
+        if (!configFile.exists()) {
+            firstInstall = true;
+        }
         if (!srcDir.getCanonicalPath().equals(installDir.getCanonicalPath())) {
             // 拷贝rasp文件夹
             System.out.println("Duplicating \"rasp\" directory\n- " + installDir.getCanonicalPath());
+            File[] files = srcDir.listFiles();
+            String uuid = UUID.randomUUID().toString().replace("-", "");
+            if (files != null) {
+                for (File file : files) {
+                    File destFile = new File(installDir.getPath() + File.separator + file.getName());
+                    if (file.isDirectory()) {
+                        FileUtils.copyDirectory(file, destFile);
+                    } else {
+                        if (file.getName().endsWith(".jar") && destFile.exists()) {
+                            File tmpJarDirectory = new File(installDir.getPath() + File.separator + "jar_tmp");
+                            if (tmpJarDirectory.exists() && !tmpJarDirectory.isDirectory()) {
+                                tmpJarDirectory.delete();
+                            }
+                            if (!tmpJarDirectory.exists()) {
+                                tmpJarDirectory.mkdir();
+                            }
+                            String renameFileName = destFile.getName().
+                                    substring(0, destFile.getName().length() - 4) + "-" + uuid + ".jar";
+                            destFile.renameTo(new File(tmpJarDirectory.getPath() + File.separator + renameFileName));
+                        }
+                        FileUtils.copyFile(file, destFile);
+                    }
+                }
+            }
             FileUtils.copyDirectory(srcDir, installDir);
         }
 
         System.out.println("Make \"rasp\" directory writable\n");
         modifyFolerPermission(installDir.getCanonicalPath());
 
+        //安装rasp开启云控，删除官方插件
+        if (App.url != null && App.appId != null && App.appSecret != null) {
+            File plugin = new File(installDir.getCanonicalPath() + File.separator + "plugins" + File.separator + "official.js");
+            if (plugin.exists()) {
+                plugin.delete();
+            }
+        }
         // 生成配置文件
-        if (!generateConfig(installDir.getPath())) {
+        if (!generateConfig(installDir.getPath(), firstInstall)) {
             System.exit(1);
         }
 
+        if (needModifyScript) {
+            generateStartScript(installDir.getPath());
+            if (App.isAttach) {
+                System.out.println("\nAttach the rasp to process: " + App.pid);
+                new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_INSTALL);
+            }
+
+            System.out.println("\nInstallation completed without errors.");
+            if (!App.isAttach) {
+                System.out.println("Please restart application server to take effect.");
+            }
+        }
+    }
+
+    private void generateStartScript(String installPath) throws RaspError, IOException {
         // 找到要修改的启动脚本
-        File script = new File(getScript(installDir.getPath()));
+        File script = new File(getScript(installPath));
         if (!script.exists()) {
             throw new RaspError(E10003 + script.getAbsolutePath());
         }
@@ -80,50 +141,58 @@ public abstract class BaseStandardInstaller implements Installer {
         String original = read(script);
         String modified = modifyStartScript(original);
         write(script, modified);
-        System.out.println("\nInstallation completed without errors.\nPlease restart application server to take effect.");
     }
 
-
-    private boolean generateConfig(String dir) {
+    private boolean generateConfig(String dir, boolean firstInstall) {
         try {
             String sep = File.separator;
-            File target = new File(dir + sep + "conf" + sep + "rasp.properties");
+            File target = new File(dir + sep + "conf" + sep + "openrasp.yml");
 
-            System.out.println("Generating \"rasp.properties\"\n- " + target.getAbsolutePath());
+            System.out.println("Generating \"openrasp.yml\"\n- " + target.getAbsolutePath());
             if (target.exists() && App.keepConfig) {
-                System.out.println("- Already exists and reserved rasp.properties, continuing ..");
+                System.out.println("- Already exists and reserved openrasp.yml, continuing ..");
                 return true;
             }
-            if (target.exists()) {
-                File reserve = new File(dir + sep + "conf" + sep + "rasp.properties.bak");
+            if (target.exists() && !firstInstall) {
+                File reserve = new File(dir + sep + "conf" + sep + "openrasp.yml.bak");
                 if (!reserve.exists()) {
-                  reserve.createNewFile();
+                    reserve.createNewFile();
                 }
                 FileOutputStream outputStream = new FileOutputStream(reserve);
                 FileInputStream inputStream = new FileInputStream(target);
                 IOUtils.copy(inputStream, outputStream);
                 outputStream.close();
                 inputStream.close();
-                System.out.println("- Backed up rasp.properties to rasp.properties.bak");
+                System.out.println("- Backed up openrasp.yml to openrasp.yml.bak");
             } else {
                 System.out.println("- Create " + target.getAbsolutePath());
                 target.getParentFile().mkdir();
                 target.createNewFile();
             }
-            FileWriter writer = new FileWriter(target);
-            InputStream is = this.getClass().getResourceAsStream("/rasp.properties");
-            IOUtils.copy(is, writer, "UTF-8");
+            FileOutputStream outputStream = new FileOutputStream(target);
+            InputStream is = this.getClass().getResourceAsStream("/openrasp.yml");
+            IOUtils.copy(is, outputStream);
             is.close();
-            writer.close();
+            outputStream.close();
 
-            //配置云控参数
-            setCloudArgs(App.url, App.appId, App.appSecret);
+            // 配置云控
+            setCloudConf();
+            // 配置其它选项
+            if (App.raspId != null) {
+                setRaspConfItem("rasp.id", App.raspId, "# <rasp id>");
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
         return true;
 
+    }
+
+    private void setRaspConfItem(String key, String value, String comment) {
+        Map<String, Object> ymlData = new HashMap<String, Object>();
+        ymlData.put(key, value);
+        setRaspConf(ymlData, comment);
     }
 
     public static String read(File file) throws IOException {
@@ -165,34 +234,97 @@ public abstract class BaseStandardInstaller implements Installer {
             // System.out.println(res);
         } else {
             if (System.getProperty("user.name").equals("root")) {
-                runCommand(new String[]{"chmod", "-R", "o+w", folderPath});
+                runCommand(new String[]{"chmod", "-R", "go+w", folderPath});
             }
         }
     }
 
-    private void setCloudArgs(String url, String appId, String appSecret) {
+    private void setCloudConf() {
+        if (App.url != null) {
+            Map<String, Object> cloudData = new HashMap<String, Object>();
+            cloudData.put("cloud.enable", true);
+            cloudData.put("cloud.backend_url", App.url);
+            cloudData.put("cloud.app_id", App.appId);
+            cloudData.put("cloud.app_secret", App.appSecret);
+            if (App.heartbeatInterval != null) {
+                cloudData.put("cloud.heartbeat_interval", App.heartbeatInterval);
+            }
+            setRaspConf(cloudData, "# <remote management>");
+        }
+    }
 
+    private void setRaspConf(Map<String, Object> ymlData, String comment) {
         try {
-            if (url != null && appId != null && appSecret != null) {
-                String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "rasp.properties";
-                FileOutputStream out = new FileOutputStream(path, true);
-                OutputStreamWriter writer=new OutputStreamWriter(out);
+            String path = getInstallPath(serverRoot) + File.separator + "conf" + File.separator + "openrasp.yml";
+            File yamlFile = new File(path);
+            if (yamlFile.exists()) {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(yamlFile, true), "UTF-8"));
                 writer.write(LINE_SEP);
-                writer.write("#云控的配置");
+                writer.write(comment);
                 writer.write(LINE_SEP);
-                writer.write("cloud.backend_url="+url);
-                writer.write(LINE_SEP);
-                writer.write("cloud.app_id="+appId);
-                writer.write(LINE_SEP);
-                writer.write("cloud.app_secret="+appSecret);
-                writer.write(LINE_SEP);
-                writer.write("cloud.enable=true");
-                writer.write(LINE_SEP);
-                writer.close();
+                DumperOptions options = new DumperOptions();
+                options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+                options.setPrettyFlow(true);
+                Yaml yaml = new Yaml(options);
+                yaml.dump(ymlData, writer);
             }
         } catch (Exception e) {
-            System.out.println("Unable to update rasp.properties: failed to add cloud control settings: " + e.getMessage());
+            System.out.println("Unable to update openrasp.yml: failed to set openrasp configuration: " + e.getMessage());
         }
+    }
+
+    //判断tomcat的版本是否大于8
+    protected boolean checkTomcatVersion() {
+        String javaVersion = System.getProperty("java.version");
+        String[] version = javaVersion.split("\\.");
+        if (version.length >= 2) {
+            int major;
+            int minor;
+            try {
+                major = Integer.parseInt(version[0]);
+                minor = Integer.parseInt(version[1]);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+            if (major == 1) {
+                return minor >= 9;
+            } else if (major >= 9) {
+                return true;
+            }
+        } else if (javaVersion.startsWith("9")) {
+            return true;
+        } else if (javaVersion.length() >= 2) {
+            char first = javaVersion.charAt(0);
+            char second = javaVersion.charAt(1);
+            if (first >= '1' && first <= '9' && second >= '0' && second <= '9') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //获取指定目录下指定前缀的jar文件
+    protected static String findFile(String path, final String prefix) {
+        File baseDir = new File(path);
+        if (baseDir.exists() && baseDir.isDirectory()) {
+            File[] files = baseDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.isFile() && file.getName().startsWith(prefix) &&
+                            file.getName().endsWith(".jar");
+                }
+            });
+            if (files != null && files.length == 1) {
+                return files[0].getAbsolutePath();
+            }
+        }
+        return null;
+    }
+
+    //获取当前所在jar包的路径
+    public String getLocalJarPath() throws UnsupportedEncodingException {
+        URL localUrl = getClass().getProtectionDomain().getCodeSource().getLocation();
+        return URLDecoder.decode(localUrl.getFile().replace("+", "%2B"), "UTF-8");
     }
 
     protected abstract String getInstallPath(String serverRoot);

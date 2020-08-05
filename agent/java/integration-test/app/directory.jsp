@@ -1,6 +1,7 @@
 <%@ page import="java.io.*" %>
 <%@ page import="java.util.*" %>
 <%
+    out.println(request.getParameter("test"));
 	request.getParameter("test");
 	String dirname = "/etc";
 

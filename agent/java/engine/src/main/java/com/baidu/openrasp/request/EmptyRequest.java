@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,7 +115,17 @@ public class EmptyRequest extends AbstractRequest {
     }
 
     @Override
-    public String getClinetIp() {
+    public String getClientIp() {
+        return null;
+    }
+
+    @Override
+    public String getContentType() {
+        return null;
+    }
+
+    @Override
+    public String getCharacterEncoding() {
         return null;
     }
 }

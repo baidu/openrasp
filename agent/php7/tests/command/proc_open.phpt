@@ -5,7 +5,7 @@ hook proc_open
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'cd')
-    assert(params.stack[0].endsWith('proc_open'))
+    assert(params.stack[0].indexOf('proc_open') != -1)
     return block
 })
 EOF;

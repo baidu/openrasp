@@ -18,13 +18,7 @@ package com.baidu.rasp.install.windows;
 
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -35,14 +29,16 @@ import static com.baidu.rasp.RaspError.E10001;
  */
 public class TomcatInstaller extends BaseStandardInstaller {
 
-    private static String OPENRASP_CONFIG =
-            "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP +
-            "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar\" %JAVA_OPTS%" + LINE_SEP +
-            "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-Dlog4j.rasp.configuration=file:%CATALINA_HOME%\\rasp\\conf\\rasp-log4j.xml\" %JAVA_OPTS%" + LINE_SEP +
-            "rem END OPENRASP" + LINE_SEP;
-    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*\\\\rasp\\\\).*");
+    private static String OPENRASP_START_TAG = "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP;
+    private static String OPENRASP_END_TAG = "rem END OPENRASP" + LINE_SEP;
+    private static String OPENRASP_CONFIG = "if \"%ACTION%\" == \"start\" set JAVA_OPTS=\"-javaagent:%CATALINA_HOME%\\rasp\\rasp.jar\" %JAVA_OPTS%" + LINE_SEP;
+    private static String JDK_JAVA_OPTIONS = "set \"JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED\"" + LINE_SEP;
 
-    TomcatInstaller(String serverName, String serverRoot) {
+    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTS.*\\\\rasp\\\\).*");
+    private static Pattern JDK_JAVA_OPTIONS_REGEX = Pattern.compile(".*JDK_JAVA_OPTIONS.*jdk\\.internal\\.loader.*");
+
+
+    public TomcatInstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
     }
 
@@ -58,17 +54,24 @@ public class TomcatInstaller extends BaseStandardInstaller {
 
     @Override
     protected String modifyStartScript(String content) throws RaspError {
+        boolean versionFlag = checkTomcatVersion();
         int modifyConfigState = NOTFOUND;
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(content);
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if (FOUND == modifyConfigState) {
+                sb.append(OPENRASP_START_TAG);
                 sb.append(OPENRASP_CONFIG);
+                //jdk版本大于8加入依赖包
+                if (versionFlag) {
+                    sb.append(JDK_JAVA_OPTIONS);
+                }
+                sb.append(OPENRASP_END_TAG);
                 modifyConfigState = DONE;
             }
             if (DONE == modifyConfigState) {
-                if (OPENRASP_REGEX.matcher(line).matches()) {
+                if (OPENRASP_REGEX.matcher(line).matches() || JDK_JAVA_OPTIONS_REGEX.matcher(line).matches()) {
                     continue;
                 }
             }

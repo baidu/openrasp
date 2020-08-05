@@ -1,6 +1,5 @@
-
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +21,11 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
+import java.util.HashMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,25 +56,23 @@ public class FileRenameHook extends AbstractClassHook {
 
     public static void checkFileRename(File source, File dest) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
-        if (!checkSwitch||source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
-
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
+        if (source != null && !source.isDirectory() && dest != null && !dest.isDirectory()) {
+            if (checkSwitch && !source.exists()){
+                return;
+            }
+            HashMap<String, Object> params = new HashMap<String, Object>();
             try {
-                params.put("source", params, source.getCanonicalPath());
+                params.put("source", source.getCanonicalPath());
             } catch (IOException e) {
-                params.put("source", params, source.getAbsolutePath());
+                params.put("source", source.getAbsolutePath());
             }
 
             try {
-                params.put("dest", params, dest.getCanonicalPath());
+                params.put("dest", dest.getCanonicalPath());
             } catch (IOException e) {
-                params.put("dest", params, dest.getAbsolutePath());
+                params.put("dest", dest.getAbsolutePath());
             }
-
-
             HookHandler.doCheck(CheckParameter.Type.RENAME, params);
-
         }
     }
 }

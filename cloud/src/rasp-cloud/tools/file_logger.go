@@ -34,9 +34,9 @@ var (
 	AdapterAlarmFile = "alarm_file_logger "
 )
 
-// raspFileLogWriter implements LoggerInterface.
+// RaspFileLogWriter implements LoggerInterface.
 // It writes messages by lines limit, file size limit, or time frequency.
-type raspFileLogWriter struct {
+type RaspFileLogWriter struct {
 	sync.RWMutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
 	// The opened file
 	Filename   string `json:"filename"`
@@ -71,8 +71,8 @@ type raspFileLogWriter struct {
 }
 
 // newFileWriter create a FileLogWriter returning as LoggerInterface.
-func newFileWriter() logs.Logger {
-	w := &raspFileLogWriter{
+func NewFileWriter() logs.Logger {
+	w := &RaspFileLogWriter{
 		Daily:      true,
 		MaxDays:    7,
 		Rotate:     true,
@@ -97,7 +97,7 @@ func newFileWriter() logs.Logger {
 //	"rotate":true,
 //  	"perm":"0600"
 //	}
-func (w *raspFileLogWriter) Init(jsonConfig string) error {
+func (w *RaspFileLogWriter) Init(jsonConfig string) error {
 	err := json.Unmarshal([]byte(jsonConfig), w)
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func (w *raspFileLogWriter) Init(jsonConfig string) error {
 }
 
 // start file logger. create log file and set to locker-inside file writer.
-func (w *raspFileLogWriter) startLogger() error {
+func (w *RaspFileLogWriter) startLogger() error {
 	file, err := w.createLogFile()
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (w *raspFileLogWriter) startLogger() error {
 	return w.initFd()
 }
 
-func (w *raspFileLogWriter) needRotate(size int, day int) bool {
+func (w *RaspFileLogWriter) NeedRotate(size int, day int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
 		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
 		(w.Daily && day != w.dailyOpenDate)
@@ -135,7 +135,7 @@ func (w *raspFileLogWriter) needRotate(size int, day int) bool {
 }
 
 // WriteMsg write logger message into file.
-func (w *raspFileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
+func (w *RaspFileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
@@ -143,11 +143,11 @@ func (w *raspFileLogWriter) WriteMsg(when time.Time, msg string, level int) erro
 	msg = msg + "\n"
 	if w.Rotate {
 		w.RLock()
-		if w.needRotate(len(msg), d) {
+		if w.NeedRotate(len(msg), d) {
 			w.RUnlock()
 			w.Lock()
-			if w.needRotate(len(msg), d) {
-				if err := w.doRotate(when); err != nil {
+			if w.NeedRotate(len(msg), d) {
+				if err := w.DoRotate(when); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
 			}
@@ -167,7 +167,7 @@ func (w *raspFileLogWriter) WriteMsg(when time.Time, msg string, level int) erro
 	return err
 }
 
-func (w *raspFileLogWriter) createLogFile() (*os.File, error) {
+func (w *RaspFileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
 	perm, err := strconv.ParseInt(w.Perm, 8, 64)
 	if err != nil {
@@ -185,7 +185,7 @@ func (w *raspFileLogWriter) createLogFile() (*os.File, error) {
 	return fd, err
 }
 
-func (w *raspFileLogWriter) initFd() error {
+func (w *RaspFileLogWriter) initFd() error {
 	fd := w.fileWriter
 	fInfo, err := fd.Stat()
 	if err != nil {
@@ -208,21 +208,21 @@ func (w *raspFileLogWriter) initFd() error {
 	return nil
 }
 
-func (w *raspFileLogWriter) dailyRotate(openTime time.Time) {
+func (w *RaspFileLogWriter) dailyRotate(openTime time.Time) {
 	y, m, d := openTime.Add(24 * time.Hour).Date()
 	nextDay := time.Date(y, m, d, 0, 0, 0, 0, openTime.Location())
 	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
 	<-tm.C
 	w.Lock()
-	if w.needRotate(0, time.Now().Day()) {
-		if err := w.doRotate(time.Now()); err != nil {
+	if w.NeedRotate(0, time.Now().Day()) {
+		if err := w.DoRotate(time.Now()); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 		}
 	}
 	w.Unlock()
 }
 
-func (w *raspFileLogWriter) lines() (int, error) {
+func (w *RaspFileLogWriter) lines() (int, error) {
 	fd, err := os.Open(w.Filename)
 	if err != nil {
 		return 0, err
@@ -251,7 +251,7 @@ func (w *raspFileLogWriter) lines() (int, error) {
 
 // DoRotate means it need to write file in new file.
 // new file name like xx.2013-01-01.log (daily) or xx.001.log (by line or size)
-func (w *raspFileLogWriter) doRotate(logTime time.Time) error {
+func (w *RaspFileLogWriter) DoRotate(logTime time.Time) error {
 	// file exists
 	// Find the next available number
 	num := w.MaxFilesCurFiles + 1
@@ -309,7 +309,7 @@ RESTART_LOGGER:
 	return nil
 }
 
-func (w *raspFileLogWriter) deleteOldLog() {
+func (w *RaspFileLogWriter) deleteOldLog() {
 	dir := filepath.Dir(w.Filename)
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) (returnErr error) {
 		defer func() {
@@ -333,17 +333,17 @@ func (w *raspFileLogWriter) deleteOldLog() {
 }
 
 // Destroy close the file description, close file writer.
-func (w *raspFileLogWriter) Destroy() {
+func (w *RaspFileLogWriter) Destroy() {
 	w.fileWriter.Close()
 }
 
 // Flush flush file logger.
 // there are no buffering messages in file logger in memory.
 // flush file means sync file from disk.
-func (w *raspFileLogWriter) Flush() {
+func (w *RaspFileLogWriter) Flush() {
 	w.fileWriter.Sync()
 }
 
 func init() {
-	logs.Register(AdapterAlarmFile, newFileWriter)
+	logs.Register(AdapterAlarmFile, NewFileWriter)
 }

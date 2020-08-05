@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,23 @@
 package com.baidu.openrasp.cloud.httpappender;
 
 import com.baidu.openrasp.cloud.CloudHttp;
-import com.baidu.openrasp.cloud.CloudHttpPool;
+import com.baidu.openrasp.cloud.ThreadPool;
 import com.baidu.openrasp.cloud.model.AppenderCache;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
 import com.baidu.openrasp.cloud.model.GenericResponse;
-import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.google.gson.*;
+import com.baidu.openrasp.messaging.ExceptionModel;
+import com.baidu.openrasp.plugin.info.ExceptInfo;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Level;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -37,14 +44,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @create: 2018/09/20 09:53
  */
 public class HttpAppender extends AppenderSkeleton {
-    private CloudHttp cloudHttp;
+    private ThreadPool threadPool;
 
     public HttpAppender() {
-        this.cloudHttp = new CloudHttpPool();
+        this.threadPool = new ThreadPool();
     }
 
     private boolean checkEntryConditions() {
-        if (cloudHttp == null) {
+        if (threadPool == null) {
             LogLog.warn("Http need to be initialized.");
             return false;
 
@@ -59,25 +66,49 @@ public class HttpAppender extends AppenderSkeleton {
     @Override
     protected void append(LoggingEvent loggingEvent) {
         if (checkEntryConditions()) {
-            JsonElement jsonElement = new JsonParser().parse(loggingEvent.getRenderedMessage());
-            JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonElement);
             String logger = getLogger(loggingEvent.getLoggerName());
-            if (logger != null) {
-                String requestUrl = getUrl(logger);
-                if (requestUrl != null) {
-                    GenericResponse response = cloudHttp.request(requestUrl, new Gson().toJson(jsonArray));
-                    if (CloudUtils.checkRequestResult(response)) {
-                        return;
+            JsonElement jsonElement = null;
+            if ("root".equals(logger)) {
+                if ((loggingEvent.getLevel().equals(Level.WARN) || loggingEvent.getLevel().equals(Level.ERROR))
+                        && loggingEvent.getMessage() instanceof ExceptionModel) {
+                    jsonElement = new JsonParser().parse(generateJson(loggingEvent));
+                }
+            } else {
+                jsonElement = new JsonParser().parse(loggingEvent.getRenderedMessage());
+            }
+            if (jsonElement != null) {
+                JsonArray jsonArray = mergeFromAppenderCache(loggingEvent.getLoggerName(), jsonElement);
+                if (logger != null) {
+                    String requestUrl = getUrl(logger);
+                    if (requestUrl != null) {
+                        Runnable runnable = createTask(requestUrl, new Gson().toJson(jsonArray), logger, jsonElement);
+                        threadPool.getThreadPool().execute(runnable);
                     }
-                    AppenderCache.setCache(logger, jsonElement);
                 }
             }
         }
     }
 
-    private JsonArray mergeFromAppenderCache(String loggerName, JsonElement currnetLog) {
+    private Runnable createTask(final String url, final String content, final String loggerName, final JsonElement currentLog) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                GenericResponse response = new CloudHttp().logRequest(url, content);
+                if (response != null) {
+                    Integer responseCode = response.getResponseCode();
+                    if (responseCode != null && responseCode >= 200 && responseCode < 300) {
+                        AppenderCache.clearCache(loggerName);
+                        return;
+                    }
+                }
+                AppenderCache.setCache(loggerName, currentLog);
+            }
+        };
+    }
+
+    private JsonArray mergeFromAppenderCache(String loggerName, JsonElement currentLog) {
         Set<JsonElement> sets = new HashSet<JsonElement>();
-        sets.add(currnetLog);
+        sets.add(currentLog);
         ConcurrentLinkedQueue<JsonElement> queue = AppenderCache.getCache(getLogger(loggerName));
         if (queue != null && !queue.isEmpty()) {
             sets.addAll(queue);
@@ -90,7 +121,7 @@ public class HttpAppender extends AppenderSkeleton {
     }
 
     private String getLogger(String loggerName) {
-        String name = null;
+        String name;
         if (loggerName.contains("policy_alarm")) {
 
             name = "policy_alarm";
@@ -102,6 +133,10 @@ public class HttpAppender extends AppenderSkeleton {
         } else if (loggerName.contains("js")) {
 
             name = "plugin";
+
+        } else {
+
+            name = "root";
         }
         return name;
     }
@@ -112,10 +147,38 @@ public class HttpAppender extends AppenderSkeleton {
             url = CloudRequestUrl.CLOUD_POLICY_ALARM_HTTP_APPENDER_URL;
         } else if ("alarm".equals(logger)) {
             url = CloudRequestUrl.CLOUD_ALARM_HTTP_APPENDER_URL;
-        } else if ("plugin".equals(logger)) {
-            url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
+        }
+//        else if ("plugin".equals(logger)) {
+//            url = CloudRequestUrl.CLOUD_PLUGIN_HTTP_APPENDER_URL;
+//        }
+        else {
+            url = CloudRequestUrl.CLOUD_EXCEPTION_HTTP_APPENDER_URL;
         }
         return url;
+    }
+
+    /**
+     * 处理log4j的ROOT logger上传日志的loggingEvent
+     */
+    private String generateJson(LoggingEvent loggingEvent) {
+        String level = loggingEvent.getLevel().toString();
+        ExceptionModel model = (ExceptionModel) loggingEvent.getMessage();
+        String message = model.getMessage();
+        int errorCode = model.getErrorType().getCode();
+        ThrowableInformation information = loggingEvent.getThrowableInformation();
+        Throwable t = information != null ? information.getThrowable() : null;
+        StackTraceElement[] traceElements = t != null ? t.getStackTrace() : new StackTraceElement[]{};
+        ExceptInfo info = new ExceptInfo(level, message, errorCode, getProcessID(), traceElements);
+        return new Gson().toJson(info.getInfo());
+    }
+
+    private int getProcessID() {
+        try {
+            String[] pids = ManagementFactory.getRuntimeMXBean().getName().split("@");
+            return Integer.parseInt(pids[0]);
+        } catch (Throwable e) {
+            return -1;
+        }
     }
 
     @Override

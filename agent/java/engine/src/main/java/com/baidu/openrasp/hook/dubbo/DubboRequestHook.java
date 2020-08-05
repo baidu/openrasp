@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,9 @@ package com.baidu.openrasp.hook.dubbo;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -55,7 +56,9 @@ public class DubboRequestHook extends AbstractClassHook {
 
         String src = getInvokeStaticSrc(DubboRequestHook.class, "getDubboRpcRequestParameters",
                 "$2", Object.class);
+        String requestEndSrc = getInvokeStaticSrc(DubboRequestHook.class, "checkRequestEnd", "");
         insertBefore(ctClass, "invoke", null, src);
+        insertAfter(ctClass, "invoke", null, requestEndSrc, true);
     }
 
     public static void getDubboRpcRequestParameters(Object object) {
@@ -67,14 +70,17 @@ public class DubboRequestHook extends AbstractClassHook {
                 if (parameterTypes[i].isPrimitive() || isWrapClass(parameterTypes[i]) || args[i] instanceof String) {
                     String[] strings = new String[1];
                     strings[0] = String.valueOf(args[i]);
-                    map.put("dubbo-"+i, strings);
+                    map.put("dubbo-" + i, strings);
                 }
 
             }
         }
 
         HookHandler.checkDubboFilterRequest(map);
+    }
 
+    public static void checkRequestEnd() {
+        HookHandler.doCheck(CheckParameter.Type.REQUESTEND, new HashMap<String, Object>());
     }
 
     public static boolean isWrapClass(Class clazz) {

@@ -15,12 +15,12 @@
 package agent
 
 import (
-	"encoding/json"
 	"gopkg.in/mgo.v2"
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"time"
+	"rasp-cloud/tools"
 )
 
 // Operations about plugin
@@ -30,24 +30,36 @@ type HeartbeatController struct {
 
 type heartbeatParam struct {
 	RaspId        string `json:"rasp_id"`
+	PluginName    string `json:"plugin_name"`
 	PluginVersion string `json:"plugin_version"`
 	PluginMd5     string `json:"plugin_md5"`
 	ConfigTime    int64  `json:"config_time"`
+	HostName      string `json:"hostname"`
 }
 
 // @router / [post]
 func (o *HeartbeatController) Post() {
 	var heartbeat heartbeatParam
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &heartbeat)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnmarshalJson(&heartbeat)
 	rasp, err := models.GetRaspById(heartbeat.RaspId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+		if err == mgo.ErrNotFound {
+			o.ServeErrorWithStatusCode(http.StatusBadRequest,
+				tools.ErrRaspNotFound, "can not found the rasp", err)
+		} else {
+			o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
+		}
 	}
 	rasp.LastHeartbeatTime = time.Now().Unix()
 	rasp.PluginVersion = heartbeat.PluginVersion
+	rasp.PluginName = heartbeat.PluginName
+	rasp.PluginMd5 = heartbeat.PluginMd5
+	if heartbeat.HostName != "" {
+		if len(heartbeat.HostName) >= 1024 {
+			o.ServeError(http.StatusBadRequest, "the length of rasp hostname must be less than 1024")
+		}
+		rasp.HostName = heartbeat.HostName
+	}
 	err = models.UpsertRaspById(heartbeat.RaspId, rasp)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update rasp", err)
@@ -56,10 +68,7 @@ func (o *HeartbeatController) Post() {
 	configTime := heartbeat.ConfigTime
 	appId := o.Ctx.Input.Header("X-OpenRASP-AppID")
 	app, err := models.GetAppById(appId)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "cannot get the app", err)
-	}
-	if app == nil {
+	if err != nil || app == nil {
 		o.ServeError(http.StatusBadRequest, "cannot get the app", err)
 	}
 

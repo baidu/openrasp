@@ -31,10 +31,7 @@ type PolicyAlarmController struct {
 // @router /search [post]
 func (o *PolicyAlarmController) Search() {
 	var param = &logs.SearchPolicyParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnmarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}
@@ -55,12 +52,7 @@ func (o *PolicyAlarmController) Search() {
 	if param.Data.StartTime > param.Data.EndTime {
 		o.ServeError(http.StatusBadRequest, "start_time cannot be greater than end_time")
 	}
-	if param.Page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
-	if param.Perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
-	}
+	o.ValidPage(param.Page, param.Perpage)
 	content, err := json.Marshal(param.Data)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to encode search data", err)
@@ -73,10 +65,21 @@ func (o *PolicyAlarmController) Search() {
 	delete(searchData, "start_time")
 	delete(searchData, "end_time")
 	delete(searchData, "app_id")
-	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
-		param.Page, param.Perpage, false, logs.AliasPolicyIndexName+"-"+param.Data.AppId)
+	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, false, searchData, "event_time",
+		param.Page, param.Perpage, false, logs.PolicyAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
+	}
+	// golang禁止循环导包，因此es.go中不能有访问mongo的操作
+	// 遍历result，加入rasp_version
+	for idx, r := range result {
+		if r["rasp_id"] != nil {
+			raspId := r["rasp_id"].(string)
+			rasp, err := models.GetRaspById(raspId)
+			if err == nil {
+				result[idx]["rasp_version"] = rasp.Version
+			}
+		}
 	}
 	o.Serve(map[string]interface{}{
 		"total":      total,

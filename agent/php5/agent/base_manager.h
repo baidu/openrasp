@@ -22,12 +22,8 @@
 
 namespace openrasp
 {
+#define ROUNDUP(x, n) (((x) + ((n)-1)) & (~((n)-1)))
 
-#if (PHP_MAJOR_VERSION == 5)
-#define TS_FETCH_WRAPPER() TSRMLS_FETCH()
-#else
-#define TS_FETCH_WRAPPER()
-#endif
 class ShmManager;
 
 class BaseManager

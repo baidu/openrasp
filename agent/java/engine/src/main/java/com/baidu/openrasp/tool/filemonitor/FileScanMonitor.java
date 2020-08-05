@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import java.io.File;
 public class FileScanMonitor {
 
     static {
-        JnotifyWatcher watcher=new JnotifyWatcher();
-        JNotify.init(Config.baseDirectory,watcher);
+        JnotifyWatcher watcher = new JnotifyWatcher();
+        JNotify.init(Config.baseDirectory, watcher);
     }
 
     /**

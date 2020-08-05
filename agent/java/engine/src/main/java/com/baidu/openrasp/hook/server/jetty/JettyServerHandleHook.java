@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,9 +54,16 @@ public class JettyServerHandleHook extends ServerRequestHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
-                "$0,$3,$4", Object.class, Object.class, Object.class);
-        insertBefore(ctClass, "handle", null, src);
+        try{
+            String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
+                    "$0,$3,$4", Object.class, Object.class, Object.class);
+            insertBefore(ctClass, "handle", null, src);
+        }catch (Exception e){
+            // jetty7.0.0.m0 版本
+            String src = getInvokeStaticSrc(ServerRequestHook.class, "checkRequest",
+                    "$0,$2,$3", Object.class, Object.class, Object.class);
+            insertBefore(ctClass, "handle", null, src);
+        }
     }
 
 }

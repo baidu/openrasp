@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,21 @@ package com.baidu.openrasp.hook.file;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.StackTrace;
-import com.google.gson.Gson;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by zhuming01 on 5/16/17.
- * All rights reserved
+ * Created by zhuming01 on 5/16/17. All rights reserved
  */
 @HookAnnotation
 public class FileHook extends AbstractClassHook {
@@ -77,29 +74,26 @@ public class FileHook extends AbstractClassHook {
      * @param file 文件对象
      */
     public static void checkListFiles(File file) {
+        boolean checkSwitch = Config.getConfig().getPluginFilter();
         if (file != null) {
-            Scriptable params = null;
+            if (checkSwitch && !file.exists()) {
+                return;
+            }
+            HashMap<String, Object> params = null;
             try {
-                JSContext cx = JSContextFactory.enterAndInitContext();
-                params = cx.newObject(cx.getScope());
-                params.put("path", params, file.getPath());
-                List<String> stackInfo = StackTrace.getStackTraceArray(Config.REFLECTION_STACK_START_INDEX,
-                        Config.getConfig().getPluginMaxStack());
-                Scriptable stackArray = cx.newArray(cx.getScope(), stackInfo.toArray());
-                params.put("stack", params, stackArray);
+                params = new HashMap<String, Object>();
+                params.put("path", file.getPath());
+                List<String> stackInfo = StackTrace.getParamStackTraceArray();
+                params.put("stack", stackInfo);
                 try {
-                    params.put("realpath", params, file.getCanonicalPath());
+                    params.put("realpath", file.getCanonicalPath());
                 } catch (Exception e) {
-                    params.put("realpath", params, file.getAbsolutePath());
+                    params.put("realpath", file.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                HookHandler.LOGGER.warn(t.getMessage(), t);
+                LogTool.traceHookWarn(t.getMessage(), t);
             }
-            String hookType = CheckParameter.Type.DIRECTORY.getName();
-            //如果在lru缓存中不进检测
-            if (params != null && !HookHandler.commonLRUCache.isContainsKey(hookType + new Gson().toJson(params))) {
-                HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
-            }
+            HookHandler.doCheck(CheckParameter.Type.DIRECTORY, params);
         }
     }
 

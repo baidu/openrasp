@@ -41,6 +41,15 @@
         <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
           <template slot="title">
             <span class="icon mr-3">
+              <i class="fe fe-shield" />
+            </span>
+            应用加固
+          </template>
+          <HardeningSettings ref="hardeningSettings" />
+        </b-tab>
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
+          <template slot="title">
+            <span class="icon mr-3">
               <i class="fe fe-user" />
             </span>
             登录认证
@@ -56,6 +65,15 @@
           </template>
           <AppSettings ref="appSettings" />
         </b-tab>
+        <b-tab title-link-class="list-group-item border-0 w-100" title-item-class="px-0">
+          <template slot="title">
+            <span class="icon mr-3">
+              <i class="fe fe-settings" />
+            </span>
+            后台设置
+          </template>
+          <PanelSettings ref="panelSettings" />
+        </b-tab>
       </b-tabs>
     </div>
   </div>
@@ -68,6 +86,8 @@ import AuthSettings from '@/components/pages/settings/auth'
 import GeneralSettings from '@/components/pages/settings/general'
 import WhitelistSettings from '@/components/pages/settings/whitelist'
 import AlgorithmSettings from '@/components/pages/settings/algorithm'
+import HardeningSettings from '@/components/pages/settings/hardening'
+import PanelSettings from '@/components/pages/settings/panel'
 import { mapGetters } from 'vuex'
 import defaultsDeep from 'lodash.defaultsdeep'
 import { getDefaultConfig } from '@/util'
@@ -80,11 +100,13 @@ export default {
     AppSettings,
     AuthSettings,
     AlgorithmSettings,
-    GeneralSettings
+    GeneralSettings,
+    HardeningSettings,
+    PanelSettings
   },
   data: function() {
     return {
-      tab_names: ['general', 'alarm', 'whitelist', 'algorithm', 'auth', 'app'],
+      tab_names: ['general', 'alarm', 'whitelist', 'algorithm', 'hardening', 'auth', 'app', 'panel'],
       tab_index: 0,
       data: undefined,
       loading: false
@@ -114,6 +136,7 @@ export default {
         this.loading = false
         this.data = defaultsDeep(getDefaultConfig(), data)
         this.$refs.generalSettings.setData(this.data.general_config)
+        this.$refs.hardeningSettings.setData(this.data.general_config)
         this.$refs.whitelistSettings.setData(this.data.whitelist_config)
       })
     },

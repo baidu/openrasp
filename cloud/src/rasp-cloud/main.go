@@ -22,13 +22,14 @@ import (
 	"github.com/astaxie/beego"
 	"rasp-cloud/controllers"
 	"rasp-cloud/routers"
+	"rasp-cloud/environment"
 )
 
 func main() {
 	beego.BConfig.Listen.Graceful = true
 	routers.InitRouter()
 	beego.ErrorController(&controllers.ErrorController{})
-	beego.Run()
+	if environment.StartBeego {
+		beego.Run()
+	}
 }
-
-

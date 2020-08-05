@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,15 @@
 
 package com.baidu.openrasp.plugin.info;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.request.AbstractRequest;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -56,19 +60,10 @@ public abstract class EventInfo {
                 json = new Gson().toJson(info);
             }
             return json;
-        } catch (Exception e) {
-            HookHandler.LOGGER.error("failed to print event log",e);
+        } catch (Throwable t) {
+            LogTool.error(ErrorType.HOOK_ERROR, "failed to print event log: " + t.getMessage(), t);
             return null;
         }
-    }
-
-    protected StackTraceElement[] filter(StackTraceElement[] trace) {
-        int i = 0;
-        // 去除插件本身调用栈
-        while (trace[i].getClassName().startsWith("com.baidu.openrasp") && i < trace.length) {
-            i++;
-        }
-        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getLogMaxStackSize(), trace.length));
     }
 
     protected String stringify(StackTraceElement[] trace) {
@@ -78,6 +73,21 @@ public abstract class EventInfo {
             ret.append("\n");
         }
         return ret.toString();
+    }
+
+    protected Map<String, String> getRequestHeader(AbstractRequest request) {
+        Map<String, String> header = new HashMap<String, String>();
+        if (request != null) {
+            Enumeration<String> headerNames = request.getHeaderNames();
+            if (headerNames != null) {
+                while (headerNames.hasMoreElements()) {
+                    String key = headerNames.nextElement();
+                    String value = request.getHeader(key);
+                    header.put(key.toLowerCase(), value);
+                }
+            }
+        }
+        return header;
     }
 
 }

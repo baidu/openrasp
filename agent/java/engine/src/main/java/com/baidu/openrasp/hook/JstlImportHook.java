@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,18 @@
 package com.baidu.openrasp.hook;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
 
 /**
  * Created by lanyuhang on 10/19/17.
@@ -73,10 +75,26 @@ public class JstlImportHook extends AbstractClassHook {
      */
     public static void checkJstlImport(String url) {
         if (url != null && !url.startsWith("/") && url.contains("://")) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            params.put("url", params, url);
-            params.put("function", params, "jstl_import");
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("url", url);
+            params.put("realpath", url);
+            try {
+                if (url.startsWith("file://")) {
+                    File realFile = new File(new URI(url));
+                    boolean checkSwitch = Config.getConfig().getPluginFilter();
+                    if (checkSwitch && !realFile.exists()) {
+                        return;
+                    }
+                    try {
+                        params.put("realpath", realFile.getCanonicalPath());
+                    } catch (Exception e) {
+                        params.put("realpath", realFile.getAbsolutePath());
+                    }
+                }
+            } catch (Exception e) {
+                LogTool.traceHookWarn("Jstl hook check failed: " + e.getMessage(), e);
+            }
+            params.put("function", "jstl_import");
             HookHandler.doCheck(CheckParameter.Type.INCLUDE, params);
         }
     }

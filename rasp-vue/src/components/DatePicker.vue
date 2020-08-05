@@ -1,5 +1,5 @@
 <template>
-  <input type="text" name="dates" class="form-control pull-right" autocomplete="off">
+  <input ref="daterangepicker" type="text" name="daterange" class="form-control" autocomplete="off" style="width: 210px; ">
 </template>
 
 <script>
@@ -8,25 +8,22 @@ import moment from 'moment'
 
 export default {
   name: 'DatePicker',
-  data: function() {
+  data() {
     return {
       start: moment().subtract(1, 'months').startOf('day'),
       end: moment().endOf('day')
     }
   },
-  mounted: function() {
-    var self = this
+  mounted() {
+    window.$(this.$refs.daterangepicker).daterangepicker({
+      startDate: this.start,
+      endDate: this.end
+    }, (start, end, label) => {
+      this.start = start
+      this.end = end
 
-    this.$nextTick(function() {
-      window.$(this.$el).daterangepicker({
-        startDate: self.start,
-        endDate: self.end
-      }, function(start, end, label) {
-        self.start = start
-        self.end = end
-
-        self.$emit('selected')
-      })
+      this.$emit('selected')
+      this.$emit('change', { start, end })
     })
   }
 }

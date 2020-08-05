@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,12 @@ import java.util.Map;
  * @create: 2018/09/17 17:56
  */
 public class GenericResponse {
+
+    public static final int ERROR_CODE_RASP_NOT_FOUND = 4001;
     private Integer responseCode;
     private Integer status;
     private String description;
-    private Map<String,Object> data;
+    private Map<String, Object> data;
 
     public Integer getResponseCode() {
         return responseCode;

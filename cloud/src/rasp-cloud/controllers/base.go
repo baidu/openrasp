@@ -17,6 +17,9 @@ package controllers
 import (
 	"github.com/astaxie/beego"
 	"net/http"
+	"encoding/json"
+	"github.com/astaxie/beego/validation"
+	"fmt"
 )
 
 // base controller
@@ -38,17 +41,60 @@ func (o *BaseController) ServeError(code int, description string, err ...error) 
 	if len(err) > 0 && err[0] != nil {
 		description = description + ": " + err[0].Error()
 	}
-	o.ServeStatusCode(code, description)
+	o.ServeStatusCode(code, code, description)
 	panic(description)
 }
 
-func (o *BaseController) ServeStatusCode(code int, description ...string) {
+func (o *BaseController) ServeErrorWithStatusCode(code int, status int, description string, err ...error) {
+	if len(err) > 0 && err[0] != nil {
+		description = description + ": " + err[0].Error()
+	}
+	o.ServeStatusCode(code, status, description)
+	panic(description)
+}
+
+func (o *BaseController) ServeStatusCode(code int, status int, description ...string) {
 	var des string
 	if len(description) == 0 {
 		des = http.StatusText(code)
 	} else {
 		des = description[0]
 	}
-	o.Data["json"] = map[string]interface{}{"status": code, "description": des}
+	o.Data["json"] = map[string]interface{}{"status": status, "description": des}
 	o.ServeJSON()
+}
+
+func (o *BaseController) UnmarshalJson(v interface{}) {
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, v)
+	if err != nil {
+		beego.Info("RequestBody:", string(o.Ctx.Input.RequestBody))
+		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
+	}
+}
+
+func (o *BaseController) ValidPage(page int, perpage int) {
+	if page <= 0 {
+		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
+	}
+	if perpage <= 0 {
+		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
+	}
+	if perpage > 100 {
+		o.ServeError(http.StatusBadRequest, "perpage must be less than 1000")
+	}
+}
+
+func (o *BaseController) ValidParam(param interface{}) {
+	valid := validation.Validation{}
+	ok, err := valid.Valid(param)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "validation has error", err)
+	}
+	if !ok {
+		errMsg := make([]string, len(valid.Errors))
+		for i, err := range valid.Errors {
+			errMsg[i] = err.Key + " " + err.Message
+		}
+		o.ServeError(http.StatusBadRequest, fmt.Sprintf("%+v", errMsg))
+	}
 }

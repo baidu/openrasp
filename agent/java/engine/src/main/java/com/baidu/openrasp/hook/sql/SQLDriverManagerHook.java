@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,17 @@
 package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.checker.policy.SqlConnectionChecker;
-import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import com.baidu.openrasp.tool.TimeUtils;
+import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
@@ -38,6 +38,14 @@ import java.util.Properties;
  */
 @HookAnnotation
 public class SQLDriverManagerHook extends AbstractClassHook {
+
+    private static ThreadLocal<Boolean> enableSqlConnectHook = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return true;
+        }
+    };
+
     private static ArrayList<String> classList = new ArrayList<String>();
 
     static {
@@ -80,7 +88,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
         String srcBefore = getInvokeStaticSrc(SQLDriverManagerHook.class, "checkSqlConnectionOnEnter",
                 "$1,$2", String.class, Properties.class);
         String srcAfter = getInvokeStaticSrc(SQLDriverManagerHook.class, "checkSqlConnectionOnExit",
-                "$1,$2", String.class, Properties.class);
+                "$_,$1,$2", Connection.class, String.class, Properties.class);
         String srcOnExit = getInvokeStaticSrc(SQLDriverManagerHook.class, "onConnectionExit", "");
         insertBefore(ctClass, "connect", null, srcBefore);
         insertAfter(ctClass, "connect", null, srcAfter, false);
@@ -94,10 +102,10 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param properties 连接属性
      */
     public static void checkSqlConnectionOnEnter(String url, Properties properties) {
-        if (Config.getConfig().getEnforcePolicy()) {
-            checkSqlConnection(url, properties);
+        if (enableSqlConnectHook.get()) {
+            HookHandler.preShieldHook();
+            enableSqlConnectHook.set(false);
         }
-        HookHandler.preShieldHook();
     }
 
     /**
@@ -106,12 +114,14 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param url        连接url
      * @param properties 连接属性
      */
-    public static void checkSqlConnectionOnExit(String url, Properties properties) {
-        if (!Config.getConfig().getEnforcePolicy()) {
-            Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
-            if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
-                checkSqlConnection(url, properties);
-            }
+    public static void checkSqlConnectionOnExit(Connection connection, String url, Properties properties) {
+        //连接成功才检测
+        if (connection == null) {
+            return;
+        }
+        Long lastAlarmTime = SqlConnectionChecker.alarmTimeCache.get(url);
+        if (lastAlarmTime == null || (System.currentTimeMillis() - lastAlarmTime) > TimeUtils.DAY_MILLISECOND) {
+            checkSqlConnection(url, properties);
         }
     }
 
@@ -120,6 +130,7 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      */
     public static void onConnectionExit() {
         HookHandler.postShieldHook();
+        enableSqlConnectHook.set(true);
     }
 
     /**
@@ -129,12 +140,9 @@ public class SQLDriverManagerHook extends AbstractClassHook {
      * @param properties 连接属性
      */
     public static void checkSqlConnection(String url, Properties properties) {
-        if (Config.getConfig().getCloudSwitch() && Config.getConfig().getHookWhiteAll()) {
-            return;
-        }
         HashMap<String, Object> params = new HashMap<String, Object>(4);
         params.put("url", url);
         params.put("properties", properties);
-        HookHandler.doPolicyCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
+        HookHandler.doCheckWithoutRequest(CheckParameter.Type.POLICY_SQL_CONNECTION, params);
     }
 }

@@ -15,7 +15,6 @@
 package api
 
 import (
-	"encoding/json"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -40,14 +39,16 @@ func (o *PluginController) Upload() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to get app", err)
 	}
+
 	uploadFile, info, err := o.GetFile("plugin")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "parse uploadFile error", err)
+	}
 	if uploadFile == nil {
 		o.ServeError(http.StatusBadRequest, "must have the plugin parameter")
 	}
 	defer uploadFile.Close()
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "parse uploadFile error", err)
-	}
+
 	if info.Size == 0 {
 		o.ServeError(http.StatusBadRequest, "the upload file cannot be empty")
 	}
@@ -68,10 +69,7 @@ func (o *PluginController) Upload() {
 // @router /get [post]
 func (o *PluginController) Get() {
 	var param map[string]string
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnmarshalJson(&param)
 	pluginId := param["id"]
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
@@ -95,7 +93,11 @@ func (o *PluginController) Download() {
 		plugin.Name = "plugin"
 	}
 	o.Ctx.Output.Header("Content-Disposition", "attachment;filename="+plugin.Name+"-"+plugin.Version+".js")
-	o.Ctx.Output.Body([]byte(plugin.Content))
+	if len(plugin.OriginContent) != 0 {
+		o.Ctx.Output.Body([]byte(plugin.OriginContent))
+	} else {
+		o.Ctx.Output.Body([]byte(plugin.Content))
+	}
 }
 
 // @router /algorithm/config [post]
@@ -104,10 +106,7 @@ func (o *PluginController) UpdateAppAlgorithmConfig() {
 		PluginId string                 `json:"id"`
 		Config   map[string]interface{} `json:"config"`
 	}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnmarshalJson(&param)
 	if param.PluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin id can not be empty")
 	}
@@ -126,10 +125,7 @@ func (o *PluginController) UpdateAppAlgorithmConfig() {
 // @router /algorithm/restore [post]
 func (o *PluginController) RestoreAlgorithmConfig() {
 	var param map[string]string
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnmarshalJson(&param)
 	pluginId := param["id"]
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")
@@ -146,10 +142,7 @@ func (o *PluginController) RestoreAlgorithmConfig() {
 // @router /delete [post]
 func (o *PluginController) Delete() {
 	var param map[string]string
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnmarshalJson(&param)
 	pluginId := param["id"]
 	if pluginId == "" {
 		o.ServeError(http.StatusBadRequest, "plugin_id cannot be empty")

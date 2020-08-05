@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package com.baidu.openrasp.plugin.checker.local;
 
-import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.AttackChecker;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -34,13 +34,13 @@ import java.util.HashMap;
  */
 public abstract class ConfigurableChecker extends AttackChecker {
 
-    private static final int DEFAULT_MIN_LENGTH = 15;
+    private static final int DEFAULT_MIN_LENGTH = -1;
 
-    protected String getActionElement(JsonObject config, String key) {
+    public static String getActionElement(JsonObject config, String key) {
         return getStringElement(config, key, "action");
     }
 
-    protected JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey) {
+    public static JsonArray getJsonObjectAsArray(JsonObject config, String key, String subKey) {
         JsonArray result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
@@ -53,7 +53,7 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return result;
     }
 
-    protected HashMap<String, Boolean> getJsonObjectAsMap(JsonObject config, String key, String subKey) {
+    public static HashMap<String, Boolean> getJsonObjectAsMap(JsonObject config, String key, String subKey) {
         HashMap<String, Boolean> result = null;
         try {
             JsonElement value = getElement(config, key, subKey);
@@ -71,7 +71,25 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return result;
     }
 
-    protected String getStringElement(JsonObject config, String key, String subKey) {
+    public static HashMap<String, Integer> getJsonObjectAsIntMap(JsonObject config, String key, String subKey) {
+        HashMap<String, Integer> result = null;
+        try {
+            JsonElement value = getElement(config, key, subKey);
+            if (value != null) {
+                Gson gson = new Gson();
+                result = gson.fromJson(value, new TypeToken<HashMap<String, Integer>>() {
+                }.getType());
+            }
+        } catch (Exception e) {
+            logJsonError(e);
+        }
+        if (result == null) {
+            result = new HashMap<String, Integer>();
+        }
+        return result;
+    }
+
+    public static String getStringElement(JsonObject config, String key, String subKey) {
         try {
             JsonElement value = getElement(config, key, subKey);
             if (value != null) {
@@ -83,20 +101,17 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return null;
     }
 
-    private JsonElement getElement(JsonObject config, String key, String subKey) {
+    public static JsonElement getElement(JsonObject config, String key, String subKey) {
         if (config != null) {
             JsonElement jsonElement = config.get(key);
             if (jsonElement != null) {
-                JsonElement value = jsonElement.getAsJsonObject().get(subKey);
-                if (value != null) {
-                    return value;
-                }
+                return jsonElement.getAsJsonObject().get(subKey);
             }
         }
         return null;
     }
 
-    protected int getIntElement(JsonObject config, String key, String subKey) {
+    public static int getIntElement(JsonObject config, String key, String subKey) {
 
         try {
             JsonElement element = getElement(config, key, subKey);
@@ -108,11 +123,11 @@ public abstract class ConfigurableChecker extends AttackChecker {
     }
 
 
-
-    private void logJsonError(Exception e) {
-        JSContext.LOGGER.warn("Parse json failed because: " + e.getMessage() +
+    public static void logJsonError(Exception e) {
+        String message = "Parse json failed because: " + e.getMessage() +
                 System.getProperty("line.separator") +
-                "        Please check algorithmConfig in js");
+                "        Please check algorithmConfig in js";
+        LogTool.warn(ErrorType.PLUGIN_ERROR, message, e);
     }
 
 }

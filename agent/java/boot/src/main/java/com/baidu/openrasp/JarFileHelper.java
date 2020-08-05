@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,13 +45,14 @@ public class JarFileHelper {
      *
      * @return jar包路径
      */
-    private static String getLocalJarPath() {
+    public static String getLocalJarPath() {
         URL localUrl = Agent.class.getProtectionDomain().getCodeSource().getLocation();
         String path = null;
         try {
             path = URLDecoder.decode(
                     localUrl.getFile().replace("+", "%2B"), "UTF-8");
         } catch (UnsupportedEncodingException e) {
+            System.err.println("[OpenRASP] Failed to get jarFile path.");
             e.printStackTrace();
         }
         return path;

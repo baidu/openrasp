@@ -1,2 +1,0 @@
-DESC wp_users
-select name, email from users where id = 1002

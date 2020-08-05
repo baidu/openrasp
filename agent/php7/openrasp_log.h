@@ -17,7 +17,10 @@
 #ifndef OPENRASP_LOG_H
 #define OPENRASP_LOG_H
 
+#include "utils/json_reader.h"
 #include "openrasp.h"
+#include "agent/shared_log_manager.h"
+#include <map>
 
 #ifdef __cplusplus
 extern "C"
@@ -38,86 +41,92 @@ extern "C"
 }
 #endif
 
-#define ALARM_LOG_DIR_NAME "alarm"
-#define POLICY_LOG_DIR_NAME "policy"
-#define PLUGIN_LOG_DIR_NAME "plugin"
-#define RASP_LOG_DIR_NAME "rasp"
+extern std::unique_ptr<openrasp::SharedLogManager> slm;
 
-typedef enum log_appender_t
+enum log_appender
 {
-    NULL_APPENDER = 0,
-    FILE_APPENDER = 1 << 0,
-    SYSLOG_APPENDER = 1 << 1,
-    FSTREAM_APPENDER = 1 << 2
-} log_appender;
+  NULL_APPENDER = 0,
+  FILE_APPENDER = 1 << 0,
+  SYSLOG_APPENDER = 1 << 1,
+  FSTREAM_APPENDER = 1 << 2
+};
 
-typedef enum logger_instance_t
+enum logger_instance
 {
-    ALARM_LOGGER,
-    POLICY_LOGGER,
-    PLUGIN_LOGGER,
-    RASP_LOGGER,
-    TOTAL
-} logger_instance;
+  ALARM_LOGGER,
+  POLICY_LOGGER,
+  PLUGIN_LOGGER,
+  RASP_LOGGER,
+  TOTAL
+};
 
 //reference https://en.wikipedia.org/wiki/Syslog
-typedef enum severity_level_t
+enum severity_level
 {
-    LEVEL_INFO = 6,
-    LEVEL_DEBUG = 7,
-    LEVEL_ALL = 8
-} severity_level;
+  LEVEL_EMERG = 0,
+  LEVEL_ALERT = 1,
+  LEVEL_CRIT = 2,
+  LEVEL_ERR = 3,
+  LEVEL_WARNING = 4,
+  LEVEL_NOTICE = 5,
+  LEVEL_INFO = 6,
+  LEVEL_DEBUG = 7
+};
 
 class RaspLoggerEntry
 {
-  private:
-    const char *name;
-    zend_bool initialized = false;
-    zend_bool accessable = false;
+private:
+  const char *name;
+  zend_bool initialized = false;
+  zend_bool accessable = false;
 
-    int available_token = 0;
-    long last_logged_time = 0;
+  int available_token = 0;
+  long last_logged_time = 0;
 
-    severity_level level = LEVEL_INFO;
-    log_appender appender = NULL_APPENDER;
-    log_appender appender_mask = NULL_APPENDER;
+  severity_level level = LEVEL_INFO;
+  log_appender appender = NULL_APPENDER;
+  log_appender appender_mask = NULL_APPENDER;
 
-    long time_offset;
-    char *formatted_date_suffix = nullptr;
+  long time_offset;
+  char *formatted_date_suffix = nullptr;
 
-    long syslog_reconnect_time;
-    zval common_info;
-    php_stream *stream_log = nullptr;
-    php_stream *syslog_stream = nullptr;
+  long syslog_reconnect_time;
+  php_stream *stream_log = nullptr;
+  php_stream *syslog_stream = nullptr;
 
-  private:
-    void update_common_info();
-    void close_streams();
-    void clear_common_info();
-    void update_formatted_date_suffix();
-    void clear_formatted_date_suffix();
-    bool comsume_token_if_available();
-    bool check_log_level(severity_level level_int) const;
-    bool if_need_update_formatted_file_suffix(long now) const;
-    bool openrasp_log_stream_available(log_appender appender_int);
-    bool raw_log(severity_level level_int, const char *message, int message_len);
+private:
+  void close_streams();
+  void update_formatted_date_suffix();
+  void clear_formatted_date_suffix();
+  bool comsume_token_if_available();
+  bool check_log_level(severity_level level_int) const;
+  bool if_need_update_formatted_file_suffix(long now) const;
+  bool openrasp_log_stream_available(log_appender appender_int);
+  bool raw_log(severity_level level_int, const char *message, int message_len);
 
-  public:
-    static const char *default_log_suffix;
-    static const char *rasp_rfc3339_format;
-    static const char *syslog_time_format;
+public:
+  static const char *default_log_suffix;
+  static const char *rasp_rfc3339_format;
+  static const char *syslog_time_format;
+  static const char *ALARM_LOG_DIR_NAME;
+  static const char *POLICY_LOG_DIR_NAME;
+  static const char *PLUGIN_LOG_DIR_NAME;
+  static const char *RASP_LOG_DIR_NAME;
 
-    RaspLoggerEntry();
-    RaspLoggerEntry(const char *name, severity_level level, log_appender appender, log_appender appender_mask);
-    RaspLoggerEntry(const RaspLoggerEntry &src) = delete;
+  RaspLoggerEntry();
+  RaspLoggerEntry(const char *name, severity_level level, log_appender appender, log_appender appender_mask);
+  RaspLoggerEntry(const RaspLoggerEntry &src) = delete;
 
-    void init(log_appender appender_int);
-    void clear();
-    bool log(severity_level level_int, const char *message, int message_len, bool separate = true, bool detail = true);
-    bool log(severity_level level_int, zval *params_result);
-    char *get_formatted_date_suffix() const;
-    zval *get_common_info();
-    void set_level(severity_level level);
+  void init(log_appender appender_int);
+  void clear();
+  bool log(severity_level level_int, const char *message, int message_len, bool separate = true, bool detail = true);
+  bool log(severity_level level_int,  openrasp::JsonReader &base_json);
+  char *get_formatted_date_suffix() const;
+  void set_level(severity_level level);
+
+  static std::string level_to_name(severity_level level);
+  static int name_to_level(const std::string &name);
+  static void inner_error(int type, openrasp_error_code code, const char *format, ...);
 };
 
 typedef RaspLoggerEntry rasp_logger_entry;
@@ -155,6 +164,10 @@ PHP_MSHUTDOWN_FUNCTION(openrasp_log);
 PHP_RINIT_FUNCTION(openrasp_log);
 PHP_RSHUTDOWN_FUNCTION(openrasp_log);
 PHP_MINFO_FUNCTION(openrasp_log);
+
+bool log_module_initialized();
+void update_log_level();
+std::map<std::string, std::string> get_if_addr_map();
 
 #endif /* OPENRASP_LOG_H */
 

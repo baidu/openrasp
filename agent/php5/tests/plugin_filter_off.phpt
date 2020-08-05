@@ -11,7 +11,7 @@ plugin.register('readFile', params => {
 })
 EOF;
 $conf = <<<CONF
-plugin.filter=false
+plugin.filter: false
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

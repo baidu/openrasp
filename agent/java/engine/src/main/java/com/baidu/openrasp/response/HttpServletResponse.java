@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,12 @@ package com.baidu.openrasp.response;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.hook.server.bes.BESResponseBodyHook;
+import com.baidu.openrasp.hook.server.catalina.CatalinaResponseBodyHook;
+import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 
 /**
  * Created by tyy on 9/5/17.
@@ -106,6 +111,16 @@ public class HttpServletResponse {
         return null;
     }
 
+    public String getCharacterEncoding() {
+        if (response != null) {
+            Object enc = Reflection.invokeMethod(response, "getCharacterEncoding", new Class[]{});
+            if (enc != null) {
+                return enc.toString();
+            }
+        }
+        return null;
+    }
+
     public String getContentType() {
         if (response != null) {
             Object contentType = Reflection.invokeMethod(response, "getContentType", new Class[]{});
@@ -153,7 +168,7 @@ public class HttpServletResponse {
     /**
      * 返回异常信息
      */
-    public void sendError() {
+    public void sendError(CheckParameter parameter) {
         if (response != null) {
             try {
                 int statusCode = Config.getConfig().getBlockStatusCode();
@@ -169,17 +184,25 @@ public class HttpServletResponse {
                 } else {
                     script = Config.getConfig().getBlockHtml().replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId);
                 }
-                if (!isCommitted) {
-                    Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
-                    if (statusCode >= 300 && statusCode <= 399) {
-                        setHeader("Location", blockUrl.replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId));
+                if (parameter.getType().equals(CheckParameter.Type.XSS_USERINPUT)) {
+                    if ("tomcat".equals(ApplicationModel.getServerName())) {
+                        CatalinaResponseBodyHook.handleXssBlockBuffer(parameter, script);
+                    } else if ("bes".equals(ApplicationModel.getServerName())) {
+                        BESResponseBodyHook.handleXssBlockBuffer(parameter, script);
                     }
-                    setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
+                }else {
+                    if (!isCommitted) {
+                        resetBuffer();
+                        Reflection.invokeMethod(response, "setStatus", new Class[]{int.class}, statusCode);
+                        if (statusCode >= 300 && statusCode <= 399) {
+                            setHeader("Location", blockUrl.replace(CONTENT_TYPE_REPLACE_REQUEST_ID, requestId));
+                        }
+                        setIntHeader(CONTENT_LENGTH_HEADER_KEY, script.getBytes().length);
+                    }
+                    sendContent(script, true);
                 }
-                resetBuffer();
-                sendContent(script, true);
             } catch (Exception e) {
-                //ignore
+                LogTool.traceHookWarn("failed to handle block body: " + e.getMessage(), e);
             }
         }
     }

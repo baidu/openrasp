@@ -43,3 +43,6 @@ error-output.txt
 .DS_Store
 test.db
 !tests/include/
+!third_party/yaml-cpp/include
+output
+test.shm.*

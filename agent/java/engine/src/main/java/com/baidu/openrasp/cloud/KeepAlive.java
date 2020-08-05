@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,20 @@
 
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
-import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
+import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.config.ConfigItem;
+import com.baidu.openrasp.dependency.DependencyReport;
+import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogConfig;
-import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
+import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.plugin.js.JS;
+import com.baidu.openrasp.tool.OSUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonPrimitive;
 
@@ -36,46 +41,75 @@ import java.util.Map;
  * @author: anyang
  * @create: 2018/09/17 16:55
  */
-public class KeepAlive {
+public class KeepAlive extends CloudTimerTask {
+
+    private DependencyReport dependencyReport = new DependencyReport();
 
     public KeepAlive() {
-        Thread thread = new Thread(new KeepAliveThread());
-        thread.setDaemon(true);
-        thread.start();
+        super("OpenRASP Heartbeat Thread");
+        dependencyReport.start();
     }
 
-    class KeepAliveThread implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                String content = new Gson().toJson(GenerateParameters());
-                String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
-                GenericResponse response = new CloudHttp().request(url, content);
-                if (CloudUtils.checkRequestResult(response)) {
-                    handleResponse(response);
-                } else {
-                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response));
-                }
-                try {
-                    Thread.sleep(Config.getConfig().getHeartbeatInterval()*1000);
-                } catch (Exception e) {
-                    //continue next loop
-                }
+    @Override
+    public long getSleepTime() {
+        return Config.getConfig().getHeartbeatInterval();
+    }
+
+    @Override
+    public void execute() {
+        String content = new Gson().toJson(generateParameters());
+        String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
+        GenericResponse response = new CloudHttp().commonRequest(url, content);
+        if (CloudUtils.checkResponse(response)) {
+            handleResponse(response);
+        } else {
+            if (response != null && response.getStatus() == GenericResponse.ERROR_CODE_RASP_NOT_FOUND) {
+                handleRaspNotFound();
             }
+            String message = CloudUtils.handleError(ErrorType.HEARTBEAT_ERROR, response);
+            LogTool.warn(ErrorType.HEARTBEAT_ERROR, message);
         }
     }
 
-    public static Map<String, Object> GenerateParameters() {
+    private void handleRaspNotFound() {
+        // 暂停心跳和所有 hook 点，并且开始重新注册
+        suspend();
+        HookHandler.enableHook.getAndSet(false);
+        new Register(new Register.RegisterCallback() {
+            @Override
+            public void call() {
+                HookHandler.enableHook.getAndSet(true);
+                resume();
+            }
+        });
+    }
+
+    @Override
+    public void handleError(Throwable t) {
+        try {
+            LogTool.warn(ErrorType.HEARTBEAT_ERROR, t.getMessage(), t);
+        } catch (Throwable e) {
+            System.out.println("OpenRASP timer logger failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public Map<String, Object> generateParameters() {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("rasp_id", CloudCacheModel.getInstance().getRaspId());
         params.put("plugin_version", CloudCacheModel.getInstance().getPluginVersion());
         params.put("config_time", CloudCacheModel.getInstance().getConfigTime());
         params.put("plugin_md5", CloudCacheModel.getInstance().getPluginMD5());
+        params.put("plugin_name", CloudCacheModel.getInstance().getPluginName());
+        params.put("hostname", OSUtil.getHostName());
         return params;
     }
 
-    private static void handleResponse(GenericResponse response) {
+    private void handleResponse(GenericResponse response) {
+        long oldConfigTime = CloudCacheModel.getInstance().getConfigTime();
+        String oldPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
         Long deliveryTime = null;
+        String name = null;
         String version = null;
         String md5 = null;
         String pluginContext = null;
@@ -95,19 +129,20 @@ public class KeepAlive {
             if (pluginMap.get("plugin") instanceof JsonPrimitive) {
                 pluginContext = ((JsonPrimitive) pluginMap.get("plugin")).getAsString();
             }
+            if (pluginMap.get("name") instanceof JsonPrimitive) {
+                name = ((JsonPrimitive) pluginMap.get("name")).getAsString();
+            }
         }
         if (configMap != null) {
             try {
-                Config.getConfig().loadConfigFromCloud(configMap, true);
                 if (deliveryTime != null) {
+                    Config.getConfig().loadConfigFromCloud(configMap, true);
                     CloudCacheModel.getInstance().setConfigTime(deliveryTime);
                 }
                 if (configMap.get("log.maxburst") != null) {
                     //更新http appender
-                    DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.LOGGER_NAME,
-                            DynamicConfigAppender.HTTP_ALARM_APPENDER_NAME);
-                    DynamicConfigAppender.createHttpAppender(DynamicConfigAppender.POLICY_LOGGER_NAME,
-                            DynamicConfigAppender.HTTP_POLICY_APPENDER_NAME);
+                    DynamicConfigAppender.fileAppenderAddBurstFilter();
+                    DynamicConfigAppender.httpAppenderAddBurstFilter();
                 }
                 //云控下发配置时动态添加或者删除syslog
                 Object syslogSwitch = configMap.get("syslog.enable");
@@ -119,12 +154,43 @@ public class KeepAlive {
                 if (syslogTag != null) {
                     DynamicConfigAppender.updateSyslogTag();
                 }
+                //是否开启log4j的debug功能
+                DynamicConfigAppender.enableDebug();
+                //更新log4j日志的最大备份时间
+                if (configMap.get("log.maxbackup") != null) {
+                    DynamicConfigAppender.setLogMaxBackup();
+                }
+                //更新log4j appender 打印日志的路径
+                if (configMap.get("log.path") != null) {
+                    String log4jPath = (String) configMap.get("log.path");
+                    DynamicConfigAppender.updateLog4jPath(true, log4jPath);
+                    DynamicConfigAppender.setLogMaxBackup();
+                    DynamicConfigAppender.fileAppenderAddBurstFilter();
+                }
+
+                if (configMap.get(ConfigItem.DEPENDENCY_CHECK_INTERVAL.toString()) != null) {
+                    dependencyReport.interrupt();
+                }
             } catch (Throwable e) {
-                CloudManager.LOGGER.warn("config update failed: ", e);
+                LogTool.warn(ErrorType.CONFIG_ERROR, "config update failed: " + e.getMessage(), e);
             }
         }
-        if (version != null && md5 != null && pluginContext != null) {
-            JsPluginManager.updatePluginAsync(pluginContext, md5, version, deliveryTime);
+        if (version != null && md5 != null && pluginContext != null && name != null) {
+            if (JS.UpdatePlugin("official.js", pluginContext)) {
+                CloudCacheModel.getInstance().setPlugin(pluginContext);
+                CloudCacheModel.getInstance().setPluginVersion(version);
+                CloudCacheModel.getInstance().setPluginMD5(md5);
+                CloudCacheModel.getInstance().setPluginName(name);
+            }
+        }
+        long newConfigTime = CloudCacheModel.getInstance().getConfigTime();
+        String newPluginMd5 = CloudCacheModel.getInstance().getPluginMD5();
+        if (oldConfigTime != newConfigTime || !newPluginMd5.equals(oldPluginMd5)) {
+            //更新成功之后立刻发送一次心跳
+            String content = new Gson().toJson(generateParameters());
+            String url = CloudRequestUrl.CLOUD_HEART_BEAT_URL;
+            new CloudHttp().commonRequest(url, content);
         }
     }
+
 }

@@ -24,11 +24,9 @@ extern "C"
 {
 #endif
 
-
 #ifdef HAVE_GETTEXT
 #include <libintl.h>
 #include <locale.h>
-#define GETTEXT_PACKAGE "openrasp"
 #define _(STRING) gettext(STRING)
 #else
 #define _(STRING) (STRING)
@@ -39,20 +37,8 @@ extern "C"
 #endif
 
 #include "openrasp_conf_holder.h"
-
-typedef enum openrasp_error_code_t
-{
-	FSWATCH_ERROR = 20001,
-	LOG_ERROR = 20002,
-	SHM_ERROR,
-	CONFIG_ERROR,
-	PLUGIN_ERROR,
-	RUNTIME_ERROR,
-	AGENT_ERROR,
-	REGISTER_ERROR,
-	HEARTBEAT_ERROR,
-	LOGCOLLECT_ERROR
-} openrasp_error_code;
+#include "openrasp_error.h"
+#include "model/request.h"
 
 #ifndef ZEND_SHUTDOWN_MODULE_GLOBALS
 #ifdef ZTS
@@ -65,8 +51,8 @@ typedef enum openrasp_error_code_t
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
-openrasp::ConfigHolder  config;
-zend_bool locked;
+openrasp::ConfigHolder config;
+openrasp::request::Request request;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)
@@ -83,8 +69,6 @@ ZEND_EXTERN_MODULE_GLOBALS(openrasp)
 
 #define OPENRASP_CONFIG(key) (OPENRASP_G(config).key)
 
-void openrasp_error(int type, openrasp_error_code error_code, const char *format, ...);
-
 #ifdef UNLIKELY
 #undef UNLIKELY
 #endif
@@ -98,5 +82,10 @@ void openrasp_error(int type, openrasp_error_code error_code, const char *format
 #define UNLIKELY(condition) (condition)
 #define LIKELY(condition) (condition)
 #endif
+
+struct OpenRASPInfo
+{
+	static const char *PHP_OPENRASP_VERSION; /* Replace with version number for your extension */
+};
 
 #endif

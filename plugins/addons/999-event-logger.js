@@ -1,5 +1,6 @@
 const plugin_version = '2018-1000-1000'
 const plugin_name    = 'event-logger'
+const plugin_desc    = '事件记录器插件'
 
 //
 // OpenRASP plugin: event logger
@@ -64,6 +65,16 @@ plugin.register('xxe', function (params, context) {
     return clean
 })
 
+plugin.register('eval', function (params, context) {
+    plugin.log('Evaluating code: ' + params.code)
+    return clean
+})
+
+plugin.register('loadLibrary', function (params, context) {
+    plugin.log('Loading library: ' + params.path)
+    return clean
+})
+
 plugin.register('include', function (params, context) {
     plugin.log('Include file: ' + params.url)
     return clean
@@ -81,6 +92,11 @@ plugin.register('writeFile', function (params, context) {
 
 plugin.register('sql', function (params, context) {
     plugin.log('SQL query: ' + params.query)
+    return clean
+})
+
+plugin.register('requestEnd', function (params, context) {
+    plugin.log('At requestEnd')
     return clean
 })
 

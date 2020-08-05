@@ -28,8 +28,10 @@ class OpenRASPContentType
 public:
   enum ContentType
   {
+    cApplicationForm,
     cApplicationJson,
     cApplicationXml,
+    cMultipartForm,
     cTextXml,
     cTextHtml,
     cNull

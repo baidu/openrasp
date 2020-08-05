@@ -17,7 +17,6 @@
 #ifndef _PLUGIN_CONTAINER_H_
 #define _PLUGIN_CONTAINER_H_
 
-#include "openrasp_config.h"
 #include "openrasp_agent.h"
 
 namespace openrasp
@@ -31,11 +30,13 @@ private:
   PluginFile active_plugin;
   std::string plugin_md5;
   std::string plugin_version;
+  std::string plugin_name;
 
 public:
-  PluginUpdatePackage(std::string content, std::string version, std::string md5);
+  PluginUpdatePackage(std::string content, std::string version, std::string name, std::string md5);
   bool build_snapshot();
   std::string get_md5() const;
+  std::string get_name() const;
   std::string get_version() const;
 };
 } // namespace openrasp

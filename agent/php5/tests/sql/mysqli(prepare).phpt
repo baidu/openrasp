@@ -10,11 +10,11 @@ plugin.register('sql', params => {
 })
 EOF;
 $conf = <<<CONF
-security.enforce_policy=false
+security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("mysqli")) die("Skipped: mysqli extension required.");
-@$con = mysqli_connect('127.0.0.1', 'root');
+@$con = mysqli_connect('127.0.0.1', 'root', 'rasp#2019');
 if (mysqli_connect_errno()) die("Skipped: can not connect to MySQL " . mysqli_connect_error());
 mysqli_close($con);
 ?>
@@ -22,7 +22,7 @@ mysqli_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-@$con = new mysqli('127.0.0.1', 'root');
+@$con = new mysqli('127.0.0.1', 'root', 'rasp#2019');
 $con->prepare('SELECT a FROM b where c=?');
 $con->close();
 ?>

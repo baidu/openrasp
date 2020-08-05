@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,24 @@
 
 package com.baidu.openrasp;
 
+import com.baidu.openrasp.cloud.CloudManager;
+import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
-import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.LogConfig;
 import com.baidu.openrasp.plugin.checker.CheckerManager;
-import com.baidu.openrasp.plugin.js.engine.JsPluginManager;
-import com.baidu.openrasp.tool.FileUtil;
-import com.baidu.openrasp.tool.model.ApplicationModel;
+import com.baidu.openrasp.plugin.js.JS;
+import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
+import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.baidu.openrasp.transformer.CustomClassTransformer;
+import com.baidu.openrasp.v8.CrashReporter;
+import com.baidu.openrasp.v8.Loader;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
+import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
 /**
  * Created by tyy on 18-1-24.
@@ -42,12 +42,10 @@ import java.util.jar.Manifest;
  */
 public class EngineBoot implements Module {
 
-    private static String projectVersion;
-    private static String buildTime;
-    private static String gitCommit;
+    private CustomClassTransformer transformer;
 
     @Override
-    public void start(String agentArg, Instrumentation inst) throws Exception {
+    public void start(String mode, Instrumentation inst) throws Exception {
         System.out.println("\n\n" +
                 "   ____                   ____  ___   _____ ____ \n" +
                 "  / __ \\____  ___  ____  / __ \\/   | / ___// __ \\\n" +
@@ -55,25 +53,60 @@ public class EngineBoot implements Module {
                 "/ /_/ / /_/ /  __/ / / / _, _/ ___ |___/ / ____/ \n" +
                 "\\____/ .___/\\___/_/ /_/_/ |_/_/  |_/____/_/      \n" +
                 "    /_/                                          \n\n");
-        if (!loadConfig(FileUtil.getBaseDir())) {
+        try {
+            Loader.load();
+        } catch (Exception e) {
+            System.out.println("[OpenRASP] Failed to load native library, please refer to https://rasp.baidu.com/doc/install/software.html#faq-v8-load for possible solutions.");
+            e.printStackTrace();
             return;
         }
-        readVersion();
+        if (!loadConfig()) {
+            return;
+        }
+        //缓存rasp的build信息
+        Agent.readVersion();
+        BuildRASPModel.initRaspInfo(Agent.projectVersion, Agent.buildTime, Agent.gitCommit);
         // 初始化插件系统
-        JsPluginManager.init();
+        if (!JS.Initialize()) {
+            return;
+        }
         CheckerManager.init();
         initTransformer(inst);
-        String message = "OpenRASP Engine Initialized [" + projectVersion + " (build: GitCommit=" + gitCommit + " date="
-                + buildTime + ")]";
+        if (CloudUtils.checkCloudControlEnter()) {
+            CrashReporter.install(Config.getConfig().getCloudAddress() + "/v1/agent/crash/report",
+                    Config.getConfig().getCloudAppId(), Config.getConfig().getCloudAppSecret(),
+                    CloudCacheModel.getInstance().getRaspId());
+        }
+        deleteTmpDir();
+        String message = "[OpenRASP] Engine Initialized [" + Agent.projectVersion + " (build: GitCommit="
+                + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
         System.out.println(message);
         Logger.getLogger(EngineBoot.class.getName()).info(message);
-        HookHandler.enableHook.set(true);
     }
 
     @Override
-    public void release() {
-        JsPluginManager.release();
+    public void release(String mode) {
+        CloudManager.stop();
+        CpuMonitorManager.release();
+        if (transformer != null) {
+            transformer.release();
+        }
+        JS.Dispose();
         CheckerManager.release();
+        String message = "[OpenRASP] Engine Released [" + Agent.projectVersion + " (build: GitCommit="
+                + Agent.gitCommit + " date=" + Agent.buildTime + ")]";
+        System.out.println(message);
+    }
+
+    private void deleteTmpDir() {
+        try {
+            File file = new File(Config.baseDirectory + File.separator + "jar_tmp");
+            if (file.exists()) {
+                FileUtils.deleteDirectory(file);
+            }
+        } catch (Throwable t) {
+            Logger.getLogger(EngineBoot.class.getName()).warn("failed to delete jar_tmp directory: " + t.getMessage());
+        }
     }
 
     /**
@@ -81,11 +114,13 @@ public class EngineBoot implements Module {
      *
      * @return 配置是否成功
      */
-    private static boolean loadConfig(String baseDir) throws IOException {
-        LogConfig.completeLogConfig(baseDir);
+    private boolean loadConfig() throws Exception {
+        LogConfig.ConfigFileAppender();
         //单机模式下动态添加获取删除syslog
-        if (!CloudUtils.checkCloudControlEnter()){
+        if (!CloudUtils.checkCloudControlEnter()) {
             LogConfig.syslogManager();
+        } else {
+            System.out.println("[OpenRASP] RASP ID: " + CloudCacheModel.getInstance().getRaspId());
         }
         return true;
     }
@@ -95,46 +130,9 @@ public class EngineBoot implements Module {
      *
      * @param inst 用于管理字节码转换器
      */
-    private static void initTransformer(Instrumentation inst) throws UnmodifiableClassException {
-        LinkedList<Class> retransformClasses = new LinkedList<Class>();
-        CustomClassTransformer customClassTransformer = new CustomClassTransformer();
-        inst.addTransformer(customClassTransformer, true);
-        Class[] loadedClasses = inst.getAllLoadedClasses();
-        for (Class clazz : loadedClasses) {
-            for (final AbstractClassHook hook : customClassTransformer.getHooks()) {
-                if (hook.isClassMatched(clazz.getName().replace(".", "/"))) {
-                    if (inst.isModifiableClass(clazz) && !clazz.getName().startsWith("java.lang.invoke.LambdaForm")) {
-                        retransformClasses.add(clazz);
-                    }
-                }
-            }
-        }
-        // hook已经加载的类
-        Class[] classes = new Class[retransformClasses.size()];
-        retransformClasses.toArray(classes);
-        if (classes.length > 0) {
-            inst.retransformClasses(classes);
-        }
-    }
-
-    private static void readVersion() throws IOException {
-        Class clazz = EngineBoot.class;
-        String className = clazz.getSimpleName() + ".class";
-        String classPath = clazz.getResource(className).toString();
-        String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1) + "/META-INF/MANIFEST.MF";
-        Manifest manifest = new Manifest(new URL(manifestPath).openStream());
-        Attributes attr = manifest.getMainAttributes();
-        projectVersion = attr.getValue("Project-Version");
-        buildTime = attr.getValue("Build-Time");
-        gitCommit = attr.getValue("Git-Commit");
-
-        projectVersion = (projectVersion == null ? "UNKNOWN" : projectVersion);
-        buildTime = (buildTime == null ? "UNKNOWN" : buildTime);
-        gitCommit = (gitCommit == null ? "UNKNOWN" : gitCommit);
-        HashMap<String, String> applicationInfo = ApplicationModel.getApplicationInfo();
-        applicationInfo.put("projectVersion", projectVersion);
-        applicationInfo.put("buildTime", buildTime);
-        applicationInfo.put("gitCommit", gitCommit);
+    private void initTransformer(Instrumentation inst) throws UnmodifiableClassException {
+        transformer = new CustomClassTransformer(inst);
+        transformer.retransform();
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,21 @@ package com.baidu.openrasp.cloud.utils;
 
 import com.baidu.openrasp.cloud.CloudManager;
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.OSUtil;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +55,7 @@ public class CloudUtils {
             jsonString = new String(outputStream.toByteArray(), "UTF-8");
             inputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            CloudManager.LOGGER.info("convert inputStream to json string failed");
         }
         return jsonString;
     }
@@ -109,30 +112,12 @@ public class CloudUtils {
         ).create();
     }
 
-    public static Gson getListGsonObject() {
-        Gson gson = new GsonBuilder().registerTypeAdapter(
-                new TypeToken<ArrayList<String>>() {
-                }.getType(),
-                new JsonDeserializer<ArrayList<String>>() {
-                    public ArrayList<String> deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-                        ArrayList<String> list = new ArrayList<String>();
-                        JsonArray jsonArray = jsonElement.getAsJsonArray();
-                        for (JsonElement jsonElement1 : jsonArray) {
-                            list.add(jsonElement1.getAsString());
-                        }
-                        return list;
-                    }
-                }
-        ).create();
-        return gson;
-    }
-
     public static boolean checkCloudControlEnter() {
         if (Config.getConfig().getCloudSwitch()) {
             try {
                 CloudCacheModel.getInstance().setRaspId(OSUtil.getRaspId());
             } catch (Exception e) {
-                CloudManager.LOGGER.warn("Unable to generate unique rasp_id:", e);
+                LogTool.warn(ErrorType.CONFIG_ERROR, "Unable to generate unique rasp_id: " + e.getMessage(), e);
                 return false;
             }
 
@@ -140,15 +125,18 @@ public class CloudUtils {
             String cloudAppId = Config.getConfig().getCloudAppId();
             String cloudAppSecret = Config.getConfig().getCloudAppSecret();
             if (cloudAddress == null || cloudAddress.trim().isEmpty()) {
-                CloudManager.LOGGER.warn("Cloud control configuration error: cloud.address is not configured");
+                LogTool.warn(ErrorType.CONFIG_ERROR,
+                        "Cloud control configuration error: cloud.address is not configured");
                 return false;
             }
             if (cloudAppId == null || cloudAppId.trim().isEmpty()) {
-                CloudManager.LOGGER.warn("Cloud control configuration error: cloud.appid is not configured");
+                LogTool.warn(ErrorType.CONFIG_ERROR,
+                        "Cloud control configuration error: cloud.appid is not configured");
                 return false;
             }
             if (cloudAppSecret == null || cloudAppSecret.trim().isEmpty()) {
-                CloudManager.LOGGER.warn("Cloud control configuration error: cloud.appsecret is not configured");
+                LogTool.warn(ErrorType.CONFIG_ERROR,
+                        "Cloud control configuration error: cloud.appsecret is not configured");
                 return false;
             }
             return true;
@@ -156,16 +144,16 @@ public class CloudUtils {
         return false;
     }
 
-    public static boolean checkRequestResult(GenericResponse response) {
+    public static boolean checkResponse(GenericResponse response) {
         if (response != null) {
-            if (Config.getConfig().getDebugLevel() > 0) {
-                CloudManager.LOGGER.warn(response.toString());
+            if (Config.getConfig().isDebugEnabled()) {
+                CloudManager.LOGGER.info(response.toString());
             }
             return response.getResponseCode() != null && response.getResponseCode() >= 200 &&
                     response.getResponseCode() < 300 && response.getStatus() != null && response.getStatus() == 0;
         } else {
-            if (Config.getConfig().getDebugLevel() > 0) {
-                CloudManager.LOGGER.warn("http request failed");
+            if (Config.getConfig().isDebugEnabled()) {
+                CloudManager.LOGGER.info("http request failed");
             }
         }
         return false;
@@ -192,20 +180,6 @@ public class CloudUtils {
         return null;
     }
 
-    public static String getMD5(String originalString) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(originalString.getBytes("UTF-8"));
-        byte[] byteArray = md.digest();
-        char[] resultCharArray = new char[byteArray.length * 2];
-        int index = 0;
-        for (byte b : byteArray) {
-            resultCharArray[index++] = hexArray[b >>> 4 & 0xf];
-            resultCharArray[index++] = hexArray[b & 0xf];
-        }
-        return new String(resultCharArray);
-    }
-
     public static String handleError(ErrorType errorType, GenericResponse response) {
         if (response == null) {
             return errorType.toString();
@@ -229,4 +203,5 @@ public class CloudUtils {
         }
         return result.trim();
     }
+
 }

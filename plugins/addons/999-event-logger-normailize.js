@@ -1,5 +1,6 @@
 const plugin_version = '2018-1000-1000'
 const plugin_name    = 'event-logger-normalize'
+const plugin_desc    = '事件记录器插件（范式化SQL）'
 
 //
 // OpenRASP plugin: event logger - normalize SQL phrase
@@ -13,6 +14,12 @@ const clean = {
     message:    'Looks fine to me',
     confidence: 0
 }
+
+// BEGIN ALGORITHM CONFIG //
+
+var algorithmConfig = {}
+
+// END ALGORITHM CONFIG //
 
 plugin.register('directory', function (params, context) {
     plugin.log('Listing directory content: ' + params.realpath)

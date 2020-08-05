@@ -25,7 +25,10 @@ namespace openrasp
 enum ShmemSecKey
 {
   SHMEM_SEC_CTRL_BLOCK,
-  SHMEM_SEC_CONF_BLOCK
+  SHMEM_SEC_PLUGIN_BLOCK,
+  SHMEM_SEC_WEBDIR_BLOCK,
+  SHMEM_SEC_CONF_BLOCK,
+  SHMEM_SEC_LOG_BLOCK
 };
 
 class ShmemSecMeta

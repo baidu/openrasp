@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 
 package com.baidu.openrasp.config;
 
-import com.baidu.openrasp.exception.ConfigLoadException;
+import com.baidu.openrasp.exceptions.ConfigLoadException;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.filemonitor.FileScanListener;
 import com.baidu.openrasp.tool.filemonitor.FileScanMonitor;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
@@ -82,11 +84,6 @@ public class CustomResponseHtml extends FileScanListener {
      * @param content 自定义页面内容
      */
     private CustomResponseHtml(String content) {
-        File assetsDir = new File(Config.getConfig().getBaseDirectory() + File.separator
-                + CustomResponseHtml.CUSTOM_RESPONSE_BASE_DIR);
-        if (!assetsDir.exists()) {
-            assetsDir.mkdir();
-        }
         this.content = content;
     }
 
@@ -130,7 +127,8 @@ public class CustomResponseHtml extends FileScanListener {
                 try {
                     setContent(FileUtils.readFileToString(file));
                 } catch (IOException e) {
-                    Config.LOGGER.warn(file.getAbsoluteFile() + " update fail because:" + e.getMessage());
+                    LogTool.warn(ErrorType.CONFIG_ERROR,
+                            file.getAbsoluteFile() + " update failed: " + e.getMessage(), e);
                 }
             } else {
                 setContent("");

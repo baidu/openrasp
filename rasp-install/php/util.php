@@ -171,7 +171,6 @@ function show_help($help_msg) {
 
 //通用全局变量
 $index 				= 1;
-$root_dir 			= null;
 $current_os 		= get_OS();
 $supported_sapi 	= array('apache2', 'cli', 'fpm');
 $lib_filename 		= $current_os == OS_WIN ? 'php_openrasp.dll' : 'openrasp.so';
@@ -180,6 +179,6 @@ $ini_loaded_file 	= php_ini_loaded_file();
 $ini_scanned_path 	= get_ini_scanned_path();
 //make sure loaded after json and pdo
 $ini_scanned_file 	= 'z_openrasp.ini';
-$openrasp_work_sub_folders = array('conf'=>0755, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0777);
+$openrasp_work_sub_folders = array('conf'=>0777, 'assets'=>0755, 'logs'=>0777, 'locale'=>0755, 'plugins'=>0777);
 
 ?>

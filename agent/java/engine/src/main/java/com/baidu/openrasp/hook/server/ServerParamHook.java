@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,11 @@ import java.io.IOException;
  *
  * 用于记录用户获取参数的 hook 点
  */
-public abstract class ServerParamHook extends AbstractClassHook{
+public abstract class ServerParamHook extends AbstractClassHook {
+
+    public ServerParamHook() {
+        isNecessary = true;
+    }
 
     /**
      * (none-javadoc)

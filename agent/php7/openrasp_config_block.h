@@ -21,14 +21,12 @@
 #include <unordered_set>
 #include <cstdint>
 #include <memory>
-#include "third_party/rapidjson/document.h"
-#include "third_party/cpptoml/cpptoml.h"
-#include "openrasp_config.h"
+#include "utils/base_reader.h"
+#include "php/header.h"
 
 namespace openrasp
 {
 using namespace std;
-class OpenraspConfig;
 
 void g_zero_filter(int64_t &value, const int64_t &dafault);
 void ge_zero_filter(int64_t &value, const int64_t &dafault);
@@ -46,7 +44,7 @@ public:
   } timeout;
   int64_t maxstack = 100;
   bool filter = true;
-  void update(OpenraspConfig *openrasp_config);
+  void update(BaseReader *reader);
 };
 
 // log
@@ -54,10 +52,8 @@ class LogBlock
 {
 public:
   const static int64_t default_maxburst;
-  const static int64_t default_maxstack;
   int64_t maxburst = 100;
-  int64_t maxstack = 10;
-  void update(OpenraspConfig *openrasp_config);
+  void update(BaseReader *reader);
 };
 
 class SyslogBlock
@@ -75,7 +71,7 @@ public:
   int64_t connection_timeout = 50;
   int64_t read_timeout = 10;
   int64_t reconnect_interval = 300;
-  void update(OpenraspConfig *openrasp_config);
+  void update(BaseReader *reader);
 };
 
 // block repsonse
@@ -88,14 +84,15 @@ public:
   string content_json = R"({"error":true, "reason": "Request blocked by OpenRASP", "request_id": "%request_id%"})";
   string content_xml = R"(<?xml version="1.0"?><doc><error>true</error><reason>Request blocked by OpenRASP</reason><request_id>%request_id%</request_id></doc>)";
   string content_html = R"(</script><script>location.href="https://rasp.baidu.com/blocked2/?request_id=%request_id%"</script>)";
-  void update(OpenraspConfig *openrasp_config);
+  void update(BaseReader *reader);
 };
 // others
 class InjectBlock
 {
 public:
   string urlprefix;
-  void update(OpenraspConfig *openrasp_config);
+  vector<string> headers;
+  void update(BaseReader *reader);
 };
 
 class BodyBlock
@@ -103,32 +100,14 @@ class BodyBlock
 public:
   const static int64_t default_maxbytes;
   int64_t maxbytes = 4 * 1024;
-  void update(OpenraspConfig *openrasp_config);
+  void update(BaseReader *reader);
 };
 
 class ClientipBlock
 {
 public:
   string header;
-  void update(OpenraspConfig *openrasp_config);
-};
-
-class SecurityBlock
-{
-public:
-  bool enforce_policy = false;
-  void update(OpenraspConfig *openrasp_config);
-};
-
-class SqlBlock
-{
-public:
-  const static int64_t default_slowquery_min_rows;
-  struct
-  {
-    int64_t min_rows = 500;
-  } slowquery;
-  void update(OpenraspConfig *openrasp_config);
+  void update(BaseReader *reader);
 };
 
 class LruBlock
@@ -136,15 +115,22 @@ class LruBlock
 public:
   const static int64_t default_max_size;
   int64_t max_size = 1024;
-  void update(OpenraspConfig *openrasp_config);
+  void update(BaseReader *reader);
 };
 
-class CallableBlock
+class DecompileBlock
 {
 public:
-  const static vector<string> default_blacklist;
-  vector<string> blacklist = {"system", "exec", "passthru", "proc_open", "shell_exec", "popen", "pcntl_exec", "assert"};
-  void update(OpenraspConfig *openrasp_config);
+  bool enable = false;
+  void update(BaseReader *reader);
+};
+
+class ResponseBlock
+{
+public:
+  int sampler_interval;
+  int sampler_burst;
+  void update(BaseReader *reader);
 };
 
 } // namespace openrasp

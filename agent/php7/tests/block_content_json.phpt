@@ -5,12 +5,12 @@ block content json
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'echo test')
-    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack[0].indexOf('exec') != -1)
     return block
 })
 EOF;
 $conf = <<<CONF
-block.content_json="{\"error\":true, \"reason\": \"Request blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
+block.content_json: "{\"error\":true, \"reason\": \"blocked by OpenRASP\", \"request_id\": \"%request_id%\"}"
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>
@@ -28,4 +28,4 @@ exec('echo test');
 --EXPECTHEADERS--
 Content-type: application/json
 --EXPECTREGEX--
-{"error":true, "reason": "Request blocked by OpenRASP", "request_id": ".*"}
+{"error":true, "reason": "blocked by OpenRASP", "request_id": ".*"}

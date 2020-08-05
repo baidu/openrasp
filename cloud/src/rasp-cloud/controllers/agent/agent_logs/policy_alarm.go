@@ -15,8 +15,6 @@
 package agent_logs
 
 import (
-	"encoding/json"
-	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models/logs"
 	"time"
@@ -30,9 +28,7 @@ type PolicyAlarmController struct {
 // @router / [post]
 func (o *PolicyAlarmController) Post() {
 	var alarms []map[string]interface{}
-	if err := json.Unmarshal(o.Ctx.Input.RequestBody, &alarms); err != nil {
-		o.ServeError(http.StatusBadRequest, "Invalid JSON request", err)
-	}
+	o.UnmarshalJson(&alarms)
 	count := 0
 	for _, alarm := range alarms {
 		alarm["@timestamp"] = time.Now().UnixNano() / 1000000

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 
 package com.baidu.openrasp.messaging;
 
+import com.baidu.openrasp.cloud.CloudHttp;
+import com.baidu.openrasp.config.Config;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -36,15 +40,18 @@ public class HttpClient {
 
     /**
      * 用于post推送報警的http client
-     *
      */
-    public HttpClient() {}
+    public HttpClient() {
+    }
 
     protected void request(String requestUrl, String attackInfoJson, int connectionTimeout, int readTimeout) {
         HttpURLConnection httpURLConnection = null;
         try {
             URL url = new URL(requestUrl);
             httpURLConnection = (HttpURLConnection) url.openConnection();
+            if (httpURLConnection instanceof HttpsURLConnection && !Config.getConfig().isHttpsVerifyPeer()) {
+                CloudHttp.skipSSL((HttpsURLConnection) httpURLConnection);
+            }
             httpURLConnection.setConnectTimeout(connectionTimeout);
             httpURLConnection.setReadTimeout(readTimeout);
             httpURLConnection.setUseCaches(false);
@@ -65,10 +72,10 @@ public class HttpClient {
                 System.out.println("[OpenRASP] Unexpected HTTP status code " + responseCode + " while posting attack event logs to " + requestUrl);
             }
         } catch (MalformedURLException me) {
-            System.out.println("[OpenRASP] Bad URL exception: " + me.getMessage());
+            System.out.println("[OpenRASP] Bad URL exceptions: " + me.getMessage());
             me.printStackTrace();
         } catch (Exception e) {
-            System.out.println("[OpenRASP] Request exception: " + e.getMessage());
+            System.out.println("[OpenRASP] Request exceptions: " + e.getMessage());
             e.printStackTrace();
         } finally {
             if (httpURLConnection != null) {

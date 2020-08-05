@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,12 @@ package com.baidu.openrasp.hook.server;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
-import com.baidu.openrasp.hook.server.websphere.WebphereHttpOutputHook;
+import com.baidu.openrasp.hook.server.weblogic.WeblogicHttpOutputHook;
+import com.baidu.openrasp.hook.server.websphere.WebsphereHttpOutputHook;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.response.HttpServletResponse;
 import com.baidu.openrasp.tool.Reflection;
+import com.baidu.openrasp.tool.model.ApplicationModel;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -77,17 +80,25 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
             try {
                 HookHandler.disableCurrThreadHook();
                 Boolean isClosed;
-                if (WebphereHttpOutputHook.clazzName != null && "com/ibm/ws/webcontainer/srt/SRTServletResponse".equals(WebphereHttpOutputHook.clazzName)) {
+                String serverName = ApplicationModel.getServerName();
+                if ("com/ibm/ws/webcontainer/srt/SRTServletResponse".equals(WebsphereHttpOutputHook.clazzName)) {
                     isClosed = (Boolean) Reflection.getField(output, "writerClosed");
+                } else if ("weblogic/servlet/internal/ServletOutputStreamImpl".equals(WeblogicHttpOutputHook.clazzName)) {
+                    isClosed = (Boolean) Reflection.getField(output, "commitCalled");
+                } else if (serverName.equals("undertow")) {
+                    Object outputStream = Reflection.getField(output, "outputStream");
+                    int flag = (Integer) Reflection.getField(outputStream, "state");
+                    isClosed = flag == 1;
                 } else {
-                    isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
-                }
-                if (isClosed != null && !isClosed) {
-                    HttpServletResponse response = HookHandler.responseCache.get();
-                    String contentType = null;
-                    if (response != null) {
-                        contentType = response.getContentType();
+                    if (serverName.equals("tomcat") && ApplicationModel.getVersion().compareTo("6") < 0) {
+                        isClosed = (Boolean) Reflection.getField(output, "closed");
+                    } else {
+                        isClosed = (Boolean) Reflection.invokeMethod(output, "isClosed", new Class[]{});
                     }
+                }
+                HttpServletResponse response = HookHandler.responseCache.get();
+                if (isClosed != null && !isClosed && response != null) {
+                    String contentType = response.getContentType();
                     if (contentType != null && contentType.contains(HttpServletResponse.CONTENT_TYPE_HTML_VALUE)) {
                         String injectPathPrefix = Config.getConfig().getInjectUrlPrefix();
                         if (!StringUtils.isEmpty(injectPathPrefix) &&
@@ -99,8 +110,8 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                         }
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Throwable t) {
+                LogTool.traceHookWarn(t.getMessage(), t);
             } finally {
                 HookHandler.enableCurrThreadHook();
             }

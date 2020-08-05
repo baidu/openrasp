@@ -5,7 +5,7 @@
 <%
 	try {
 	    HttpClient httpClient = new HttpClient();
-	    GetMethod getMethod = new GetMethod("http://0x7f.0x0.0x0.0x1:8080/app");
+	    GetMethod getMethod = new GetMethod("http://127.0.0.1:8080/app");
 	    httpClient.executeMethod(getMethod);
 
 	    String charSet = getMethod.getResponseCharSet();

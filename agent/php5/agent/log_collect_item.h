@@ -20,6 +20,7 @@
 #include "openrasp.h"
 #include <fstream>
 #include <memory>
+#include <map>
 
 namespace openrasp
 {
@@ -28,43 +29,55 @@ class LogCollectItem
 {
 public:
   static const long time_offset;
-
-private:
-  static const std::string status_file;
+  static const std::map<int, const std::string> instance_url_map;
+  static const std::map<int, const std::string> instance_name_map;
 
 public:
-  LogCollectItem(const std::string name, const std::string url_path, bool collect_enable);
+  LogCollectItem(int instance_id, bool collect_enable);
 
-  void update_fpos();
-  void update_last_post_time();
-  void determine_fpos();
+  bool has_error() const;
+  void update_collect_status();
   inline void update_curr_suffix();
-  void save_status_snapshot() const;
+  void update_status_snapshot();
 
   bool need_rotate() const;
   void handle_rotate(bool need_rotate);
 
-  bool get_post_logs(std::string &body);
+  void clear_cache_body();
+  void refresh_cache_body();
+  std::string get_cache_body() const;
+  bool get_collect_enable() const;
   std::string get_cpmplete_url() const;
   std::string get_active_log_file() const;
 
 private:
-  const std::string name;
-  const std::string url_path;
-  std::string curr_suffix;
+  static const std::string status_file;
+
+  const int instance_id;
+  bool collect_enable = false;
+  bool error = false;
+
   std::ifstream ifs;
+
   int fpos = 0;
   long st_ino = 0;
   long last_post_time = 0;
-  bool collect_enable = false;
+  std::string curr_suffix;
+
+  std::string cached_body;
+  long cached_count = 0;
 
 private:
   void clear();
-  void open_active_log();
+  void update_fpos();
   void cleanup_expired_logs() const;
   inline std::string get_base_dir_path() const;
   long get_active_file_inode();
   bool log_content_qualified(const std::string &content);
+
+  bool is_instance_valid() const;
+  const std::string get_name() const;
+  const std::string get_url_path() const;
 };
 
 } // namespace openrasp

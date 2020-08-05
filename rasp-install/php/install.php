@@ -19,11 +19,29 @@ OpenRASP Installer for PHP servers - Copyright 2017-2019 Baidu Inc.
 For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php
+error_reporting(E_ALL);
+$open_basedir = ini_get('open_basedir');
+if (!empty($open_basedir)) {
+	echo "WARNING: open_basedir is configured and might affect the installation process";
+	echo "         current value: $open_basedir\n";
+}
+
+foreach (array('/sys/fs/selinux/enforce', '/selinux/enforce') as $selinux) {
+	if (!file_exists($selinux)) {
+		continue;
+	}
+
+	if (@file_get_contents($selinux) == "1") {
+		echo "ERROR: selinux is enabled, try disable it with 'setenforce 0'\n";
+		exit;
+	}
+}
+
 if (PHP_VERSION_ID < 50300) {
 	echo sprintf("Error: OpenRASP works on PHP 5.3 and onwards, version %s.%s is not supported\n", PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
 	exit;
 }
-include_once(__DIR__ . DIRECTORY_SEPARATOR .'util.php');
+include_once(__DIR__ . DIRECTORY_SEPARATOR . 'util.php');
 
 //获取将要安装动态库绝对路径(get absolute path of lib to be installed)
 function get_lib_2b_installed($current_os, $lib_filename)
@@ -37,9 +55,19 @@ function get_lib_2b_installed($current_os, $lib_filename)
 		$machine_type = $machine_type_convertion[$machine_type];
 	}
 	$zts_suffix = ZEND_THREAD_SAFE ? "-ts" : "";
-	$lib_abspath = sprintf("%s%sphp%s%s%s-php%s.%s-%s%s%s", __DIR__,
-		DIRECTORY_SEPARATOR, $zts_suffix, DIRECTORY_SEPARATOR, $current_os, PHP_MAJOR_VERSION,
-		PHP_MINOR_VERSION, $machine_type, DIRECTORY_SEPARATOR, $lib_filename);
+	$lib_abspath = sprintf(
+		"%s%sphp%s%s%s-php%s.%s-%s%s%s",
+		__DIR__,
+		DIRECTORY_SEPARATOR,
+		$zts_suffix,
+		DIRECTORY_SEPARATOR,
+		$current_os,
+		PHP_MAJOR_VERSION,
+		PHP_MINOR_VERSION,
+		$machine_type,
+		DIRECTORY_SEPARATOR,
+		$lib_filename
+	);
 	return $lib_abspath;
 }
 
@@ -75,38 +103,340 @@ function update_file_if_need($src, $dest, $description = "")
 	}
 }
 
-function get_ini_content($lib_filename, $root_dir, $remote_enable, $backend_url, $app_id, $app_secret)
+function  startWith($str, $needle)
 {
-$ini_content = <<<OPENRASP
+	return strpos($str, $needle) === 0;
+}
+
+class IniConfig
+{
+	var $extension;
+	var $root_dir;
+	var $backend_url;
+	var $app_id;
+	var $app_secret;
+	var $rasp_id;
+	var $remote_management_enable;
+	var $iast_enable;
+	var $heartbeat_interval;
+
+	function __construct($extension)
+	{
+		$this->extension = $extension;
+		$this->remote_management_enable = "0";
+		$this->iast_enable = "0";
+		$this->heartbeat_interval = 180;
+	}
+
+	public function setRootDir($root_dir)
+	{
+		$real_root_dir = realpath($root_dir);
+		if (empty($real_root_dir)) {
+			log_tips(ERROR, "Can't resolve realpath of " . $root_dir . ": No such directory.");
+		} else {
+			log_tips(INFO, "openrasp.root_dir => " . $real_root_dir);
+			$this->root_dir = $real_root_dir;
+		}
+	}
+
+	public function getRootDir()
+	{
+		return $this->root_dir;
+	}
+
+	public function setBackendUrl($backend_url)
+	{
+		if (!empty($backend_url)) {
+			if (parse_url($backend_url)) {
+				log_tips(INFO, "openrasp.backend_url => " . $backend_url);
+				$this->backend_url = $backend_url;
+			} else {
+				log_tips(ERROR, "backend-url option is an illegal URL.");
+			}
+		} else {
+			log_tips(ERROR, "backend-url option cannot be empty.");
+		}
+	}
+
+	public function setAppId($app_id)
+	{
+		if (!empty($app_id)) {
+			if (preg_match("/^[0-9a-fA-F]{40}$/", $app_id) != 0) {
+				log_tips(INFO, "openrasp.app_id => " . $app_id);
+				$this->app_id = $app_id;
+			} else {
+				log_tips(ERROR, "app-id option format is incorrect.");
+			}
+		} else {
+			log_tips(ERROR, "app-id option cannot be empty.");
+		}
+	}
+
+	public function setAppSecret($app_secret)
+	{
+		if (!empty($app_secret)) {
+			if (preg_match("/^[0-9a-zA-Z_-]{43,45}$/", $app_secret) != 0) {
+				log_tips(INFO, "openrasp.app_secret => " . $app_secret);
+				$this->app_secret = $app_secret;
+			} else {
+				log_tips(ERROR, "app-secret option format is incorrect.");
+			}
+		} else {
+			log_tips(ERROR, "app-secret option cannot be empty.");
+		}
+	}
+
+	public function setRaspId($rasp_id)
+	{
+		if (!empty($rasp_id)) {
+			if (preg_match("/^[0-9a-zA-Z]{16,512}$/", $rasp_id) != 0) {
+				log_tips(INFO, "openrasp.rasp_id => " . $rasp_id);
+				$this->rasp_id = $rasp_id;
+			} else {
+				log_tips(ERROR, "rasp-id option format is incorrect.");
+			}
+		} else {
+			log_tips(ERROR, "rasp-id option cannot be empty.");
+		}
+	}
+
+	public function setHeartbeatInterval($heartbeat_interval)
+	{
+		if (is_numeric($heartbeat_interval) && (int) $heartbeat_interval >= 10 && (int) $heartbeat_interval <= 1800) {
+			log_tips(INFO, "openrasp.heartbeat_interval => " . $heartbeat_interval);
+			$this->heartbeat_interval = $heartbeat_interval;
+		} else {
+			log_tips(ERROR, "heartbeat option must be numeric and between 10 and 1800.");
+		}
+	}
+
+	public function isRemoteManagementEnable()
+	{
+		return $this->remote_management_enable === "1";
+	}
+
+	public function generateRemoteManagementEnable()
+	{
+		if (!empty($this->backend_url) && !empty($this->app_id) && !empty($this->app_secret)) {
+			$this->remote_management_enable = "1";
+		} else if (!empty($this->backend_url) || !empty($this->app_id) || !empty($this->app_secret)) {
+			log_tips(ERROR, "backend-url app-id app-secret options must be specified simultaneously.");
+		}
+	}
+
+	public function enableIast()
+	{
+		$this->iast_enable = "1";
+	}
+
+	public function isIastEnable()
+	{
+		return $this->iast_enable === "1";
+	}
+
+	public function initializeRootDir()
+	{
+		if (file_exists($this->root_dir)) {
+			if (!chmod($this->root_dir, 0777)) {
+				log_tips(ERROR, 'Fail to chmod ' . $this->root_dir);
+			}
+		} else {
+			if (!mkdir($this->root_dir, 0777, TRUE)) {
+				log_tips(ERROR, 'Unable to create directory: ' . $this->root_dir);
+			}
+		}
+	}
+
+	public function get_ini_content()
+	{
+		$ini_content = <<<OPENRASP
 ;OPENRASP BEGIN
 	
-extension=$lib_filename
-openrasp.root_dir=$root_dir
+extension=$this->extension
+openrasp.root_dir=$this->root_dir
 	
 ;国际化配置
 ;openrasp.locale=
 
 ;云端地址
-openrasp.backend_url=$backend_url
+openrasp.backend_url=$this->backend_url
 
 ;agent app_id
-openrasp.app_id=$app_id
+openrasp.app_id=$this->app_id
 
 ;agent secret
-openrasp.app_secret=$app_secret
+openrasp.app_secret=$this->app_secret
+
+;agent rasp_id
+openrasp.rasp_id=$this->rasp_id
 
 ;远程管理开关
-openrasp.remote_management_enable=$remote_enable
+openrasp.remote_management_enable=$this->remote_management_enable
 
 ;心跳时间间隔
-openrasp.heartbeat_interval=180
+openrasp.heartbeat_interval=$this->heartbeat_interval
+
+;SSL证书验证开关
+openrasp.ssl_verifypeer=0
+
+;IAST开关
+openrasp.iast_enable=$this->iast_enable
 	
 ;OPENRASP END
 
 OPENRASP;
-return $ini_content;
+		return $ini_content;
+	}
 }
 
+class RaspOption
+{
+	const NOVALUE = 0;
+	const REQUIRED = 1;
+	const OPTIONAL = 2;
+
+	var $shortOpts;
+	var $longOpts;
+
+	function __construct()
+	{
+		$this->shortOpts = array(array(), array(), array());
+		$this->longOpts = array(array(), array(), array());
+	}
+
+	//only support one by one
+	public function addShortOption($key, $type)
+	{
+		if (is_string($key) && strlen($key) == 1) {
+			switch ($type) {
+				case self::OPTIONAL:
+					array_push($this->shortOpts[self::OPTIONAL], $key);
+					break;
+				case self::REQUIRED:
+					array_push($this->shortOpts[self::REQUIRED], $key);
+					break;
+				case self::NOVALUE:
+				default:
+					array_push($this->shortOpts[self::NOVALUE], $key);
+					break;
+			}
+		}
+	}
+
+	public function addLongOption($key, $type)
+	{
+		if (is_string($key)) {
+			switch ($type) {
+				case self::OPTIONAL:
+					array_push($this->longOpts[self::OPTIONAL], $key);
+					break;
+				case self::REQUIRED:
+					array_push($this->longOpts[self::REQUIRED], $key);
+					break;
+				case self::NOVALUE:
+				default:
+					array_push($this->longOpts[self::NOVALUE], $key);
+					break;
+			}
+		}
+	}
+
+	private function getShortOptionStr()
+	{
+		$str = '';
+
+		foreach ($this->shortOpts[self::NOVALUE] as $opt) {
+			$str .= $opt;
+		}
+		foreach ($this->shortOpts[self::REQUIRED] as $opt) {
+			$str .= ($opt . ':');
+		}
+		foreach ($this->shortOpts[self::OPTIONAL] as $opt) {
+			$str .= ($opt . '::');
+		}
+		return $str;
+	}
+
+	private function getLongOptionArr()
+	{
+		$arr = array();
+
+		foreach ($this->longOpts[self::NOVALUE] as $opt) {
+			array_push($arr, $opt);
+		}
+		foreach ($this->longOpts[self::REQUIRED] as $opt) {
+			array_push($arr, ($opt . ':'));
+		}
+		foreach ($this->longOpts[self::OPTIONAL] as $opt) {
+			array_push($arr, ($opt . '::'));
+		}
+		return $arr;
+	}
+
+
+	public function checkOptions()
+	{
+		global $argc;
+		global $argv;
+		$size = sizeof($argv);
+		for ($i = 1; $i < $size; $i++) {
+			//long option
+			if (startWith($argv[$i], "--")) {
+				$opt = substr($argv[$i], 2);
+				if (in_array($opt, $this->longOpts[self::NOVALUE])) {
+					continue;
+				}
+				foreach ($this->longOpts[self::OPTIONAL] as $optionalOpt) {
+					if (startWith($opt, $optionalOpt . '=')) {
+						continue 2;
+					}
+				}
+				foreach ($this->longOpts[self::REQUIRED] as $requiredOpt) {
+					if ($opt == $requiredOpt) {
+						$i++;
+						continue 2;
+					}
+					if (startWith($opt, $requiredOpt . '=')) {
+						continue 2;
+					}
+				}
+				return '--' . $opt;
+			}
+			//short option
+			if (startWith($argv[$i], "-")) {
+				$opt = substr($argv[$i], 1);
+				if (in_array($opt, $this->shortOpts[self::NOVALUE])) {
+					continue;
+				}
+				foreach ($this->shortOpts[self::OPTIONAL] as $optionalOpt) {
+					if (startWith($opt, $optionalOpt . '=')) {
+						continue 2;
+					}
+				}
+				foreach ($this->shortOpts[self::REQUIRED] as $requiredOpt) {
+					if ($opt == $requiredOpt) {
+						$i++;
+						continue 2;
+					}
+					if (startWith($opt, $requiredOpt)) {
+						continue 2;
+					}
+				}
+				return '-' . $opt;
+			}
+			return $argv[$i];
+		}
+		return false;
+	}
+
+	public function getOptions()
+	{
+		return getopt($this->getShortOptionStr(), $this->getLongOptionArr());
+	}
+}
+
+$iniConfig = new IniConfig($lib_filename);
+$raspOption = new RaspOption();
 $lib_source_path = get_lib_2b_installed($current_os, $lib_filename);
 $install_help_msg = <<<HELP
 Synopsis:
@@ -121,84 +451,87 @@ Options:
 
     --app-secret <secret>   Value of app_secret (required for remote management)
 
+    --rasp-id <id>          Value of rasp_id (if not set, it will be generated at runtime)
+
+    --heartbeat             Value of heartbeat interval (10 - 1800)
+
     --keep-ini              Do not update PHP ini entries
 
-    --keep-plugin           Do not update the official javascript plugin
+    --keep-plugin           Do not update the official javascript plugin (higher priority than --without-plugin)
 
     --keep-conf             Do not update the openrasp config in root_dir/conf directory
+
+    --without-plugin        Do not install the official javascript plugin
+
+    --iast                  Enable IAST mode
 
     -h, --help              Show help messages
 
 HELP;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 参数解析 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-$shortopts = "d:h";
-$longopts = array("ignore-ini", "ignore-plugin", "ignore-conf", "app-id:", "app-secret:", "backend-url:", "help");
-$options = getopt($shortopts, $longopts);
+$raspOption->addShortOption('d', RaspOption::REQUIRED);
+$raspOption->addShortOption('h', RaspOption::NOVALUE);
+$raspOption->addLongOption('iast', RaspOption::NOVALUE);
+$raspOption->addLongOption('without-plugin', RaspOption::NOVALUE);
+$raspOption->addLongOption('keep-ini', RaspOption::NOVALUE);
+$raspOption->addLongOption('keep-plugin', RaspOption::NOVALUE);
+$raspOption->addLongOption('keep-conf', RaspOption::NOVALUE);
+$raspOption->addLongOption('help', RaspOption::NOVALUE);
+$raspOption->addLongOption('app-id', RaspOption::REQUIRED);
+$raspOption->addLongOption('app-secret', RaspOption::REQUIRED);
+$raspOption->addLongOption('rasp-id', RaspOption::REQUIRED);
+$raspOption->addLongOption('backend-url', RaspOption::REQUIRED);
+$raspOption->addLongOption('heartbeat', RaspOption::REQUIRED);
+
+$invalidOption = $raspOption->checkOptions();
+if ($invalidOption) {
+	log_tips(ERROR, "invalid option '$invalidOption', try '--help or -h' for more information.");
+}
+$options = $raspOption->getOptions();
+
 if (array_key_exists("h", $options) || array_key_exists("help", $options)) {
 	show_help($install_help_msg);
-} 
+}
 if (array_key_exists("d", $options) && !empty($options["d"])) {
 	// 创建目录
-	if (! file_exists($options["d"])) {
-    	mkdir($options["d"], 0777, true);
+	if (is_string($options["d"])) {
+		if (!file_exists($options["d"])) {
+			mkdir($options["d"], 0777, true);
+		}
+		$iniConfig->setRootDir($options["d"]);
+	} else {
+		log_tips(ERROR, "openrasp.root_dir must be string, please make sure all option names are correct");
 	}
-
-	$root_dir = realpath($options["d"]);
-	if (empty ($root_dir)) {
-		log_tips(ERROR, "Can't resolve realpath of " . $options["d"] . ": No such directory.");
-	}
-	log_tips(INFO, "openrasp.root_dir => ".$root_dir);
 } else {
 	log_tips(ERROR, "openrasp.root_dir must be specified via option \"-d\"");
 }
 
-$remote_enable = "0";
-$backend_url = "";
-$app_id = "";
-$app_secret = "";
 if (array_key_exists("backend-url", $options)) {
-	if (!empty($options["backend-url"])) {
-		if (parse_url($options["backend-url"])) {
-			$backend_url = $options["backend-url"];
-		} else {
-			log_tips(ERROR, "backend-url option is an illegal URL.");
-		}
-	} else {
-		log_tips(ERROR, "backend-url option cannot be empty.");
-	}
+	$iniConfig->setBackendUrl($options["backend-url"]);
 }
 
 if (array_key_exists("app-id", $options)) {
-	if (!empty($options["app-id"]))
-	{
-		if (preg_match("/^[0-9a-fA-F]{40}$/", $options["app-id"]) != 0) {
-			$app_id = $options["app-id"];
-		} else {
-			log_tips(ERROR, "app-id option format is incorrect.");
-		}
-	} else {
-		log_tips(ERROR, "app-id option cannot be empty.");
-	}
+	$iniConfig->setAppId($options["app-id"]);
 }
 
 if (array_key_exists("app-secret", $options)) {
-	if (!empty($options["app-secret"])) {
-		if (preg_match("/^[0-9a-zA-Z_-]{43,45}/", $options["app-secret"]) != 0) {
-			$app_secret = $options["app-secret"];
-		} else {
-			log_tips(ERROR, "app-secret option format is incorrect.");
-		}
-	} else {
-		log_tips(ERROR, "app-secret option cannot be empty.");
-	}
+	$iniConfig->setAppSecret($options["app-secret"]);
 }
 
-if (!empty($backend_url) && !empty($app_id) && !empty($app_secret)) {
-	$remote_enable = "1";
-} else if (!empty($backend_url) || !empty($app_id) || !empty($app_secret)) {
-	log_tips(ERROR, "backend-url app-id app-secret options must be specified simultaneously.");
+if (array_key_exists("rasp-id", $options)) {
+	$iniConfig->setRaspId($options["rasp-id"]);
 }
+
+if (array_key_exists("heartbeat", $options)) {
+	$iniConfig->setHeartbeatInterval($options["heartbeat"]);
+}
+
+if (array_key_exists("iast", $options)) {
+	$iniConfig->enableIast();
+}
+
+$iniConfig->generateRemoteManagementEnable();
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 检查依赖扩展 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 major_tips('Check whether required PHP extensions are installed');
@@ -210,7 +543,9 @@ if (!check_dep_exts_installed($dep_exts)) {
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 拷贝动态库 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 major_tips('Installing OpenRASP PHP extension');
 if (!file_exists($extension_dir)) {
-	log_tips(ERROR, "Extension directory '$extension_dir' does not exist");
+	if (!mkdir($extension_dir, 0777, TRUE)) {
+		log_tips(ERROR, 'Unable to create extension directory: ' . $extension_dir);
+	}
 }
 if (!is_writable($extension_dir)) {
 	log_tips(ERROR, "Extension directory '$extension_dir' is not writable, make sure you have write permissions");
@@ -220,9 +555,11 @@ if (!file_exists($lib_source_path)) {
 		"\nExpecting '$lib_source_path' to be present." .
 		"\nPlease check your system, php version and ZTS state.");
 }
-$lib_dest_path = $extension_dir.DIRECTORY_SEPARATOR.$lib_filename;
-if (file_exists($lib_dest_path)
-	&& !rename($lib_dest_path, $lib_dest_path.'.bak')) {
+$lib_dest_path = $extension_dir . DIRECTORY_SEPARATOR . $lib_filename;
+if (
+	file_exists($lib_dest_path)
+	&& !rename($lib_dest_path, $lib_dest_path . '.bak')
+) {
 	log_tips(ERROR, "Unable to backup old openrasp extension: $lib_dest_path");
 }
 if (!copy($lib_source_path, $lib_dest_path)) {
@@ -232,7 +569,7 @@ if (!copy($lib_source_path, $lib_dest_path)) {
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 更新ini配置 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
+if (extension_loaded('openrasp') && array_key_exists("keep-ini", $options)) {
 	major_tips("Skipped update of php.ini since '--keep-ini' is set");
 } else {
 	major_tips('Updating php.ini');
@@ -256,7 +593,7 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 		$ini_src = $ini_scanned_path . DIRECTORY_SEPARATOR . $ini_scanned_file;
 		$handle = fopen($ini_src, "w+");
 		if ($handle) {
-			if (fwrite($handle, get_ini_content($lib_filename, $root_dir, $remote_enable, $backend_url, $app_id, $app_secret)) === FALSE) {
+			if (fwrite($handle, $iniConfig->get_ini_content()) === FALSE) {
 				fclose($handle);
 				log_tips(ERROR, 'Cannot write to ' . $ini_src);
 			} else {
@@ -316,7 +653,7 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 			} else if (FINSH === $found_openrasp) {
 				log_tips(INFO, 'Found old configuration in INI files, doing upgrades');
 			}
-			$tmp_ini_data[] = get_ini_content($lib_filename, $root_dir, $remote_enable, $backend_url, $app_id, $app_secret);
+			$tmp_ini_data[] = $iniConfig->get_ini_content();
 			$handle = fopen($ini_file, "w+");
 			if ($handle) {
 				$write_state = TRUE;
@@ -347,39 +684,35 @@ if (extension_loaded('openrasp') && array_key_exists("ignore-ini", $options)) {
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 初始化工作目录 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 major_tips('Initializing OpenRASP root folder (openrasp.root_dir)');
-if (file_exists($root_dir)) {
-	if (!chmod($root_dir, 0777)) {
-		log_tips(ERROR, 'Fail to chmod '.$root_dir);
-	}
-} else {
-	if (!mkdir($root_dir, 0777, TRUE)) {
-		log_tips(ERROR, 'Unable to create directory: ' . $root_dir);
-	}
-}
-foreach($openrasp_work_sub_folders as $key => $value) {
-	$sub_item = realpath($root_dir) . DIRECTORY_SEPARATOR . $key;
+$iniConfig->initializeRootDir();
+foreach ($openrasp_work_sub_folders as $key => $value) {
+	$sub_item = $iniConfig->getRootDir() . DIRECTORY_SEPARATOR . $key;
 	if (file_exists($sub_item)) {
 		if (substr(sprintf('%o', fileperms($sub_item)), -4) != strval($value)) {
 			chmod($sub_item, $value);
 		}
 		if ($key === "plugins") {
-			if (array_key_exists("ignore-plugin", $options)) {
+			if (array_key_exists("keep-plugin", $options)) {
 				major_tips("Skipped update of the official javascript plugin since '--keep-plugin' is set");
 			} else {
 				major_tips('Updating the official javascript plugin');
 				$plugin_source_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($plugin_source_dir)) {
 					$official_plugins = scandir($plugin_source_dir);
-					foreach ($official_plugins as $key => $plugin) {
-						if ($plugin === '.'
+					foreach ($official_plugins as $pkey => $plugin) {
+						if (
+							$plugin === '.'
 							|| $plugin === '..'
 							|| !is_file($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin)
 							|| !endsWith($plugin, '.js')
 						) {
 							continue;
 						}
-						update_file_if_need($plugin_source_dir . DIRECTORY_SEPARATOR . $plugin, 
-						$sub_item . DIRECTORY_SEPARATOR . $plugin,  "official plugin");
+						update_file_if_need(
+							$plugin_source_dir . DIRECTORY_SEPARATOR . $plugin,
+							$sub_item . DIRECTORY_SEPARATOR . $plugin,
+							"official plugin"
+						);
 					}
 				}
 			}
@@ -389,14 +722,18 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 				recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
 			}
 		} else if ($key === "conf") {
-			if (array_key_exists("ignore-conf", $options)) {
+			if (array_key_exists("keep-conf", $options)) {
 				major_tips("Skipped update of openrasp config since '--keep-conf' is set");
 			} else {
 				major_tips('Updating the openrasp config');
+				$conf_filename = $iniConfig->isIastEnable() ? "iast.yml" : "openrasp.yml";
 				$conf_dir = __DIR__ . DIRECTORY_SEPARATOR . $key;
 				if (file_exists($conf_dir)) {
-					update_file_if_need($conf_dir . DIRECTORY_SEPARATOR . "openrasp.toml", 
-					$sub_item . DIRECTORY_SEPARATOR . "openrasp.toml",  "openrasp config");
+					update_file_if_need(
+						$conf_dir . DIRECTORY_SEPARATOR . $conf_filename,
+						$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml",
+						"openrasp config (" . $conf_filename . ")"
+					);
 				}
 			}
 		}
@@ -408,10 +745,28 @@ foreach($openrasp_work_sub_folders as $key => $value) {
 			log_tips(ERROR, "Unable to create directory: $sub_item");
 		}
 		if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . $key)) {
-			recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
+			if ($key === "conf") {
+				$conf_filename = $iniConfig->isIastEnable() ? "iast.yml" : "openrasp.yml";
+				update_file_if_need(
+					__DIR__ . DIRECTORY_SEPARATOR . $key . DIRECTORY_SEPARATOR . $conf_filename,
+					$sub_item . DIRECTORY_SEPARATOR . "openrasp.yml",
+					"openrasp config (" . $conf_filename . ")"
+				);
+			} else {
+				recurse_copy(__DIR__ . DIRECTORY_SEPARATOR . $key, $sub_item);
+			}
+		}
+	}
+	if ($key === "plugins") {
+		if (array_key_exists("without-plugin", $options)) {
+			clear_dir($sub_item);
+			major_tips("All javascript plugins will be removed since '--without-plugin' is set");
+		} else if ($iniConfig->isRemoteManagementEnable()) {
+			clear_dir($sub_item);
+			major_tips('All javascript plugins will be removed since remote management is turned on');
 		}
 	}
 }
 
-major_tips("Installation completed without errors, please restart PHP server to take effect.", TRUE); 
+major_tips("Installation completed without errors, please restart PHP server to take effect.", TRUE);
 ?>

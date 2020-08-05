@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(openrasp_inject)
-char *request_id;
+
 ZEND_END_MODULE_GLOBALS(openrasp_inject)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp_inject);

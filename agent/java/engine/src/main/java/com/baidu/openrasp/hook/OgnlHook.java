@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,11 @@ package com.baidu.openrasp.hook;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
+import java.util.HashMap;
 
 import java.io.IOException;
 
@@ -77,9 +75,8 @@ public class OgnlHook extends AbstractClassHook {
         if (object != null) {
             String expression = String.valueOf(object);
             if (expression.length() >= Config.getConfig().getOgnlMinLength()) {
-                JSContext cx = JSContextFactory.enterAndInitContext();
-                Scriptable params = cx.newObject(cx.getScope());
-                params.put("expression", params, expression);
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                params.put("expression", expression);
                 HookHandler.doCheck(CheckParameter.Type.OGNL, params);
             }
         }

@@ -5,13 +5,13 @@ plugin timeout
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'echo test')
-    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack[0].indexOf('exec') != -1)
     while(true);
     return block
 })
 EOF;
 $conf = <<<CONF
-plugin.timeout.millis=100
+plugin.timeout.millis: 100
 CONF;
 include(__DIR__.'/skipif.inc');
 ?>

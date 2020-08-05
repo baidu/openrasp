@@ -9,29 +9,30 @@
       <div class="card-body">
         <p>最多允许200个URL，单条URL长度限制为200字符</p>
         <b-table hover bordered :items="data" :fields="fields">
-          <template slot="index" slot-scope="scope">
-            {{ scope.index + 1 }}
+          <template v-slot:cell(index)="data" nowrap>
+            {{ data.index + 1 }}
           </template>
-          <template slot="hook" slot-scope="scope">
-            <span v-if="scope.value.all">
+          <template v-slot:cell(hook)="data">
+            <span v-if="data.value.all">
               所有 Hook 点
             </span>
-            <span v-if="!scope.value.all">
-              {{ whitelist2str(scope.value) }}
+            <span v-if="!data.value.all">
+              {{ whitelist2str(data.value) }}
             </span>
           </template>
-          <template slot="command" slot-scope="scope">
-            <a href="javascript:" @click="showModal(scope.index)">
+          <template v-slot:cell(command)="data">
+            <a href="javascript:" @click="showModal(data.index)">
               编辑
             </a>
-            <a href="javascript:" @click="deleteItem(scope.index)">
+            <a href="javascript:" @click="deleteItem(data.index)">
               删除
             </a>
           </template>
         </b-table>
+        <p v-if="data.length == 0" class="text-center">暂无数据</p>
       </div>
-      <div class="card-footer">
-        <button class="btn btn-info" @click="showModal(data.length)">
+      <div v-bind:class="{'card-footer': true, 'sticky-card-footer': sticky}">
+        <button class="btn btn-info" @click="showModal(-1)">
           添加
         </button>
         <button class="btn btn-primary pull-right" @click="doSave()">
@@ -40,17 +41,21 @@
       </div>
     </div>
 
-    <b-modal id="modal1" ref="modal" title="添加/编辑 白名单" hide-header-close @hidden="hideModal()">
+    <b-modal id="whitelistEditModal" ref="modal" no-fade title="添加/编辑 白名单" size="lg" hide-header-close @hidden="hideModal()" @shown="$refs.focus.focus()">
       <div class="form-group">
-        <label>URL - 不区分 http/https</label>
-        <input v-model="modalData.url" type="text" class="form-control" maxlen="200">
+        <label>URL前缀 - 不区分 http/https，不支持通配符或者正则，格式如 <span class="text-danger">rasp.baidu.com/phpmyadmin/</span>；若要匹配全部URL，请写 <strong>*</strong></label>
+        <input ref="focus" v-model.trim="modalData.url" maxlength="200" type="text" class="form-control" maxlen="200">
+      </div>
+      <div class="form-group">
+        <label>白名单备注（可选）</label>
+        <input ref="focus" v-model.trim="modalData.description" maxlength="200" type="text" class="form-control" maxlen="200">
       </div>
       <div class="form-group">
         <label>检测点</label>
         <div class="row">
           <div class="col-12">
             <label class="custom-switch">
-              <input v-model="modalData.hook.all" type="checkbox" checked="modalData.hook.all" class="custom-switch-input">
+              <input v-model="modalData.hook.all" type="checkbox" class="custom-switch-input">
               <span class="custom-switch-indicator" />
               <span class="custom-switch-description">
                 关闭所有检测点
@@ -61,7 +66,7 @@
         <div v-if="!modalData.hook.all" class="row">
           <div v-for="(item, key) in attack_types" :key="key" class="col-6">
             <label class="custom-switch">
-              <input v-model="modalData.hook[key]" type="checkbox" checked="modalData.hook[key]" class="custom-switch-input">
+              <input type="checkbox" :value="key" v-model="modalData.hook[key]" class="custom-switch-input">
               <span class="custom-switch-indicator" />
               <span class="custom-switch-description">
                 {{ item }}
@@ -71,11 +76,11 @@
         </div>
       </div>
       <div slot="modal-footer" class="w-100">
-        <b-button class="float-right ml-2" variant="default" @click="hideModal()">
-          关闭
+        <b-button class="float-right ml-2 btn-info" variant="default" @click="hideModal()">
+          取消
         </b-button>
         <b-button class="float-right ml-2" variant="primary" @click="hideModal(true)">
-          保存
+          确定
         </b-button>
       </div>
     </b-modal>
@@ -83,7 +88,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from "vuex";
 import { attack_type2name, attack_types } from '@/util/'
 
 export default {
@@ -93,19 +98,24 @@ export default {
       data: [],
       index: 0,
       fields: [
-        { key: 'index', label: '#' },
+        { key: 'index', label: '#', tdAttr: {'nowrap': ''} },
         { key: 'url', label: 'URL' },
-        { key: 'hook', label: '检测点' },
-        { key: 'command', label: '操作' }
+        { key: 'hook', label: '检测点', tdAttr: {'style': 'min-width: 150px; '} },
+        { key: 'description', label: '备注' },
+        { key: 'command', label: '操作', tdAttr: {'nowrap': ''} }
       ],
-      modalData: { url: '', hook: {}},
+      modalData: { url: '', hook: {}, description: ''},
       attack_types
     }
   },
   computed: {
-    ...mapGetters(['current_app'])
+    ...mapGetters(['current_app', 'sticky'])
+  },
+  mounted: function() {
+
   },
   methods: {
+    ...mapMutations(["setSticky"]),
     whitelist2str(row) {
       return Object.keys(row).filter(key => row[key]).map(key => attack_type2name(key)).join(', ')
     },
@@ -113,35 +123,58 @@ export default {
       this.data = data
     },
     showModal(index) {
-      if (index === undefined && this.data.length >= 200) {
+      if (index === -1 && this.data.length >= 200) {
         alert('为了保证性能，白名单最多支持 200 条')
         return
       }
+
+      this.setSticky(false)
       this.index = index
       Object.assign(this.modalData, JSON.parse(JSON.stringify(this.data[index] || {})))
       this.$refs.modal.show()
     },
     hideModal(save) {
       if (save === true) {
-        if (!this.modalData.url) {
+        if (!this.modalData.url || this.modalData.url.trim().length == 0) {
+          alert('URL 未填写')
           return
         }
         if (this.modalData.url.startsWith('http://') || this.modalData.url.startsWith('https://')) {
           alert('URL 无需以 http/https 开头，请删除')
           return
         }
+
+        let hookSelected = Object.values(this.modalData.hook).indexOf(true)
+        if (hookSelected < 0) {
+          alert('请至少选择一个 hook 点来加白名单')
+          return
+        }
+
+        if (this.index == -1) {
+          this.index = this.data.length
+        }
+
         this.$set(this.data, this.index, this.modalData)
+        // console.log (this.index, this.data)
       }
-      this.modalData = { url: '', hook: {}}
+      this.modalData = { url: '', hook: {}, description: ''}
       this.$refs.modal.hide()
+      this.setSticky(true)
     },
     deleteItem: function(index) {
-      if (!confirm('确认删除')) {
+      if (!confirm('确认删除?')) {
         return
       }
       this.data.splice(index, 1)
     },
     doSave() {
+      this.data.forEach(element=>{
+          for (let i in element.hook) {
+              if(!element.hook[i]) {
+                  delete element.hook[i]
+              }
+          }
+      })
       return this.request.post('v1/api/app/whitelist/config', {
         app_id: this.current_app.id,
         config: this.data

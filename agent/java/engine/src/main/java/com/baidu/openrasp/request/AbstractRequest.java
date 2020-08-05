@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,16 @@
 
 package com.baidu.openrasp.request;
 
-import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.Reflection;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 
 /**
  * Created by zhuming01 on 6/23/17.
@@ -39,12 +37,14 @@ public abstract class AbstractRequest {
     protected static final Class[] STRING_CLASS = new Class[]{String.class};
     protected Object request;
     protected Object inputStream = null;
+    protected Object charReader = null;
     protected ByteArrayOutputStream bodyOutputStream = null;
-    protected CharArrayWriter bodyCharWriter = null;
+    protected CharArrayWriter bodyWriter = null;
     protected int maxBodySize = 4096;
     protected String requestId;
     protected boolean canGetParameter = false;
-    protected HashMap<String, String[]> fileUploadCache = new HashMap<String, String[]>();
+    protected HashMap<String, String[]> formItemCache = null;
+    protected LinkedList<RequestFileItem> fileParamCache = null;
 
     /**
      * constructor
@@ -67,8 +67,18 @@ public abstract class AbstractRequest {
     }
 
     /**
-     * constructor 测试时使用的构造函数
+     * constructor
      *
+     * @param request 请求实体
+     */
+    public AbstractRequest(Object request, String requestId) {
+        this.request = request;
+        this.requestId = requestId;
+        this.maxBodySize = Config.getConfig().getBodyMaxBytes();
+    }
+
+    /**
+     * constructor 测试时使用的构造函数
      */
     public AbstractRequest(int request) {
     }
@@ -174,6 +184,11 @@ public abstract class AbstractRequest {
      */
     public abstract StringBuffer getRequestURL();
 
+    public String getRequestURLString() {
+        Object ret = getRequestURL();
+        return ret != null ? ret.toString() : null;
+    }
+
     /**
      * 获取服务器名称
      *
@@ -219,6 +234,20 @@ public abstract class AbstractRequest {
      */
     public abstract Enumeration<String> getHeaderNames();
 
+    public String[] getHeadersArray() {
+        ArrayList<String> headers = new ArrayList<String>();
+        Enumeration<String> headerNames = getHeaderNames();
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String key = headerNames.nextElement();
+                String value = getHeader(key);
+                headers.add(key.toLowerCase());
+                headers.add(value);
+            }
+        }
+        return headers.toArray(new String[0]);
+    }
+
     /**
      * 获取请求的url中的 Query String 参数部分
      *
@@ -242,11 +271,18 @@ public abstract class AbstractRequest {
     public abstract String getAppBasePath();
 
     /**
+     * 获取请求的contentType
+     *
+     * @return contentType
+     */
+    public abstract String getContentType();
+
+    /**
      * 获取自定义的clientip
      *
      * @return 自定义的clientip
      */
-    public abstract String getClinetIp();
+    public abstract String getClientIp();
 
     /**
      * 返回HTTP request body
@@ -255,6 +291,33 @@ public abstract class AbstractRequest {
      */
     public byte[] getBody() {
         return bodyOutputStream != null ? bodyOutputStream.toByteArray() : null;
+    }
+
+    /**
+     * 返回HTTP request body
+     *
+     * @return request body, can be null
+     */
+    public String getStringBody() {
+        if (bodyOutputStream != null) {
+            byte[] body = bodyOutputStream.toByteArray();
+            if (body != null) {
+                String encoding = getCharacterEncoding();
+                if (!StringUtils.isEmpty(encoding)) {
+                    try {
+                        return new String(body, encoding);
+                    } catch (UnsupportedEncodingException e) {
+                        return new String(body);
+                    }
+                } else {
+                    return new String(body);
+                }
+            }
+            return null;
+        } else if (bodyWriter != null) {
+            return bodyWriter.toString();
+        }
+        return null;
     }
 
     /**
@@ -285,11 +348,29 @@ public abstract class AbstractRequest {
     }
 
     /**
-     * 添加HTTP request body
+     * 返回字符输入流
+     *
+     * @return 字符输入流
+     */
+    public Object getCharReader() {
+        return charReader;
+    }
+
+    /**
+     * 设置字符输入流
+     *
+     * @param charReader 字符输入流
+     */
+    public void setCharReader(Object charReader) {
+        this.charReader = charReader;
+    }
+
+    /**
+     * 添加 HTTP request body
      *
      * @param b 要添加的字节
      */
-    public void appendBody(int b) {
+    public void appendByteBody(int b) {
         if (bodyOutputStream == null) {
             bodyOutputStream = new ByteArrayOutputStream();
         }
@@ -300,16 +381,7 @@ public abstract class AbstractRequest {
     }
 
     /**
-     * 添加HTTP request body
-     *
-     * @param bytes 要添加的字节数组
-     */
-    public void appendBody(byte[] bytes) {
-        appendBody(bytes, 0, bytes.length);
-    }
-
-    /**
-     * 添加HTTP request body
+     * 添加 HTTP request body
      *
      * @param bytes  字节数组
      * @param offset 要添加的起始偏移量
@@ -326,6 +398,46 @@ public abstract class AbstractRequest {
         }
     }
 
+    /**
+     * 添加 HTTP request body
+     *
+     * @param cbuf   字符数组
+     * @param offset 要添加的起始偏移量
+     * @param len    要添加的长度
+     */
+    public void appendBody(char[] cbuf, int offset, int len) {
+        if (bodyWriter == null) {
+            bodyWriter = new CharArrayWriter();
+        }
+
+        len = Math.min(len, maxBodySize / 2 - bodyWriter.size());
+        if (len > 0) {
+            bodyWriter.write(cbuf, offset, len);
+        }
+    }
+
+    /**
+     * 添加 HTTP request body
+     *
+     * @param b 要添加的字符
+     */
+    public void appendCharBody(int b) {
+        if (bodyWriter == null) {
+            bodyWriter = new CharArrayWriter();
+        }
+
+        if (bodyWriter.size() < (maxBodySize / 2)) {
+            bodyWriter.write(b);
+        }
+    }
+
+    /**
+     * 返回body的编码类型
+     *
+     * @return CharacterEncoding
+     */
+    public abstract String getCharacterEncoding();
+
     protected boolean setCharacterEncodingFromConfig() {
         try {
             String paramEncoding = Config.getConfig().getRequestParamEncoding();
@@ -334,12 +446,24 @@ public abstract class AbstractRequest {
                 return true;
             }
         } catch (Exception e) {
-            HookHandler.LOGGER.warn("set character encoding failed", e);
+            LogTool.warn(ErrorType.RUNTIME_ERROR, "set character encoding failed: " + e.getMessage(), e);
         }
         return false;
     }
 
-    public HashMap<String, String[]> getFileUploadCache() {
-        return fileUploadCache;
+    public HashMap<String, String[]> getFormItemCache() {
+        return formItemCache;
+    }
+
+    public void setFormItemCache(HashMap<String, String[]> cache) {
+        formItemCache = cache;
+    }
+
+    public LinkedList<RequestFileItem> getFileParamCache() {
+        return fileParamCache;
+    }
+
+    public void setFileParamCache(LinkedList<RequestFileItem> fileParamCache) {
+        this.fileParamCache = fileParamCache;
     }
 }

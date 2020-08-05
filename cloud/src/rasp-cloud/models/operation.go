@@ -55,38 +55,37 @@ const (
 	OperationTypeDeleteApp
 	OperationTypeEditApp
 	OperationTypeRestorePlugin
+	OperationTypeAddStrategy
+	OperationTypeDeleteStrategy
+	OperationTypeEditStrategy
+	OperationTypeSelectStrategy
 )
 
 func init() {
-	count, err := mongo.Count(operationCollectionName)
+	index := &mgo.Index{
+		Key:        []string{"app_id"},
+		Unique:     false,
+		Background: true,
+		Name:       "app_id",
+	}
+	err := mongo.CreateIndex(operationCollectionName, index)
 	if err != nil {
-		tools.Panic(tools.ErrCodeConfigInitFailed, "failed to get operation collection count", err)
+		tools.Panic(tools.ErrCodeConfigInitFailed,
+			"failed to create app_id index for operation collection", err)
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:        []string{"app_id"},
-			Unique:     false,
-			Background: true,
-			Name:       "app_id",
-		}
-		err = mongo.CreateIndex(operationCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"failed to create app_id index for operation collection", err)
-		}
 
-		index = &mgo.Index{
-			Key:        []string{"time"},
-			Unique:     false,
-			Background: true,
-			Name:       "time",
-		}
-		err = mongo.CreateIndex(operationCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeConfigInitFailed,
-				"failed to create operate_time index for operation collection", err)
-		}
+	index = &mgo.Index{
+		Key:        []string{"time"},
+		Unique:     false,
+		Background: true,
+		Name:       "time",
 	}
+	err = mongo.CreateIndex(operationCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeConfigInitFailed,
+			"failed to create operate_time index for operation collection", err)
+	}
+
 }
 
 func AddOperation(appId string, typeId int, ip string, content string, userName ...string) error {
@@ -148,8 +147,4 @@ func FindOperation(data *Operation, startTime int64, endTime int64,
 		result = make([]Operation, 0)
 	}
 	return
-}
-
-func RemoveOperationByAppId(appId string) (error) {
-	return mongo.RemoveAll(operationCollectionName, bson.M{"app_id": appId})
 }

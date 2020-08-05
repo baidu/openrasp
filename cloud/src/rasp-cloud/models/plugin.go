@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"crypto/md5"
 	"rasp-cloud/mongo"
-	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"time"
@@ -33,6 +32,8 @@ import (
 	"bufio"
 	"bytes"
 	"github.com/robertkrimen/otto"
+	"rasp-cloud/conf"
+	"strings"
 )
 
 type Plugin struct {
@@ -41,9 +42,11 @@ type Plugin struct {
 	Name                   string                 `json:"name" bson:"name"`
 	UploadTime             int64                  `json:"upload_time" bson:"upload_time"`
 	Version                string                 `json:"version" bson:"version"`
+	Description            string                 `json:"description" bson:"description"`
 	Md5                    string                 `json:"md5" bson:"md5"`
+	OriginContent          string                 `json:"origin_content,omitempty" bson:"origin_content"`
 	Content                string                 `json:"plugin,omitempty" bson:"content"`
-	DefaultAlgorithmConfig map[string]interface{} `bson:"default_algorithm_config"`
+	DefaultAlgorithmConfig map[string]interface{} `json:"-" bson:"default_algorithm_config"`
 	AlgorithmConfig        map[string]interface{} `json:"algorithm_config" bson:"algorithm_config"`
 }
 
@@ -52,70 +55,74 @@ const (
 )
 
 var (
-	mutex      sync.Mutex
-	MaxPlugins int
+	mutex sync.Mutex
 )
 
 func init() {
-	if value, err := beego.AppConfig.Int("MaxPlugins"); err != nil || value <= 0 {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "the 'AlarmBufferSize' config must be greater than 0", nil)
-	} else if value < 10 {
-		beego.Warning("the value of 'MaxPlugins' config is less than 10, it will be set to 10")
-		MaxPlugins = 10
-	} else {
-		MaxPlugins = value
+	index := &mgo.Index{
+		Key:        []string{"app_id"},
+		Unique:     false,
+		Background: true,
+		Name:       "app_id",
 	}
-	count, err := mongo.Count(pluginCollectionName)
+	err := mongo.CreateIndex(pluginCollectionName, index)
 	if err != nil {
-		tools.Panic(tools.ErrCodeMongoInitFailed, "failed to get plugin collection count", err)
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create app_id index for plugin collection", err)
 	}
-	if count <= 0 {
-		index := &mgo.Index{
-			Key:        []string{"app_id"},
-			Unique:     false,
-			Background: true,
-			Name:       "app_id",
-		}
-		err := mongo.CreateIndex(pluginCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed,
-				"failed to create app_id index for plugin collection", err)
-		}
-		index = &mgo.Index{
-			Key:        []string{"upload_time"},
-			Unique:     false,
-			Background: true,
-			Name:       "upload_time",
-		}
-		err = mongo.CreateIndex(pluginCollectionName, index)
-		if err != nil {
-			tools.Panic(tools.ErrCodeMongoInitFailed,
-				"failed to create upload_time index for plugin collection", err)
-		}
+	index = &mgo.Index{
+		Key:        []string{"upload_time"},
+		Unique:     false,
+		Background: true,
+		Name:       "upload_time",
+	}
+	err = mongo.CreateIndex(pluginCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create the upload_time index for plugin collection", err)
 	}
 }
 
 func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
+	plugin, err = generatePlugin(pluginContent, appId)
+	if err != nil {
+		return
+	}
+	err = addPluginToDb(plugin)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
 
+func generatePlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 	pluginReader := bufio.NewReader(bytes.NewReader(pluginContent))
-	firstLine, err := pluginReader.ReadString('\n')
-	if err != nil {
-		return nil, errors.New("failed to read the plugin file: " + err.Error())
-	}
-	secondLine, err := pluginReader.ReadString('\n')
-	if err != nil {
-		return nil, errors.New("failed to read the plugin file: " + err.Error())
-	}
 	var newVersion string
 	var newPluginName string
-	if newVersion = regexp.MustCompile(`'.+'|".+"`).FindString(firstLine); newVersion == "" {
-		return nil, errors.New("failed to find the plugin version")
+	var newPluginDesc string
+	for i := 0; i < 3; i++ {
+		var lineValue string
+		var lineSep []string
+		line, err := pluginReader.ReadString('\n')
+		if err != nil {
+			return nil, errors.New("failed to read the plugin file: " + err.Error())
+		}
+		if lineValue = regexp.MustCompile(`'.+'|".+"`).FindString(line); lineValue == "" {
+			continue
+		}
+		if lineSep = strings.Split(line, "="); len(lineSep) >= 2 {
+			if strings.Contains(lineSep[0], "plugin_version") {
+				newVersion = lineValue[1 : len(lineValue)-1]
+			} else if strings.Contains(lineSep[0], "plugin_name") {
+				newPluginName = lineValue[1 : len(lineValue)-1]
+			} else if strings.Contains(lineSep[0], "plugin_desc") {
+				newPluginDesc = lineValue[1 : len(lineValue)-1]
+			}
+		}
 	}
-	newVersion = newVersion[1 : len(newVersion)-1]
-	if newPluginName = regexp.MustCompile(`'.+'|".+"`).FindString(secondLine); newPluginName == "" {
-		return nil, errors.New("failed to find the plugin name")
+	if newVersion == "" || newPluginName == "" {
+		return nil, errors.New("the plugin name and plugin version can not be empty")
 	}
-	newPluginName = newPluginName[1 : len(newPluginName)-1]
 	algorithmStartMsg := "// BEGIN ALGORITHM CONFIG //"
 	algorithmEndMsg := "// END ALGORITHM CONFIG //"
 	algorithmStart := bytes.Index(pluginContent, []byte(algorithmStartMsg))
@@ -142,39 +149,47 @@ func AddPlugin(pluginContent []byte, appId string) (plugin *Plugin, err error) {
 	if err != nil {
 		return nil, errors.New("failed to unmarshal algorithm json data: " + err.Error())
 	}
-	return addPluginToDb(newVersion, newPluginName, pluginContent, appId, algorithmData)
-
-}
-
-func addPluginToDb(version string, name string, content []byte, appId string,
-	defaultAlgorithmConfig map[string]interface{}) (plugin *Plugin, err error) {
-	newMd5 := fmt.Sprintf("%x", md5.Sum(content))
+	newMd5 := fmt.Sprintf("%x", md5.Sum(pluginContent))
 	plugin = &Plugin{
 		Id:                     generatePluginId(appId),
-		Version:                version,
-		Name:                   name,
+		Version:                newVersion,
+		Name:                   newPluginName,
+		Description:            newPluginDesc,
 		Md5:                    newMd5,
-		Content:                string(content),
+		OriginContent:          string(pluginContent),
+		Content:                string(pluginContent),
 		UploadTime:             time.Now().UnixNano() / 1000000,
 		AppId:                  appId,
-		DefaultAlgorithmConfig: defaultAlgorithmConfig,
-		AlgorithmConfig:        defaultAlgorithmConfig,
+		DefaultAlgorithmConfig: algorithmData,
+		AlgorithmConfig:        algorithmData,
 	}
+	return plugin, nil
+}
+
+func addPluginToDb(plugin *Plugin) (err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	var count int
-	if MaxPlugins > 0 {
-		_, oldPlugins, err := GetPluginsByApp(appId, MaxPlugins-1, 0)
+	if conf.AppConfig.MaxPlugins > 0 {
+		_, oldPlugins, err := GetPluginsByApp(plugin.AppId, conf.AppConfig.MaxPlugins-1, 0, "-upload_time")
 		if err != nil {
-			return nil, err
+			return err
 		}
 		count = len(oldPlugins)
 		if count > 0 {
 			for _, oldPlugin := range oldPlugins {
+				app := &App{}
+				err = mongo.FindOne(appCollectionName, bson.M{"selected_plugin_id": oldPlugin.Id}, app)
+				if err != nil && err != mgo.ErrNotFound {
+					return err
+				}
+				if app.Id != "" {
+					continue
+				}
 				err = mongo.RemoveId(pluginCollectionName, oldPlugin.Id)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 		}
@@ -192,17 +207,73 @@ func generatePluginId(appId string) string {
 func GetSelectedPlugin(appId string, hasContent bool) (plugin *Plugin, err error) {
 	var app *App
 	if err = mongo.FindId(appCollectionName, appId, &app); err != nil {
-		return
+		return nil, errors.New("can not get app," + err.Error())
 	}
 	return GetPluginById(app.SelectedPluginId, hasContent)
 }
 
-func SetSelectedPlugin(appId string, pluginId string) error {
-	_, err := GetPluginById(pluginId, false)
+func SetSelectedPlugin(appId string, pluginId string, strategyId string) (plugin *Plugin, err error) {
+	plugin, err = GetPluginById(pluginId, false)
 	if err != nil {
-		return err
+		return
 	}
-	return mongo.UpdateId(appCollectionName, appId, bson.M{"selected_plugin_id": pluginId})
+	// 获取当前app的selected_plugin_id
+	app, err := GetAppById(appId)
+	if err != nil {
+		return nil, err
+	}
+	oldPluginId := app.SelectedPluginId
+	newPluginId := pluginId
+	if oldPluginId != "" {
+		err = MergeAlgorithmPlugin(oldPluginId, newPluginId)
+		if err != nil {
+			return
+		}
+	}
+	query := bson.M{"selected_plugin_id": pluginId, "app_id": appId}
+	if strategyId == ""{
+		return plugin, mongo.UpdateId(appCollectionName, appId, bson.M{"selected_plugin_id": pluginId})
+	}else {
+		return plugin, mongo.UpdateId(strategyCollectionName, strategyId, query)
+	}
+}
+
+func MergeAlgorithmPlugin(oldId string, newId string) (err error) {
+	oldPlugin, err := GetPluginById(oldId, false)
+	if err != nil {
+		return
+	}
+	newPlugin, err := GetPluginById(newId, false)
+	if err != nil {
+		return
+	}
+	if oldPlugin.Name == newPlugin.Name {
+		// 将content合入，同时将algrithom_config合入。只合并action字段
+		newPluginConfig := newPlugin.AlgorithmConfig
+		oldPluginConfig := oldPlugin.AlgorithmConfig
+		hasReplace := false
+		// 获取oldPluginConfig中的action，并用new中的值进行替换。如果不存在则覆盖
+		for k, v := range oldPluginConfig {
+			if newMap, ok := newPluginConfig[k].(map[string]interface{}); ok {
+				if oldMap, ok :=v.(map[string]interface{}); ok {
+					if oldMap["action"] != nil {
+						if newMap["action"] == nil {
+							// 完全复制
+							newMap["action"] = oldMap["action"]
+						} else {
+							newMap["action"] = oldMap["action"].(string)
+							newPluginConfig[k] = newMap
+							hasReplace = true
+						}
+					}
+				}
+			}
+		}
+		if hasReplace {
+			_, err = UpdateAlgorithmConfig(newId, newPlugin.AlgorithmConfig)
+		}
+	}
+	return
 }
 
 func RestoreDefaultConfiguration(pluginId string) (appId string, err error) {
@@ -263,7 +334,6 @@ func handleAlgorithmConfig(plugin *Plugin, config map[string]interface{}) (appId
 	}
 	algorithmContent := regexp.MustCompile(regex).ReplaceAllString(plugin.Content, newContent)
 	newMd5 := fmt.Sprintf("%x", md5.Sum([]byte(algorithmContent)))
-	fmt.Println(algorithmContent)
 	return plugin.AppId, mongo.UpdateId(pluginCollectionName, plugin.Id, bson.M{"content": algorithmContent,
 		"algorithm_config": config, "md5": newMd5})
 }
@@ -280,15 +350,27 @@ func GetPluginById(id string, hasContent bool) (plugin *Plugin, err error) {
 	return
 }
 
-func GetPluginsByApp(appId string, skip int, limit int) (total int, plugins []Plugin, err error) {
+func GetPluginsByApp(appId string, skip int, limit int, sortField string) (total int, plugins []Plugin, err error) {
 	newSession := mongo.NewSession()
 	defer newSession.Close()
 	total, err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(bson.M{"app_id": appId}).Count()
 	if err != nil {
 		return
 	}
-	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(bson.M{"app_id": appId}).Select(bson.M{"content": 0}).
-		Sort("-upload_time").Skip(skip).Limit(limit).All(&plugins)
+	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(bson.M{"app_id": appId}).
+		Select(bson.M{"content": 0, "origin_content": 0}).
+		Sort(sortField).Skip(skip).Limit(limit).All(&plugins)
+	if plugins == nil {
+		plugins = make([]Plugin, 0)
+	}
+	return
+}
+
+func SearchPlugins(selector bson.M, skip int, limit int, sortField string) (plugins []Plugin, err error) {
+	newSession := mongo.NewSession()
+	defer newSession.Close()
+	err = newSession.DB(mongo.DbName).C(pluginCollectionName).Find(selector).Select(bson.M{"content": 0, "origin_content": 0}).
+		Sort(sortField).Skip(skip).Limit(limit).All(&plugins)
 	if plugins == nil {
 		plugins = make([]Plugin, 0)
 	}
@@ -302,10 +384,6 @@ func DeletePlugin(pluginId string) error {
 }
 
 func RemovePluginByAppId(appId string) error {
-	return mongo.RemoveAll(pluginCollectionName, bson.M{"app_id": appId})
-}
-
-func NewPlugin(version string, content []byte, appId string) *Plugin {
-	newMd5 := fmt.Sprintf("%x", md5.Sum(content))
-	return &Plugin{Version: version, Md5: newMd5, Content: string(content)}
+	_, err := mongo.RemoveAll(pluginCollectionName, bson.M{"app_id": appId})
+	return err
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,12 @@
 
 package com.baidu.openrasp.cloud.model;
 
+import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.LRUCache;
+import com.baidu.openrasp.tool.OSUtil;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @description: 缓存云控数据
@@ -33,7 +38,7 @@ public class CloudCacheModel {
     public long configTime = 0;
     public String algorithmConfig;
     public String raspId;
-    public String masterIp = "";
+    public String pluginName = "";
     public static LRUCache<Long, Long> reportCache = new LRUCache<Long, Long>(CACHE_SIZE);
 
     private CloudCacheModel() {
@@ -92,11 +97,24 @@ public class CloudCacheModel {
     }
 
     public String getMasterIp() {
-        return masterIp;
+        String ip = "";
+        try {
+            ip = OSUtil.getMasterIp(Config.getConfig().getCloudAddress());
+        } catch (Exception e) {
+            LogTool.warn(ErrorType.REGISTER_ERROR, "get local ip failed: " + e.getMessage(), e);
+        }
+        if (StringUtils.isEmpty(ip)) {
+            LogTool.warn(ErrorType.REGISTER_ERROR, "get local ip failed, the local ip is empty");
+        }
+        return ip;
     }
 
-    public void setMasterIp(String masterIp) {
-        this.masterIp = masterIp;
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    public void setPluginName(String pluginName) {
+        this.pluginName = pluginName;
     }
 
     public static CloudCacheModel getInstance() {

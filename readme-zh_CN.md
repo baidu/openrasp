@@ -30,7 +30,7 @@ RASP 技术以探针的形式，将保护引擎注入到应用服务中，能够
 
 ##### 1. OpenRASP 都支持哪些应用服务器?
 
-> 目前，我们支持 Tomcat 6-8, JBoss 4.X, Jetty 7-9, Resin 3-4, SpringBoot 1-2, WebSphere 8.5 & 9.0,  PHP 5.3-7.2 等服务器，更多服务器支持开发中
+> 目前，我们支持 Tomcat 6-9, JBoss 4.X, Jetty 7-9, Resin 3-4, SpringBoot 1-2, WebSphere 8.5 & 9.0, WebLogic 10.3.6 & 12.2,  PHP 5.3-7.3 等服务器，更多服务器支持开发中
 
 ##### 2. OpenRASP 是否会影响服务器的性能?
 

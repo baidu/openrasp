@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,12 @@
 package com.baidu.openrasp.cloud.model;
 
 import com.baidu.openrasp.cloud.utils.DoubleArrayTrie;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -69,5 +73,47 @@ public class HookWhiteModel {
             }
         }
         return false;
+    }
+
+    public static TreeMap<String, Integer> parseHookWhite(Map<Object, Object> hooks) {
+        TreeMap<String, Integer> temp = new TreeMap<String, Integer>();
+        for (Map.Entry<Object, Object> hook : hooks.entrySet()) {
+            int codeSum = 0;
+            if (hook.getValue() instanceof ArrayList) {
+                ArrayList<String> types = (ArrayList<String>) hook.getValue();
+                if (hook.getKey().equals("*") && types.contains("all")) {
+                    for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                        if (type.getCode() != 0) {
+                            codeSum = codeSum + type.getCode();
+                        }
+                    }
+                    temp.put("", codeSum);
+                    return temp;
+                } else if (types.contains("all")) {
+                    for (CheckParameter.Type type : CheckParameter.Type.values()) {
+                        if (type.getCode() != 0) {
+                            codeSum = codeSum + type.getCode();
+                        }
+                    }
+                    temp.put(hook.getKey().toString(), codeSum);
+                } else {
+                    for (String s : types) {
+                        String hooksType = s.toUpperCase();
+                        try {
+                            Integer code = CheckParameter.Type.valueOf(hooksType).getCode();
+                            codeSum = codeSum + code;
+                        } catch (Exception e) {
+//                            LogTool.traceWarn(ErrorType.CONFIG_ERROR, "Hook type " + s + " does not exist", e);
+                        }
+                    }
+                    if (hook.getKey().equals("*")) {
+                        temp.put("", codeSum);
+                    } else {
+                        temp.put(hook.getKey().toString(), codeSum);
+                    }
+                }
+            }
+        }
+        return temp;
     }
 }

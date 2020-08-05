@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package com.baidu.openrasp.hook;
 
 
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import javassist.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -40,6 +42,12 @@ public abstract class AbstractClassHook {
     protected boolean couldIgnore = true;
 
     private boolean isLoadedByBootstrapLoader = false;
+
+    protected boolean isNecessary = false;
+
+    public boolean isNecessary() {
+        return isNecessary;
+    }
 
     /**
      * 用于判断类名与当前需要hook的类是否相同
@@ -74,10 +82,9 @@ public abstract class AbstractClassHook {
         try {
             hookMethod(ctClass);
             return ctClass.toBytecode();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
             if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.error("transform class " + ctClass.getName() + " failed", e);
+                LOGGER.info("transform class " + ctClass.getName() + " failed", e);
             }
         }
         return null;
@@ -121,19 +128,48 @@ public abstract class AbstractClassHook {
     public void insertBefore(CtClass ctClass, String methodName, String desc, String src)
             throws NotFoundException, CannotCompileException {
 
-        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc, null);
         if (methods != null && methods.size() > 0) {
-            for (CtBehavior method : methods) {
-                if (method != null) {
-                    insertBefore(method, src);
-                }
-            }
+            insertBefore(methods, src);
         } else {
             if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
+                LOGGER.info("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
             }
         }
 
+    }
+
+    /**
+     * 在目标类的目标方法的入口插入相应的源代码
+     * 可排除一定的方法
+     *
+     * @param ctClass     目标类
+     * @param methodName  目标方法名称
+     * @param excludeDesc 排除的方法描述符
+     * @param src         待插入的源代码
+     */
+    public void insertBeforeWithExclude(CtClass ctClass, String methodName, String excludeDesc, String src)
+            throws NotFoundException, CannotCompileException {
+
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, null, excludeDesc);
+        if (methods != null && methods.size() > 0) {
+            insertBefore(methods, src);
+        } else {
+            if (Config.getConfig().isDebugEnabled()) {
+                LOGGER.info("can not find method " + methodName +
+                        " exclude desc:" + excludeDesc + " in class " + ctClass.getName());
+            }
+        }
+
+    }
+
+    private void insertBefore(LinkedList<CtBehavior> methods, String src)
+            throws CannotCompileException {
+        for (CtBehavior method : methods) {
+            if (method != null) {
+                insertBefore(method, src);
+            }
+        }
     }
 
     /**
@@ -163,7 +199,7 @@ public abstract class AbstractClassHook {
     public void insertAfter(CtClass ctClass, String methodName, String desc, String src, boolean asFinally)
             throws NotFoundException, CannotCompileException {
 
-        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc);
+        LinkedList<CtBehavior> methods = getMethod(ctClass, methodName, desc, null);
         if (methods != null && methods.size() > 0) {
             for (CtBehavior method : methods) {
                 if (method != null) {
@@ -172,7 +208,7 @@ public abstract class AbstractClassHook {
             }
         } else {
             if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.warn("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
+                LOGGER.info("can not find method " + methodName + " " + desc + " in class " + ctClass.getName());
             }
         }
 
@@ -202,7 +238,7 @@ public abstract class AbstractClassHook {
      * @return 所有符合要求的方法实例
      * @see javassist.bytecode.Descriptor
      */
-    private LinkedList<CtBehavior> getMethod(CtClass ctClass, String methodName, String desc) {
+    protected LinkedList<CtBehavior> getMethod(CtClass ctClass, String methodName, String desc, String excludeDesc) {
         if ("<init>".equals(methodName)) {
             return getConstructor(ctClass, desc);
         }
@@ -211,7 +247,10 @@ public abstract class AbstractClassHook {
             CtMethod[] allMethods = ctClass.getDeclaredMethods();
             if (allMethods != null) {
                 for (CtMethod method : allMethods) {
-                    if (method != null && !method.isEmpty() && method.getName().equals(methodName))
+                    if (method != null
+                            && !method.isEmpty()
+                            && method.getName().equals(methodName)
+                            && !method.getSignature().equals(excludeDesc))
                         methods.add(method);
                 }
             }
@@ -219,7 +258,7 @@ public abstract class AbstractClassHook {
             try {
                 CtMethod ctMethod = ctClass.getMethod(methodName, desc);
                 if (ctMethod != null && !ctMethod.isEmpty()) {
-                    methods.add(ctClass.getMethod(methodName, desc));
+                    methods.add(ctMethod);
                 }
             } catch (NotFoundException e) {
                 // ignore
@@ -239,9 +278,8 @@ public abstract class AbstractClassHook {
             method.insertBefore(src);
             LOGGER.info("insert before method " + method.getLongName());
         } catch (CannotCompileException e) {
-            if (Config.getConfig().isDebugEnabled()) {
-                LOGGER.error("insert before method " + method.getLongName() + " failed", e);
-            }
+            LogTool.traceError(ErrorType.HOOK_ERROR,
+                    "insert before method " + method.getLongName() + " failed: " + e.getMessage(), e);
             throw e;
         }
     }
@@ -268,7 +306,8 @@ public abstract class AbstractClassHook {
             method.insertAfter(src, asFinally);
             LOGGER.info("insert after method: " + method.getLongName());
         } catch (CannotCompileException e) {
-            LOGGER.error("insert after method " + method.getLongName() + " failed", e);
+            LogTool.traceError(ErrorType.HOOK_ERROR,
+                    "insert after method " + method.getLongName() + " failed: " + e.getMessage(), e);
             throw e;
         }
     }
@@ -310,11 +349,11 @@ public abstract class AbstractClassHook {
                 src += ",null);";
             }
             src = "try {" + src + "} catch (Throwable t) {if(t.getCause() != null && t.getCause().getClass()" +
-                    ".getName().equals(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
+                    ".getName().equals(\"com.baidu.openrasp.exceptions.SecurityException\")){throw t;}}";
         } else {
             src = invokeClassName + '.' + methodName + "(" + paramString + ");";
             src = "try {" + src + "} catch (Throwable t) {if(t.getClass()" +
-                    ".getName().equals(\"com.baidu.openrasp.exception.SecurityException\")){throw t;}}";
+                    ".getName().equals(\"com.baidu.openrasp.exceptions.SecurityException\")){throw t;}}";
         }
         return src;
     }

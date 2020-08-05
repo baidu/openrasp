@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.io.IOException;
 
 /**
  * Created by tyy on 18-4-28.
- *
+ * <p>
  * sql Prepare 查询 hook 点
  */
 @HookAnnotation
@@ -39,7 +39,7 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         /* MySQL */
         if ("com/mysql/jdbc/PreparedStatement".equals(className)
                 || "com/mysql/cj/jdbc/PreparedStatement".equals(className)) {
-            this.type = SQL_TYPE_MYSQL;
+            this.type = SqlType.MYSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -47,21 +47,21 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         /* SQLite */
         if ("org/sqlite/PrepStmt".equals(className)
                 || "org/sqlite/jdbc3/JDBC3PreparedStatement".equals(className)) {
-            this.type = SQL_TYPE_SQLITE;
+            this.type = SqlType.SQLITE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* Oracle */
         if ("oracle/jdbc/driver/OraclePreparedStatement".equals(className)) {
-            this.type = SQL_TYPE_ORACLE;
+            this.type = SqlType.ORACLE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* SQL Server */
         if ("com/microsoft/sqlserver/jdbc/SQLServerPreparedStatement".equals(className)) {
-            this.type = SQL_TYPE_SQLSERVER;
+            this.type = SqlType.SQLSERVER;
             this.exceptions = new String[]{"com/microsoft/sqlserver/jdbc/SQLServerException"};
             return true;
         }
@@ -74,14 +74,15 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
                 || "org/postgresql/jdbc3g/AbstractJdbc3gStatement".equals(className)
                 || "org/postgresql/jdbc4/AbstractJdbc4Statement".equals(className)) {
             this.className = className;
-            this.type = SQL_TYPE_PGSQL;
+            this.type = SqlType.PGSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
-        /* DB2 */
-        if ("com/ibm/db2/jcc/am/Connection".equals(className)) {
-            this.type = SQL_TYPE_DB2;
+         /* HSqlDB */
+        if ("org/hsqldb/jdbc/JDBCPreparedStatement".equals(className)
+                || "org/hsqldb/jdbc/jdbcPreparedStatement".equals(className)) {
+            this.type = SqlType.HSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -111,38 +112,48 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
 
     private void hookSqlPreparedStatementMethod(CtClass ctClass) throws NotFoundException, CannotCompileException {
         String originalSqlCode = null;
-        String checkSqlSrc = null;
-        if (SQL_TYPE_MYSQL.equals(this.type)) {
+//        String checkSqlSrc = null;
+        if (SqlType.MYSQL.equals(this.type)) {
             originalSqlCode = "originalSql";
-        } else if (SQL_TYPE_SQLITE.equals(this.type)) {
+        } else if (SqlType.SQLITE.equals(this.type)
+                || SqlType.HSQL.equals(this.type)) {
             originalSqlCode = "this.sql";
-        } else if (SQL_TYPE_SQLSERVER.equals(this.type)) {
+        } else if (SqlType.SQLSERVER.equals(this.type)) {
             originalSqlCode = "preparedSQL";
-        } else if (SQL_TYPE_PGSQL.equals(this.type)) {
+        } else if (SqlType.PGSQL.equals(this.type)) {
             if ("org/postgresql/jdbc/PgPreparedStatement".equals(className)) {
                 originalSqlCode = "preparedQuery.query.toString(preparedQuery.query.createParameterList())";
             } else {
                 originalSqlCode = "preparedQuery.toString(preparedQuery.createParameterList())";
             }
-        } else if (SQL_TYPE_ORACLE.equals(this.type)) {
+        } else if (SqlType.ORACLE.equals(this.type)) {
             originalSqlCode = "this.sqlObject.getOriginalSql()";
         }
         if (originalSqlCode != null) {
-            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0," + originalSqlCode, String.class, Object.class, String.class);
-            insertBefore(ctClass, "execute", "()Z", checkSqlSrc);
-            insertBefore(ctClass, "executeUpdate", "()I", checkSqlSrc);
-            insertBefore(ctClass, "executeQuery", "()Ljava/sql/ResultSet;", checkSqlSrc);
+//            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+//                    "\"" + type.name + "\"" + ",$0," + originalSqlCode, String.class, Object.class, String.class);
+//            insertBefore(ctClass, "execute", "()Z", checkSqlSrc);
+//            insertBefore(ctClass, "executeUpdate", "()I", checkSqlSrc);
+//            insertBefore(ctClass, "executeQuery", "()Ljava/sql/ResultSet;", checkSqlSrc);
+//            try {
+//                insertBefore(ctClass, "executeBatch", "()[I", checkSqlSrc);
+//            } catch (CannotCompileException e) {
+//                insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
+//            }
+            addCatch(ctClass, "execute", null, originalSqlCode);
+            addCatch(ctClass, "executeUpdate", null, originalSqlCode);
+            addCatch(ctClass, "executeQuery", null, originalSqlCode);
             try {
-                insertBefore(ctClass, "executeBatch", "()[I", checkSqlSrc);
+                addCatch(ctClass, "executeBatch", null, originalSqlCode);
             } catch (CannotCompileException e) {
-                insertBefore(ctClass, "executeBatchInternal", null, checkSqlSrc);
+                addCatch(ctClass, "executeBatchInternal", null, originalSqlCode);
             }
-        } else if (SQL_TYPE_DB2.equals(this.type)) {
-            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                    "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
-            insertBefore(ctClass, "prepareStatement", null, checkSqlSrc);
         }
+//        else if (SQL_TYPE_DB2.equals(this.type)) {
+//            checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+//                    "\"" + type.name + "\"" + ",$0,$1", String.class, Object.class, String.class);
+//            insertBefore(ctClass, "prepareStatement", null, checkSqlSrc);
+//        }
     }
 
 }

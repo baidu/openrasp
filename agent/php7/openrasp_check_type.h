@@ -20,9 +20,9 @@
 #include "openrasp.h"
 #include <string>
 #include <memory>
-#include <set>
+#include <map>
 
-typedef enum check_type_t
+enum OpenRASPCheckType
 {
   INVALID_TYPE = 0,
   CALLABLE,
@@ -30,21 +30,30 @@ typedef enum check_type_t
   DIRECTORY,
   READ_FILE,
   WRITE_FILE,
+  DELETE_FILE,
   COPY,
   RENAME,
   FILE_UPLOAD,
   INCLUDE,
+  EVAL,
   DB_CONNECTION,
   SQL,
-  SQL_SLOW_QUERY,
   SQL_PREPARED,
+  SQL_ERROR,
   SSRF,
   WEBSHELL_EVAL,
   WEBSHELL_COMMAND,
   WEBSHELL_FILE_PUT_CONTENTS,
+  WEBSHELL_LD_PRELOAD,
   XSS_ECHO,
+  XSS_USER_INPUT,
+  REQUEST,
+  REQUEST_END,
+  MONGO,
+  SSRF_REDIRECT,
+  RESPONSE,
   ALL_TYPE
-} OpenRASPCheckType;
+};
 
 class CheckTypeTransfer
 {
@@ -54,14 +63,18 @@ private:
   std::vector<OpenRASPCheckType> buildin_check_type;
   void insert(OpenRASPCheckType type, const std::string &name, bool is_buildin = false);
 
-public:
   CheckTypeTransfer();
+  virtual ~CheckTypeTransfer();
+  CheckTypeTransfer(const CheckTypeTransfer &) = delete;
+  CheckTypeTransfer &operator=(const CheckTypeTransfer &) = delete;
+
+public:
+  static CheckTypeTransfer &instance();
+  //only read op
   std::string type_to_name(OpenRASPCheckType type) const;
   OpenRASPCheckType name_to_type(const std::string &name) const;
-  std::vector<std::string> get_all_names() const;
   std::map<std::string, std::string> get_buildin_action_map() const;
+  std::vector<OpenRASPCheckType> get_buildin_check_types() const;
 };
-
-extern std::unique_ptr<CheckTypeTransfer> check_type_transfer;
 
 #endif

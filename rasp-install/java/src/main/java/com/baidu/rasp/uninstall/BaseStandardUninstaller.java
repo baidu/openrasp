@@ -16,18 +16,21 @@
 
 package com.baidu.rasp.uninstall;
 
+import com.baidu.rasp.App;
+import com.baidu.rasp.Attacher;
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 
-import static com.baidu.rasp.RaspError.E10003;
 import static com.baidu.rasp.RaspError.E10002;
+import static com.baidu.rasp.RaspError.E10003;
 
 /**
- * @Description: 自动卸载基础类
  * @author anyang
+ * @Description: 自动卸载基础类
  * @date 2018/4/25 19:37
  */
 public abstract class BaseStandardUninstaller implements Uninstaller {
@@ -44,8 +47,10 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
     public void uninstall() throws RaspError, IOException {
         File installDir = new File(getInstallPath(serverRoot));
         BaseStandardInstaller.modifyFolerPermission(installDir.getCanonicalPath());
-        // 删除文件
-        delRaspFolder(getInstallPath(serverRoot));
+        if (App.isAttach) {
+            System.out.println("Attach the rasp to process with pid " + App.pid);
+            new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_UNINSTALL);
+        }
         // 找到要修改的启动脚本
         File script = new File(getScript(installDir.getPath()));
         if (!script.exists()) {
@@ -57,8 +62,13 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         String original = BaseStandardInstaller.read(script);
         String modified = recoverStartScript(original);
         BaseStandardInstaller.write(script, modified);
-        System.out.println("\nUninstallation completed without errors.\nPlease restart application server to take effect.");
 
+        // 删除文件
+        delRaspFolder(getInstallPath(serverRoot));
+
+        if (!App.isAttach) {
+            System.out.println("\nUninstallation completed without errors.\nPlease restart application server to take effect.");
+        }
     }
 
     public void delAllFile(String path) throws RaspError {
@@ -94,6 +104,34 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         // 删除rasp空文件夹
         folder.delete();
 
+    }
+
+    //判断tomcat的版本是否大于8
+    protected boolean checkTomcatVersion() {
+        String javaVersion = System.getProperty("java.version");
+        return javaVersion != null && (javaVersion.startsWith("1.9") || javaVersion.startsWith("10.")
+                || javaVersion.startsWith("11."));
+    }
+
+    protected String getUninstallContent(String content) {
+        StringBuilder sb = new StringBuilder();
+        boolean isDelete = false;
+        Scanner scanner = new Scanner(content);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            if (line.contains("BEGIN OPENRASP")) {
+                isDelete = true;
+                continue;
+            }
+            if (line.contains("END OPENRASP")) {
+                isDelete = false;
+                continue;
+            }
+            if (!isDelete) {
+                sb.append(line).append(LINE_SEP);
+            }
+        }
+        return sb.toString();
     }
 
     protected abstract String getInstallPath(String serverRoot);

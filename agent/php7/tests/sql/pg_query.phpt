@@ -10,11 +10,11 @@ plugin.register('sql', params => {
 })
 EOF;
 $conf = <<<CONF
-security.enforce_policy=false
+security.enforce_policy: false
 CONF;
 include(__DIR__.'/../skipif.inc');
 if (!extension_loaded("pgsql")) die("Skipped: pgsql extension required.");
-@$con = pg_connect('host=127.0.0.1 port=5432 user=postgres');
+include('pg_connect.inc');
 if (!$con) die("Skipped: can not connect to postgresql");
 pg_close($con);
 ?>
@@ -22,7 +22,7 @@ pg_close($con);
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-@$con = pg_connect('host=127.0.0.1 port=5432 user=postgres');
+include('pg_connect.inc');
 pg_query($con, 'SELECT a FROM b');
 pg_close($con);
 ?>

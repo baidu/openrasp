@@ -30,12 +30,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.regex.Pattern;
 
-import static com.baidu.rasp.RaspError.E10005;
+import static com.baidu.rasp.RaspError.*;
 
 /**
  * Created by OpenRASP on 5/11/17.
@@ -44,12 +43,25 @@ public class App {
     public static String install;
     public static String appId;
     public static String appSecret;
+    public static Integer heartbeatInterval;
+    public static String raspId;
     public static String baseDir;
     public static String url;
+    public static int pid;
+    public static boolean isAttach = false;
     public static boolean keepConfig = false;
+    public static boolean noDetect = false;
+    public static boolean isPrepend = false;
 
     public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
     public static final String REGEX_APPSECRET = "^[a-zA-Z0-9_-]{43,45}$";
+
+    public static final String TOMCAT = "Tomcat";
+    public static final String JBOSS = "JBoss 4-6";
+    public static final String RESIN = "Resin";
+    public static final String WEBLOGIC = "Weblogic";
+    public static final String JBOSSEAP = "JbossEAP";
+    public static final String WILDFLY = "Wildfly";
 
     private static InstallerFactory newInstallerFactory() {
         if (System.getProperty("os.name").startsWith("Windows")) {
@@ -69,39 +81,80 @@ public class App {
 
     private static void argsParser(String[] args) throws ParseException, RaspError {
         Options options = new Options();
-        options.addOption("install", true, "specify application server path");
-        options.addOption("uninstall", true, "specify application server path");
+        options.addOption("install", true, "Specify application server path");
+        options.addOption("uninstall", true, "Specify application server path");
         options.addOption("appid", true, "Value of cloud.appid");
         options.addOption("appsecret", true, "Value of cloud.appsecret");
+        options.addOption("heartbeat", true, "Value of cloud.heartbeat_interval");
+        options.addOption("raspid", true, "Value of rasp.id");
         options.addOption("backendurl", true, "Value of cloud.backendurl");
-        options.addOption("keepconf", false, "If the parameter exists, reserved rasp.properties");
-        options.addOption("help", false, "print options information");
-        options.addOption("h", false, "print options information");
+        options.addOption("keepconf", false, "Do not override openrasp.yml");
+        options.addOption("h", "help", false, "You're reading this!");
+        options.addOption("pid", true, "Specify the pid of Java server to attach");
+        options.addOption("nodetect", false, "Install without updating startup scripts, " +
+                "useful for standalone Java servers like SpringBoot");
+        options.addOption("prepend", false, "Prepend the origin java options");
+
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
         if (cmd.hasOption("help") || cmd.hasOption("h")) {
-            showHelp();
+            showHelp(options);
         } else {
             if (cmd.hasOption("install") && cmd.hasOption("uninstall")) {
                 throw new RaspError(E10005 + "Can't use -install and -uninstall simultaneously");
-            } else if (cmd.hasOption("install")) {
-                baseDir = cmd.getOptionValue("install");
-                install = "install";
-            } else if (cmd.hasOption("uninstall")) {
-                baseDir = cmd.getOptionValue("uninstall");
-                install = "uninstall";
             } else {
-                throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
+                if (cmd.hasOption("install")) {
+                    baseDir = cmd.getOptionValue("install");
+                    install = "install";
+                } else if (cmd.hasOption("uninstall")) {
+                    baseDir = cmd.getOptionValue("uninstall");
+                    install = "uninstall";
+                } else {
+                    throw new RaspError(E10005 + "One of -install and -uninstall must be specified");
+                }
+
+                noDetect = cmd.hasOption("nodetect");
+                isPrepend = cmd.hasOption("prepend");
+
+                if (cmd.hasOption("pid")) {
+                    isAttach = true;
+                    pid = getIntegerParam(cmd, "pid");
+                }
             }
 
             keepConfig = cmd.hasOption("keepconf");
             appId = cmd.getOptionValue("appid");
             appSecret = cmd.getOptionValue("appsecret");
+            if (cmd.hasOption("heartbeat")) {
+                heartbeatInterval = getIntegerParam(cmd, "heartbeat");
+            }
+            raspId = cmd.getOptionValue("raspid");
             url = cmd.getOptionValue("backendurl");
             if (!(appId != null && appSecret != null && url != null || appId == null && appSecret == null && url == null)) {
                 throw new RaspError(E10005 + "-backendurl, -appid and -appsecret must be set simultaneously");
             }
         }
+    }
+
+    private static int getIntegerParam(CommandLine cmd, String param) throws RaspError {
+        try {
+            return Integer.parseInt(cmd.getOptionValue(param));
+        } catch (NumberFormatException e) {
+            throw new RaspError(E10005 + "The -" + param + " parameter must have a integer value");
+        }
+    }
+
+    private static String checkRaspId(String raspId) {
+        if (raspId.length() < 16 || raspId.length() > 512) {
+            return "the length of -raspid must be between [16,512]";
+        }
+        for (int i = 0; i < raspId.length(); i++) {
+            char a = raspId.charAt(i);
+            if (!((a >= 'a' && a <= 'z') || (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z'))) {
+                return "the -raspid param can only contain letters and numbers";
+            }
+        }
+        return null;
     }
 
     private static void checkArgs() throws RaspError {
@@ -117,11 +170,22 @@ public class App {
                 throw new RaspError(E10005 + "appsecret must have 43~45 characters");
             }
         }
+        if (raspId != null) {
+            String invalidMsg = checkRaspId(raspId);
+            if (invalidMsg != null) {
+                throw new RaspError(E10005 + invalidMsg);
+            }
+        }
         if (url != null) {
             try {
                 new URL(url);
             } catch (MalformedURLException e) {
                 throw new RaspError(E10005 + "backendurl must be a valid URL, e.g http://192.168.1.1");
+            }
+        }
+        if (heartbeatInterval != null) {
+            if (heartbeatInterval < 10 || heartbeatInterval > 1800) {
+                throw new RaspError(E10005 + "heartbeat must be between [10,1800]");
             }
         }
     }
@@ -144,40 +208,56 @@ public class App {
         System.out.println(notice);
     }
 
-    private static void showHelp() {
-        String helpMsg = "Usage: \n" +
-                "  java -jar RaspInstall.jar -install /tomcat/\n" +
-                "  java -jar RaspInstall.jar -uninstall /tomcat/\n" +
-                "\n" +
-                "Additional command line arguments: \n" +
-                "  -install      Install OpenRASP\n" +
-                "  -uninstall    Uninstall OpenRASP\n" +
-                "  -appid        Value of cloud.appid\n" +
-                "  -backendurl   Value of cloud.address\n" +
-                "  -appsecret    Value of cloud.appsecret\n" +
-                "  -keepconf     Do not overwrite rasp.properties\n" +
-                "  -help/-h      Show this dialog\n";
-        System.out.println(helpMsg);
+    private static void showHelp(Options opts) {
+        HelpFormatter help = new HelpFormatter();
+        help.printHelp("java -jar RaspInstall.jar", opts);
     }
 
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void operateServer(String[] args) throws RaspError, ParseException, IOException {
         showBanner();
-        try {
-            argsParser(args);
-            checkArgs();
-            if ("install".equals(install)) {
-                File serverRoot = new File(baseDir);
-                InstallerFactory factory = newInstallerFactory();
-                Installer installer = factory.getInstaller(serverRoot);
+        argsParser(args);
+        checkArgs();
+        if ("install".equals(install)) {
+            File serverRoot = new File(baseDir);
+            InstallerFactory factory = newInstallerFactory();
+            Installer installer = factory.getInstaller(serverRoot, noDetect);
+            if (installer != null) {
                 installer.install();
-            } else if ("uninstall".equals(install)) {
-                File serverRoot = new File(baseDir);
-                UninstallerFactory factory = newUninstallerFactory();
-                Uninstaller uninstaller = factory.getUninstaller(serverRoot);
-                uninstaller.uninstall();
+            } else {
+                throw new RaspError(E10007);
             }
+        } else if ("uninstall".equals(install)) {
+            File serverRoot = new File(baseDir);
+            UninstallerFactory factory = newUninstallerFactory();
+            Uninstaller uninstaller = factory.getUninstaller(serverRoot);
+            if (uninstaller != null) {
+                uninstaller.uninstall();
+            } else {
+                throw new RaspError(E10007);
+            }
+        }
+    }
+
+    public static void listServerSupport(String serverRoot) throws RaspError {
+        System.out.println("List of currently supported servers are:");
+        System.out.println("- " + TOMCAT);
+        System.out.println("- " + RESIN);
+        System.out.println("- " + WEBLOGIC);
+        System.out.println("- " + JBOSSEAP);
+        System.out.println("- " + WILDFLY);
+        System.out.println("- " + JBOSS + "\n");
+        throw new RaspError(E10004 + serverRoot);
+    }
+
+    public static void main(String[] args) {
+        try {
+            operateServer(args);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            if (e instanceof RaspError || e instanceof UnrecognizedOptionException) {
+                System.out.println(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
             showNotice();
             System.exit(1);
         }

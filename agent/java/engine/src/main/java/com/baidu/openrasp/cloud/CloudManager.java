@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,13 @@
 
 package com.baidu.openrasp.cloud;
 
+import com.baidu.openrasp.cloud.model.AppenderMappedLogger;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
+import com.baidu.openrasp.dependency.DependencyReport;
+import com.baidu.openrasp.detector.ServerDetector;
 import org.apache.log4j.Logger;
+
+import java.util.LinkedList;
 
 /**
  * @description: 初始化云控配置
@@ -26,10 +32,26 @@ import org.apache.log4j.Logger;
 public class CloudManager {
     public static final Logger LOGGER = Logger.getLogger(CloudManager.class.getPackage().getName() + ".log");
 
+    private static LinkedList<CloudTimerTask> tasks = new LinkedList<CloudTimerTask>();
+
     public static void init() {
-        new KeepAlive();
-        new StatisticsReport();
+        //注册成功之后初始化创建http appender
+        DynamicConfigAppender.createRootHttpAppender();
+        DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_ALARM.getLogger(),
+                AppenderMappedLogger.HTTP_ALARM.getAppender());
+        DynamicConfigAppender.createHttpAppender(AppenderMappedLogger.HTTP_POLICY_ALARM.getLogger(),
+                AppenderMappedLogger.HTTP_POLICY_ALARM.getAppender());
+        tasks.add(new KeepAlive());
+        tasks.add(new StatisticsReport());
+        for (CloudTimerTask task : tasks) {
+            task.start();
+        }
     }
 
+    public static void stop() {
+        for (CloudTimerTask task : tasks) {
+            task.stop();
+        }
+    }
 
 }

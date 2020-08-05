@@ -30,17 +30,23 @@ class BackendResponse;
 
 class BackendRequest
 {
+
 private:
   CURL *curl = nullptr;
   CURLcode curl_code;
-  const std::string url;
-  const char *post_data;
+  struct curl_slist *chunk = nullptr;
+
+  void add_header(const std::string &header);
+  void set_custom_headers();
 
 public:
-  BackendRequest(const std::string &url, const char *post_data);
+  BackendRequest();
   virtual ~BackendRequest();
   std::shared_ptr<BackendResponse> curl_perform();
   CURLcode get_curl_code() const;
+  const char *get_curl_err_msg() const;
+  void set_url(const std::string &url);
+  void add_post_fields(const std::string &post_data);
 };
 
 } // namespace openrasp

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.baidu.openrasp.tool;
 
+import com.baidu.openrasp.config.Config;
+
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,22 +60,44 @@ public class StackTrace {
      *
      * @return 原始栈
      */
-    public static List<String> getStackTraceArray(int startIndex, int depth) {
-
+    public static List<String> getStackTraceArray(boolean isFilter, boolean hasLineNumber) {
         LinkedList<String> stackTrace = new LinkedList<String>();
         Throwable throwable = new Throwable();
-        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
-
-        if (stackTraceElements != null) {
-            for (int i = startIndex; i < stackTraceElements.length; i++) {
-                if (i > startIndex + depth) {
-                    break;
+        StackTraceElement[] stack = throwable.getStackTrace();
+        if (stack != null) {
+            if (isFilter) {
+                stack = filter(stack);
+            }
+            for (int i = 0; i < stack.length; i++) {
+                if (hasLineNumber) {
+                    stackTrace.add(stack[i].toString());
+                } else {
+                    stackTrace.add(stack[i].getClassName() + "." + stack[i].getMethodName());
                 }
-                stackTrace.add(stackTraceElements[i].getClassName() + "." + stackTraceElements[i].getMethodName());
             }
         }
 
         return stackTrace;
+    }
+
+    /**
+     * hook 点参数获取原始栈
+     *
+     * @return 原始栈
+     */
+    public static List<String> getParamStackTraceArray() {
+        return getStackTraceArray(true, false);
+    }
+
+    //去掉包含rasp的堆栈
+    public static StackTraceElement[] filter(StackTraceElement[] trace) {
+        int i = 0;
+        // 去除插件本身调用栈
+        while (i < trace.length && (trace[i].getClassName().startsWith("com.baidu.openrasp")
+                || trace[i].getClassName().contains("reflect"))) {
+            i++;
+        }
+        return Arrays.copyOfRange(trace, i, Math.min(i + Config.getConfig().getPluginMaxStack(), trace.length));
     }
 
 }

@@ -5,7 +5,7 @@ hook shell_exec
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'cd')
-    assert(params.stack[0].endsWith('shell_exec'))
+    assert(params.stack[0].indexOf('shell_exec') != -1)
     return block
 })
 EOF;

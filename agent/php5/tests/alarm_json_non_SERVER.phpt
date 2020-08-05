@@ -5,7 +5,7 @@ alarm json
 $plugin = <<<EOF
 plugin.register('command', params => {
     assert(params.command == 'echo test')
-    assert(params.stack[0].endsWith('exec'))
+    assert(params.stack[0].indexOf('exec') != -1)
     return {action: 'log'}
 })
 EOF;
@@ -21,4 +21,4 @@ exec('echo test');
 passthru('tail -n 1 /tmp/openrasp/logs/alarm/alarm.log.'.date("Y-m-d"));
 ?>
 --EXPECTREGEX--
-.*"user_agent":"".*
+.*"header":{}.*

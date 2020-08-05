@@ -1,12 +1,12 @@
 #!/bin/bash
 set -ev
 
-pushd agent/java
-pushd integration-test
+bash build-java.sh
+tar -xf rasp-java.tar.gz --strip 1 -C agent/java/integration-test
+pushd agent/java/integration-test
 bash build-war.sh
-bash build-rasp.sh
-bash build-rasp-install.sh
 rm -rf ~/.m2/repository/com/baidu
+rm rasp/plugins/official.js
 bash start-$SERVER.sh
 pushd tester
 yarn

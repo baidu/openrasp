@@ -20,11 +20,8 @@
 #include <string>
 #include <unordered_set>
 
-ZEND_INI_MH(OnUpdateOpenraspIntGEZero);
-ZEND_INI_MH(OnUpdateOpenraspIntGZero);
 ZEND_INI_MH(OnUpdateOpenraspCString);
 ZEND_INI_MH(OnUpdateOpenraspBool);
-ZEND_INI_MH(OnUpdateOpenraspSet);
 ZEND_INI_MH(OnUpdateOpenraspHeartbeatInterval);
 
 class Openrasp_ini
@@ -32,11 +29,20 @@ class Openrasp_ini
 public:
   char *root_dir;
   char *locale;
-  unsigned int heartbeat_interval = 180;
+  unsigned int heartbeat_interval = 90;
   char *backend_url;
   char *app_id;
   char *app_secret;
+  char *rasp_id;
   bool remote_management_enable = true;
+  bool ssl_verifypeer = false;
+  bool iast_enable = false;
+
+  static const char *APPID_REGEX;
+  static const char *APPSECRET_REGEX;
+  static const char* RASPID_REGEX;
+  bool verify_remote_management_ini(std::string &error);
+  bool verify_rasp_id();
 };
 
 extern Openrasp_ini openrasp_ini;

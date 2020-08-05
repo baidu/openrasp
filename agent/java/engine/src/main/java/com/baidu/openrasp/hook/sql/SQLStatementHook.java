@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,13 @@ package com.baidu.openrasp.hook.sql;
 
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
-import com.baidu.openrasp.tool.Reflection;
-
-import com.google.gson.Gson;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by zhuming01 on 7/18/17.
@@ -55,7 +48,7 @@ public class SQLStatementHook extends AbstractSqlHook {
         /* MySQL */
         if ("com/mysql/jdbc/StatementImpl".equals(className)
                 || "com/mysql/cj/jdbc/StatementImpl".equals(className)) {
-            this.type = SQL_TYPE_MYSQL;
+            this.type = SqlType.MYSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -63,21 +56,21 @@ public class SQLStatementHook extends AbstractSqlHook {
         /* SQLite */
         if ("org/sqlite/Stmt".equals(className)
                 || "org/sqlite/jdbc3/JDBC3Statement".equals(className)) {
-            this.type = SQL_TYPE_SQLITE;
+            this.type = SqlType.SQLITE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* Oracle */
         if ("oracle/jdbc/driver/OracleStatement".equals(className)) {
-            this.type = SQL_TYPE_ORACLE;
+            this.type = SqlType.ORACLE;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* SQL Server */
         if ("com/microsoft/sqlserver/jdbc/SQLServerStatement".equals(className)) {
-            this.type = SQL_TYPE_SQLSERVER;
+            this.type = SqlType.SQLSERVER;
             this.exceptions = new String[]{"com/microsoft/sqlserver/jdbc/SQLServerException"};
             return true;
         }
@@ -89,14 +82,22 @@ public class SQLStatementHook extends AbstractSqlHook {
                 || "org/postgresql/jdbc3/AbstractJdbc3Statement".equals(className)
                 || "org/postgresql/jdbc3g/AbstractJdbc3gStatement".equals(className)
                 || "org/postgresql/jdbc4/AbstractJdbc4Statement".equals(className)) {
-            this.type = SQL_TYPE_PGSQL;
+            this.type = SqlType.PGSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
 
         /* DB2 */
         if (className != null && className.startsWith("com/ibm/db2/jcc/am")) {
-            this.type = SQL_TYPE_DB2;
+            this.type = SqlType.DB2;
+            this.exceptions = new String[]{"java/sql/SQLException"};
+            return true;
+        }
+
+        /* HSqlDB */
+        if ("org/hsqldb/jdbc/JDBCStatement".equals(className)
+                || "org/hsqldb/jdbc/jdbcStatement".equals(className)) {
+            this.type = SqlType.HSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
         }
@@ -112,7 +113,7 @@ public class SQLStatementHook extends AbstractSqlHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         CtClass[] interfaces = ctClass.getInterfaces();
-        if (SQL_TYPE_DB2.equals(this.type) && interfaces != null) {
+        if (SqlType.DB2.equals(this.type) && interfaces != null) {
             for (CtClass inter : interfaces) {
                 if ("com.ibm.db2.jcc.DB2Statement".equals(inter.getName())) {
                     if (interfaces.length > 2) {
@@ -126,36 +127,27 @@ public class SQLStatementHook extends AbstractSqlHook {
     }
 
     private void hookSqlStatementMethod(CtClass ctClass) throws NotFoundException, CannotCompileException {
-        String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
-                "\"" + type + "\"" + ",$0,$1", String.class, Object.class, String.class);
-        insertBefore(ctClass, "execute", checkSqlSrc,
-                new String[]{"(Ljava/lang/String;)Z", "(Ljava/lang/String;I)Z",
-                        "(Ljava/lang/String;[I)Z", "(Ljava/lang/String;[Ljava/lang/String;)Z"});
-        insertBefore(ctClass, "executeUpdate", checkSqlSrc,
-                new String[]{"(Ljava/lang/String;)I", "(Ljava/lang/String;I)I",
-                        "(Ljava/lang/String;[I)I", "(Ljava/lang/String;[Ljava/lang/String;)I"});
-        insertBefore(ctClass, "executeQuery",
-                "(Ljava/lang/String;)Ljava/sql/ResultSet;", checkSqlSrc);
-        insertBefore(ctClass, "addBatch",
-                "(Ljava/lang/String;)V", checkSqlSrc);
-    }
+        String[] executeFuncDescs = new String[]{"(Ljava/lang/String;)Z", "(Ljava/lang/String;I)Z",
+                "(Ljava/lang/String;[I)Z", "(Ljava/lang/String;[Ljava/lang/String;)Z"};
 
-    public static String getSqlConnectionId(String type, Object statement) {
-        String id = null;
-        try {
-            if (type.equals(SQLStatementHook.SQL_TYPE_MYSQL)) {
-                id = Reflection.getField(statement, "connectionId").toString();
-            } else if (type.equals(SQLStatementHook.SQL_TYPE_ORACLE)) {
-                Object connection = Reflection.getField(statement, "connection");
-                id = Reflection.getField(connection, "ociConnectionPoolConnID").toString();
-            } else if (type.equals(SQLStatementHook.SQL_TYPE_SQLSERVER)) {
-                Object connection = Reflection.invokeMethod(statement, "getConnection", new Class[]{});
-                id = Reflection.getField(connection, "clientConnectionId").toString();
-            }
-            return id;
-        } catch (Exception e) {
-            return null;
-        }
+        String[] executeUpdateFuncDescs = new String[]{"(Ljava/lang/String;)I", "(Ljava/lang/String;I)I",
+                "(Ljava/lang/String;[I)I", "(Ljava/lang/String;[Ljava/lang/String;)I"};
+
+        String executeQueryFuncDesc = "(Ljava/lang/String;)Ljava/sql/ResultSet;";
+
+        String addBatchFuncDesc = "(Ljava/lang/String;)V";
+
+        String checkSqlSrc = getInvokeStaticSrc(SQLStatementHook.class, "checkSQL",
+                "\"" + type.name + "\"" + ",$0,$1", String.class, Object.class, String.class);
+        insertBefore(ctClass, "execute", checkSqlSrc, executeFuncDescs);
+        insertBefore(ctClass, "executeUpdate", checkSqlSrc, executeUpdateFuncDescs);
+        insertBefore(ctClass, "executeQuery", executeQueryFuncDesc, checkSqlSrc);
+        insertBefore(ctClass, "addBatch", addBatchFuncDesc, checkSqlSrc);
+
+        addCatch(ctClass, "execute", executeFuncDescs);
+        addCatch(ctClass, "executeUpdate", executeUpdateFuncDescs);
+        addCatch(ctClass, "executeQuery", new String[]{executeQueryFuncDesc});
+        addCatch(ctClass, "addBatch", new String[]{addBatchFuncDesc});
     }
 
     /**
@@ -163,19 +155,13 @@ public class SQLStatementHook extends AbstractSqlHook {
      *
      * @param stmt sql语句
      */
-    public static void checkSQL(String server, Object statement, String stmt) {
-        if (stmt != null && !stmt.isEmpty() && !HookHandler.commonLRUCache.isContainsKey(server.trim() + stmt.trim())) {
-            JSContext cx = JSContextFactory.enterAndInitContext();
-            Scriptable params = cx.newObject(cx.getScope());
-            String connectionId = getSqlConnectionId(server, statement);
-            if (connectionId != null) {
-                params.put(server + "_connection_id", params, connectionId);
-            }
-            params.put("server", params, server);
-            params.put("query", params, stmt);
 
+    public static void checkSQL(String server, Object statement, String stmt) {
+        if (stmt != null && !stmt.isEmpty()) {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("server", server);
+            params.put("query", stmt);
             HookHandler.doCheck(CheckParameter.Type.SQL, params);
         }
     }
-
 }

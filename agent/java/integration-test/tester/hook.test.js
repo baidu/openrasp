@@ -14,11 +14,13 @@ const watchFileOptions = {
     interval: 400
 };
 const SERVER_HOME = process.env['SERVER_HOME'];
-const CONF_FILE = SERVER_HOME + '/rasp/conf/rasp.properties';
+const CONF_FILE = SERVER_HOME + '/rasp/conf/openrasp.yml';
 const RASP_LOG_FILE = SERVER_HOME + '/rasp/logs/rasp/rasp.log';
+const PLUGIN_LOG = SERVER_HOME + '/rasp/logs/plugin/plugin.log';
 chai.should();
 axios.defaults.headers.common['Test-Test'] = 'Test-Test';
 axios.defaults.validateStatus = status => status !== undefined;
+axios.defaults.transformResponse = []
 
 describe(process.env['SERVER'] || 'server', function () {
     before(function () {
@@ -45,7 +47,7 @@ describe(process.env['SERVER'] || 'server', function () {
         let form = new FormData();
         form.append('test', new Buffer(10), {
             filename: 'test.txt',
-            contentType: 'test/plain',
+            contentType: 'text/plain',
             knownLength: 10
         });
         return axios.post('fileUpload' + '.jsp?test=a&test=b', form, {
@@ -63,12 +65,20 @@ describe(process.env['SERVER'] || 'server', function () {
                 .match(/blocked/);
         });
     });
+    var env = process.env['SERVER'] || 'server';
+    if (env == 'dubbo') {
+        it('dubbo', function () {
+            return axios.get('http://127.0.0.1:8080/dubbo-consumer/mysql.do')
+                .should.eventually.have.property('data')
+                .match(/blocked/);
+        });
+    }
     it('paramEncodingConfig', function () {
         fs.watchFile(RASP_LOG_FILE, watchFileOptions, () => {
             return axios.get("param-encoding" + '.jsp?test=a&test=b')
             .should.eventually.have.property('data')
             .match(/blocked/);
         });
-        fs.writeFileSync(CONF_FILE, '\nrequest.param_encoding=utf-8');
+        fs.writeFileSync(CONF_FILE, '\nrequest.param_encoding: utf-8');
     });
 });

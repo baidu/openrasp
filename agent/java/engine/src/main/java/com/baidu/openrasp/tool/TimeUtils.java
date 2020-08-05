@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import java.util.TimeZone;
 public class TimeUtils {
 
     public static final int DAY_MILLISECOND = 86400000;
+
     /**
      * 获取ISO8601格式化时间
      *

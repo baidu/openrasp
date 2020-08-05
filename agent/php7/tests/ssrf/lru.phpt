@@ -2,6 +2,7 @@
 hook curl_exec lru
 --SKIPIF--
 <?php
+if (!function_exists("curl_init")) die("Skipped: curl is disabled.");
 $plugin = <<<EOF
 let f = false
 plugin.register('ssrf', params => {
@@ -17,7 +18,7 @@ include(__DIR__.'/../skipif.inc');
 --INI--
 openrasp.root_dir=/tmp/openrasp
 --GET--
-url=http://requestb.in
+url=http://www.example.com
 --FILE--
 <?php 
 	$url = @$_GET['url'];

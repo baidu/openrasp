@@ -22,21 +22,22 @@ namespace openrasp
 
 const std::string PluginUpdatePackage::snapshot_filename = "snapshot.dat";
 
-PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string version, std::string md5)
-    : active_plugin(version, content)
+PluginUpdatePackage::PluginUpdatePackage(std::string content, std::string version, std::string name, std::string md5)
+    : active_plugin(name, content)
 {
   plugin_version = version;
+  plugin_name = name;
   plugin_md5 = md5;
 }
 
 bool PluginUpdatePackage::build_snapshot()
 {
-  Platform::Initialize();
-  Snapshot snapshot("", {active_plugin});
-  Platform::Shutdown();
+  Platform::Get()->Startup();
+  Snapshot snapshot(process_globals.plugin_config, {active_plugin}, OpenRASPInfo::PHP_OPENRASP_VERSION, 0);
+  Platform::Get()->Shutdown();
   if (!snapshot.IsOk())
   {
-    openrasp_error(E_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code, error %s."), strerror(errno));
+    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR, _("Fail to initialize builtin js code, error %s."), strerror(errno));
     return false;
   }
   std::string snapshot_abs_path = std::string(openrasp_ini.root_dir) + DEFAULT_SLASH + PluginUpdatePackage::snapshot_filename;
@@ -49,26 +50,35 @@ bool PluginUpdatePackage::build_snapshot()
 #endif
   if (!build_successful)
   {
-    openrasp_error(E_WARNING, AGENT_ERROR, _("Fail to write snapshot to %s."), snapshot_abs_path.c_str());
+    openrasp_error(LEVEL_WARNING, PLUGIN_ERROR, _("Fail to write snapshot to %s, cuz of %s."),
+                   snapshot_abs_path.c_str(), strerror(errno));
   }
-  std::map<std::string, std::string> buildin_action_map = check_type_transfer->get_buildin_action_map();
-  Platform::Initialize();
-  Isolate *isolate = Isolate::New(&snapshot);
+  std::map<std::string, std::string> buildin_action_map = CheckTypeTransfer::instance().get_buildin_action_map();
+  Platform::Get()->Startup();
+  Isolate *isolate = Isolate::New(&snapshot, 0);
   extract_buildin_action(isolate, buildin_action_map);
-  isolate->Dispose();
-  Platform::Shutdown();
   std::map<OpenRASPCheckType, OpenRASPActionType> type_action_map;
   for (auto iter = buildin_action_map.begin(); iter != buildin_action_map.end(); iter++)
   {
-    type_action_map.insert({check_type_transfer->name_to_type(iter->first), string_to_action(iter->second)});
+    type_action_map.insert({CheckTypeTransfer::instance().name_to_type(iter->first), string_to_action(iter->second)});
   }
   openrasp::scm->set_buildin_check_action(type_action_map);
+  openrasp::scm->set_mysql_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.mysql.error_code", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE));
+  openrasp::scm->set_sqlite_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.sqlite.error_code", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE));
+  openrasp::scm->build_pg_error_array(isolate);
+  isolate->Dispose();
+  Platform::Get()->Shutdown();
   return build_successful;
 }
 
 std::string PluginUpdatePackage::get_version() const
 {
   return plugin_version;
+}
+
+std::string PluginUpdatePackage::get_name() const
+{
+  return plugin_name;
 }
 
 std::string PluginUpdatePackage::get_md5() const

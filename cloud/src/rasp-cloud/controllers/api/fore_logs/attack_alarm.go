@@ -22,6 +22,7 @@ import (
 	"rasp-cloud/models/logs"
 	"math"
 	"time"
+	"fmt"
 )
 
 // Operations about attack alarm message
@@ -32,12 +33,9 @@ type AttackAlarmController struct {
 // @router /aggr/time [post]
 func (o *AttackAlarmController) AggregationWithTime() {
 	var param = &logs.AggrTimeParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnmarshalJson(&param)
 	if param.AppId != "" {
-		_, err = models.GetAppById(param.AppId)
+		_, err := models.GetAppById(param.AppId)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to get the app: "+param.AppId)
 		}
@@ -66,6 +64,16 @@ func (o *AttackAlarmController) AggregationWithTime() {
 	if len(param.Interval) > 32 {
 		o.ServeError(http.StatusBadRequest, "the length of interval cannot be greater than 32")
 	}
+	intervals := [...]string{"hour", "day", "month"}
+	isValidInterval := false
+	for index := range intervals {
+		if param.Interval == intervals[index] {
+			isValidInterval = true
+		}
+	}
+	if !isValidInterval {
+		o.ServeError(http.StatusBadRequest, "the interval must be in "+fmt.Sprintf("%v", intervals))
+	}
 	if len(param.TimeZone) > 32 {
 		o.ServeError(http.StatusBadRequest, "the length of time_zone cannot be greater than 32")
 	}
@@ -80,10 +88,7 @@ func (o *AttackAlarmController) AggregationWithTime() {
 // @router /aggr/type [post]
 func (o *AttackAlarmController) AggregationWithType() {
 	var param = &logs.AggrFieldParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnmarshalJson(&param)
 	o.validFieldAggrParam(param)
 	result, err :=
 		logs.AggregationAttackWithType(param.StartTime, param.EndTime, param.Size, param.AppId)
@@ -96,10 +101,7 @@ func (o *AttackAlarmController) AggregationWithType() {
 // @router /aggr/ua [post]
 func (o *AttackAlarmController) AggregationWithUserAgent() {
 	var param = &logs.AggrFieldParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
-	}
+	o.UnmarshalJson(&param)
 	o.validFieldAggrParam(param)
 	result, err :=
 		logs.AggregationAttackWithUserAgent(param.StartTime, param.EndTime, param.Size, param.AppId)
@@ -111,11 +113,68 @@ func (o *AttackAlarmController) AggregationWithUserAgent() {
 
 // @router /search [post]
 func (o *AttackAlarmController) Search() {
-	var param = &logs.SearchAttackParam{}
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &param)
+	param, searchData := o.handleAttackSearchParam()
+	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime,
+		false, searchData, "event_time", param.Page,
+		param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
 	if err != nil {
-		o.ServeError(http.StatusBadRequest, "json decode error", err)
+		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
 	}
+	// golang禁止循环导包，因此es.go中不能有访问mongo的操作
+  	// 遍历result，加入rasp_version
+	for idx, r := range result {
+		if r["rasp_id"] != nil {
+			raspId := r["rasp_id"].(string)
+			rasp, err := models.GetRaspById(raspId)
+			if err == nil {
+				result[idx]["rasp_version"] = rasp.Version
+			}
+		}
+	}
+	o.Serve(map[string]interface{}{
+		"total":      total,
+		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
+		"page":       param.Page,
+		"perpage":    param.Perpage,
+		"data":       result,
+	})
+}
+
+// @router /aggr/vuln [post]
+func (o *AttackAlarmController) AggregationVuln() {
+	param, searchData := o.handleAttackSearchParam()
+	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime,
+		true, searchData, "event_time", param.Page,
+		param.Perpage, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+param.Data.AppId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
+	}
+	// golang禁止循环导包，因此es.go中不能有访问mongo的操作
+	// 遍历result，加入rasp_version
+	for idx, r := range result {
+		if r["rasp_id"] != nil {
+			raspId := r["rasp_id"].(string)
+			rasp, err := models.GetRaspById(raspId)
+			if err != nil {
+				result[idx]["rasp_version"] = "Unknown"
+			} else {
+				result[idx]["rasp_version"] = rasp.Version
+			}
+		}
+	}
+	o.Serve(map[string]interface{}{
+		"total":      total,
+		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
+		"page":       param.Page,
+		"perpage":    param.Perpage,
+		"data":       result,
+	})
+}
+
+func (o *AttackAlarmController) handleAttackSearchParam() (param *logs.SearchAttackParam,
+	searchData map[string]interface{}) {
+	param = &logs.SearchAttackParam{}
+	o.UnmarshalJson(&param)
 	if param.Data == nil {
 		o.ServeError(http.StatusBadRequest, "search data can not be empty")
 	}
@@ -136,17 +195,11 @@ func (o *AttackAlarmController) Search() {
 	if param.Data.StartTime > param.Data.EndTime {
 		o.ServeError(http.StatusBadRequest, "start_time cannot be greater than end_time")
 	}
-	if param.Page <= 0 {
-		o.ServeError(http.StatusBadRequest, "page must be greater than 0")
-	}
-	if param.Perpage <= 0 {
-		o.ServeError(http.StatusBadRequest, "perpage must be greater than 0")
-	}
+	o.ValidPage(param.Page, param.Perpage)
 	content, err := json.Marshal(param.Data)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to encode search data", err)
 	}
-	var searchData map[string]interface{}
 	err = json.Unmarshal(content, &searchData)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to decode search data", err)
@@ -154,18 +207,7 @@ func (o *AttackAlarmController) Search() {
 	delete(searchData, "start_time")
 	delete(searchData, "end_time")
 	delete(searchData, "app_id")
-	total, result, err := logs.SearchLogs(param.Data.StartTime, param.Data.EndTime, searchData, "event_time",
-		param.Page, param.Perpage, false, logs.AliasAttackIndexName+"-"+param.Data.AppId)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to search data from es", err)
-	}
-	o.Serve(map[string]interface{}{
-		"total":      total,
-		"total_page": math.Ceil(float64(total) / float64(param.Perpage)),
-		"page":       param.Page,
-		"perpage":    param.Perpage,
-		"data":       result,
-	})
+	return
 }
 
 func (o *AttackAlarmController) validFieldAggrParam(param *logs.AggrFieldParam) {
@@ -192,5 +234,9 @@ func (o *AttackAlarmController) validFieldAggrParam(param *logs.AggrFieldParam) 
 	}
 	if param.Size <= 0 {
 		o.ServeError(http.StatusBadRequest, "size must be greater than 0")
+	}
+
+	if param.Size > 1024 {
+		o.ServeError(http.StatusBadRequest, "size can not be greater than 1024")
 	}
 }

@@ -24,22 +24,27 @@
 #include "backend_response.h"
 #include <signal.h>
 #include "utils/time.h"
+#include "plugin_update_pkg.h"
 
 namespace openrasp
 {
+
+#ifndef sighandler_t
+typedef void (*sighandler_t)(int);
+#endif
+
 class LogCollectItem;
 
 class BaseAgent
 {
 public:
-  bool is_alive;
-  pid_t agent_pid;
-
   BaseAgent(std::string name);
 
   virtual void run() = 0;
   virtual void write_pid_to_shm(pid_t agent_pid) = 0;
-  virtual void install_signal_handler(__sighandler_t signal_handler);
+  virtual pid_t get_pid_from_shm() = 0;
+  virtual void install_sigterm_handler(sighandler_t signal_handler);
+  virtual std::string get_name() const;
 
 protected:
   std::string name;
@@ -55,9 +60,11 @@ public:
   HeartBeatAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+  virtual pid_t get_pid_from_shm();
+  virtual std::shared_ptr<PluginUpdatePackage> build_plugin_update_package(BaseReader *body_reader);
 
 private:
-  void do_heartbeat();
+  bool do_heartbeat();
 };
 
 class LogAgent : public BaseAgent
@@ -70,15 +77,17 @@ public:
   LogAgent();
   virtual void run();
   virtual void write_pid_to_shm(pid_t agent_pid);
+  virtual pid_t get_pid_from_shm();
 
 private:
-  static const long log_push_interval = 15;
-  static const long max_interval = 500;
+  static const unsigned long log_push_interval = 15;
+  static const unsigned long max_interval = 500;
   static const double factor;
 
 private:
   bool post_logs_via_curl(std::string &log_arr, std::string &url_string);
 };
+
 } // namespace openrasp
 
 #endif

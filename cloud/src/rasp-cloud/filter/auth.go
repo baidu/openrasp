@@ -26,13 +26,16 @@ func init() {
 	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
 		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Content-Type"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Content-Type", "X-OpenRASP-Token"},
 		ExposeHeaders:    []string{"Content-Length", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Content-Type"},
 		AllowCredentials: true,
 	}))
 	beego.InsertFilter("/v1/agent/*", beego.BeforeRouter, authAgent)
 	beego.InsertFilter("/v1/api/*", beego.BeforeRouter, authApi)
+	beego.InsertFilter("/v1/iast/auth", beego.BeforeRouter, authAgent)
+	beego.InsertFilter("/v1/iast/version", beego.BeforeRouter, authAgent)
 	beego.InsertFilter("/v1/user/islogin", beego.BeforeRouter, authApi)
+	beego.InsertFilter("/v1/user/default", beego.BeforeRouter, authApi)
 }
 
 func authAgent(ctx *context.Context) {

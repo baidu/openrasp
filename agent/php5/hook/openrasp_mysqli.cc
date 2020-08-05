@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
+#include "openrasp_sql.h"
 #include "openrasp_hook.h"
+#include "hook/data/sql_error_object.h"
+#include "hook/checker/v8_detector.h"
+#include "hook/data/sql_object.h"
 
 extern "C"
 {
@@ -23,21 +27,31 @@ extern "C"
 /**
  * mysqli相关hook点
  */
-HOOK_FUNCTION_EX(mysqli, mysqli, DB_CONNECTION);
-HOOK_FUNCTION_EX(real_connect, mysqli, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(mysqli, mysqli, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(mysqli, mysqli, SQL_ERROR);
+POST_HOOK_FUNCTION_EX(real_connect, mysqli, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(real_connect, mysqli, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(query, mysqli, SQL);
-// POST_HOOK_FUNCTION_EX(query, mysqli, SQL_SLOW_QUERY);
-HOOK_FUNCTION(mysqli_connect, DB_CONNECTION);
-HOOK_FUNCTION(mysqli_real_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION_EX(query, mysqli, SQL_ERROR);
+POST_HOOK_FUNCTION(mysqli_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysqli_connect, SQL_ERROR);
+POST_HOOK_FUNCTION(mysqli_real_connect, DB_CONNECTION);
+POST_HOOK_FUNCTION(mysqli_real_connect, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_query, SQL);
-// POST_HOOK_FUNCTION(mysqli_query, SQL_SLOW_QUERY);
+POST_HOOK_FUNCTION(mysqli_query, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_real_query, SQL);
+POST_HOOK_FUNCTION(mysqli_real_query, SQL_ERROR);
 PRE_HOOK_FUNCTION(mysqli_prepare, SQL_PREPARED);
+POST_HOOK_FUNCTION(mysqli_prepare, SQL_ERROR);
 PRE_HOOK_FUNCTION_EX(prepare, mysqli, SQL_PREPARED);
+POST_HOOK_FUNCTION_EX(prepare, mysqli, SQL_ERROR);
 
-static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p, zend_bool is_real_connect, zend_bool in_ctor)
+static long fetch_mysqli_errno(const char *function_name, uint32_t param_count, zval *params[] TSRMLS_DC);
+static std::string fetch_mysqli_error(const char *function_name, uint32_t param_count, zval *params[] TSRMLS_DC);
+
+static bool mysqli_init_sql_username_data(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj, zend_bool is_real_connect, zend_bool in_ctor)
 {
-    char *hostname = NULL, *username = NULL, *passwd = NULL, *dbname = NULL, *socket = NULL;
+    char *hostname = nullptr, *username = nullptr, *passwd = nullptr, *dbname = nullptr, *socket = nullptr;
     int hostname_len = 0, username_len = 0, passwd_len = 0, dbname_len = 0, socket_len = 0;
     long port = MYSQL_PORT, flags = 0;
     zval *object = getThis();
@@ -57,7 +71,7 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
         if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|ssssls", &hostname, &hostname_len, &username, &username_len,
                                   &passwd, &passwd_len, &dbname, &dbname_len, &port, &socket, &socket_len) == FAILURE)
         {
-            return;
+            return false;
         }
     }
     else
@@ -68,7 +82,7 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
                                       &hostname, &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname,
                                       &dbname_len, &port, &socket, &socket_len, &flags) == FAILURE)
             {
-                return;
+                return false;
             }
         }
         else
@@ -77,13 +91,17 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
                                              &hostname_len, &username, &username_len, &passwd, &passwd_len, &dbname,
                                              &dbname_len, &port, &socket, &socket_len, &flags) == FAILURE)
             {
-                return;
+                return false;
             }
         }
     }
     if (!username)
     {
         username = default_user;
+    }
+    if (!passwd)
+    {
+        passwd = default_password;
     }
     if (!port)
     {
@@ -97,239 +115,277 @@ static void init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAMETERS, sql_conne
     {
         socket = default_socket;
     }
-    sql_connection_p->set_server("mysql");
-    sql_connection_p->set_username(SAFE_STRING(username));
-    sql_connection_p->set_host(SAFE_STRING(hostname));
-    sql_connection_p->set_using_socket(nullptr == hostname || strcmp("localhost", hostname) == 0);
-    sql_connection_p->set_socket(SAFE_STRING(socket));
-    sql_connection_p->set_port(port);
+    sql_connection_obj.set_server("mysql");
+    sql_connection_obj.set_username(SAFE_STRING(username));
+    sql_connection_obj.set_password(SAFE_STRING(passwd));
+    sql_connection_obj.set_using_socket(nullptr == hostname || strcmp("localhost", hostname) == 0);
+    sql_connection_obj.set_socket(SAFE_STRING(socket));
+    sql_connection_obj.set_host(SAFE_STRING(hostname));
+    sql_connection_obj.set_port(port);
+    return true;
 }
 
-static void init_global_mysqli_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool global_mysqli_connect_conn_init(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 0);
+    return mysqli_init_sql_username_data(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj, 0, 0);
 }
 
-static void init_global_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool global_mysqli_real_connect_conn_init(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 0);
+    return mysqli_init_sql_username_data(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj, 1, 0);
 }
 
-static void init_mysqli__construct_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool mysqli__construct_conn_init(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 0, 1);
+    return mysqli_init_sql_username_data(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj, 0, 1);
 }
 
-static void init_mysqli_real_connect_conn_entry(INTERNAL_FUNCTION_PARAMETERS, sql_connection_entry *sql_connection_p)
+static bool mysqli_real_connect_conn_init(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    init_mysqli_connection_entry(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_p, 1, 1);
+    return mysqli_init_sql_username_data(INTERNAL_FUNCTION_PARAM_PASSTHRU, sql_connection_obj, 1, 1);
+}
+
+static void mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAMETERS, init_sql_connection_t connection_init_func)
+{
+    long error_code = fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr TSRMLS_CC);
+    std::string error_msg = fetch_mysqli_error("mysqli_connect_error", 0, nullptr TSRMLS_CC);
+    openrasp::data::SqlConnectionObject sco;
+    connection_init_func(INTERNAL_FUNCTION_PARAM_PASSTHRU, sco);
+    openrasp::data::SqlErrorObject seo(sco, "mysql", error_code, error_msg);
+    openrasp::checker::V8Detector error_checker(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+    error_checker.run();
 }
 
 //mysqli::mysqli
-void pre_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_mysqli_mysqli_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
+    if (Z_TYPE_P(this_ptr) == IS_OBJECT && 0 == fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr TSRMLS_CC))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli__construct_conn_entry, 0);
+        openrasp::data::SqlConnectionObject sco;
+        sql_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, mysqli__construct_conn_init, sco);
+    }
+}
+
+//mysqli::mysqli error
+void post_mysqli_mysqli_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(this_ptr) == IS_OBJECT)
+    {
+        mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, mysqli__construct_conn_init);
     }
 }
 
 //mysqli::real_connect
-void pre_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(this_ptr) == IS_OBJECT)
+    if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_mysqli_real_connect_conn_entry, 0);
+        openrasp::data::SqlConnectionObject sco;
+        sql_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, mysqli_real_connect_conn_init, sco);
+    }
+}
+
+//mysqli::real_connect error
+void post_mysqli_real_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
+    {
+        mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, mysqli_real_connect_conn_init);
     }
 }
 
 //mysqli::query
 void pre_mysqli_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *query = NULL;
-    int query_len;
+    zval *query = nullptr;
     long resultmode = MYSQLI_STORE_RESULT;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &query, &query_len, &resultmode) == FAILURE)
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|l", &query, &resultmode) == FAILURE)
     {
         return;
     }
-    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, "mysql" TSRMLS_CC);
 }
 
-void post_mysqli_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void post_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    long resultmode = MYSQLI_STORE_RESULT;
-    int argc = ZEND_NUM_ARGS();
-    if (2 == argc)
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
-        zval ***ppp_args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
-        if (zend_get_parameters_array_ex(argc, ppp_args) == SUCCESS &&
-            Z_TYPE_PP(ppp_args[1]) == IS_LONG)
+        zval *query = nullptr;
+        long resultmode = MYSQLI_STORE_RESULT;
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|l", &query, &resultmode) == FAILURE)
         {
-            resultmode = Z_LVAL_PP(ppp_args[1]);
+            return;
         }
-        efree(ppp_args);
-    }
-    long num_rows = 0;
-    if (resultmode == MYSQLI_STORE_RESULT && Z_TYPE_P(return_value) == IS_OBJECT)
-    {
-        zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("mysqli_num_rows", 1, args TSRMLS_CC);
-    }
-    else if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
-    {
         zval *args[1];
         args[0] = this_ptr;
-        num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
-    }
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows TSRMLS_CC);
+        int param_num = 1;
+        long error_code = fetch_mysqli_errno("mysqli_errno", param_num, args TSRMLS_CC);
+        std::string error_msg = fetch_mysqli_error("mysqli_error", param_num, args TSRMLS_CC);
+        openrasp::data::SqlErrorObject seo(openrasp::data::SqlObject("mysql", query), "mysql", error_code, error_msg);
+        openrasp::checker::V8Detector v8_detector(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+        v8_detector.run();
     }
 }
 
 //mysqli_connect
-void pre_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_global_mysqli_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(return_value) == IS_OBJECT)
+    if (Z_TYPE_P(return_value) == IS_OBJECT && 0 == fetch_mysqli_errno("mysqli_connect_errno", 0, nullptr TSRMLS_CC))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_connect_conn_entry, 0);
+        openrasp::data::SqlConnectionObject sco;
+        sql_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, global_mysqli_connect_conn_init, sco);
+    }
+}
+
+//mysqli_connect error
+void post_global_mysqli_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
+    {
+        mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, global_mysqli_connect_conn_init);
     }
 }
 
 //mysqli_real_connect
-void pre_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
-{
-    if (OPENRASP_CONFIG(security.enforce_policy))
-    {
-        if (check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 1))
-        {
-            handle_block(TSRMLS_C);
-        }
-    }
-}
 void post_global_mysqli_real_connect_DB_CONNECTION(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    if (!OPENRASP_CONFIG(security.enforce_policy) && Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
+    if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
     {
-        check_database_connection_username(INTERNAL_FUNCTION_PARAM_PASSTHRU, init_global_mysqli_real_connect_conn_entry, 0);
+        openrasp::data::SqlConnectionObject sco;
+        sql_connection_policy_check(INTERNAL_FUNCTION_PARAM_PASSTHRU, global_mysqli_real_connect_conn_init, sco);
+    }
+}
+
+//mysqli_real_connect error
+void post_global_mysqli_real_connect_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
+    {
+        mysqli_connect_error_intercept(INTERNAL_FUNCTION_PARAM_PASSTHRU, global_mysqli_real_connect_conn_init);
     }
 }
 
 //mysqli_query
 void pre_global_mysqli_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *mysql_link;
-    char *query = NULL;
-    int query_len;
+    zval *mysql_link = nullptr;
+    zval *query = nullptr;
     long resultmode = MYSQLI_STORE_RESULT;
 
-    if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "os|l", &mysql_link, &query, &query_len, &resultmode) == FAILURE)
+    if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "oz|l", &mysql_link, &query, &resultmode) == FAILURE)
     {
         return;
     }
-    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, "mysql" TSRMLS_CC);
 }
-void post_global_mysqli_query_SQL_SLOW_QUERY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+
+void post_global_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    long resultmode = MYSQLI_STORE_RESULT;
-    int argc = ZEND_NUM_ARGS();
-    zval ***ppp_args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
-    if (zend_get_parameters_array_ex(argc, ppp_args) == SUCCESS)
+    if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value))
     {
-        if (3 == argc && Z_TYPE_PP(ppp_args[2]) == IS_LONG)
+        zval *mysql_link = nullptr;
+        zval *query = nullptr;
+        long resultmode = MYSQLI_STORE_RESULT;
+
+        if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "oz|l", &mysql_link, &query, &resultmode) == FAILURE)
         {
-            resultmode = Z_LVAL_PP(ppp_args[2]);
+            return;
         }
-    }
-    long num_rows = 0;
-    if (resultmode == MYSQLI_STORE_RESULT && Z_TYPE_P(return_value) == IS_OBJECT)
-    {
         zval *args[1];
-        args[0] = return_value;
-        num_rows = fetch_rows_via_user_function("mysqli_num_rows", 1, args TSRMLS_CC);
-    }
-    else if (Z_TYPE_P(return_value) == IS_BOOL && Z_BVAL_P(return_value))
-    {
-        zval *args[1];
-        args[0] = *ppp_args[0];
-        num_rows = fetch_rows_via_user_function("mysqli_affected_rows", 1, args TSRMLS_CC);
-    }
-    efree(ppp_args);
-    if (num_rows >= OPENRASP_CONFIG(sql.slowquery.min_rows))
-    {
-        slow_query_alarm(num_rows TSRMLS_CC);
+        int param_num = 0;
+        if (nullptr != mysql_link)
+        {
+            args[0] = mysql_link;
+            param_num = 1;
+        }
+        long error_code = fetch_mysqli_errno("mysqli_errno", param_num, args TSRMLS_CC);
+        std::string error_msg = fetch_mysqli_error("mysqli_error", param_num, args TSRMLS_CC);
+        openrasp::data::SqlErrorObject seo(openrasp::data::SqlObject("mysql", query), "mysql", error_code, error_msg);
+        openrasp::checker::V8Detector v8_detector(seo, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+        v8_detector.run();
     }
 }
 
 //mysqli_real_query
 void pre_global_mysqli_real_query_SQL(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *mysql_link;
-    char *query = NULL;
-    int query_len;
+    zval *mysql_link = nullptr;
+    zval *query = nullptr;
 
-    if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "os", &mysql_link, &query, &query_len) == FAILURE)
+    if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "oz", &mysql_link, &query) == FAILURE)
     {
         return;
     }
 
-    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, "mysql" TSRMLS_CC);
+}
+
+void post_global_mysqli_real_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_global_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_global_mysqli_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *query = NULL;
-    int query_len;
-    zval *mysql_link;
+    zval *query = nullptr;
+    zval *mysql_link = nullptr;
 
-    if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "os", &mysql_link, &query, &query_len) == FAILURE)
+    if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "oz", &mysql_link, &query) == FAILURE)
     {
         return;
     }
 
-    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, "mysql" TSRMLS_CC);
+}
+
+void post_global_mysqli_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_global_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 void pre_mysqli_prepare_SQL_PREPARED(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *query = NULL;
-    int query_len;
+    zval *query = nullptr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &query, &query_len) == FAILURE)
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &query) == FAILURE)
     {
         return;
     }
-    plugin_sql_check(query, query_len, "mysql" TSRMLS_CC);
+    plugin_sql_check(query, "mysql" TSRMLS_CC);
+}
+
+void post_mysqli_prepare_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+{
+    post_mysqli_query_SQL_ERROR(OPENRASP_INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+static long fetch_mysqli_errno(const char *function_name, uint32_t param_count, zval *params[] TSRMLS_DC)
+{
+    long error_code = 0;
+    zval function, retval;
+    INIT_ZVAL(function);
+    ZVAL_STRING(&function, function_name, 0);
+    if (call_user_function(EG(function_table), nullptr, &function, &retval, param_count, params TSRMLS_CC) == SUCCESS &&
+        Z_TYPE(retval) == IS_LONG)
+    {
+        error_code = Z_LVAL(retval);
+    }
+    return error_code;
+}
+
+static std::string fetch_mysqli_error(const char *function_name, uint32_t param_count, zval *params[] TSRMLS_DC)
+{
+    std::string error_msg;
+    zval function, retval;
+    INIT_ZVAL(function);
+    ZVAL_STRING(&function, function_name, 0);
+    if (call_user_function(EG(function_table), nullptr, &function, &retval, param_count, params TSRMLS_CC) == SUCCESS)
+    {
+        if (Z_TYPE(retval) == IS_STRING)
+        {
+            error_msg = std::string(Z_STRVAL(retval));
+        }
+        zval_dtor(&retval);
+    }
+    return error_msg;
 }

@@ -19,6 +19,10 @@
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include "openrasp_log.h"
 
 #ifdef PHP_WIN32
 #include "win32/time.h"
@@ -76,7 +80,7 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
     pAdapterInfo = (IP_ADAPTER_INFO *)MALLOC(sizeof(IP_ADAPTER_INFO));
     if (pAdapterInfo == NULL)
     {
-        openrasp_error(E_WARNING, LOG_ERROR, _("Error allocating memory needed to call GetAdaptersinfo."));
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Error allocating memory needed to call GetAdaptersinfo."));
     }
 
     if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW)
@@ -85,7 +89,7 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
         pAdapterInfo = (IP_ADAPTER_INFO *)MALLOC(ulOutBufLen);
         if (pAdapterInfo == NULL)
         {
-            openrasp_error(E_WARNING, LOG_ERROR, _("Error allocating memory needed to call GetAdaptersinfo."));
+            openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("Error allocating memory needed to call GetAdaptersinfo."));
         }
     }
     if (pAdapterInfo != NULL && (dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR)
@@ -102,11 +106,12 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
     struct ifaddrs *ifaddr, *ifa;
     if (getifaddrs(&ifaddr) == -1)
     {
-        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs() error: %s"), strerror(errno));
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("getifaddrs() error: %s"), strerror(errno));
     }
     else
     {
-        int n, s;
+        int n = 0;
+        int s = 0;
         char host[NI_MAXHOST];
         for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++)
         {
@@ -125,7 +130,7 @@ void fetch_if_addrs(std::map<std::string, std::string> &if_addr_map)
                                 host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
                 if (s != 0)
                 {
-                    openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs() error: getnameinfo failed - %s."), gai_strerror(s));
+                    openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("getifaddrs() error: getnameinfo failed - %s."), gai_strerror(s));
                 }
                 if_addr_map.insert(std::pair<std::string, std::string>(ifa->ifa_name, host));
             }
@@ -140,7 +145,7 @@ void fetch_hw_addrs(std::vector<std::string> &hw_addrs)
     struct ifaddrs *ifaddr, *ifa;
     if (getifaddrs(&ifaddr) == -1)
     {
-        openrasp_error(E_WARNING, LOG_ERROR, _("getifaddrs error: %s"), strerror(errno));
+        openrasp_error(LEVEL_WARNING, RUNTIME_ERROR, _("getifaddrs error: %s"), strerror(errno));
     }
     else
     {
@@ -215,35 +220,65 @@ bool fetch_source_in_ip_packets(char *local_ip, size_t len, char *url)
         }
         php_url_free(resource);
     }
-    if (nullptr == server)
+    if (nullptr != server)
     {
-        return false;
+        struct sockaddr_in serv;
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        fcntl(sock, F_SETFL, O_NONBLOCK);
+        if (sock >= 0)
+        {
+            memset(&serv, 0, sizeof(serv));
+            serv.sin_family = AF_INET;
+            memcpy(&(serv.sin_addr.s_addr), server->h_addr, server->h_length);
+            serv.sin_port = htons(backend_port);
+            int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
+            struct sockaddr_in name;
+            socklen_t namelen = sizeof(name);
+            err = getsockname(sock, (struct sockaddr *)&name, &namelen);
+            const char *p = inet_ntop(AF_INET, &name.sin_addr, local_ip, len);
+            close(sock);
+            return nullptr != p;
+        }
     }
-    struct sockaddr_in serv;
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    fcntl(sock, F_SETFL, O_NONBLOCK);
-    if (sock < 0)
+    return false;
+}
+
+std::vector<std::string> lookup_host(const std::string &host)
+{
+    std::vector<std::string> ips;
+    struct addrinfo hints, *res;
+    int errcode;
+    char addrstr[100];
+    void *ptr;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_CANONNAME;
+
+    errcode = getaddrinfo(host.c_str(), nullptr, &hints, &res);
+    if (errcode == 0)
     {
-        return false;
+        while (res)
+        {
+            inet_ntop(res->ai_family, res->ai_addr->sa_data, addrstr, 100);
+
+            switch (res->ai_family)
+            {
+            case AF_INET:
+                ptr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
+                break;
+            case AF_INET6:
+                ptr = &((struct sockaddr_in6 *)res->ai_addr)->sin6_addr;
+                break;
+            }
+            inet_ntop(res->ai_family, ptr, addrstr, 100);
+            ips.push_back(addrstr);
+            res = res->ai_next;
+        }
     }
-    memset(&serv, 0, sizeof(serv));
-    serv.sin_family = AF_INET;
-    memcpy(&(serv.sin_addr.s_addr), server->h_addr, server->h_length);
-    serv.sin_port = htons(backend_port);
-    int err = connect(sock, (const struct sockaddr *)&serv, sizeof(serv));
-    struct sockaddr_in name;
-    socklen_t namelen = sizeof(name);
-    err = getsockname(sock, (struct sockaddr *)&name, &namelen);
-    const char *p = inet_ntop(AF_INET, &name.sin_addr, local_ip, len);
-    if (nullptr == p)
-    {
-        openrasp_error(E_WARNING, LOG_ERROR, _("inet_ntop() error: %s"), strerror(errno));
-        close(sock);
-        return false;
-    }
-    close(sock);
-    return true;
+    std::sort(ips.begin(), ips.end());
+    return ips;
 }
 
 } // namespace openrasp
-

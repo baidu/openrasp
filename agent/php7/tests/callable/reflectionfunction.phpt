@@ -6,13 +6,13 @@ $plugin = <<<EOF
 RASP.algorithmConfig = {
      webshell_callable: {
         name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
-        action: 'block'
+        action: 'block',
+        functions: [
+            'system', 'exec'
+        ] 
     }
 }
 EOF;
-$conf = <<<CONF
-webshell_callable.blacklist=["system", "exec"]
-CONF;
 include(__DIR__.'/../skipif.inc');
 ?>
 --INI--

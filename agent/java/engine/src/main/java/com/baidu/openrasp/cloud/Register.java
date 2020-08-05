@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@ package com.baidu.openrasp.cloud;
 
 import com.baidu.openrasp.cloud.model.CloudCacheModel;
 import com.baidu.openrasp.cloud.model.CloudRequestUrl;
-import com.baidu.openrasp.cloud.model.ErrorType;
 import com.baidu.openrasp.cloud.model.GenericResponse;
 import com.baidu.openrasp.cloud.utils.CloudUtils;
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.tool.OSUtil;
 import com.baidu.openrasp.tool.model.ApplicationModel;
+import com.baidu.openrasp.tool.model.BuildRASPModel;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
@@ -36,11 +38,18 @@ import java.util.Map;
  */
 public class Register {
     private static final int REGISTER_DELAY = 300 * 1000;
+    private RegisterCallback callback;
 
-    public Register() {
+    public Register(RegisterCallback callback) {
+        this.callback = callback;
         Thread thread = new Thread(new RegisterThread());
+        thread.setName("OpenRASP Register Thread");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    public static interface RegisterCallback {
+        void call();
     }
 
     class RegisterThread implements Runnable {
@@ -49,41 +58,52 @@ public class Register {
         @Override
         public void run() {
             while (!this.registerFlag) {
-                String content = new Gson().toJson(GenerateParameters());
-                String url = CloudRequestUrl.CLOUD_REGISTER_URL;
-                GenericResponse response = new CloudHttp().request(url, content);
-                if (CloudUtils.checkRequestResult(response)) {
-                    this.registerFlag = true;
-                    Config.getConfig().setHookWhiteAll("false");
-                    System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management");
-                    CloudManager.init();
-                } else {
-                    System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
-                    CloudManager.LOGGER.warn(CloudUtils.handleError(ErrorType.REGISTER_ERROR, response));
+                try {
+                    String content = new Gson().toJson(generateParameters());
+                    String url = CloudRequestUrl.CLOUD_REGISTER_URL;
+                    GenericResponse response = new CloudHttp().commonRequest(url, content);
+                    if (CloudUtils.checkResponse(response)) {
+                        this.registerFlag = true;
+                        Config.getConfig().setHookWhiteAll("false");
+                        System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management, please refer to rasp logs for details");
+                        CloudManager.LOGGER.info("[OpenRASP] RASP agent successfully registered,registration details are as follows: \n" + content);
+                        callback.call();
+                    } else {
+                        System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");
+                        String message = CloudUtils.handleError(ErrorType.REGISTER_ERROR, response);
+                        LogTool.warn(ErrorType.REGISTER_ERROR, message);
+                    }
+                } catch (Throwable e) {
+                    LogTool.warn(ErrorType.REGISTER_ERROR, e.getMessage(), e);
                 }
+
                 try {
                     Thread.sleep(REGISTER_DELAY);
                 } catch (InterruptedException e) {
-                    //continue next loop
+                    LogTool.warn(ErrorType.REGISTER_ERROR, e.getMessage(), e);
                 }
             }
         }
     }
 
-    private static Map<String, Object> GenerateParameters() {
+    private static Map<String, Object> generateParameters() {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("id", CloudCacheModel.getInstance().getRaspId());
-        params.put("version", ApplicationModel.getRaspVersion());
+        params.put("version", BuildRASPModel.getRaspVersion());
         params.put("hostname", OSUtil.getHostName());
+        params.put("os", OSUtil.getOs());
         params.put("language", "java");
         params.put("language_version", System.getProperty("java.version"));
         params.put("server_type", ApplicationModel.getServerName());
         params.put("server_version", ApplicationModel.getVersion());
-        String raspHome = Config.getConfig().getBaseDirectory();
-        params.put("rasp_home", raspHome);
+        params.put("rasp_home", Config.getConfig().getBaseDirectory());
         params.put("register_ip", CloudCacheModel.getInstance().getMasterIp());
-        int heartbeatInterval = Config.getConfig().getHeartbeatInterval();
-        params.put("heartbeat_interval",heartbeatInterval);
+        params.put("heartbeat_interval", Config.getConfig().getHeartbeatInterval());
+        params.put("environ", ApplicationModel.getSystemEnv());
+        String VMType = ApplicationModel.getVMType();
+        if (VMType != null) {
+            params.put("host_type", VMType);
+        }
         return params;
     }
 }

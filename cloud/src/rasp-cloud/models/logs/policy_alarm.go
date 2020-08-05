@@ -18,96 +18,22 @@ import (
 	"fmt"
 	"crypto/md5"
 	"github.com/astaxie/beego"
+	"rasp-cloud/conf"
 )
-
-type RaspLog struct {
-	content string
-}
 
 var (
-	PolicyIndexName      = "openrasp-policy-alarm"
-	AliasPolicyIndexName = "real-openrasp-policy-alarm"
-	PolicyEsMapping      = `
-	{
-		"settings": {
-			"analysis": {
-				"normalizer": {
-					"lowercase_normalizer": {
-						"type": "custom",
-						"filter": ["lowercase"]
-					}
-				}     
-			}
-		},
-		"mappings": {
-			"policy-alarm": {
-				"_all": {
-					"enabled": false
-				},
-				"properties": {
-					"@timestamp":{
-						"type":"date"
-         			},
-					"event_type": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"server_hostname": {
-						"type": "keyword",
-						"ignore_above": 256,
-						"normalizer": "lowercase_normalizer"
-					},
-					"server_type": {
-						"type": "keyword",
-						"ignore_above": 64
-					},
-					"server_nic": {
-						"type": "nested",
-						"properties": {
-							"name": {
-								"type": "keyword",
-								"ignore_above": 256
-							},
-							"ip": {
-								"type": "keyword",
-								"ignore_above": 256
-							}
-						}
-					},
-					"app_id": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"rasp_id": {
-						"type": "keyword",
-						"ignore_above": 256
-					},
-					"event_time": {
-						"type": "date"
-					},
-					"stack_trace": {
-						"type": "keyword"
-					},
-					"policy_id": {
-						"type": "long"
-					},
-					"message": {
-						"type": "keyword"
-					},
-					"stack_md5": {
-						"type": "keyword",
-						"ignore_above": 64
-					},
-					"policy_params": {
-						"type": "object",
-						"enabled":"false"
-					}
-				}
-			}
-		}
+	PolicyAlarmInfo = AlarmLogInfo{
+		EsType:       "policy-alarm",
+		EsIndex:      "openrasp-policy-alarm",
+		EsAliasIndex: "real-openrasp-policy-alarm",
+		AlarmBuffer:  make(chan map[string]interface{}, conf.AppConfig.AlarmBufferSize),
+		FileLogger:   initAlarmFileLogger("openrasp-logs/policy-alarm", "policy.log"),
 	}
-`
 )
+
+func init() {
+	registerAlarmInfo(&PolicyAlarmInfo)
+}
 
 func AddPolicyAlarm(alarm map[string]interface{}) error {
 	defer func() {
@@ -115,17 +41,17 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 			beego.Error("failed to add policy alarm: ", r)
 		}
 	}()
-	if stack, ok := alarm["stack_trace"]; ok && stack != nil && stack != "" {
-		_, ok = stack.(string)
-		if ok {
-			alarm["stack_md5"] = fmt.Sprintf("%x", md5.Sum([]byte(stack.(string))))
-		}
-	}
+	putStackMd5(alarm, "policy_params")
 	idContent := ""
 	idContent += fmt.Sprint(alarm["rasp_id"])
 	idContent += fmt.Sprint(alarm["policy_id"])
 	idContent += fmt.Sprint(alarm["stack_md5"])
-	if alarm["policy_id"] == "3006" && alarm["policy_params"] != nil {
+	idContent += fmt.Sprint(alarm["message"])
+	if alarm["policy_id"] == "3007" && alarm["policy_params"] != nil {
+		if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok && len(policyParam) > 0 {
+			idContent += fmt.Sprint(policyParam["type"])
+		}
+	} else if alarm["policy_id"] == "3006" && alarm["policy_params"] != nil {
 		if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok && len(policyParam) > 0 {
 			idContent += fmt.Sprint(policyParam["connectionString"])
 			idContent += fmt.Sprint(policyParam["port"])
@@ -134,7 +60,15 @@ func AddPolicyAlarm(alarm map[string]interface{}) error {
 			idContent += fmt.Sprint(policyParam["socket"])
 			idContent += fmt.Sprint(policyParam["username"])
 		}
+	} else if alarm["policy_id"] == "3009" && alarm["policy_params"] != nil {
+		if policyParam, ok := alarm["policy_params"].(map[string]interface{}); ok && len(policyParam) > 0 {
+			idContent += fmt.Sprint(policyParam["webroot"])
+		}
 	}
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
-	return AddAlarmFunc(PolicyAlarmType, alarm)
+	err := AddLogWithKafka(AttackAlarmInfo.EsType, alarm)
+	if err != nil {
+		return err
+	}
+	return AddAlarmFunc(PolicyAlarmInfo.EsType, alarm)
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,14 @@ import java.lang.instrument.Instrumentation;
  */
 public interface Module {
 
-    void start(String agentArg, Instrumentation inst) throws Exception;
+    String START_MODE_ATTACH = "attach";
+    String START_MODE_NORMAL = "normal";
 
-    void release();
+    String START_ACTION_INSTALL = "install";
+    String START_ACTION_UNINSTALL = "uninstall";
+
+    void start(String mode, Instrumentation inst) throws Throwable;
+
+    void release(String mode) throws Throwable;
 
 }

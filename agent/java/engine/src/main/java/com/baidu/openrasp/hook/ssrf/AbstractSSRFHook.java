@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,11 @@ package com.baidu.openrasp.hook.ssrf;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
-import com.baidu.openrasp.plugin.js.engine.JSContext;
-import com.baidu.openrasp.plugin.js.engine.JSContextFactory;
-import com.google.gson.Gson;
-import org.mozilla.javascript.Scriptable;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
@@ -50,18 +47,40 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
      * ssrf 检测的入口
      *
      * @param url      http 请求的 url
-     * @param hostName http 请求的 host
+     * @param hostname http 请求的 host
      * @param function http 请求的方式
      */
-    protected static void checkHttpUrl(String url, String hostName, String function) {
-        JSContext cx = JSContextFactory.enterAndInitContext();
-        Scriptable params = cx.newObject(cx.getScope());
-        params.put("url", params, url);
-        params.put("hostname", params, hostName);
-        params.put("function", params, function);
+    static void checkHttpUrl(String url, String hostname, String port, String function) {
+        checkHttpUrl(getSsrfParam(url, hostname, port, function));
+    }
+
+    /**
+     * ssrf 检测的入口
+     *
+     * @param params 检测参数
+     */
+    static void checkHttpUrl(HashMap<String, Object> params) {
+        if (params != null) {
+            HookHandler.doCheck(CheckParameter.Type.SSRF, params);
+        }
+    }
+
+    static HashMap<String, Object> getSsrfParam(String url, String hostname, String port, String function) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("url", url);
+        params.put("hostname", hostname);
+        params.put("function", function);
+        params.put("port", port);
+        LinkedList<String> ip = getIpList(hostname);
+        Collections.sort(ip);
+        params.put("ip", ip);
+        return params;
+    }
+
+    public static LinkedList<String> getIpList(String hostname) {
         LinkedList<String> ip = new LinkedList<String>();
         try {
-            InetAddress[] addresses = InetAddress.getAllByName(hostName);
+            InetAddress[] addresses = InetAddress.getAllByName(hostname);
             for (InetAddress address : addresses) {
                 if (address != null && address instanceof Inet4Address) {
                     ip.add(address.getHostAddress());
@@ -70,13 +89,8 @@ public abstract class AbstractSSRFHook extends AbstractClassHook {
         } catch (Throwable t) {
             // ignore
         }
-        Collections.sort(ip);
-        Scriptable array = cx.newArray(cx.getScope(), ip.toArray());
-        params.put("ip", params, array);
-        //如果在lru缓存中不进检测
-        if (!HookHandler.commonLRUCache.isContainsKey(new Gson().toJson(params))) {
-            HookHandler.doCheck(CheckParameter.Type.SSRF, params);
-        }
+        return ip;
     }
+
 
 }

@@ -24,8 +24,6 @@ END;
 --FILE--
 <?php
 include(__DIR__.'/../include.txt');
-echo 'no check';
 ?>
---EXPECT--
-openrasp
-no check
+--EXPECTREGEX--
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

@@ -5,45 +5,37 @@
 'use strict';
 var plugin = new RASP('test');
 
-var clean = {
-    action: 'ignore',
-    message: '无风险'
-};
-
-function checkContext(context, paramInit, hookName) {
+function checkContext(context) {
     function assert(flag) {
         if (!flag) {
-            throw new PluginError(flag);
+            throw new Error();
         }
     }
 
-    if (hookName === 'request') {
-        if (/param-encoding/.test(context.path)) {
-            assert(context.parameter.test)
-        } else {
-            assert(!context.parameter.test)
-        }
-    } else {
-        assert(context.method);
-        assert(context.protocol === 'http/1.1');
-        assert(context.server);
-        assert(context.url);
-        assert(context.path);
-        if (paramInit === true) {
-            assert(context.parameter.test[0] === 'a' && context.parameter.test[1] === 'b');
-        } else {
-            assert(JSON.stringify(context.parameter) === "{}");
-        }
-        assert(context.header['test-test'] === 'Test-Test');
-        assert(context.querystring);
-        assert(context.remoteAddr);
-    }
+    assert(context.method);
+    assert(context.protocol === 'http/1.1');
+    assert(context.server);
+    assert(context.url);
+    assert(context.path);
+    assert(context.parameter.test[0] === 'a' && context.parameter.test[1] === 'b');
+    assert(context.header['test-test'] === 'Test-Test');
+    assert(context.querystring);
+    assert(context.remoteAddr);
 }
 
 plugin.register('request', function (params, context) {
-    checkContext(context, true, 'request');
-    plugin.log('request', params);
-    if (/request/.test(context.path) || /param-encoding/.test(context.path)) {
+    if (/request/.test(context.path)) {
+        plugin.log('request', params);
+        return {
+            action: 'block'
+        }
+    }
+});
+
+plugin.register('request', function (params, context) {
+    if (/param-encoding/.test(context.path)) {
+        plugin.log('param-encoding', params, context);
+        checkContext(context);
         return {
             action: 'block'
         }
@@ -72,7 +64,7 @@ plugin.register('readFile', function (params, context) {
 plugin.register('writeFile', function (params, context) {
     checkContext(context);
     plugin.log('writeFile', params);
-    if (params.name === 'writeFileTest') {
+    if (params.path === '/tmp/writeFileTest') {
         return {
             action: 'block'
         }
@@ -90,18 +82,25 @@ plugin.register('fileUpload', function (params, context) {
 });
 
 plugin.register('sql', function (params, context) {
-    checkContext(context);
     plugin.log('sql', params);
-    if (params.query === 'SELECT * FROM user') {
-        return {
-            action: 'block'
+    if (context.protocol === 'dubbo') {
+        if (params.query === 'SELECT * FROM user') {
+            return {
+                action: 'block'
+            }
+        }
+    } else {
+        if (params.query === 'SELECT * FROM user') {
+            return {
+                action: 'block'
+            }
         }
     }
 });
 
 plugin.register('command', function (params, context) {
     checkContext(context);
-    plugin.log('command', params);
+    plugin.log('command', params, context);
     if (params.command === 'pwd') {
         return {
             action: 'block'
@@ -110,7 +109,7 @@ plugin.register('command', function (params, context) {
 });
 
 plugin.register('xxe', function (params, context) {
-    checkContext(context, true);
+    checkContext(context);
     plugin.log('xxe', params);
     if (params.entity.endsWith('/etc/passwd')) {
         return {
@@ -140,7 +139,6 @@ plugin.register('deserialization', function (params, context) {
 });
 
 plugin.register('include', function (params, context) {
-    checkContext(context);
     plugin.log('include', params);
     if (/passwd/.test(params.url)) {
         return {
@@ -150,9 +148,8 @@ plugin.register('include', function (params, context) {
 });
 
 plugin.register('ssrf', function (params, context) {
-    checkContext(context);
     plugin.log('ssrf', params);
-    if (params.hostname === '0x7f.0x0.0x0.0x1' && params.url === 'http://0x7f.0x0.0x0.0x1:8080/app') {
+    if (params.hostname === '127.0.0.1' && params.url === 'http://127.0.0.1:8080/app') {
         return {
             action: 'block'
         }

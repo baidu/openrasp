@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "hook/data/file_op_object.h"
+#include "hook/checker/v8_detector.h"
 #include "openrasp_hook.h"
 
 /**
@@ -25,57 +27,16 @@ PRE_HOOK_FUNCTION(scandir, DIRECTORY);
 
 static inline void _hook_php_do_opendir(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-	openrasp::Isolate *isolate = OPENRASP_V8_G(isolate);
-	if (!isolate)
+	zval *dirname;
+
+	if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "z", &dirname) != SUCCESS)
 	{
 		return;
 	}
 
-	zend_string *dirname;
-
-	if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "P", &dirname) != SUCCESS)
-	{
-		return;
-	}
-
-	if (ZSTR_LEN(dirname) < 1)
-	{
-		return;
-	}
-
-	php_stream *dirp;
-	dirp = php_stream_opendir(ZSTR_VAL(dirname), IGNORE_PATH, NULL);
-	if (!dirp)
-	{
-		return;
-	}
-	php_stream_close(dirp);
-	std::string real_path = openrasp_real_path(ZSTR_VAL(dirname), ZSTR_LEN(dirname), false, OPENDIR);
-	if (real_path.empty())
-	{
-		return;
-	}
-
-	bool is_block = false;
-	{
-		v8::HandleScope handle_scope(isolate);
-		auto arr = format_debug_backtrace_arr();
-		size_t len = arr.size();
-		auto stack = v8::Array::New(isolate, len);
-		for (size_t i = 0; i < len; i++)
-		{
-			stack->Set(i, openrasp::NewV8String(isolate, arr[i]));
-		}
-		auto params = v8::Object::New(isolate);
-		params->Set(openrasp::NewV8String(isolate, "path"), openrasp::NewV8String(isolate, dirname->val, dirname->len));
-		params->Set(openrasp::NewV8String(isolate, "realpath"), openrasp::NewV8String(isolate, real_path));
-		params->Set(openrasp::NewV8String(isolate, "stack"), stack);
-		is_block = isolate->Check(openrasp::NewV8String(isolate, get_check_type_name(check_type)), params, OPENRASP_CONFIG(plugin.timeout.millis));
-	}
-	if (is_block)
-	{
-		handle_block();
-	}
+	openrasp::data::FileOpObject dir_obj(dirname, OPENDIR);
+	openrasp::checker::V8Detector v8_detector(dir_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
+	v8_detector.run();
 }
 
 void pre_global_dir_DIRECTORY(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)

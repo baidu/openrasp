@@ -9,6 +9,8 @@
 #                                #
 ##################################
 
+set -e
+
 cd "$(dirname "$0")"
 
 BASE_DIR=$(pwd)
@@ -33,6 +35,16 @@ function buildRaspInstall {
 	rm -rf $BASE_DIR/rasp-install/java/target
 }
 
+# 编译 openrasp-v8
+function fetchV8Library {
+	cd $BASE_DIR
+	git submodule update --init
+	cd openrasp-v8/java
+	git fetch --tags
+	./fetch_native_libraries.sh
+	cd $BASE_DIR
+}
+
 # 编译Rasp
 function buildRasp {
 	cd $BASE_DIR/agent/java || exit 1
@@ -48,19 +60,26 @@ function buildPlugin {
 }
 
 function copyConf {
-	cp $BASE_DIR/rasp-install/java/src/main/resources/rasp.properties $OUTPUT_ROOT/rasp/conf/rasp.properties || exit 1
+	cp $BASE_DIR/rasp-install/java/src/main/resources/openrasp.yml $OUTPUT_ROOT/rasp/conf/openrasp.yml || exit 1
 }
 
 log "[1] build RaspInstall.jar" 
 buildRaspInstall
 
-log "[2] copy OpenRasp Plugin"
+log "[2] copy OpenRASP Plugin"
 buildPlugin
 
-log "[3] copy rasp.properties"
+log "[3] copy rasp.yaml"
 copyConf
 
-log "[4] build OpenRasp"
+log "[4] fetch openrasp-v8 library"
+if [[ ! -z $SKIP_V8 ]]; then
+	echo Skipped fetchV8Library
+else
+	fetchV8Library
+fi
+
+log "[5] build OpenRASP"
 buildRasp
 
 cd $OUTPUT_ROOT/..

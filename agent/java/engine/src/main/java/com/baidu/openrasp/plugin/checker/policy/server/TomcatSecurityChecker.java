@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 package com.baidu.openrasp.plugin.checker.policy.server;
 
 import com.baidu.openrasp.HookHandler;
+import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.messaging.ErrorType;
+import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.plugin.info.EventInfo;
 import com.baidu.openrasp.plugin.info.SecurityPolicyInfo;
@@ -56,7 +59,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
 
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
-        if ("tomcat".equals(ApplicationModel.getServerName())){
+        if ("tomcat".equals(ApplicationModel.getServerName()) && ApplicationModel.getStartUpInfo()) {
             String tomcatBaseDir = System.getProperty("catalina.base");
             try {
                 if (tomcatBaseDir != null) {
@@ -66,7 +69,7 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                     checkDefaultApp(tomcatBaseDir, infos);
                     System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
                 } else {
-                    LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
                             "Unable to locate tomcat base directory: failed to read system property \"catalina.base\""));
                 }
             } catch (Exception e) {
@@ -81,14 +84,14 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private void checkHttpOnlyIsOpen(String tomcatBaseDir, List<EventInfo> infos) {
         File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
         if (!contextFile.exists()) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "Unable to load conf/context.xml: no such file"));
+            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "Unable to load conf/context.xml: no such file, ignored"));
             return;
         }
 
         if (!contextFile.canRead()) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "Unable to load conf/context.xml: file is not readable"));
+            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "Unable to load conf/context.xml: file is not readable, ignored"));
             return;
         }
 
@@ -106,9 +109,9 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
 
             if (!isHttpOnly) {
                 Map<String, Object> params = new HashMap<String, Object>();
-                params.put("config_file",contextFile.getAbsolutePath());
+                params.put("config_file", contextFile.getAbsolutePath());
                 infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY,
-                        "Tomcat security baseline - httpOnly should be enabled in " + contextFile.getAbsolutePath(), true,params));
+                        "Tomcat security baseline - httpOnly should be enabled in " + contextFile.getAbsolutePath(), true, params));
             }
         }
     }
@@ -119,8 +122,8 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private void checkManagerPassword(String tomcatBaseDir, List<EventInfo> infos) {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/tomcat-users.xml"));
+            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "can not load file conf/tomcat-users.xml: no such file or file is not readable, ignored"));
             return;
         }
 
@@ -138,18 +141,26 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                             List<String> managerList = Arrays.asList(TOMCAT_MANAGER_ROLES);
                             for (int j = 0; j < roles.length; j++) {
                                 if (managerList.contains(roles[j].trim())) {
-                                    List<String> weakWords = Arrays.asList(WEAK_WORDS);
+                                    List<String> weakWords = getSecurityWeakPasswords();
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
-                                    if (weakWords.contains(userName) && weakWords.contains(password)) {
+                                    if (password == null || password.isEmpty()) {
                                         Map<String, Object> params = new HashMap<String, Object>();
-                                        params.put("config_file",userFile.getAbsolutePath());
-                                        params.put("username",userName);
-                                        params.put("password",password);
+                                        params.put("type", ApplicationModel.getServerName());
+                                        params.put("username", userName);
+                                        params.put("password", password);
                                         infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
-                                                "Tomcat security baseline - detected weak" +
-                                                        " username/password combination in " +
-                                                        userFile.getAbsolutePath() + ", username is " + userName, true,params));
+                                                "Tomcat security baseline - detected empty password in " +
+                                                        userFile.getAbsolutePath() + ", username is " + userName, true, params));
+                                    }
+                                    if (weakWords.contains(password)) {
+                                        Map<String, Object> params = new HashMap<String, Object>();
+                                        params.put("type", ApplicationModel.getServerName());
+                                        params.put("username", userName);
+                                        params.put("password", password);
+                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD,
+                                                "Tomcat security baseline - detected weak password in " + userFile.getAbsolutePath() +
+                                                        ", username is " + userName, true, params));
                                     }
                                 }
                             }
@@ -163,8 +174,8 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
     private void checkDirectoryListing(String tomcatBaseDir, List<EventInfo> infos) {
         File webFile = new File(tomcatBaseDir + File.separator + "conf/web.xml");
         if (!(webFile.exists() && webFile.canRead())) {
-            LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
-                    "can not load file conf/web.xml"));
+            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
+                    "can not load file conf/web.xml: no such file or file is not readable"));
             return;
         }
         Element rootElement = getXmlFileRootElement(webFile);
@@ -188,9 +199,9 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                             if (isFoundDefaultClass) {
                                 if (isOpenListingDirectory(servletElement)) {
                                     Map<String, Object> params = new HashMap<String, Object>();
-                                    params.put("config_file",webFile.getAbsolutePath());
+                                    params.put("config_file", webFile.getAbsolutePath());
                                     infos.add(new SecurityPolicyInfo(Type.DIRECTORY_LISTING,
-                                            "Tomcat security baseline - detected open Directory Listing in conf/web.xml", true,params));
+                                            "Tomcat security baseline - detected open Directory Listing in conf/web.xml", true, params));
                                     return;
                                 }
                             }
@@ -264,15 +275,22 @@ public class TomcatSecurityChecker extends ServerPolicyChecker {
                 message.append(app).append(", ");
             }
             Map<String, Object> params = new HashMap<String, Object>();
-            params.put("path",defaultAppBaseDir);
-            params.put("apps",apps);
-            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true,params));
+            params.put("path", defaultAppBaseDir);
+            params.put("apps", apps);
+            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true, params));
         }
     }
 
+    /**
+     * 从配置获取弱口令列表
+     */
+    public List<String> getSecurityWeakPasswords() {
+        List<String> securityWeakPasswords = Config.getConfig().getSecurityWeakPasswords();
+        return securityWeakPasswords != null ? securityWeakPasswords : Arrays.asList(WEAK_WORDS);
+    }
+
     private void handleException(Exception e) {
-        e.printStackTrace();
-        LOGGER.error(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
+        LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
     }
 
     private String getFormattedMessage(String title, String message) {

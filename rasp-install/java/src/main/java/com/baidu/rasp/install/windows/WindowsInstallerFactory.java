@@ -19,6 +19,8 @@ package com.baidu.rasp.install.windows;
 import com.baidu.rasp.install.Installer;
 import com.baidu.rasp.install.InstallerFactory;
 
+import static com.baidu.rasp.App.*;
+
 /**
  * Created by OpenRASP on 5/19/17.
  * All rights reserved
@@ -34,6 +36,15 @@ public class WindowsInstallerFactory extends InstallerFactory {
         }
         if (serverName.equals(RESIN)) {
             return new ResinInstaller(serverName, serverRoot);
+        }
+        if (serverName.equals(WEBLOGIC)) {
+            return new WeblogicInstaller(serverName, serverRoot);
+        }
+        if (serverName.equals(WILDFLY)) {
+            return new JbossEAPInstaller(serverName, serverRoot);
+        }
+        if (serverName.equals(JBOSSEAP)) {
+            return new JbossEAPInstaller(serverName, serverRoot);
         }
         System.out.println("Unexpected server name: " + serverName);
         return null;

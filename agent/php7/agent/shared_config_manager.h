@@ -21,12 +21,12 @@
 #include "base_manager.h"
 #include <memory>
 #include <map>
-#include "utils/ReadWriteLock.h"
+#include "utils/read_write_lock.h"
 #include "shared_config_block.h"
+#include "utils/base_reader.h"
 
 namespace openrasp
 {
-#define ROUNDUP(x, n) (((x) + ((n)-1)) & (~((n)-1)))
 
 class SharedConfigManager : public BaseManager
 {
@@ -43,28 +43,45 @@ public:
   bool set_log_max_backup(long log_max_backup);
 
   long get_debug_level();
-  bool set_debug_level(long debug_level);
+  bool set_debug_level(BaseReader *br);
 
-  int get_check_type_white_bit_mask(std::string url);
-  bool build_check_type_white_array(std::map<std::string, int> &url_mask_map);
-  bool build_check_type_white_array(OpenraspConfig &openrasp_config);
+  dat_value get_check_type_white_bit_mask(std::string url);
+  bool build_check_type_white_array(BaseReader *br);
+
+  bool build_weak_password_array(BaseReader *br);
+  bool is_password_weak(std::string password);
+
+  bool build_pg_error_array(std::vector<std::string> &pg_errors);
+  bool build_pg_error_array(Isolate *isolate);
+  bool pg_error_filtered(std::string error);
 
   std::string get_rasp_id() const;
-  std::string get_hostname() const;
 
   bool set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map);
   OpenRASPActionType get_buildin_check_action(OpenRASPCheckType check_type);
+
+  void set_mysql_error_codes(std::vector<int64_t> error_codes);
+  bool mysql_error_code_exist(int64_t err_code);
+
+  void set_sqlite_error_codes(std::vector<int64_t> error_codes);
+  bool sqlite_error_code_exist(int64_t err_code);
 
 private:
   int meta_size;
   ReadWriteLock *rwlock;
   SharedConfigBlock *shared_config_block;
   std::string rasp_id;
-  std::string hostname;
 
-private:
+  bool build_check_type_white_array(std::map<std::string, dat_value> &url_mask_map);
+  bool build_check_type_white_array(std::map<std::string, std::vector<std::string>> &url_type_map);
+
+  bool build_weak_password_array(std::vector<std::string> &weak_passwords);
+
+  bool set_debug_level(long debug_level);
+
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
-  bool build_hostname();
+  bool write_weak_password_array_to_shm(const void *source, size_t num);
+  bool write_pg_error_array_to_shm(const void *source, size_t num);
   bool build_rasp_id();
 };
 
