@@ -21,6 +21,7 @@ import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -29,8 +30,6 @@ import javassist.NotFoundException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 
@@ -68,11 +67,11 @@ public class NioFilesReadHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(NioFilesReadHook.class, "checkNioReadFile", "$1", Path.class);
+        String src = getInvokeStaticSrc(NioFilesReadHook.class, "checkNioReadFile", "$1", Object.class);
         insertBefore(ctClass, "readAllBytes", "(Ljava/nio/file/Path;)[B", src);
         insertBefore(ctClass, "newInputStream", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/InputStream;", src);
-        insertBefore(ctClass, "lines", "(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/util/stream/Stream;", src);
-        //读写channel,一般不会直接使用，暂不hook
+
+        //读写channel
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;Ljava/util/Set;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/channels/SeekableByteChannel;", src);
         //insertBefore(ctClass, "newByteChannel", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/SeekableByteChannel;", src);
     }
@@ -82,9 +81,9 @@ public class NioFilesReadHook extends AbstractClassHook {
      *  path转file保持原有file逻辑,增加stackInfo
      * @param path 文件路径
      */
-    public static void checkNioReadFile(Path path) {
+    public static void checkNioReadFile(Object path) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
-        File file= path.toFile();
+        File file= (File) Reflection.invokeMethod(path, "toFile", new Class[]{});
         if (checkSwitch && !file.exists()) {
             return;
         }
@@ -102,7 +101,6 @@ public class NioFilesReadHook extends AbstractClassHook {
         List<String> stackInfo = StackTrace.getParamStackTraceArray();
         params.put("stack", stackInfo);
         params.put("realpath", FileUtil.getRealPath(file));
-
         HookHandler.doCheck(CheckParameter.Type.READFILE, params);
-        }
+    }
 }

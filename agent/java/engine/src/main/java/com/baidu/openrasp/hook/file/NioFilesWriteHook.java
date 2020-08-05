@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.FileUtil;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.StackTrace;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
@@ -28,7 +29,6 @@ import javassist.NotFoundException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 
@@ -66,7 +66,7 @@ public class NioFilesWriteHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(NioFilesWriteHook.class, "checkNioWriteFile", "$1", Path.class);
+        String src = getInvokeStaticSrc(NioFilesWriteHook.class, "checkNioWriteFile", "$1", Object.class);
         insertBefore(ctClass, "createFile", "(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", src);
         insertBefore(ctClass, "newOutputStream", "(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/OutputStream;", src);
         //创建目录  待确认
@@ -81,11 +81,12 @@ public class NioFilesWriteHook extends AbstractClassHook {
      *
      * @param path 文件路径
      */
-    public static void checkNioWriteFile(Path path) {
-        if (path.toString() != null) {
+    public static void checkNioWriteFile(Object path) {
+        if (path != null) {
+            File file = (File) Reflection.invokeMethod(path, "toFile", new Class[]{});
             HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("path", path.toString());
-            params.put("realpath", FileUtil.getRealPath(new File(path.toString())));
+            params.put("path", file.getPath());
+            params.put("realpath", FileUtil.getRealPath(file));
             List<String> stackInfo = StackTrace.getParamStackTraceArray();
             params.put("stack", stackInfo);
             HookHandler.doCheck(CheckParameter.Type.WRITEFILE, params);

@@ -19,13 +19,13 @@ package com.baidu.openrasp.hook.file;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 
 /**
@@ -62,7 +62,7 @@ public class NioFilesDeleteHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(NioFilesDeleteHook.class, "checkDeleteFile", "$1", Path.class);
+        String src = getInvokeStaticSrc(NioFilesDeleteHook.class, "checkDeleteFile", "$1", Object.class);
         insertBefore(ctClass, "delete", "(Ljava/nio/file/Path;)V", src);
         insertBefore(ctClass, "deleteIfExists", "(Ljava/nio/file/Path;)Z", src);
     }
@@ -72,9 +72,9 @@ public class NioFilesDeleteHook extends AbstractClassHook {
      *
      * @param path 文件路径
      */
-    public static void checkDeleteFile(Path path) {
-        if (path.toString() != null) {
-            File file=path.toFile();
+    public static void checkDeleteFile(Object path) {
+        if (path != null) {
+            File file=(File) Reflection.invokeMethod(path, "toFile", new Class[]{});
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("path", file.getPath());
             try {

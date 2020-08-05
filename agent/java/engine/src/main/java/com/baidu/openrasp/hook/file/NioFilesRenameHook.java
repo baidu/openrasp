@@ -20,13 +20,14 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
+import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.annotation.HookAnnotation;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 
 /**
@@ -63,13 +64,13 @@ public class NioFilesRenameHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(NioFilesRenameHook.class, "checkFileRename", "$1,$2", Path.class,Path.class);
+        String src = getInvokeStaticSrc(NioFilesRenameHook.class, "checkFileRename", "$1,$2", Object.class,Object.class);
         insertBefore(ctClass, "copy", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;", src);
         insertBefore(ctClass, "move", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;", src);
 
-        String srcLink = getInvokeStaticSrc(NioFilesRenameHook.class, "checkFileLink", "$1,$2", Path.class,Path.class);
+        String srcLink = getInvokeStaticSrc(NioFilesRenameHook.class, "checkFileLink", "$1,$2", Object.class,Object.class);
         insertBefore(ctClass, "createLink", "(Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;", srcLink);
-        //软连接  待确认
+        //软连接hook  待确认,先注释掉
         //insertBefore(ctClass, "createSymbolicLink", "(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;", srcLink);
 
     }
@@ -80,23 +81,29 @@ public class NioFilesRenameHook extends AbstractClassHook {
      * @param pathSource 源文件路径
      * @param pathDest 目标文件路径
      */
-    public static void checkFileRename(Path pathSource,Path pathDest) {
+    public static void checkFileRename(Object pathSource,Object pathDest) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
-        if (pathSource != null && !pathSource.toFile().isDirectory() && pathDest != null && !pathDest.toFile().isDirectory()) {
-            if (checkSwitch && !pathSource.toFile().exists()){
+        File fileSource = null;
+        File fileDest = null;
+        if(pathSource != null && pathDest != null){
+            fileSource = (File) Reflection.invokeMethod(pathSource, "toFile", new Class[]{});
+            fileDest = (File) Reflection.invokeMethod(pathDest, "toFile", new Class[]{});
+        }
+        if ( fileSource !=null && fileDest !=null && !fileSource.isDirectory() && !fileDest.isDirectory()) {
+            if (checkSwitch && !fileSource.exists()){
                 return;
             }
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
-                params.put("source", pathSource.toFile().getCanonicalPath());
+                params.put("source", fileSource.getCanonicalPath());
             } catch (IOException e) {
-                params.put("source", pathSource.toFile().getAbsolutePath());
+                params.put("source", fileSource.getAbsolutePath());
             }
 
             try {
-                params.put("dest", pathDest.toFile().getCanonicalPath());
+                params.put("dest", fileDest.getCanonicalPath());
             } catch (IOException e) {
-                params.put("dest", pathDest.toFile().getAbsolutePath());
+                params.put("dest", fileDest.getAbsolutePath());
             }
             HookHandler.doCheck(CheckParameter.Type.RENAME, params);
         }
@@ -108,23 +115,29 @@ public class NioFilesRenameHook extends AbstractClassHook {
      * @param pathSource 源文件路径
      * @param pathDest 目标文件路径
      */
-    public static void checkFileLink(Path pathDest,Path pathSource) {
+    public static void checkFileLink(Object pathDest,Object pathSource) {
         boolean checkSwitch = Config.getConfig().getPluginFilter();
-        if (pathSource != null && !pathSource.toFile().isDirectory() && pathDest != null && !pathDest.toFile().isDirectory()) {
-            if (checkSwitch && !pathSource.toFile().exists()){
+        File fileSource = null;
+        File fileDest = null;
+        if(pathSource != null && pathDest != null){
+            fileSource = (File) Reflection.invokeMethod(pathSource, "toFile", new Class[]{});
+            fileDest = (File) Reflection.invokeMethod(pathDest, "toFile", new Class[]{});
+        }
+        if ( fileSource !=null && fileDest !=null && !fileSource.isDirectory() && !fileDest.isDirectory()) {
+            if (checkSwitch && !fileSource.exists()){
                 return;
             }
             HashMap<String, Object> params = new HashMap<String, Object>();
             try {
-                params.put("source", pathSource.toFile().getCanonicalPath());
+                params.put("source", fileSource.getCanonicalPath());
             } catch (IOException e) {
-                params.put("source", pathSource.toFile().getAbsolutePath());
+                params.put("source", fileSource.getAbsolutePath());
             }
 
             try {
-                params.put("dest", pathDest.toFile().getCanonicalPath());
+                params.put("dest", fileDest.getCanonicalPath());
             } catch (IOException e) {
-                params.put("dest", pathDest.toFile().getAbsolutePath());
+                params.put("dest", fileDest.getAbsolutePath());
             }
             HookHandler.doCheck(CheckParameter.Type.RENAME, params);
         }
