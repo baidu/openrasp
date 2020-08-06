@@ -1,4 +1,4 @@
-const plugin_version = '2020-0804-1930'
+const plugin_version = '2020-0806-1430'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -484,7 +484,7 @@ var algorithmConfig = {
         sensitive_cmd: ["curl", "bash", "cat", "sh"],
 
         alarm_token_enable: true,
-        alarm_token: ["$IFS", "${IFS}", "'"]
+        alarm_token: ["$IFS", "${IFS}"]
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
@@ -2528,7 +2528,7 @@ plugin.register('command', function (params, context) {
         for (var i=0; i<raw_tokens.length; i++) {
             // 敏感token检测
             if (algorithmConfig.command_error.alarm_token_enable) {
-                if (alarm_token.indexOf(raw_tokens[i].text) != -1) {
+                if (alarm_token == raw_tokens[i].text) {
                     if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
                         return {
                             action:     algorithmConfig.command_error.action,
@@ -2559,6 +2559,16 @@ plugin.register('command', function (params, context) {
             }
             else if (raw_tokens[i].text == "`") {
                 ticks ++
+            }
+            else if (raw_tokens[i].text == "'" && algorithmConfig.command_error.unbalanced_quote_enable) {
+                if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
+                    return {
+                        action:     algorithmConfig.command_error.action,
+                        confidence: 70,
+                        message:    _("Command execution - Detected unbalanced single quote!"),
+                        algorithm:  'command_error'
+                    }
+                }
             }
         }
 
