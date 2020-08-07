@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const plugin_version = '2020-0713-1500'
+=======
+const plugin_version = '2020-0806-1430'
+>>>>>>> master
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -483,7 +487,7 @@ var algorithmConfig = {
         sensitive_cmd: ["curl", "bash", "cat", "sh"],
 
         alarm_token_enable: true,
-        alarm_token: ["$IFS", "${IFS}", "'"]
+        alarm_token: ["$IFS", "${IFS}"]
     },
     // 命令执行 - 是否拦截所有命令执行？如果没有执行命令的需求，可以改为 block，最大程度的保证服务器安全
     command_other: {
@@ -659,7 +663,7 @@ var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat)$/i
 var ntfsRegex       = /::\$(DATA|INDEX)$/
 
 // 已知用户输入匹配算法误报: 传入 1,2,3,4 -> IN(1,2,3,4) 和 传入 column_name, column_pass -> select column_name, column_pass from xxx
-var commaSeparatedRegex   = /^(([a-zA-Z_]\w*|[0-9+\-x\.]+) *, *)+([a-zA-Z_]\w*|[0-9+\-x\.]+)$/
+var commaSeparatedRegex   = /^(, *)?(([a-zA-Z_]\w*|[0-9+\-x\.]+) *, *)+([a-zA-Z_]\w*|[0-9+\-x\.]+)$/
 
 // 匹配内网地址
 var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
@@ -1689,10 +1693,14 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                 return v.text.substr(0, 50).toLowerCase()
             })
 
+            // 是否在union select 语句中
+            var union_state = false
+
             for (var i = 1; i < tokens_lc.length; i ++)
             {
-                if (features['union_null'] && tokens_lc[i] === 'select')
+                if (features['union_null']) 
                 {
+<<<<<<< HEAD
                     var null_count = 0
 
                     // 寻找连续的逗号、NULL或者数字
@@ -1709,8 +1717,45 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     if (null_count >= 5) {
                         reason = _("SQLi - Detected UNION-NULL phrase in sql query")
                         break
+=======
+                    if (tokens_lc[i] === 'union')
+                    {
+                        union_state = true
                     }
-                    continue
+                    else if (tokens_lc[i] === 'from')
+                    {
+                        union_state = false
+                    }
+                    else if (tokens_lc[i] === 'select' && union_state)
+                    {
+                        var null_count = 0
+                        var num_count = 0
+
+                        // 寻找连续的逗号、NULL或者数字
+                        for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
+                            if ((tokens_lc[j] === ',' || tokens_lc[j] == 'null') && tokens_lc[j] != tokens_lc[j+1]) {
+                                null_count ++
+                            } else {
+                                break
+                            }
+                        }
+                        for (var j = i + 1; j < tokens_lc.length && j < i + 6; j ++) {
+                            if ((tokens_lc[j] === ',' || ! isNaN(parseInt(tokens_lc[j]))) && tokens_lc[j] != tokens_lc[j+1]) {
+                                num_count++
+                            } else {
+                                break
+                            }
+                        }
+
+                        // NULL,NULL,NULL == 5个token
+                        // 1,2,3          == 5个token
+                        if (null_count >= 5 || num_count >= 5) {
+                            reason = _("SQLi - Detected UNION-NULL phrase in sql query")
+                            break
+                        }
+                        continue
+>>>>>>> master
+                    }
                 }
 
                 if (features['stacked_query'] && tokens_lc[i] == ';' && i != tokens_lc.length - 1)
@@ -2490,7 +2535,7 @@ plugin.register('command', function (params, context) {
         for (var i=0; i<raw_tokens.length; i++) {
             // 敏感token检测
             if (algorithmConfig.command_error.alarm_token_enable) {
-                if (alarm_token.indexOf(raw_tokens[i].text) != -1) {
+                if (alarm_token == raw_tokens[i].text) {
                     if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
                         return {
                             action:     algorithmConfig.command_error.action,
@@ -2521,6 +2566,16 @@ plugin.register('command', function (params, context) {
             }
             else if (raw_tokens[i].text == "`") {
                 ticks ++
+            }
+            else if (raw_tokens[i].text == "'" && algorithmConfig.command_error.unbalanced_quote_enable) {
+                if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
+                    return {
+                        action:     algorithmConfig.command_error.action,
+                        confidence: 70,
+                        message:    _("Command execution - Detected unbalanced single quote!"),
+                        algorithm:  'command_error'
+                    }
+                }
             }
         }
 
