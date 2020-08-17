@@ -216,6 +216,8 @@ func HandleUpgrade(flag string) {
 		UpdateMappingConfig["error-alarm-template"] = "120to121"
 	case "121to122":
 		log.Println("Going to update 121to122")
+	case "134to135":
+		UpdateMappingConfig["attack-alarm-template"] = "134to135"
 	default:
 		log.Println("Unknown upgrade job specified: " + flag)
 	}
