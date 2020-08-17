@@ -78,7 +78,7 @@ var attackAlarmTemplate = `
 						},
 						"url": {
 							"type": "keyword",
-							"ignore_above": 256,
+							"ignore_above": 1024,
 							"normalizer": "lowercase_normalizer"
 						},
 						"event_type": {
@@ -477,6 +477,63 @@ var dependencyDataTemplate = `
 		}
 	`
 
+var crashDataTemplate = `
+		{
+			"template":"openrasp-crash-alarm-*",
+			"aliases" : {
+        		"real-{index}" : {} 
+    		},
+			"settings": {
+				"analysis": {
+					"normalizer": {
+						"lowercase_normalizer": {
+							"type": "custom",
+							"filter": ["lowercase","asciifolding"]
+						}
+					}     
+				}
+			},
+			"mappings": {
+				"crash-alarm": {
+					"_all": {
+						"enabled": false
+					},
+					"properties": {
+						"@timestamp":{
+							"type":"date"
+         				},
+						"app_id": {
+							"type": "keyword",
+							"ignore_above" : 256
+						},
+						"rasp_id": {
+							"type": "keyword",
+							"ignore_above" : 256
+						},
+						"language": {
+							"type": "keyword",
+							"ignore_above" : 64
+						},
+						"event_time": {
+							"type": "date"
+						},
+						"crash_hostname": {
+							"type": "keyword",
+							"ignore_above": 256,
+							"normalizer": "lowercase_normalizer"
+						},
+						"crash_message": {
+							"type": "keyword"
+						},
+						"crash_log": {
+							"type": "binary"
+						}
+					}
+				}
+			}
+		}
+	`
+
 func init() {
 	if *conf.AppConfig.Flag.StartType != conf.StartTypeReset {
 
@@ -486,6 +543,7 @@ func init() {
 			"attack-alarm-template":    attackAlarmTemplate,
 			"policy-alarm-template":    policyAlarmTemplate,
 			"dependency-data-template": dependencyDataTemplate,
+			"crash-alarm-template":     crashDataTemplate,
 		}
 		for name, template := range templates {
 			err := CreateTemplate(name, template)

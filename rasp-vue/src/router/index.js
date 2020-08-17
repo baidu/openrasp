@@ -6,6 +6,7 @@ import store from '@/store'
 import Login from '@/components/Login'
 import dashboard from '@/components/pages/dashboard'
 import baseline from '@/components/pages/baseline'
+import crash from '@/components/pages/crash'
 import hosts from '@/components/pages/hosts'
 import settings from '@/components/pages/settings'
 import plugins from '@/components/pages/plugins'
@@ -73,6 +74,10 @@ const router = new Router({
         path: 'baseline/:app_id/',
         name: 'baseline',
         component: baseline
+      }, {
+        path: 'crash/:app_id/',
+        name: 'crash',
+        component: crash
       }, {
         path: 'events/:app_id/',
         name: 'events',

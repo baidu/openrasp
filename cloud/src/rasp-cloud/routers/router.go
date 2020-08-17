@@ -94,6 +94,11 @@ func InitRouter() {
 					&fore_logs.ErrorController{},
 				),
 			),
+			beego.NSNamespace("/crash",
+				beego.NSInclude(
+					&fore_logs.CrashController{},
+				),
+			),
 		),
 		beego.NSNamespace("/app",
 			beego.NSInclude(

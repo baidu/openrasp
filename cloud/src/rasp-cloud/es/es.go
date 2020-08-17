@@ -153,12 +153,9 @@ func CreateTemplate(name string, body string) error {
 }
 
 func CreateEsIndex(index string, alias string, template string) error {
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(180*time.Second))
 	defer cancel()
 	exists, err := ElasticClient.IndexExists(index).Do(ctx)
-	if exists {
-		return nil
-	}
 	if err != nil {
 		return err
 	}
@@ -168,9 +165,6 @@ func CreateEsIndex(index string, alias string, template string) error {
 			return err
 		}
 		logs.Info("create es index: " + createResult.Index)
-		if err != nil {
-			return err
-		}
 	} else {
 		if environment.UpdateMappingConfig[template] != nil {
 			beego.Info("updating template name:", template, "alias:", alias)
@@ -181,7 +175,6 @@ func CreateEsIndex(index string, alias string, template string) error {
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -199,7 +192,8 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 			beego.Error("failed to get app_id param from alarm: " + fmt.Sprintf("%+v", doc))
 		}
 		if appId, ok := doc["app_id"].(string); ok {
-			if docType == "policy-alarm" || docType == "error-alarm" || docType == "attack-alarm" {
+			if docType == "policy-alarm" || docType == "error-alarm" || docType == "attack-alarm" ||
+				docType == "crash-alarm" {
 				bulkService.Add(elastic.NewBulkUpdateRequest().
 					Index("real-openrasp-" + docType + "-" + appId).
 					Type(docType).
@@ -308,7 +302,6 @@ func UpdateMapping(destIndex string, alias string, template string, ctx context.
 		if err != nil {
 			return err
 		}
-
 		//aliases := ElasticClient.Alias()
 		// 去掉新建索引中的模版索引，换成原索引的模版索引
 		//aliasName := res.Indices[destIndex].Aliases[0].AliasName

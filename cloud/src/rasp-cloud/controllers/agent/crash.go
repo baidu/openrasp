@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net/mail"
 	"os"
+	"rasp-cloud/models/logs"
 	"strings"
 	"github.com/astaxie/beego"
 	"bytes"
@@ -79,6 +80,10 @@ func (o *CrashController) Post() {
 		o.ServeError(http.StatusBadRequest, "rasp_id can not be empty")
 	}
 	rasp, err := models.GetRaspById(raspId)
+	// send to es
+	alarm := make(map[string]interface{})
+	alarm["rasp_id"] = raspId
+	alarm["app_id"] = appId
 	if err != nil {
 		hostname := o.GetString("hostname")
 		language := o.GetString("language")
@@ -86,8 +91,14 @@ func (o *CrashController) Post() {
 			HostName: hostname,
 			Language: language,
 		}
+		alarm["crash_hostname"] = hostname
+		alarm["language"] = language
+		alarm["version"] = ""
+	} else {
+		alarm["crash_hostname"] = rasp.HostName
+		alarm["language"] = rasp.Language
+		alarm["version"] = rasp.Version
 	}
-
 	crashLog, info, err := o.GetFile("crash_log")
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "parse uploadFile error", err)
@@ -96,7 +107,6 @@ func (o *CrashController) Post() {
 		o.ServeError(http.StatusBadRequest, "must have the crash log parameter")
 	}
 	defer crashLog.Close()
-
 	crashLogContent, err := ioutil.ReadAll(crashLog)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to read crash log", err)
@@ -104,6 +114,19 @@ func (o *CrashController) Post() {
 	err = sendCrashEmailAlarm(crashLogContent, info.Filename, app, rasp)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "send email failed", err)
+	}
+
+	// send to es
+	//crashLogContent, err := ioutil.ReadFile("hs_err_pid20067-java.log")
+	//if err != nil {
+	//	o.ServeError(http.StatusBadRequest, "hehe", err)
+	//}
+	alarm["crash_log"] = string(crashLogContent)
+	alarm["@timestamp"] = time.Now().UnixNano() / 1000000
+	alarm["event_time"] = alarm["@timestamp"]
+	err = logs.AddCrashAlarm(alarm)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "send crash alarm to es failed", err)
 	}
 	o.ServeWithEmptyData()
 }

@@ -70,4 +70,13 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["rasp-cloud/controllers/api/fore_logs:CrashController"] = append(beego.GlobalControllerRouter["rasp-cloud/controllers/api/fore_logs:CrashController"],
+        beego.ControllerComments{
+            Method: "Search",
+            Router: `/search`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
 }

@@ -102,6 +102,21 @@ type SearchErrorParam struct {
 	} `json:"data"`
 }
 
+type SearchCrashParam struct {
+	Page    int `json:"page"`
+	Perpage int `json:"perpage"`
+	Data *struct {
+		Id             string    `json:"_id,omitempty"`
+		AppId          string    `json:"app_id,omitempty"`
+		StartTime      int64     `json:"start_time"`
+		EndTime        int64     `json:"end_time"`
+		HostName       string    `json:"crash_hostname,omitempty"`
+		Language       *[]string `json:"language,omitempty"`
+		RaspId         string    `json:"rasp_id,omitempty"`
+		CrashMessage   string    `json:"crash_message,omitempty"`
+	} `json:"data"`
+}
+
 type AlarmLogInfo struct {
 	EsType       string
 	EsIndex      string
@@ -187,6 +202,17 @@ func handleEsLogPush() {
 		err := es.BulkInsertAlarm(PolicyAlarmInfo.EsType, alarms)
 		if err != nil {
 			beego.Error("failed to execute es bulk insert for policy alarm: " + err.Error())
+		}
+	case alarm := <-CrashAlarmInfo.AlarmBuffer:
+		alarms := make([]map[string]interface{}, 0, 200)
+		alarms = append(alarms, alarm)
+		for len(CrashAlarmInfo.AlarmBuffer) > 0 && len(alarms) < 200 {
+			alarm := <-CrashAlarmInfo.AlarmBuffer
+			alarms = append(alarms, alarm)
+		}
+		err := es.BulkInsertAlarm(CrashAlarmInfo.EsType, alarms)
+		if err != nil {
+			beego.Error("failed to execute es bulk insert for crash alarm: " + err.Error())
 		}
 	case alarm := <-ErrorAlarmInfo.AlarmBuffer:
 		alarms := make([]map[string]interface{}, 0, 200)
@@ -281,13 +307,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 				} else {
 					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 				}
-			} else if key == "intercept_state" {
-				if v, ok := value.([]interface{}); ok {
-					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
-				} else {
-					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
-				}
-			} else if key == "policy_id" {
+			} else if key == "intercept_state" || key == "policy_id" || key == "language" {
 				if v, ok := value.([]interface{}); ok {
 					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
 				} else {
@@ -296,7 +316,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
-			} else if key == "attack_source" || key == "url" ||
+			} else if key == "attack_source" || key == "url" || key == "crash_message" || key == "crash_hostname" ||
 				key == "message" || key == "plugin_message" || key == "client_ip" {
 				realValue := strings.TrimSpace(fmt.Sprint(value))
 				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+realValue+"*"))
@@ -337,7 +357,6 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 		}
 		return 0, nil, err
 	}
-
 	result := make([]map[string]interface{}, 0)
 	if !isAttachAggr {
 		if queryResult != nil && queryResult.Hits != nil && queryResult.Hits.Hits != nil {

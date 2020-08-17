@@ -112,6 +112,12 @@
                   安全基线
                 </RouterLink>
               </li>
+              <li class="nav-item dropdown">
+                <RouterLink :to="{ name: 'crash', params: { app_id: current_app.id } }" class="nav-link">
+                  <i class="fe fe-alert-triangle" />
+                  崩溃信息
+                </RouterLink>
+              </li>
               <li class="nav-item">
                 <RouterLink :to="{ name: 'hosts', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-cloud" />
