@@ -10,11 +10,11 @@
             width: 100%;
           "
         >
-          <h1 class="page-title">
+          <h1 class="page-title" style="padding-top: 3px;">
             崩溃信息
           </h1>
           <div class="page-options d-flex" style="margin-top: 5px;">
-            <b-dropdown text="应用语言" class="ml-4" right>
+            <!-- <b-dropdown text="应用语言" class="ml-4" right>
               <b-container style="width: 250px;">
                 <b-form-row>
                   <template v-for="(row, index) in language_list">
@@ -35,7 +35,7 @@
                   </template>
                 </b-form-row>
               </b-container>
-            </b-dropdown>
+            </b-dropdown> -->
             <div class="input-icon ml-2">
               <span class="input-icon-addon">
                 <i class="fe fe-calendar" />
@@ -54,31 +54,29 @@
                 @keyup.enter="loadEvents(1)"
               />
             </div>
+
+            <div class="input-icon ml-2">
+              <span class="input-icon-addon">
+                <i class="fe fe-search" />
+              </span>
+              <input
+                v-model.trim="crash_message"
+                type="text"
+                class="form-control w-10"
+                placeholder="报警信息"
+                style="width: 210px;"
+                @keyup.enter="loadEvents(1)"
+              />
+            </div>
+
+            <button
+              class="btn btn-primary ml-2"
+              @click="loadEvents(1)"
+              style="height: 38px;"
+            >
+              搜索
+            </button>
           </div>
-        </div>
-        <div class="page-options d-flex" style="margin-top: 5px;">
-          <div class="input-icon ml-2">
-            <span class="input-icon-addon">
-              <i class="fe fe-search" />
-            </span>
-            <input
-              v-model.trim="crash_message"
-              type="text"
-              class="form-control w-10"
-              placeholder="报警信息"
-              style="width: 210px;"
-              @keyup.enter="loadEvents(1)"
-            />
-          </div>
-        </div>
-        <div class="page-options d-flex" style="margin-top: 5px;">
-          <button
-            class="btn btn-primary ml-2"
-            @click="loadEvents(1)"
-            style="height: 38px;"
-          >
-            搜索
-          </button>
         </div>
       </div>
       <div class="card">

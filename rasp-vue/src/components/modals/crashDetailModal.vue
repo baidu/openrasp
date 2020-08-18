@@ -17,7 +17,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary pull-left" v-clipboard:copy="data.stack_trace">
+          <button class="btn btn-primary mr-auto" v-clipboard:copy="data.stack_trace">
             复制
           </button>
 
