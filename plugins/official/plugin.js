@@ -1,4 +1,4 @@
-const plugin_version = '2020-0806-1430'
+const plugin_version = '2020-0818-1800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -45,6 +45,9 @@ var algorithmConfig = {
 
         // 若 is_dev 开启，表示为线下环境，将开启更多消耗性能的检测算法
         is_dev:  false,
+
+        // 若 log_event 开启，将打印应用行为信息到 plugin.log
+        log_event: false,
 
         // schema 版本
         schema_version: 1
@@ -1497,6 +1500,76 @@ function _(message, args)
 
 // 开始
 
+// 如果开启记录日志，先打印日志，再执行后续逻辑
+if (algorithmConfig.meta.log_event) {
+
+    plugin.register('directory', function (params, context) {
+        plugin.log('Listing directory content: ' + params.realpath)
+        return clean
+    })
+
+    plugin.register('fileUpload', function (params, context) {
+        plugin.log('File upload: ' + params.filename)
+        return clean
+    })
+
+    plugin.register('rename', function (params, context) {
+        plugin.log('Rename file - From ' + params.source + ' to ' + params.dest)  
+        return clean
+    })
+
+    plugin.register('ssrf', function (params, context) {
+        plugin.log('SSRF requesting ' + params.url + ' (IP: ' + params.ip + ')')
+        return clean
+    })
+
+    plugin.register('command', function (params, context) {
+        plugin.log('Execute command: ' + params.command)
+        return clean
+    })
+
+    plugin.register('ognl', function (params, context) {
+        plugin.log('Evaluating OGNL expression: ' + params.expression)
+        return clean
+    })
+
+    plugin.register('xxe', function (params, context) {
+        plugin.log('Loading XML entity: ' + params.entity)
+        return clean
+    })
+
+    plugin.register('eval', function (params, context) {
+        plugin.log('Evaluating code: ' + params.code)
+        return clean
+    })
+
+    plugin.register('loadLibrary', function (params, context) {
+        plugin.log('Loading library: ' + params.path)
+        return clean
+    })
+
+    plugin.register('include', function (params, context) {
+        plugin.log('Include file: ' + params.url)
+        return clean
+    })
+
+    plugin.register('readFile', function (params, context) {
+        plugin.log('Read file: ' + params.realpath)
+        return clean
+    })
+
+    plugin.register('writeFile', function (params, context) {
+        plugin.log('Write file: ' + params.realpath)
+        return clean
+    })
+
+    plugin.register('sql', function (params, context) {
+        plugin.log('SQL query: ' + params.query)
+        return clean
+    })
+}
+
+
 // 若开启「研发模式」，将只使用JS插件
 if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
     // v1.1 之前的版本，SQL/SSRF 使用 java 原生实现，需要将插件配置传递给 java
@@ -2924,7 +2997,6 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
             }
         }
     })
-
 }
 
 plugin.log('OpenRASP official plugin: Initialized, version', plugin_version)

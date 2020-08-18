@@ -63,6 +63,19 @@
               启动「研发模式」，开启一些消耗性能的检测算法
             </span>
           </label>
+          <br>
+          <label class="custom-switch" v-if="data.meta.log_event != undefined">
+            <input
+              v-model="data.meta.log_event"
+              type="checkbox"
+              name="custom-switch-checkbox"
+              class="custom-switch-input"
+            >
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              打印「行为日志」，仅用于调试，请勿在线上开启
+            </span>
+          </label>
         </div>
         <!-- 结束 快速设置 -->
 
