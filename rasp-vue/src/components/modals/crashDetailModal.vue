@@ -11,7 +11,7 @@
         <div class="modal-body" style="padding-top: 20px">
           <div id="myTabContent" class="tab-content">
             <div class="h6">
-              应用堆栈
+              崩溃详情
             </div>
             <pre style="max-height: 400px; overflow-y: scroll">{{ data.stack_trace }}</pre>
           </div>
