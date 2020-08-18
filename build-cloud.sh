@@ -93,6 +93,9 @@ var BuildTime = "${build_time}"
 EOF
     fi
 
+    # 设置国内代理
+    go env -w GOPROXY=https://goproxy.cn,direct
+
     # linux
     GOOS=linux bee pack -exr=vendor
     repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
