@@ -2,6 +2,7 @@ package logs
 
 import (
 	"github.com/astaxie/beego"
+	"github.com/ianlancetaylor/demangle"
 	"crypto/md5"
 	"errors"
 	"fmt"
@@ -84,7 +85,14 @@ func parsePhpStack(alarm map[string]interface{}) map[string]interface{}{
 			if strings.Index(content, "openrasp.so") != -1 && findStack {
 				cnt += 1
 				if cnt == 3 {
-					alarmMessage = content
+					tmp := strings.Split(content, "(")[1]
+					ret := strings.Split(tmp, "+")
+					alarmMessage, err := demangle.ToString(ret[0])
+					if err != nil {
+						alarmMessage = content
+					} else {
+						alarmMessage = alarmMessage + "+" + strings.Split(ret[1], ")")[0]
+					}
 					findStack = false
 				}
 			}

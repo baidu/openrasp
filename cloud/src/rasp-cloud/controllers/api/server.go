@@ -78,7 +78,7 @@ func (o *ServerController) PutUrl() {
 
 // @router /clear_logs [post]
 func (o *ServerController) ClearLogs() {
-	docTypeList := []string{"attack-alarm", "report-data", "error-alarm", "policy-alarm"}
+	docTypeList := []string{"attack-alarm", "report-data", "error-alarm", "policy-alarm", "crash-alarm"}
 	var param struct {
 		AppId string `json:"app_id"`
 	}

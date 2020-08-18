@@ -37,7 +37,7 @@
       </div>     
       <p>点击执行后，会清空如下内容（<strong>仅当前应用</strong>）</p>      
       <ul>
-        <li v-for="x in ['攻击事件', '基线报警', '异常日志', '请求数量']">{{x}}</li>
+        <li v-for="x in ['攻击事件', '基线报警', '异常日志', '请求数量', '崩溃信息']">{{x}}</li>
       </ul>
       <div slot="footer">
         <b-button variant="danger" @click="removeLogs">

@@ -84,6 +84,9 @@ func (o *CrashController) Post() {
 	alarm := make(map[string]interface{})
 	alarm["rasp_id"] = raspId
 	alarm["app_id"] = appId
+	alarm["plugin_name"] = ""
+	alarm["plugin_version"] = ""
+	alarm["rasp_home"] = ""
 	if err != nil {
 		hostname := o.GetString("hostname")
 		language := o.GetString("language")
@@ -98,6 +101,9 @@ func (o *CrashController) Post() {
 		alarm["crash_hostname"] = rasp.HostName
 		alarm["language"] = rasp.Language
 		alarm["version"] = rasp.Version
+		alarm["plugin_name"] = rasp.PluginName
+		alarm["plugin_version"] = rasp.PluginVersion
+		alarm["rasp_home"] = rasp.RaspHome
 	}
 	crashLog, info, err := o.GetFile("crash_log")
 	if err != nil {
