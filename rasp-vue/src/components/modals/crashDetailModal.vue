@@ -13,10 +13,14 @@
             <div class="h6">
               应用堆栈
             </div>
-            <pre v-if="data.stack_trace">{{ data.stack_trace }}</pre>
+            <pre style="max-height: 400px; overflow-y: scroll">{{ data.stack_trace }}</pre>
           </div>
         </div>
         <div class="modal-footer">
+          <button class="btn btn-primary pull-left" v-clipboard:copy="data.stack_trace">
+            复制
+          </button>
+
           <button class="btn btn-primary" data-dismiss="modal">
             关闭
           </button>

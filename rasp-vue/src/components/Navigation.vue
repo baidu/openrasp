@@ -60,6 +60,10 @@
                   <i class="dropdown-icon fe fe-alert-circle" />
                   异常日志
                 </RouterLink>
+                <RouterLink class="dropdown-item" :to="{ name: 'crash', params: { app_id: current_app.id } }">
+                  <i class="dropdown-icon fe fe-alert-triangle" />
+                  崩溃信息
+                </RouterLink>
                 <RouterLink class="dropdown-item" :to="{ name: 'audit', params: { app_id: current_app.id } }">
                   <i class="dropdown-icon fe fe-user-check" />
                   操作审计
@@ -110,12 +114,6 @@
                 <RouterLink :to="{ name: 'baseline', params: { app_id: current_app.id } }" class="nav-link">
                   <i class="fe fe-check-square" />
                   安全基线
-                </RouterLink>
-              </li>
-              <li class="nav-item dropdown">
-                <RouterLink :to="{ name: 'crash', params: { app_id: current_app.id } }" class="nav-link">
-                  <i class="fe fe-alert-triangle" />
-                  崩溃信息
                 </RouterLink>
               </li>
               <li class="nav-item">
