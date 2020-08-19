@@ -1,4 +1,4 @@
-const plugin_version = '2020-0806-1430'
+const plugin_version = '2020-0819-1440'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1931,7 +1931,6 @@ plugin.register('directory', function (params, context) {
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
         // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
-        // 过滤已知误报(joomla)
         if (language == 'php' && validate_stack_php(params.stack))
         {
             return {
