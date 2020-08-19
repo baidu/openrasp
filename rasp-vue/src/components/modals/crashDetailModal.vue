@@ -120,6 +120,14 @@ export default {
       this.data = data
       this.data.stack_trace = data.crash_log.replace(/(^\s*)|(\s*$)/g, "");
       $('#showCrashDetailModal').modal()
+    },
+    env2str(environ) {
+      var result = ''
+      for (let name in environ) {
+        result = result + name + '=' + environ[name] + "\n"
+      }
+
+      return result
     }
   }
 }

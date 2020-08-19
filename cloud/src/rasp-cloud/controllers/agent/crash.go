@@ -50,10 +50,10 @@ type crashTemplateParam struct {
 func (o *CrashController) Post() {
 	appId := o.Ctx.Input.Header("X-OpenRASP-AppID")
 	app, err := models.GetAppById(appId)
-	if !app.EmailAlarmConf.Enable {
-		o.ServeWithEmptyData()
-		return
-	}
+	//if !app.EmailAlarmConf.Enable {
+	//	o.ServeWithEmptyData()
+	//	return
+	//}
 	isCrashReportEnable := false
 	if app.AttackTypeAlarmConf != nil {
 		if _, ok := (*app.AttackTypeAlarmConf)["crash"]; !ok {
@@ -87,6 +87,12 @@ func (o *CrashController) Post() {
 	alarm["plugin_name"] = ""
 	alarm["plugin_version"] = ""
 	alarm["rasp_home"] = ""
+	alarm["host_type"] = ""
+	alarm["register_ip"] = ""
+	alarm["hostname"] = ""
+	alarm["language_version"] = ""
+	alarm["register_time"] = ""
+	alarm["environ"] = make(map[string]string)
 	if err != nil {
 		hostname := o.GetString("hostname")
 		language := o.GetString("language")
@@ -94,16 +100,22 @@ func (o *CrashController) Post() {
 			HostName: hostname,
 			Language: language,
 		}
-		alarm["crash_hostname"] = hostname
+		alarm["hostname"] = hostname
 		alarm["language"] = language
 		alarm["version"] = ""
 	} else {
-		alarm["crash_hostname"] = rasp.HostName
+		alarm["hostname"] = rasp.HostName
 		alarm["language"] = rasp.Language
 		alarm["version"] = rasp.Version
 		alarm["plugin_name"] = rasp.PluginName
 		alarm["plugin_version"] = rasp.PluginVersion
 		alarm["rasp_home"] = rasp.RaspHome
+		alarm["host_type"] = rasp.HostType
+		alarm["register_ip"] = rasp.RegisterIp
+		alarm["hostname"] = rasp.HostName
+		alarm["language_version"] = rasp.LanguageVersion
+		alarm["register_time"] = rasp.RegisterTime
+		alarm["environ"] = rasp.Environ
 	}
 	crashLog, info, err := o.GetFile("crash_log")
 	if err != nil {
@@ -117,10 +129,6 @@ func (o *CrashController) Post() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to read crash log", err)
 	}
-	err = sendCrashEmailAlarm(crashLogContent, info.Filename, app, rasp)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "send email failed", err)
-	}
 
 	// send to es
 	//crashLogContent, err := ioutil.ReadFile("hs_err_pid20067-java.log")
@@ -130,9 +138,15 @@ func (o *CrashController) Post() {
 	alarm["crash_log"] = string(crashLogContent)
 	alarm["@timestamp"] = time.Now().UnixNano() / 1000000
 	alarm["event_time"] = alarm["@timestamp"]
-	err = logs.AddCrashAlarm(alarm)
+	sendEmail, err := logs.AddCrashAlarm(alarm)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "send crash alarm to es failed", err)
+	}
+	if app.EmailAlarmConf.Enable && sendEmail {
+		err = sendCrashEmailAlarm(crashLogContent, info.Filename, app, rasp)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "send email failed", err)
+		}
 	}
 	o.ServeWithEmptyData()
 }

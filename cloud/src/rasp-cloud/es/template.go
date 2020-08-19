@@ -517,10 +517,18 @@ var crashDataTemplate = `
 						"event_time": {
 							"type": "date"
 						},
-						"crash_hostname": {
+						"hostname": {
 							"type": "keyword",
 							"ignore_above": 256,
 							"normalizer": "lowercase_normalizer"
+						},
+						"plugin_name": {
+							"type": "keyword",
+							"ignore_above": 256
+						},
+						"register_ip": {
+							"type": "keyword",
+							"ignore_above": 128
 						},
 						"crash_message": {
 							"type": "keyword"

@@ -137,7 +137,7 @@
                   {{ moment(row.event_time).format("HH:mm:ss") }}
                 </td>                
                 <td>
-                  {{ row.crash_hostname }}
+                  {{ row.hostname }}
                 </td>
                 <td nowrap>
                   {{ row.language }}/{{ row.version }} <br>
@@ -264,7 +264,7 @@ export default {
             start_time: this.$refs.datePicker.start.valueOf(),
             end_time: this.$refs.datePicker.end.valueOf(),
             app_id: this.current_app.id,
-            crash_hostname: this.hostname,
+            hostname: this.hostname,
             language: this.selected_language,
             rasp_id: this.rasp_id,
             crash_message: this.crash_message,

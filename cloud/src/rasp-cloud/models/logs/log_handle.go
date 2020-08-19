@@ -110,7 +110,7 @@ type SearchCrashParam struct {
 		AppId          string    `json:"app_id,omitempty"`
 		StartTime      int64     `json:"start_time"`
 		EndTime        int64     `json:"end_time"`
-		HostName       string    `json:"crash_hostname,omitempty"`
+		HostName       string    `json:"hostname,omitempty"`
 		Language       *[]string `json:"language,omitempty"`
 		RaspId         string    `json:"rasp_id,omitempty"`
 		CrashMessage   string    `json:"crash_message,omitempty"`
@@ -316,7 +316,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
-			} else if key == "attack_source" || key == "url" || key == "crash_message" || key == "crash_hostname" ||
+			} else if key == "attack_source" || key == "url" || key == "crash_message" || key == "hostname" ||
 				key == "message" || key == "plugin_message" || key == "client_ip" {
 				realValue := strings.TrimSpace(fmt.Sprint(value))
 				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+realValue+"*"))

@@ -24,28 +24,29 @@ func init() {
 	registerAlarmInfo(&CrashAlarmInfo)
 }
 
-func AddCrashAlarm(alarm map[string]interface{}) error {
+func AddCrashAlarm(alarm map[string]interface{}) (bool, error) {
+	sendEmail := true
 	defer func() {
 		if r := recover(); r != nil {
 			beego.Error("failed to add crash alarm: ", r)
 		}
 	}()
 	if alarm["language"].(string) == "java" {
-		alarm = parseJavaStack(alarm)
+		sendEmail, alarm = parseJavaStack(alarm)
 	} else if alarm["language"].(string) == "php" {
-		alarm = parsePhpStack(alarm)
+		sendEmail, alarm = parsePhpStack(alarm)
 	} else {
-		return errors.New("unknown language:" +  alarm["language"].(string))
+		return false, errors.New("unknown language:" +  alarm["language"].(string))
 	}
 
 	err := AddLogWithKafka(AttackAlarmInfo.EsType, alarm)
 	if err != nil {
-		return err
+		return true, err
 	}
-	return AddAlarmFunc(CrashAlarmInfo.EsType, alarm)
+	return sendEmail, AddAlarmFunc(CrashAlarmInfo.EsType, alarm)
 }
 
-func parseJavaStack(alarm map[string]interface{}) map[string]interface{}{
+func parseJavaStack(alarm map[string]interface{}) (bool, map[string]interface{}) {
 	// java
 	var alarmMessage string
 	var idContent string
@@ -63,10 +64,10 @@ func parseJavaStack(alarm map[string]interface{}) map[string]interface{}{
 	idContent += fmt.Sprint(alarm["rasp_id"])
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
 	alarm["stack_md5"] = alarm["upsert_id"]
-	return alarm
+	return true, alarm
 }
 
-func parsePhpStack(alarm map[string]interface{}) map[string]interface{}{
+func parsePhpStack(alarm map[string]interface{}) (bool, map[string]interface{}){
 	// php
 	var alarmMessage string
 	var idContent string
@@ -82,16 +83,16 @@ func parsePhpStack(alarm map[string]interface{}) map[string]interface{}{
 		}
 		if strings.Index(content, "[0x") != -1 {
 			content = content[:strings.Index(content, "[0x")]
-			if strings.Index(content, "openrasp.so") != -1 && findStack {
+			if strings.Index(content, "openrasp.so") != -1 {
 				cnt += 1
-				if cnt == 3 {
+				if cnt == 3 && findStack {
 					tmp := strings.Split(content, "(")[1]
 					ret := strings.Split(tmp, "+")
-					alarmMessage, err := demangle.ToString(ret[0])
+					retMessage, err := demangle.ToString(ret[0])
 					if err != nil {
 						alarmMessage = content
 					} else {
-						alarmMessage = alarmMessage + "+" + strings.Split(ret[1], ")")[0]
+						alarmMessage = retMessage + "+" + strings.Split(ret[1], ")")[0]
 					}
 					findStack = false
 				}
@@ -107,5 +108,8 @@ func parsePhpStack(alarm map[string]interface{}) map[string]interface{}{
 	idContent += fmt.Sprint(alarm["rasp_id"])
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
 	alarm["stack_md5"] = alarm["upsert_id"]
-	return alarm
+	if cnt < 3 {
+		return false, alarm
+	}
+	return true, alarm
 }
