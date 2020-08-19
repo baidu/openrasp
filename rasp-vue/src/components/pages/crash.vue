@@ -112,11 +112,14 @@
                 <th>
                   最后发现时间
                 </th>
-                <th style="min-width: 150px;">
-                  语言
+                <th nowrap>
+                  主机名
                 </th>
                 <th>
-                  主机名
+                  RASP 版本
+                </th>
+                <th>
+                  RASP 目录
                 </th>
                 <th nowrap>
                   报警信息
@@ -132,13 +135,16 @@
                   {{ moment(row.event_time).format("YYYY-MM-DD") }}
                   <br />
                   {{ moment(row.event_time).format("HH:mm:ss") }}
-                </td>
-                <td style="max-width: 500px; word-break: break-word;">
-                  {{ row.language }}/{{ row.version || "-" }}
-                </td>
-
+                </td>                
                 <td>
                   {{ row.crash_hostname }}
+                </td>
+                <td nowrap>
+                  {{ row.language }}/{{ row.version }} <br>
+                  {{ row.plugin_name ? row.plugin_name : 'official' }}/{{ row.plugin_version }}
+                </td>
+                <td>
+                  {{ row.rasp_home }}
                 </td>
                 <td style="word-break: break-word;">
                   {{ row.crash_message }}
