@@ -870,7 +870,6 @@ function validate_stack_java(stacks) {
         'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': "Using SpEL expressions",
         'freemarker.template.utility.Execute.exec':                                     "Using FreeMarker template",
         'org.jboss.el.util.ReflectionUtil.invokeMethod':                                "Using JBoss EL method",
-        'net.rebeyond.behinder.payload.java.Cmd.RunCMD':                                "Using BeHinder defineClass webshell",
         'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     "Using Groovy library",
         'bsh.Reflect.invokeMethod':                                                     "Using BeanShell library",
         'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     "Using Nashorn engine"
@@ -909,6 +908,11 @@ function validate_stack_java(stacks) {
 
         if (method.startsWith('ysoserial.Pwner')) {
             message = "Using YsoSerial tool"
+            break
+        }
+
+        if (method.startsWith('net.rebeyond.behinder')) {
+            message = "Using BeHinder defineClass webshell"
             break
         }
 
@@ -1516,7 +1520,7 @@ function _(message, args)
 if (algorithmConfig.meta.log_event) {
 
     plugin.register('directory', function (params, context) {
-        plugin.log('Listing directory content: ' + params.realpath)
+        plugin.log('Listing directory content: ' + params.realpath, params.stack)
         return clean
     })
 
@@ -1536,7 +1540,7 @@ if (algorithmConfig.meta.log_event) {
     })
 
     plugin.register('command', function (params, context) {
-        plugin.log('Execute command: ' + params.command)
+        plugin.log('Execute command: ' + params.command, params.stack)
         return clean
     })
 
