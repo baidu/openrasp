@@ -105,7 +105,7 @@ function startWith($str, $needle)
 
 function validateRootDir($root_dir)
 {
-	$valid = false;
+	// 未配置直接返回
 	$open_basedir = ini_get('open_basedir');
 	if (empty($open_basedir)) {
 		return;
@@ -113,6 +113,7 @@ function validateRootDir($root_dir)
 
 	// 避免因为斜杠匹配失败，暂时不做 realpath 处理
 	$root_dir = rtrim($root_dir, '/');
+	$valid    = false;
 
 	// TODO: 改为真实路径 + 前缀检查
 	$allowed = explode(':', $open_basedir);
