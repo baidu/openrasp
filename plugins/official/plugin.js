@@ -2007,7 +2007,6 @@ plugin.register('directory', function (params, context) {
     // 算法2 - 检查PHP菜刀等后门
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
-        // PHP: 过滤已知误报(joomla)
         if (language == 'php' && validate_stack_php(params.stack))
         {
             return {
