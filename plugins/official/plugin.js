@@ -2007,13 +2007,21 @@ plugin.register('directory', function (params, context) {
     // 算法2 - 检查PHP菜刀等后门
     if (algorithmConfig.directory_reflect.action != 'ignore')
     {
-        // 目前，只有 PHP 支持通过堆栈方式，拦截列目录功能
-        // 过滤已知误报(joomla)
+        // PHP: 过滤已知误报(joomla)
         if (language == 'php' && validate_stack_php(params.stack))
         {
             return {
                 action:     algorithmConfig.directory_reflect.action,
                 message:    _("WebShell activity - Using file manager function with China Chopper WebShell"),
+                confidence: 90,
+                algorithm:  'directory_reflect'
+            }
+        }
+        else if (language == 'java' && validate_stack_java(params.stack))
+        {
+            return {
+                action:     algorithmConfig.directory_reflect.action,
+                message:    _("WebShell activity - Using file manager function with Java WebShell"),
                 confidence: 90,
                 algorithm:  'directory_reflect'
             }
