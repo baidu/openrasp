@@ -25,3 +25,9 @@ td {
 .modal-body p {
     word-break: break-all
 }
+
+.active .dropdown-icon,
+.dropdown-item.active .dropdown-icon,
+.dropdown-item:active .dropdown-icon {
+    color: white
+}
