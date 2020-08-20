@@ -515,7 +515,7 @@ var crashDataTemplate = `
 							"ignore_above" : 64
 						},
 						"relativity": {
-							"type": "bool"
+							"type": "boolean"
 						},
 						"event_time": {
 							"type": "date"
