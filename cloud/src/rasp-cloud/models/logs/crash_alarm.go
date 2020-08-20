@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 	"rasp-cloud/conf"
 )
@@ -62,6 +63,7 @@ func parseJavaStack(alarm map[string]interface{}) (bool, map[string]interface{})
 	// 去重
 	idContent += fmt.Sprint(alarm["crash_message"])
 	idContent += fmt.Sprint(alarm["rasp_id"])
+	idContent += fmt.Sprint(rand.Int())
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
 	alarm["stack_md5"] = alarm["upsert_id"]
 	return true, alarm
@@ -72,6 +74,8 @@ func parsePhpStack(alarm map[string]interface{}) (bool, map[string]interface{}){
 	var alarmMessage string
 	var idContent string
 	var cnt int
+	// 标记第一次出现openrasp.so的位置
+	var firstIdx int
 	findStack := false
 	crashLogContent := fmt.Sprint(alarm["crash_log"])
 	splitCrashLogContent := strings.Split(crashLogContent, "\n")
@@ -79,6 +83,7 @@ func parsePhpStack(alarm map[string]interface{}) (bool, map[string]interface{}){
 		// 去掉[0x7f0e258d86ee]类似的内存地址
 		if strings.Index(content, "Native stacks:") != -1 {
 			findStack = true
+			firstIdx = idx + 3
 			continue
 		}
 		if strings.Index(content, "[0x") != -1 {
@@ -100,12 +105,21 @@ func parsePhpStack(alarm map[string]interface{}) (bool, map[string]interface{}){
 			splitCrashLogContent[idx] = content
 		}
 	}
-	alarm["crash_message"] = alarmMessage
+	// 如果没有出现第三个openrasp.so, 此处需要附一个无关的值
+	if alarmMessage == "" {
+		content := splitCrashLogContent[firstIdx]
+		alarm["crash_message"] = content[:strings.Index(content, "[0x")]
+		alarm["relativity"] = false
+	} else {
+		alarm["crash_message"] = alarmMessage
+		alarm["relativity"] = true
+	}
 	crashLogContent = strings.Join(splitCrashLogContent, "\n")
 	alarm["crash_log"] = crashLogContent
 	// 去重
 	idContent += fmt.Sprint(alarm["crash_log"])
 	idContent += fmt.Sprint(alarm["rasp_id"])
+	idContent += fmt.Sprint(rand.Int())
 	alarm["upsert_id"] = fmt.Sprintf("%x", md5.Sum([]byte(idContent)))
 	alarm["stack_md5"] = alarm["upsert_id"]
 	if cnt < 3 {

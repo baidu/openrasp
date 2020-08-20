@@ -514,6 +514,9 @@ var crashDataTemplate = `
 							"type": "keyword",
 							"ignore_above" : 64
 						},
+						"relativity": {
+							"type": "bool"
+						},
 						"event_time": {
 							"type": "date"
 						},
