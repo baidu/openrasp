@@ -1,4 +1,4 @@
-const plugin_version = '2020-0819-1600'
+const plugin_version = '2020-0820-1620'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -338,6 +338,11 @@ var algorithmConfig = {
     // copy_webshell: {
     //     action: 'block'
     // },
+
+    link_webshell: {
+        name:   '算法1 - 通过链接方式获取 WebShell',
+        action: 'block'
+    },
 
     // 文件管理器 - 用户输入匹配，仅当直接读取绝对路径时才检测
     directory_userinput: {
@@ -2423,6 +2428,30 @@ if (algorithmConfig.rename_webshell.action != 'ignore')
     })
 }
 
+
+if (algorithmConfig.link_webshell.action != 'ignore')
+{
+    plugin.register('link', function (params, context) {
+        // 目标文件在webroot内才认为是写后门
+        if (!is_outside_webroot(context.appBasePath, params.dest, null)) {
+            // 源文件是干净的文件，目标文件是脚本文件，判定为重命名方式写后门
+            if (cleanFileRegex.test(params.source) && scriptFileRegex.test(params.dest))
+            {
+                return {
+                    action:    algorithmConfig.link_webshell.action,
+                    message:   _("File upload - Linking a non-script file to server-side script file, source file is %1%, link type", [
+                        params.source,
+                        params.type
+                    ]),
+                    confidence: 90,
+                    algorithm:  'link_webshell'
+                }
+            }
+        }
+
+        return clean
+    })
+}
 
 plugin.register('command', function (params, context) {
     var cmd        = params.command
