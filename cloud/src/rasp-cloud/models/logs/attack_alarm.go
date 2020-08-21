@@ -66,6 +66,7 @@ var (
 		"webshell_file_put_contents": "WebShell - 后门上传",
 		"webshell_ld_preload":        "WebShell - LD_PRELOAD 后门",
 		"response":                   "HTTP 响应采样检测",
+		"link":                       "文件链接",
 	}
 
 	AttackInterceptMap = map[interface{}]string{
