@@ -61,6 +61,7 @@ public class CheckParameter {
         LOADLIBRARY("loadLibrary", new V8AttackChecker(), 1 << 20),
         SSRF_REDIRECT("ssrfRedirect", new V8AttackChecker(), 1 << 21),
         RESPONSE("response", new V8AttackChecker(false), 1 << 23),
+        LINK("link", new V8AttackChecker(), 1 << 24),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),
