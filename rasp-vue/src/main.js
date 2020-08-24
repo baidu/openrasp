@@ -4,9 +4,13 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import axios from 'axios'
+
 import VueClipboard from 'vue-clipboard2'
+Vue.use(VueClipboard)
+
 import BootstrapVue from 'bootstrap-vue'
 Vue.use(BootstrapVue)
+
 import 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
@@ -20,7 +24,6 @@ window.$ = window.jQuery = require('jquery')
 
 Vue.config.productionTip = false
 
-Vue.use(VueClipboard);
 
 import './mixins'
 import store from './store'
