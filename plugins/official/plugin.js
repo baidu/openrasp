@@ -1,4 +1,4 @@
-const plugin_version = '2020-0820-1620'
+const plugin_version = '2020-0824-1700'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -637,7 +637,7 @@ var forcefulBrowsing = {
 	    '/etc/issue',
         '/etc/shadow',
         '/etc/passwd',
-        '/etc/hosts',
+        // '/etc/hosts',
         '/etc/apache2/apache2.conf',
         '/root/.bash_history',
         '/root/.bash_profile',
