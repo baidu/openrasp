@@ -47,7 +47,7 @@
               <p style="word-break: break-all; ">
                 {{ data.register_ip }}
               </p>
-              <div v-if="data.environ">
+              <div v-if="data.environ && data.environ.length">
                 <div class="h6">
                   环境变量
                 </div>
