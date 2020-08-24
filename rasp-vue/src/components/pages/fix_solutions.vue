@@ -55,7 +55,11 @@
 
         <div v-if="data.attack_type == 'deserialization'">
             检查系统是否存在已知的反序列化漏洞，并升级软件或者框架到最新版本。
-        </div>         
+        </div>
+
+        <div v-if="data.attack_type == 'link'">
+            如果这个链接操作不是业务正常需求，则很有可能是 webshell 后门执行的操作，比如用于绕过EDR检测。
+        </div>
 
         <div v-if="data.attack_type == 'ssrf' || data.attack_type == 'ssrfRedirect'">
             检查业务代码，看是否可以直接向用户指定的内网URL，发起请求。
