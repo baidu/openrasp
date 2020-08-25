@@ -125,16 +125,13 @@ func (o *RaspController) GeneralCsv() {
 			selector.Language  = "php"
 		}
 	}
-	if (!language_java && !language_php) {
-		o.ServeWithEmptyData()
-	}
 	if hostname != "" {
 		selector.HostName = hostname
 	}
 	if version != "" {
 		selector.Version = version
 	}
-	if (online || offline) {
+	if (online || offline || (!language_java && !language_php)) {
 		_, rasps, err = models.FindRasp(selector, 0, 0)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to get rasp", err)

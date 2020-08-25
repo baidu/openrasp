@@ -261,7 +261,7 @@ export default {
     getHref() {
         return '/v1/api/rasp/csv?app_id=' + this.current_app.id + '&version=' + this.currentVersion +
             '&online=' + this.filter.online + '&offline=' +  this.filter.offline + '&hostname=' + this.hostname + 
-            '&language_java=' + this.filter.language_java + '&language_php' + this.filter.language_php
+            '&language_java=' + this.filter.language_java + '&language_php=' + this.filter.language_php
     },
     enumAgentVersion() {
       const body = {

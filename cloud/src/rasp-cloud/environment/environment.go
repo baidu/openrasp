@@ -254,7 +254,7 @@ func HandleDaemon() {
 	}
 	if CheckPIDAlreadyRunning(PidFileName) {
 		RecoverPid(PidFileName, false)
-		log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+		beego.Error("fail to start! for details please check the log in " + LogApiPath + "/agent-cloud.log")
 	} else {
 		var cnt int
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
@@ -267,11 +267,11 @@ func HandleDaemon() {
 		}
 
 		if cnt == 29 {
-			beego.Error("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
+			beego.Error("start timeout! for details please check the log in " + LogApiPath + "/agent-cloud.log")
 		} else if CheckPort(port) {
-			beego.Info("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+			beego.Info("start successfully, for details please check the log in " + LogApiPath + "/agent-cloud.log")
 		} else {
-			beego.Error("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+			beego.Error("fail to start! for details please check the log in " + LogApiPath + "/agent-cloud.log")
 		}
 
 	}
@@ -281,8 +281,7 @@ func HandleDaemon() {
 func CheckForkStatus(remove bool) {
 	f, ret := newPIDFile(PidFileName, remove)
 	if ret == false && f == nil {
-		beego.Error("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
-		log.Fatalf("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
+		beego.Error("create %s error, for details please check the log in " + LogApiPath, PidFileName)
 	}
 }
 
@@ -391,7 +390,7 @@ func processExists(pid string) (bool, error) {
 func checkPIDAlreadyExists(path string, remove bool) bool {
 	//pid := readPIDFILE(path)
 	if res, err := processExists(OldPid); res && err == nil && OldPid != " " {
-		beego.Info("the main process" + OldPid + " has already exist!")
+		beego.Info("the main process " + OldPid + " has already exist!")
 		return true
 	}
 	if remove {
