@@ -220,6 +220,7 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 	if bsonModel["app_id"] != nil {
 		app_id := strings.TrimSpace(fmt.Sprint(bsonModel["app_id"]))
 		version := strings.TrimSpace(fmt.Sprint(bsonModel["version"]))
+		language := strings.TrimSpace(fmt.Sprint(bsonModel["language"]))
 		onlineFlag := bson.M{"$gt": 0}
 		if selector.Online != nil {
 			if *selector.Online {
@@ -229,23 +230,26 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 			}
 		}
 		var matchCase bson.M
+		matchCase = bson.M{"$and": []bson.M{
+			{"app_id": app_id},
+			{"onlineTime": onlineFlag},
+		}}
 		if version != "<nil>" {
-			matchCase = bson.M{"$and": []bson.M{
-				{"app_id": app_id},
-				{"version": version},
-				{"onlineTime": onlineFlag},
-			}}
-		} else {
-			matchCase = bson.M{"$and": []bson.M{
-				{"app_id": app_id},
-				{"onlineTime": onlineFlag},
-			}}
+			and := matchCase["$and"].([]bson.M)
+			and = append(and, bson.M{"version": version})
+			matchCase["$and"] = and
+		}
+		if language != "<nil>" {
+			and := matchCase["$and"].([]bson.M)
+			and = append(and, bson.M{"language": language})
+			matchCase["$and"] = and
 		}
 		Operations := []bson.M {
 			{
 				"$project": bson.M {
 					"app_id": 1,
 					"version": 1,
+					"language": 1,
 					"last_heartbeat_time": 1,
 					"heartbeat_interval": 1,
 					"onlineTime": bson.M {

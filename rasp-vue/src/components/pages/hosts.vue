@@ -310,11 +310,12 @@ export default {
       this.$refs.showHostDetail.showModal(data)
     },
     loadRaspList(page) {
-      if (!this.filter.online && !this.filter.offline) {
+      if ((!this.filter.online && !this.filter.offline) || (!this.filter.language_java && !this.filter.language_php)) {
         this.currentPage = page
         this.data = []
         this.total = 0
         this.loading = false
+        this.agent_versions = []
         return
       }
 
