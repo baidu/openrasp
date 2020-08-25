@@ -104,11 +104,29 @@ func (o *RaspController) GeneralCsv() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "offline field err", err)
 	}
+	language_java, err := o.GetBool("language_java")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "language_java field err", err)
+	}
+	language_php, err := o.GetBool("language_php")
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "language_php field err", err)
+	}
 	hostname := o.GetString("hostname")
 	selector := &models.Rasp{AppId: appId}
 	if (!online || !offline) {
 		selector.Online = new(bool)
 		*selector.Online = online
+	}
+	if ((!language_java || !language_php) && (language_java || language_php)) {
+		if language_java {
+			selector.Language = "java"
+		} else {
+			selector.Language  = "php"
+		}
+	}
+	if (!language_java && !language_php) {
+		o.ServeWithEmptyData()
 	}
 	if hostname != "" {
 		selector.HostName = hostname
