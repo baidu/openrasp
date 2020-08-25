@@ -8,16 +8,16 @@
         <div class="page-options d-flex" style="margin-top: 5px;">
           <select v-model="currentVersion" class="form-control">
             <option value="">
-              客户端版本: 全部
+              版本: 全部
             </option>
             <option :value="v.version" v-for="v in agent_versions" :key="v.version">
-              客户端版本: {{v.version}} ({{ v.count }})
+              版本: {{v.version}} ({{ v.count }})
             </option>
           </select>
         </div>
         <div class="page-options d-flex" style="margin-top: 5px; margin-left: 10px; ">
           <div>
-            <b-dropdown :text="'主机状态' + toHostStatus()" class="">
+            <b-dropdown :text="'状态' + toHostStatus()" class="">
               <div class="row px-2">
                 <div class="col-6">
                   <label class="custom-switch">
@@ -39,7 +39,7 @@
                 </div>
               </div>
             </b-dropdown>
-            <b-dropdown text="语言类型" class="">
+            <b-dropdown :text="'语言' + toLanguageStatus()" class="" style="margin-left: 10px; ">
               <div class="row px-2">
                 <div class="col-6">
                   <label class="custom-switch">
@@ -260,7 +260,8 @@ export default {
     ceil: Math.ceil,
     getHref() {
         return '/v1/api/rasp/csv?app_id=' + this.current_app.id + '&version=' + this.currentVersion +
-            '&online=' + this.filter.online + '&offline=' +  this.filter.offline + '&hostname=' + this.hostname
+            '&online=' + this.filter.online + '&offline=' +  this.filter.offline + '&hostname=' + this.hostname + 
+            '&language_java=' + this.filter.language_java + '&language_php' + this.filter.language_php
     },
     enumAgentVersion() {
       const body = {
@@ -304,6 +305,20 @@ export default {
         return ': 仅在线'
       } else {
         return ': 仅离线'
+      }      
+    },
+    toLanguageStatus() {
+      if (this.filter.language_java && this.filter.language_php) {
+        return ': 全部'
+      }
+      if (! this.filter.language_java && ! this.filter.language_php) {
+        return ''
+      }
+
+      if (this.filter.language_java) {
+        return ': 仅 Java'
+      } else {
+        return ': 仅 PHP'
       }      
     },
     showHostDetail(data) {
