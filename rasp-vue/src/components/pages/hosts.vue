@@ -39,6 +39,28 @@
                 </div>
               </div>
             </b-dropdown>
+            <b-dropdown text="语言类型" class="">
+              <div class="row px-2">
+                <div class="col-6">
+                  <label class="custom-switch">
+                    <input v-model="filter.language_java" type="checkbox" checked="filter.language_java" class="custom-switch-input" @change="$emit('selected')">
+                    <span class="custom-switch-indicator" />
+                    <span class="custom-switch-description">
+                      Java
+                    </span>
+                  </label>
+                </div>
+                <div class="col-6">
+                  <label class="custom-switch">
+                    <input v-model="filter.language_php" type="checkbox" checked="filter.language_php" class="custom-switch-input" @change="$emit('selected')">
+                    <span class="custom-switch-indicator" />
+                    <span class="custom-switch-description">
+                      PHP
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </b-dropdown>
           </div>
           <div class="input-icon ml-3">
             <span class="input-icon-addon">
@@ -182,7 +204,9 @@ export default {
       hostname: '',
       filter: {
         online: true,
-        offline: true
+        offline: true,
+        language_java: true,
+        language_php: true,
       }
     }
   },
@@ -252,6 +276,12 @@ export default {
       } else if (!this.filter.online && this.filter.offline) {
           body.data.online = false
       }
+      // 筛选语言
+      if (this.filter.language_java && !this.filter.language_php) {
+        body.data.language = "java"
+      } else if (!this.filter.language_java && this.filter.language_php) {
+        body.data.language = "php"
+      }
       // if (this.currentVersion) {
       //     body.data.version = this.currentVersion
       // }
@@ -315,6 +345,12 @@ export default {
         body.data.online = true
       } else if (!this.filter.online && this.filter.offline) {
         body.data.online = false
+      }
+      // 筛选语言
+      if (this.filter.language_java && !this.filter.language_php) {
+        body.data.language = "java"
+      } else if (!this.filter.language_java && this.filter.language_php) {
+        body.data.language = "php"
       }
       this.loading = true
       return this.request.post('v1/api/rasp/search', body).then(res => {
