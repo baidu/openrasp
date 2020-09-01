@@ -1,4 +1,4 @@
-const plugin_version = '2020-0824-1700'
+const plugin_version = '2020-0901-1300'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -236,7 +236,8 @@ var algorithmConfig = {
             '.burpcollaborator.net',
             '.tu4.org',
             '.2xss.cc',
-            '.bxss.me'
+            '.bxss.me',
+            '.godns.vip'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
