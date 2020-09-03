@@ -120,7 +120,7 @@ export var attack_types = {
   xxe: 'XXE 外部实体加载',
   directory: '目录遍历',
   rename: '文件重命名',
-  readFile: '任意文件下载',
+  readFile: '任意文件读取',
   deleteFile: '任意文件删除',
   include: '任意文件包含',
   writeFile: '任意文件写入',
