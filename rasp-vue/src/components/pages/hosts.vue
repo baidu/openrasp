@@ -246,7 +246,12 @@ export default {
     // console.log('load filter')
     try {
       let filter = JSON.parse(localStorage.getItem('host_filter_status'))
-      if (typeof(filter.online) == 'boolean' && typeof(filter.offline) == 'boolean') {
+      if (
+        typeof(filter.online) == 'boolean' &&
+        typeof(filter.offline) == 'boolean' &&
+        typeof(filter.language_java) == 'boolean' &&
+        typeof(filter.language_php) == 'boolean'
+      ) {
         this.filter = filter
       }
     } catch (e) {}
