@@ -797,6 +797,10 @@ func (o *AppController) ConfigAlarm() {
 	if param.GeneralAlarmConf != nil {
 		models.AlarmCheckInterval = param.GeneralAlarmConf.AlarmCheckInterval
 		o.validGeneralAlarmConf(param.GeneralAlarmConf)
+		err = models.UpdateGeneralAlarmConfig(param.GeneralAlarmConf)
+		if err != nil {
+			o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
+		}
 	}
 	content, err := json.Marshal(param)
 	if err != nil {
@@ -809,10 +813,6 @@ func (o *AppController) ConfigAlarm() {
 	app, err = models.UpdateAppById(param.AppId, updateData)
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app", err)
-	}
-	err = models.UpdateGeneralAlarmConfig(param.GeneralAlarmConf)
-	if err != nil {
-		o.ServeError(http.StatusBadRequest, "failed to update alarm config", err)
 	}
 	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
 		"Alarm configuration updated for "+param.AppId)

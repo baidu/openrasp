@@ -407,23 +407,20 @@ export default {
     loadAlarmMethod: function() {
       var self = this
       var conf = self.data.attack_type_alarm_conf
-
       // 没配置等于全开
       if (! conf) {
-        this.resetAlarmMethods(true)
+        this.resetAlarmMethods(false)
         return
       }
-
       // 转换
       self.sendMethods['crash'] = {}
 
-      Object.keys(conf).forEach(function (name) {
+      Object.keys(self.sendMethods).forEach(function (name) {
         self.sendMethods[name] = {
           ding: false,
           http: false,
           email: false
         }
-
         conf[name].forEach(function (method) {
           self.sendMethods[name][method] = true
         })
