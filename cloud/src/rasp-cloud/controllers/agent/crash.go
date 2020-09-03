@@ -152,7 +152,11 @@ func (o *CrashController) Post() {
 }
 
 func sendCrashEmailAlarm(crashLogContent []byte, fileName string, app *models.App, rasp *models.Rasp) error {
-	var emailConf = app.EmailAlarmConf
+	// 获取app的email配置用户名和密码
+	emailConf, err := models.GetEmailConfByAppId(app.Id)
+	if err != nil {
+		return err
+	}
 	if len(emailConf.RecvAddr) > 0 && emailConf.ServerAddr != "" {
 		var (
 			msg       string

@@ -42,7 +42,6 @@ import (
 	"net"
 	"rasp-cloud/conf"
 	"net/url"
-	"log"
 )
 
 type App struct {
@@ -354,7 +353,6 @@ func HandleAttackAlarm() {
 	_, err := mongo.FindAllWithSelect(appCollectionName, nil, &apps, bson.M{"plugin": 0}, 0, 0)
 	if err != nil {
 		beego.Error("failed to get apps for the alarm: " + err.Error())
-		log.Println("failed to get apps for the alarm: " + err.Error())
 		return
 	}
 	now := time.Now().UnixNano() / 1000000
@@ -386,7 +384,6 @@ func HandleAttackAlarm() {
 				1, 10, false, logs.AttackAlarmInfo.EsAliasIndex+"-"+app.Id)
 			if err != nil {
 				beego.Error("failed to get alarm from es: " + err.Error())
-				log.Println("failed to get alarm from es: " + err.Error())
 				continue
 			}
 			if total > 0 {
@@ -488,6 +485,10 @@ func GetAllApp(page int, perpage int, mask bool) (count int, result []*App, err 
 
 func GetAppByIdWithoutMask(id string) (app *App, err error) {
 	err = mongo.FindId(appCollectionName, id, &app)
+	generalConf, _ := getGeneralConfig()
+	if generalConf != nil {
+		app.GeneralAlarmConf.AlarmCheckInterval = generalConf.AlarmCheckInterval
+	}
 	return
 }
 
@@ -524,6 +525,20 @@ func GetSecretByAppId(appId string) (secret string, err error) {
 	}
 	if result != nil {
 		secret = result.Secret
+	}
+	return
+}
+
+func GetEmailConfByAppId(appId string) (e EmailAlarmConf, err error) {
+	newSession := mongo.NewSession()
+	defer newSession.Close()
+	var result *App
+	err = newSession.DB(mongo.DbName).C(appCollectionName).FindId(appId).Select(bson.M{"email_alarm_conf": 1}).One(&result)
+	if err != nil {
+		return
+	}
+	if result != nil {
+		e = result.EmailAlarmConf
 	}
 	return
 }

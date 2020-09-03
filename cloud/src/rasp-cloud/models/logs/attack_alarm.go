@@ -51,6 +51,7 @@ var (
 		"directory":                  "目录遍历",
 		"rename":                     "文件重命名",
 		"readFile":                   "任意文件下载",
+		"deleteFile":                 "任意文件删除",
 		"include":                    "任意文件包含",
 		"writeFile":                  "任意文件写入",
 		"ssrf":                       "SSRF 服务端请求伪造",
