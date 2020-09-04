@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 ?>
-OpenRASP Uninstaller for PHP servers - Copyright 2017-2019 Baidu Inc.
+OpenRASP Uninstaller for PHP servers - Copyright 2017-2020 Baidu Inc.
 For more details visit: https://rasp.baidu.com/doc/install/software.html
 
 <?php

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2020 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -191,7 +191,7 @@ public class App {
     }
 
     private static void showBanner() {
-        String banner = "OpenRASP Installer for Java app servers - Copyright 2017-2019 Baidu Inc.\n" +
+        String banner = "OpenRASP Installer for Java app servers - Copyright 2017-2020 Baidu Inc.\n" +
                 "For more details visit: https://rasp.baidu.com/doc/install/software.html\n";
         System.out.println(banner);
     }
