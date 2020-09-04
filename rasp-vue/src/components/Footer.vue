@@ -13,7 +13,7 @@
           </div>
         </div>
         <div class="col-12 col-lg-auto mt-3 mt-lg-0 text-center">
-          Copyright © 2017-2020 Baidu, Inc. 企业版 {{ cloud.version }} ({{ cloud.commit_id.substr(0, 8) }})，编译时间 {{ cloud.build_time}}
+          Copyright © 2017-2020 Baidu, Inc. {{ cloud.version }} ({{ cloud.commit_id.substr(0, 8) }})，编译时间 {{ cloud.build_time}}
         </div>
       </div>
     </div>
