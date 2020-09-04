@@ -10,13 +10,10 @@
                 <li class="list-inline-item"><a href="https://rasp.baidu.com/#section-books" target="_blank">最佳实践</a></li>
               </ul>
             </div>
-            <div class="col-auto">
-              <a href="https://github.com/baidu/openrasp" target="_blank" class="btn btn-outline-primary btn-sm">源代码</a>
-            </div>
           </div>
         </div>
         <div class="col-12 col-lg-auto mt-3 mt-lg-0 text-center">
-          Copyright © 2017-2020 Baidu, Inc. 当前版本 {{rasp_version}}
+          Copyright © 2017-2020 Baidu, Inc. 企业版 {{ cloud.version }} ({{ cloud.commit_id.substr(0, 8) }})，编译时间 {{ cloud.build_time}}
         </div>
       </div>
     </div>
@@ -24,14 +21,33 @@
 </template>
 
 <script>
-import { rasp_version } from '@/util'
+import { rasp_version, rasp_commit_id, rasp_build_time } from '@/util/version'
 
 export default {
   name: 'Footer',
   data: function() {
     return {
-      rasp_version: rasp_version
+      cloud: {
+        version: '获取中',
+        commit_id: '',
+        build_time: ''
+      },
+      fe: {
+        version: rasp_version,
+        commit_id: rasp_commit_id,
+        build_time: rasp_build_time
+      }
     }
+  },
+  methods: {
+    getVersion() {
+      this.request.post('v1/version', {}).then(res => {
+        this.cloud = res
+      })
+    }
+  },
+  mounted() {
+    this.getVersion()
   }
 }
 </script>
