@@ -42,7 +42,7 @@ type PIDFile struct {
 var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
-	Version             = "1.3.3"
+	Version             = "1.3.4"
 	LogPath             = beego.AppConfig.DefaultString("LogPath", "/home/openrasp/logs")
 	LogApiPath			= LogPath + "/api"
 	PidFileName         = LogPath + "/pid.file"
@@ -118,14 +118,14 @@ func HandleOperation(operation string) {
 	case conf.StatusOperation:
 		status()
 	default:
-		log.Println("unknown operation!")
+		beego.Info("unknown operation!")
 	}
 }
 
 func restart() {
 	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
-		log.Println("Restarting........")
+		beego.Info("Restarting........")
 		if err != nil {
 			tools.Panic(tools.ErrCodeGetPidFailed, "Failed to get pid", err)
 		}
@@ -143,14 +143,13 @@ func restart() {
 			time.Sleep(1 * time.Second)
 			if restartCnt%60 == 0 {
 				beego.Info("this operation may spend about a few minutes")
-				log.Println("this operation may spend about a few minutes")
 			}
 			if restartCnt >= 300 {
 				beego.Info("Restart timeout! Probably the process has been restarted immediately")
 				log.Fatalln("Restart timeout! Probably the process has been restarted immediately")
 			}
 		}
-		log.Println("Restart success!")
+		beego.Info("Restart success!")
 	} else {
 		log.Printf("The process id:%s is not exists or not a rasp process!", OldPid)
 		beego.Info("The process id: " + OldPid + " is not exists or not a rasp process!")
@@ -162,7 +161,7 @@ func restart() {
 func stop() {
 	pid, err := strconv.Atoi(OldPid)
 	if CheckPIDAlreadyRunning(PidFileName) {
-		log.Println("Stopping........")
+		beego.Info("Stopping........")
 		if err != nil {
 			tools.Panic(tools.ErrCodeGetPidFailed, "Failed to get pid", err)
 		} else {
@@ -170,7 +169,7 @@ func stop() {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			log.Println("Stop ok!")
+			beego.Info("Stop ok!")
 		}
 	} else {
 		beego.Info("The process id:" + OldPid + " is not exists!")
@@ -209,15 +208,15 @@ func HandleUpgrade(flag string) {
 	UpdateMappingConfig = make(map[string]interface{})
 	switch flag {
 	case "120to121":
-		log.Println("Going to update ElasticSearch mapping")
+		beego.Info("Going to update ElasticSearch mapping")
 
 		UpdateMappingConfig["attack-alarm-template"] = "120to121"
 		UpdateMappingConfig["policy-alarm-template"] = "120to121"
 		UpdateMappingConfig["error-alarm-template"] = "120to121"
 	case "121to122":
-		log.Println("Going to update 121to122")
+		beego.Info("Going to update 121to122")
 	default:
-		log.Println("Unknown upgrade job specified: " + flag)
+		beego.Info("Unknown upgrade job specified: " + flag)
 	}
 }
 
@@ -254,7 +253,7 @@ func HandleDaemon() {
 	}
 	if CheckPIDAlreadyRunning(PidFileName) {
 		RecoverPid(PidFileName, false)
-		log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+		log.Fatal("fail to start! for details please check the log in agent-cloud.log")
 	} else {
 		var cnt int
 		port := beego.AppConfig.DefaultInt("httpport", 8080)
@@ -267,14 +266,11 @@ func HandleDaemon() {
 		}
 
 		if cnt == 29 {
-			beego.Error("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
-			log.Fatal("start timeout! for details please check the log in 'logs/api/agent-cloud.log'")
+			beego.Error("start timeout! for details please check the log in agent-cloud.log")
 		} else if CheckPort(port) {
-			beego.Info("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
-			log.Println("start successfully, for details please check the log in 'logs/api/agent-cloud.log'")
+			beego.Info("start successfully, for details please check the log in agent-cloud.log")
 		} else {
-			beego.Error("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
-			log.Fatal("fail to start! for details please check the log in 'logs/api/agent-cloud.log'")
+			beego.Error("fail to start! for details please check the log in agent-cloud.log")
 		}
 
 	}
@@ -284,8 +280,7 @@ func HandleDaemon() {
 func CheckForkStatus(remove bool) {
 	f, ret := newPIDFile(PidFileName, remove)
 	if ret == false && f == nil {
-		beego.Error("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
-		log.Fatalf("create %s error, for details please check the log in 'logs/api/agent-cloud.log'", PidFileName)
+		beego.Error("create " + PidFileName + " %s error, for details please check the log in agent-cloud.log")
 	}
 }
 
@@ -300,7 +295,7 @@ func fork() (err error) {
 			args = append(args, arg)
 		}
 	}
-	log.Println("args:", args)
+	beego.Info("args:", args)
 	cmd := exec.Command(path, args...)
 	err = cmd.Start()
 	return
@@ -368,7 +363,7 @@ func processExists(pid string) (bool, error) {
 	//			return true, nil
 	//		} else if len(outStr) > 0 {
 	//			if Status == "restart" {
-	//				log.Println(outStr)
+	//				beego.Info(outStr)
 	//			}
 	//			return false, nil
 	//		}
@@ -383,7 +378,7 @@ func processExists(pid string) (bool, error) {
 			return true, nil
 		} else if len(outStr) > 0 {
 			if Status == "restart" {
-				log.Println(outStr)
+				beego.Info(outStr)
 			}
 			return false, nil
 		}
@@ -394,8 +389,7 @@ func processExists(pid string) (bool, error) {
 func checkPIDAlreadyExists(path string, remove bool) bool {
 	//pid := readPIDFILE(path)
 	if res, err := processExists(OldPid); res && err == nil && OldPid != " " {
-		beego.Error("the main process %s has already exist!", OldPid)
-		log.Printf("the main process %s has already exist!", OldPid)
+		beego.Info("the main process " + OldPid + " has already exist!")
 		return true
 	}
 	if remove {
@@ -409,7 +403,7 @@ func CheckPIDAlreadyRunning(path string) bool {
 	//cwd, err := os.Getwd()
 	//if err != nil {
 	//	beego.Error("getwd error:", err)
-	//	log.Println("getwd error:", err)
+	//	beego.Info("getwd error:", err)
 	//}
 	ret := pidFileExists(filepath.Join(path))
 	if ret == false {
@@ -449,12 +443,10 @@ func newPIDFile(path string, remove bool) (*PIDFile, bool) {
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
-		log.Println("Mkdir error:", err)
 		beego.Error("Mkdir error:", err)
 		return nil, false
 	}
 	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
-		log.Println("WriteFile error:", err)
 		beego.Error("WriteFile error:", err)
 		return nil, false
 	}
@@ -489,12 +481,10 @@ func RecoverPid(path string, remove bool) (*PIDFile, bool) {
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0755)); err != nil {
-		log.Println("Mkdir error:", err)
 		beego.Error("Mkdir error:", err)
 		return nil, false
 	}
 	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%s", OldPid)), 0644); err != nil {
-		log.Println("WriteFile error:", err)
 		beego.Error("WriteFile error:", err)
 		return nil, false
 	}
