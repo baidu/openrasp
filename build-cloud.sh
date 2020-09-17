@@ -78,7 +78,7 @@ function build_cloud()
     fi
 
     cd src/rasp-cloud
-    if [[ -z "NO_GOMOD_DOWNLOAD" ]]; then
+    if [[ -z "$NO_GOMOD_DOWNLOAD" ]]; then
         go mod download
     fi
 
