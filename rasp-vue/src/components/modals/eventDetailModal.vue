@@ -229,9 +229,16 @@ export default {
       this.data = data
 
       // v1.2 之后，删除外面的字符串堆栈，改用 params.stack 数组
-      if (! data.stack_trace && data.attack_params.stack)
+      if (! data.stack_trace)
       {
-        data.stack_trace = data.attack_params.stack.join("\n")
+        if (data.attack_params.stack)
+        {
+          data.stack_trace = data.attack_params.stack.join("\n")
+        }
+        else
+        {
+          data.stack_trace = ''
+        }
       }
 
       this.$refs.attack_params.setData(data)
