@@ -38,7 +38,7 @@
         <servlet.version>3.1.0</servlet.version>
         <jsp.version>2.3.1</jsp.version>
         <jstl.version>1.2</jstl.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
     </properties>
     <dependencies>
         <dependency>
