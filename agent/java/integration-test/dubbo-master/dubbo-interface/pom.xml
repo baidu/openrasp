@@ -33,7 +33,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <compiler.source>1.7</compiler.source>
         <compiler.target>1.7</compiler.target>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <!-- spring版本号 -->
         <spring.version>4.0.2.RELEASE</spring.version>
         <!-- mybatis版本号 -->
