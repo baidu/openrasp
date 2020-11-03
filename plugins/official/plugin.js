@@ -1,4 +1,4 @@
-const plugin_version = '2020-0901-1300'
+const plugin_version = '2020-1103-1700'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -878,7 +878,8 @@ function validate_stack_java(stacks) {
         'org.jboss.el.util.ReflectionUtil.invokeMethod':                                "Using JBoss EL method",
         'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     "Using Groovy library",
         'bsh.Reflect.invokeMethod':                                                     "Using BeanShell library",
-        'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     "Using Nashorn engine"
+        'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     "Using Nashorn engine",
+        'org.apache.shiro.io.DefaultSerializer.deserialize':                            "Using Shiro framework (DefaultSerializer)"
     }
 
     var userCode = false, reachedInvoke = false, i = 0, message = undefined
