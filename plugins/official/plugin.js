@@ -1,4 +1,4 @@
-const plugin_version = '2020-1103-1700'
+const plugin_version = '2020-1125-1100'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1991,6 +1991,14 @@ plugin.register('sql_exception', function(params, context) {
             }
             // 过滤非语法错误
             if (! /syntax/i.test(params.error_msg)) {
+                return clean
+            }
+        }
+    }
+    else if (params.server = 'sqlite') {
+        if (error_code == 1) {
+            // 忽略大小写匹配
+            if ( !/syntax/i.test(params.error_msg) && !  /malformed MATCH/i.test(params.error_msg)) {
                 return clean
             }
         }
