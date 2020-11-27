@@ -1,4 +1,4 @@
-const plugin_version = '2020-1127-1230'
+const plugin_version = '2020-1127-1930'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1211,6 +1211,11 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance,
             start = i
             break
         }
+    }
+
+    // 注释可能在结尾，防止去掉注释导致的越界
+    if (start == -1) {
+        return false
     }
 
     // 寻找 token 结束点
