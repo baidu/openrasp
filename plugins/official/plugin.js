@@ -1,4 +1,4 @@
-const plugin_version = '2020-1125-1100'
+const plugin_version = '2020-1127-1230'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -973,6 +973,10 @@ function validate_stack_php(stacks) {
             // call_user_func/call_user_func_array 两个函数调用很频繁
         // 必须是 call_user_func 直接调用 system/exec 等函数才拦截，否则会有很多误报
         if (stack.indexOf('@call_user_func') != -1) {
+            // 过滤safesdk
+            if (stack.indexOf('safesdk-php') != -1) {
+                continue
+            }
             if (i <= 1) {
                 verdict = true
                 break
