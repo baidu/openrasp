@@ -38,7 +38,8 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
 
         /* MySQL */
         if ("com/mysql/jdbc/PreparedStatement".equals(className)
-                || "com/mysql/cj/jdbc/PreparedStatement".equals(className)) {
+                || "com/mysql/cj/jdbc/PreparedStatement".equals(className)
+                || "com/mysql/cj/jdbc/ClientPreparedStatement".equals(className)) {
             this.type = SqlType.MYSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
@@ -79,7 +80,7 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
             return true;
         }
 
-         /* HSqlDB */
+        /* HSqlDB */
         if ("org/hsqldb/jdbc/JDBCPreparedStatement".equals(className)
                 || "org/hsqldb/jdbc/jdbcPreparedStatement".equals(className)) {
             this.type = SqlType.HSQL;
@@ -114,7 +115,11 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         String originalSqlCode = null;
 //        String checkSqlSrc = null;
         if (SqlType.MYSQL.equals(this.type)) {
-            originalSqlCode = "originalSql";
+            if ("com/mysql/cj/jdbc/ClientPreparedStatement".equals(className)) {
+                originalSqlCode = "((com.mysql.cj.PreparedQuery)this.query).getOriginalSql()";
+            } else {
+                originalSqlCode = "originalSql";
+            }
         } else if (SqlType.SQLITE.equals(this.type)
                 || SqlType.HSQL.equals(this.type)) {
             originalSqlCode = "this.sql";
