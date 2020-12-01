@@ -973,7 +973,7 @@ function validate_stack_php(stacks) {
             // call_user_func/call_user_func_array 两个函数调用很频繁
         // 必须是 call_user_func 直接调用 system/exec 等函数才拦截，否则会有很多误报
         if (stack.indexOf('@call_user_func') != -1) {
-            // 过滤safesdk
+            // 过滤内部安全编码库
             if (stack.indexOf('safesdk-php') != -1) {
                 continue
             }

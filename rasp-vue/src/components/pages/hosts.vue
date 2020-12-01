@@ -66,7 +66,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="主机名称/备注/IP/OS" @keyup.enter="loadRaspList(1)">
+            <input v-model.trim="hostname" type="text" class="form-control w-10" placeholder="主机名/备注/RASP目录/IP/OS" @keyup.enter="loadRaspList(1)">
           </div>
 
           <button class="btn btn-primary ml-2" @click="loadRaspList(1)">
