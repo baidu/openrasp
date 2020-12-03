@@ -243,7 +243,7 @@ var algorithmConfig = {
     // SSRF - 是否允许访问混淆后的IP地址
     ssrf_obfuscate: {
         name:   '算法4 - 拦截混淆地址',
-        action: 'block'
+        action: 'ignore'
     },
     // SSRF - 禁止使用 curl 读取 file:///etc/passwd、php://filter/XXXX 这样的内容
     ssrf_protocol: {
