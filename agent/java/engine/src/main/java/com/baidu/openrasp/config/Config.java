@@ -59,7 +59,7 @@ public class Config extends FileScanListener {
     static final String CONFIG_FILE_NAME = "openrasp.yml";
     public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
     public static String baseDirectory;
-    static Integer watchId;
+    static Object watchId;
     //全局lru的缓存
     private static boolean isInit = false;
     public static LRUCache<Object, String> commonLRUCache;
@@ -115,6 +115,7 @@ public class Config extends FileScanListener {
     int responseSamplerInterval;
     int responseSamplerBurst;
     boolean iastEnable;
+    boolean jnotifyEnable;
     static Config instance;
 
 
@@ -282,7 +283,7 @@ public class Config extends FileScanListener {
         }
     }
 
-    private void addConfigFileMonitor() throws JNotifyException {
+    private void addConfigFileMonitor() throws Exception {
         if (watchId != null) {
             FileScanMonitor.removeMonitor(watchId);
         }
@@ -559,6 +560,10 @@ public class Config extends FileScanListener {
      */
     public boolean isIastEnabled() {
         return iastEnable;
+    }
+
+    public boolean isJnotifyEnabled() {
+        return jnotifyEnable;
     }
 
     /**

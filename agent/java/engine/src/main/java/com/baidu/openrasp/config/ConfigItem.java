@@ -669,6 +669,18 @@ public enum ConfigItem {
         }
     }),
 
+    JNOTIFY_ENABLE(new ConfigSetter<String>("jnotify.enable") {
+        @Override
+        public synchronized void setValue(String enable) {
+            Config.getConfig().jnotifyEnable = Boolean.parseBoolean(enable);
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "true";
+        }
+    }),
+
     IAST_ENABLE(new ConfigSetter<String>("iast.enable") {
         @Override
         public synchronized void setValue(String iastEnable) {

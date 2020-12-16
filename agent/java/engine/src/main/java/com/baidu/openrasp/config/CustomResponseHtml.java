@@ -40,7 +40,7 @@ public class CustomResponseHtml extends FileScanListener {
 
     private static CustomResponseHtml instance = new CustomResponseHtml("");
 
-    private static Integer watchId = null;
+    private static Object watchId = null;
 
     private String content;
 
