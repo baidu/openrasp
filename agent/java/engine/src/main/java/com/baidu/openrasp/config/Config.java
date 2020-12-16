@@ -58,6 +58,7 @@ public class Config extends FileScanListener {
     static final String CONFIG_DIR_NAME = "conf";
     static final String CONFIG_FILE_NAME = "openrasp.yml";
     public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
+    public static final String[] FILE_MONITOR_MODE = new String[]{"jnotify", "scan", "disable"};
     public static String baseDirectory;
     static Object watchId;
     //全局lru的缓存
@@ -115,7 +116,8 @@ public class Config extends FileScanListener {
     int responseSamplerInterval;
     int responseSamplerBurst;
     boolean iastEnable;
-    boolean jnotifyEnable;
+    String fileMonitorMode;
+    long fileMonitorInterval;
     static Config instance;
 
 
@@ -562,8 +564,12 @@ public class Config extends FileScanListener {
         return iastEnable;
     }
 
-    public boolean isJnotifyEnabled() {
-        return jnotifyEnable;
+    public String getFileMonitorMode() {
+        return fileMonitorMode;
+    }
+
+    public long getFileMonitorInterval() {
+        return fileMonitorInterval;
     }
 
     /**

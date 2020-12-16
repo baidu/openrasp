@@ -32,7 +32,7 @@ import java.io.File;
 public class FileScanMonitor {
 
     static {
-        if (!Config.getConfig().getCloudSwitch() && Config.getConfig().isJnotifyEnabled()) {
+        if (!Config.getConfig().getCloudSwitch() && Config.getConfig().getFileMonitorMode().equals("jnotify")) {
             JnotifyWatcher watcher = new JnotifyWatcher();
             JNotify.init(Config.baseDirectory, watcher);
         }
@@ -50,7 +50,7 @@ public class FileScanMonitor {
      */
     public static Object addMonitor(String path, FileAlterationListener listener) throws Exception {
         if (!Config.getConfig().getCloudSwitch()) {
-            if (Config.getConfig().isJnotifyEnabled()) {
+            if ("jnotify".equals(Config.getConfig().getFileMonitorMode())) {
                 File file = new File(path);
                 FileAlterationObserver observer = new FileAlterationObserver(file);
                 observer.checkAndNotify();
@@ -58,10 +58,10 @@ public class FileScanMonitor {
                 int mask = JNotify.FILE_CREATED | JNotify.FILE_DELETED
                         | JNotify.FILE_MODIFIED;
                 return JNotify.addWatch(path, mask, false, new FileEventListener(observer));
-            } else {
+            } else if ("scan".equals(Config.getConfig().getFileMonitorMode())) {
                 FileAlterationObserver observer = new FileAlterationObserver(path);
                 observer.addListener(listener);
-                FileAlterationMonitor monitor = new FileAlterationMonitor(1000, observer);
+                FileAlterationMonitor monitor = new FileAlterationMonitor(Config.getConfig().getFileMonitorInterval(), observer);
                 monitor.start();
                 return monitor;
             }
@@ -77,13 +77,15 @@ public class FileScanMonitor {
      */
     public static void removeMonitor(Object watchId) {
         if (!Config.getConfig().getCloudSwitch()) {
-            if (Config.getConfig().isJnotifyEnabled() && (watchId instanceof Integer)) {
+            if ("jnotify".equals(Config.getConfig().getFileMonitorMode())
+                    && (watchId instanceof Integer)) {
                 try {
                     JNotify.removeWatch((Integer) watchId);
                 } catch (JNotifyException e) {
                     e.printStackTrace();
                 }
-            } else if (watchId instanceof FileAlterationMonitor) {
+            } else if ("scan".equals(Config.getConfig().getFileMonitorMode())
+                    && watchId instanceof FileAlterationMonitor) {
                 try {
                     ((FileAlterationMonitor) watchId).stop();
                 } catch (Exception e) {

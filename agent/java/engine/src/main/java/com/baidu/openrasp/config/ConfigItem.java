@@ -669,15 +669,41 @@ public enum ConfigItem {
         }
     }),
 
-    JNOTIFY_ENABLE(new ConfigSetter<String>("jnotify.enable") {
+    FILE_MONITOR_MODE(new ConfigSetter<String>("file_monitor.mode") {
         @Override
-        public synchronized void setValue(String enable) {
-            Config.getConfig().jnotifyEnable = Boolean.parseBoolean(enable);
+        public synchronized void setValue(String mode) {
+            boolean find = false;
+            for (String m : Config.FILE_MONITOR_MODE) {
+                if (m.equals(mode)) {
+                    find = true;
+                    break;
+                }
+            }
+            if (!find) {
+                throw new ConfigLoadException(itemName + " must be in [ 'jnotify','scan','disable' ]");
+            }
+            Config.getConfig().fileMonitorMode = mode;
         }
 
         @Override
         public String getDefaultValue() {
-            return "true";
+            return "jnotify";
+        }
+    }),
+
+    FILE_MONITOR_INTERVAL(new ConfigSetter<String>("file_monitor.interval") {
+        @Override
+        public synchronized void setValue(String interval) {
+            long value = Long.parseLong(interval);
+            if (value <= 0) {
+                throw new ConfigLoadException(itemName + " must be greater than 0");
+            }
+            Config.getConfig().fileMonitorInterval = value;
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "1000";
         }
     }),
 
