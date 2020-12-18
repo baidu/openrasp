@@ -687,7 +687,7 @@ public enum ConfigItem {
 
         @Override
         public String getDefaultValue() {
-            return "jnotify";
+            return "scan";
         }
     }),
 
@@ -703,7 +703,7 @@ public enum ConfigItem {
 
         @Override
         public String getDefaultValue() {
-            return "1000";
+            return "3";
         }
     }),
 

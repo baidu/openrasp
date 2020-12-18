@@ -61,7 +61,7 @@ public class FileScanMonitor {
             } else if ("scan".equals(Config.getConfig().getFileMonitorMode())) {
                 FileAlterationObserver observer = new FileAlterationObserver(path);
                 observer.addListener(listener);
-                FileAlterationMonitor monitor = new FileAlterationMonitor(Config.getConfig().getFileMonitorInterval(), observer);
+                FileAlterationMonitor monitor = new FileAlterationMonitor(Config.getConfig().getFileMonitorInterval() * 1000, observer);
                 monitor.start();
                 return monitor;
             }
