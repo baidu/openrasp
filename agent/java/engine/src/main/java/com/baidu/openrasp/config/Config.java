@@ -101,6 +101,7 @@ public class Config extends FileScanListener {
     Map<Object, Object> responseHeaders;
     int logMaxBackUp;
     int dependencyCheckInterval;
+    boolean dependencyCheckEnable;
     List<String> securityWeakPasswords;
     boolean disableHooks;
     boolean cpuUsageEnable;
@@ -832,6 +833,10 @@ public class Config extends FileScanListener {
      */
     public int getDependencyCheckInterval() {
         return dependencyCheckInterval;
+    }
+
+    public boolean isDependencyCheckEnable() {
+        return dependencyCheckEnable;
     }
 
     public List<String> getSecurityWeakPasswords() {

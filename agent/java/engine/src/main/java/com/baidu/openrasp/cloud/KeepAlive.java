@@ -47,7 +47,9 @@ public class KeepAlive extends CloudTimerTask {
 
     public KeepAlive() {
         super("OpenRASP Heartbeat Thread");
-        dependencyReport.start();
+        if (Config.getConfig().isDependencyCheckEnable()) {
+            dependencyReport.start();
+        }
     }
 
     @Override
@@ -169,7 +171,9 @@ public class KeepAlive extends CloudTimerTask {
                 }
 
                 if (configMap.get(ConfigItem.DEPENDENCY_CHECK_INTERVAL.toString()) != null) {
-                    dependencyReport.interrupt();
+                    if (Config.getConfig().isDependencyCheckEnable()) {
+                        dependencyReport.interrupt();
+                    }
                 }
             } catch (Throwable e) {
                 LogTool.warn(ErrorType.CONFIG_ERROR, "config update failed: " + e.getMessage(), e);

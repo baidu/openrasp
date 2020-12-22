@@ -581,6 +581,18 @@ public enum ConfigItem {
         }
     }),
 
+    DEPENDENCY_ENABLE(new ConfigSetter<String>("dependency_check.enable") {
+        @Override
+        public synchronized void setValue(String enable) {
+            Config.getConfig().dependencyCheckEnable = Boolean.parseBoolean(enable);
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "true";
+        }
+    }),
+
     SECURITY_WEAK_PASSWORDS(new ConfigSetter<List<String>>("security.weak_passwords") {
         @Override
         public synchronized void setValue(List<String> securityWeakPasswords) {
