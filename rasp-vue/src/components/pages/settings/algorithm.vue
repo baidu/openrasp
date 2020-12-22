@@ -222,7 +222,8 @@ export default {
         'xxe_protocol': true,
         'ssrf_protocol': true,
         'response_dataLeak': true,
-        'command_error': true
+        'command_error': true,
+        'xxe_disable_entity': true
       },
       browser_headers: browser_headers
     }

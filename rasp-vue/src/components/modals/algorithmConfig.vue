@@ -46,6 +46,18 @@
             </div>
           </div>
 
+          <div v-if="key == 'xxe_disable_entity'">
+            <p>将为以下类调用 setFeature() 函数，禁止外部实体加载。开启此选项可能会影响业务，请谨慎选择。</p>
+            <div v-for="row in xxe_disable_entity_keys" :key="row.key">
+              <label class="custom-switch m-0">
+                <input type="checkbox" v-model="data[row.key]" class="custom-switch-input">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">{{row.descr}}</span>              
+              </label>
+              <br>
+            </div>
+          </div>
+
           <div v-if="key.endsWith('_protocol')">
             <label>禁止加载的协议列表，逗号分隔</label>
             <textarea class="form-control" autocomplete="off" autocorrect="off"
@@ -181,6 +193,28 @@ export default {
         {
           key:   'alarm_token_enable',
           descr: '检查恶意的 TOKEN，如 $IFS'
+        }
+      ],
+      xxe_disable_entity_keys: [
+        {
+          key:   'java_dom',
+          descr: 'org.apache.xerces.parsers.DOMParser'
+        },
+        {
+          key:   'java_dom4j',
+          descr: 'org.dom4j.io.SAXReader'
+        },
+        {
+          key:   'java_jdom',
+          descr: 'org.jdom.input.SAXBuilder'
+        },
+        {
+          key:   'java_sax',
+          descr: 'org.apache.xerces.internal.jaxp.SAXParserImpl'
+        },
+        {
+          key:   'java_stax',
+          descr: 'javax.xml.stream.XMLInputFactory'
         }
       ]
     }
