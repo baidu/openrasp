@@ -1,4 +1,4 @@
-const plugin_version = '2020-1127-1930'
+const plugin_version = '2020-1223-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -553,7 +553,12 @@ var algorithmConfig = {
     },
 
     webshell_ld_preload: {
-        name:   '算法5 - 拦截 PHP LD_PRELOAD 机制后门',
+        name:   '算法5 - 拦截 PHP LD_PRELOAD/LD_AUDIT 机制后门',
+        action: 'block'
+    },
+
+    webshell_gconv_path: {
+        name:   '算法5 - 拦截 PHP GCONV_PATH 机制后门',
         action: 'block'
     },
 
