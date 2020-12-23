@@ -558,7 +558,7 @@ var algorithmConfig = {
     },
 
     webshell_gconv_path: {
-        name:   '算法5 - 拦截 PHP GCONV_PATH 机制后门',
+        name:   '算法6 - 拦截 PHP GCONV_PATH 机制后门',
         action: 'block'
     },
 
