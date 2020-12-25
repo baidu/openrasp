@@ -580,14 +580,14 @@ var algorithmConfig = {
         ]
     },
 
-    webshell_ld_preload: {
-        name:   '算法5 - 拦截 PHP LD_PRELOAD/LD_AUDIT 机制后门',
-        action: 'block'
-    },
-
-    webshell_gconv_path: {
-        name:   '算法6 - 拦截 PHP GCONV_PATH 机制后门',
-        action: 'block'
+    webshell_env: {
+        name:   '算法5 - 拦截 PHP putenv 相关后门',
+        action: 'block',
+        env: [
+            'LD_PRELOAD',
+            'LD_AUDIT',
+            'GCONV_PATH'
+        ]
     },
 
     eval_regex: {
