@@ -51,6 +51,7 @@ public class App {
     public static boolean isAttach = false;
     public static boolean keepConfig = false;
     public static boolean noDetect = false;
+    public static boolean noDependencyCheck = false;
     public static boolean isPrepend = false;
 
     public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
@@ -93,6 +94,7 @@ public class App {
         options.addOption("pid", true, "Specify the pid of Java server to attach");
         options.addOption("nodetect", false, "Install without updating startup scripts, " +
                 "useful for standalone Java servers like SpringBoot");
+        options.addOption("nodep", false, "Install without dependency check");
         options.addOption("prepend", false, "Prepend the origin java options");
 
         CommandLineParser parser = new PosixParser();
@@ -114,6 +116,7 @@ public class App {
                 }
 
                 noDetect = cmd.hasOption("nodetect");
+                noDependencyCheck = cmd.hasOption("nodep");
                 isPrepend = cmd.hasOption("prepend");
 
                 if (cmd.hasOption("pid")) {
