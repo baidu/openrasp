@@ -94,7 +94,7 @@ public class App {
         options.addOption("pid", true, "Specify the pid of Java server to attach");
         options.addOption("nodetect", false, "Install without updating startup scripts, " +
                 "useful for standalone Java servers like SpringBoot");
-        options.addOption("nodep", false, "Install without dependency check");
+        options.addOption("nodep", false, "Disable parsing of Jar dependency");
         options.addOption("prepend", false, "Prepend the origin java options");
 
         CommandLineParser parser = new PosixParser();
