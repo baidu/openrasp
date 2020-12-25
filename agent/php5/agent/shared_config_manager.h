@@ -55,6 +55,10 @@ public:
   bool build_pg_error_array(Isolate *isolate);
   bool pg_error_filtered(std::string error);
 
+  bool build_env_key_array(std::vector<std::string> &env_keys);
+  bool build_env_key_array(Isolate *isolate);
+  bool filter_env_key(const std::string &env);
+
   std::string get_rasp_id() const;
 
   bool set_buildin_check_action(std::map<OpenRASPCheckType, OpenRASPActionType> buildin_action_map);
@@ -82,6 +86,7 @@ private:
   bool write_check_type_white_array_to_shm(const void *source, size_t num);
   bool write_weak_password_array_to_shm(const void *source, size_t num);
   bool write_pg_error_array_to_shm(const void *source, size_t num);
+  bool write_env_key_array_to_shm(const void *source, size_t num);
   bool build_rasp_id();
 };
 

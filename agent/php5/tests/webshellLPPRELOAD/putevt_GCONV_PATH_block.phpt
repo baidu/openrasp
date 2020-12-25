@@ -1,5 +1,5 @@
 --TEST--
-hook putenv (webshell) bad param
+hook putenv (webshell)
 --SKIPIF--
 <?php
 $dir = __DIR__;
@@ -21,8 +21,8 @@ include(__DIR__.'/../skipif.inc');
 openrasp.root_dir=/tmp/openrasp
 --FILE--
 <?php
-putenv(array())
+putenv('GCONV_PATH=2333')
 ?>
 ok
 --EXPECTREGEX--
-Warning: putenv\(\) expects.*
+<\/script><script>location.href="http[s]?:\/\/.*?request_id=[0-9a-f]{32}"<\/script>

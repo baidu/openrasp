@@ -19,9 +19,9 @@
 #include "openrasp_hook.h"
 #include "agent/shared_config_manager.h"
 
-PRE_HOOK_FUNCTION(putenv, WEBSHELL_LD_PRELOAD);
+PRE_HOOK_FUNCTION(putenv, WEBSHELL_ENV);
 
-void pre_global_putenv_WEBSHELL_LD_PRELOAD(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
+void pre_global_putenv_WEBSHELL_ENV(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *env = nullptr;
     if (zend_parse_parameters(MIN(1, ZEND_NUM_ARGS()), "z", &env) == FAILURE)

@@ -66,6 +66,7 @@ bool PluginUpdatePackage::build_snapshot()
   openrasp::scm->set_mysql_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.mysql.error_code", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE));
   openrasp::scm->set_sqlite_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.sqlite.error_code", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE));
   openrasp::scm->build_pg_error_array(isolate);
+  openrasp::scm->build_env_key_array(isolate);
   isolate->Dispose();
   Platform::Get()->Shutdown();
   return build_successful;
