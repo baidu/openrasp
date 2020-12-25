@@ -86,6 +86,7 @@
         >
           <div class="form-label">
             {{ attack_type2name(row.name) }}
+            <span v-if="row.name == 'response'">(该检测点不支持阻断)</span>
           </div>
           <div
             v-for="item in row.items"
@@ -223,7 +224,9 @@ export default {
         'ssrf_protocol': true,
         'response_dataLeak': true,
         'command_error': true,
-        'xxe_disable_entity': true
+        'xxe_disable_entity': true,
+        'deserialization_blacklist': true,
+        'ognl_blacklist': true
       },
       browser_headers: browser_headers
     }

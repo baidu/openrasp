@@ -129,7 +129,7 @@ export var attack_types = {
   ognl: 'OGNL 代码执行',
   webdav: '任意文件上传 (PUT)',
   fileUpload: '任意文件上传',
-  deserialization: 'Transformer 反序列化',
+  deserialization: '反序列化攻击',
   xss_echo: 'Echo XSS 跨站脚本攻击',
   xss_userinput: 'BODY XSS 跨站脚本攻击',
   webshell_callable: 'WebShell - 变形后门',

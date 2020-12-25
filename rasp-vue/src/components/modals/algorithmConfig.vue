@@ -1,6 +1,6 @@
 <template>
   <div id="algorithmConfigModal" class="modal no-fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-md" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -87,6 +87,22 @@
             </div>
           </div>
 
+          <div v-if="key == 'deserialization_blacklist'">
+            <label>反序列化黑名单（一行一个）</label>
+            <div class="form-group">
+              <textarea type="text" style="white-space: nowrap" autocorrect="off" rows="5"
+               v-model.trim="deserialization_blacklist_concat" class="form-control"></textarea>
+            </div>
+          </div>
+
+          <div v-if="key == 'ognl_blacklist'">
+            <label>OGNL语句黑名单（一行一个）</label>
+            <div class="form-group">
+              <textarea type="text" style="white-space: nowrap" autocorrect="off" rows="5"
+               v-model.trim="ognl_blacklist_concat" class="form-control"></textarea>
+            </div>
+          </div>
+
           <div v-if="key == 'command_common'">
             <label>渗透命令探针 - 正则表达式</label>
             <div v-bind:class="{'form-group': true, 'has-error': command_common_error}">
@@ -147,6 +163,8 @@ export default {
       eval_regex_error: false,
       protocol_concat: '',
       error_code_concat: '',
+      deserialization_blacklist_concat: '',
+      ognl_blacklist_concat: '',
       sql_policy_keys: [
         {
           key:   'stacked_query',
@@ -257,6 +275,14 @@ export default {
         this.error_code_concat = this.data.mysql.error_code.join(',')
       }
 
+      if (this.key == 'deserialization_blacklist') {
+        this.deserialization_blacklist_concat = this.data.clazz.join('\n')
+      }
+
+      if (this.key == 'ognl_blacklist') {
+        this.ognl_blacklist_concat = this.data.expression.join('\n')
+      }
+
       $('#algorithmConfigModal').modal({
         // backdrop: 'static',
         // keyboard: false
@@ -265,6 +291,14 @@ export default {
     saveConfig() {
       if (this.key == 'sql_exception') {
         this.data.mysql.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
+      }
+
+      if (this.key == 'deserialization_blacklist') {
+        this.data.clazz = trimSplit(this.deserialization_blacklist_concat, '\n')
+      }
+
+      if (this.key == 'ognl_blacklist') {
+        this.data.expression = trimSplit(this.ognl_blacklist_concat, '\n')
       }
 
       if (this.key.endsWith('_protocol')) {
