@@ -86,7 +86,7 @@
         >
           <div class="form-label">
             {{ attack_type2name(row.name) }}
-            <span v-if="row.name == 'response'">(该检测点不支持阻断)</span>
+            <span v-if="row.name == 'response'">(该检测点不支持阻断，拦截攻击等同于记录日志)</span>
           </div>
           <div
             v-for="item in row.items"
