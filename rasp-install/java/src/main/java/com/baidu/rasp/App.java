@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ public class App {
     public static boolean isAttach = false;
     public static boolean keepConfig = false;
     public static boolean noDetect = false;
+    public static boolean noDependencyCheck = false;
     public static boolean isPrepend = false;
 
     public static final String REGEX_APPID = "^[a-z0-9]{40,40}$";
@@ -93,6 +94,7 @@ public class App {
         options.addOption("pid", true, "Specify the pid of Java server to attach");
         options.addOption("nodetect", false, "Install without updating startup scripts, " +
                 "useful for standalone Java servers like SpringBoot");
+        options.addOption("nodep", false, "Disable parsing of Jar dependency");
         options.addOption("prepend", false, "Prepend the origin java options");
 
         CommandLineParser parser = new PosixParser();
@@ -114,6 +116,7 @@ public class App {
                 }
 
                 noDetect = cmd.hasOption("nodetect");
+                noDependencyCheck = cmd.hasOption("nodep");
                 isPrepend = cmd.hasOption("prepend");
 
                 if (cmd.hasOption("pid")) {
@@ -191,7 +194,7 @@ public class App {
     }
 
     private static void showBanner() {
-        String banner = "OpenRASP Installer for Java app servers - Copyright 2017-2020 Baidu Inc.\n" +
+        String banner = "OpenRASP Installer for Java app servers - Copyright 2017-2021 Baidu Inc.\n" +
                 "For more details visit: https://rasp.baidu.com/doc/install/software.html\n";
         System.out.println(banner);
     }

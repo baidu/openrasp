@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -246,6 +246,9 @@ public abstract class BaseStandardInstaller implements Installer {
             cloudData.put("cloud.backend_url", App.url);
             cloudData.put("cloud.app_id", App.appId);
             cloudData.put("cloud.app_secret", App.appSecret);
+            if (App.noDependencyCheck) {
+                cloudData.put("dependency_check.enable", false);
+            }
             if (App.heartbeatInterval != null) {
                 cloudData.put("cloud.heartbeat_interval", App.heartbeatInterval);
             }
