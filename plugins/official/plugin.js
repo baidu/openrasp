@@ -1,4 +1,4 @@
-const plugin_version = '2020-1225-1000'
+const plugin_version = '2020-1228-1300'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -580,7 +580,7 @@ var algorithmConfig = {
         ]
     },
 
-    webshell_env: {
+    webshell_ld_preload: {
         name:   '算法5 - 拦截 PHP putenv 相关后门',
         action: 'block',
         env: [
