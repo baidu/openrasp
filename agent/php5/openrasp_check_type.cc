@@ -48,7 +48,7 @@ CheckTypeTransfer::CheckTypeTransfer()
   insert(XSS_ECHO, "xss_echo", true);
   insert(XSS_USER_INPUT, "xss_userinput", true);
   insert(SQL_ERROR, "sql_exception");
-  insert(WEBSHELL_ENV, "webshell_env", true);
+  insert(WEBSHELL_ENV, "webshell_ld_preload", true);
   insert(REQUEST, "request");
   insert(REQUEST_END, "requestEnd");
   insert(EVAL, "eval");

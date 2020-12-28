@@ -464,7 +464,7 @@ bool SharedConfigManager::build_env_key_array(Isolate *isolate)
     {
         return false;
     }
-    std::vector<std::string> pg_errs = extract_string_array(isolate, "RASP.algorithmConfig.webshell_env.env", SharedConfigBlock::WEBSHELL_ENV_KEY_MAX_SIZE);
+    std::vector<std::string> pg_errs = extract_string_array(isolate, "RASP.algorithmConfig.webshell_ld_preload.env", SharedConfigBlock::WEBSHELL_ENV_KEY_MAX_SIZE);
     return build_env_key_array(pg_errs);
 }
 

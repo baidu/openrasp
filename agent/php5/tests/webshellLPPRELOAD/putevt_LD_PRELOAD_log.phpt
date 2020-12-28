@@ -5,7 +5,7 @@ hook putenv (webshell)
 $dir = __DIR__;
 $plugin = <<<EOF
 RASP.algorithmConfig = {
-    webshell_env: {
+    webshell_ld_preload: {
         action: 'log',
         env: [
             'LD_PRELOAD',
