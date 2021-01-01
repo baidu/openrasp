@@ -329,6 +329,15 @@
             </p>
         </div>
 
+        <div v-if="data.attack_type == 'webshell_ld_preload' && data.attack_params.env">
+            <div class="h6">
+                后门要设置的环境变量
+            </div>
+            <p>
+                {{ data.attack_params.env }}
+            </p>
+        </div>
+
     </div>
 
 </template>

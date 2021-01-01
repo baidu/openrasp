@@ -136,8 +136,7 @@ export var attack_types = {
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
-  webshell_ld_preload: 'WebShell - LD_PRELOAD 方式',
-  webshell_env: 'WebShell - 环境变量方式',
+  webshell_ld_preload: 'WebShell - 环境变量方式',
   response: 'HTTP 响应采样检测',
   request: '请求开始',
   link: '文件链接'

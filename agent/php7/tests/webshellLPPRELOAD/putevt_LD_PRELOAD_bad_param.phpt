@@ -5,7 +5,7 @@ hook putenv (webshell) bad param
 $dir = __DIR__;
 $plugin = <<<EOF
 RASP.algorithmConfig = {
-    webshell_env: {
+    webshell_ld_preload: {
         action: 'block',
         env: [
             'LD_PRELOAD',
