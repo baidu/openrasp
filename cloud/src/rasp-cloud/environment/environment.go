@@ -174,7 +174,7 @@ func stop() {
 			log.Println("Stop ok!")
 		}
 	} else {
-		beego.Info("The process id:" + OldPid + " is not exists!")
+		beego.Info("Process " + OldPid + " is not running, rasp-cloud was not shutdown cleanly")
 	}
 	os.Exit(0)
 }
@@ -296,7 +296,7 @@ func fork() (err error) {
 			args = append(args, arg)
 		}
 	}
-	beego.Info("cli arguments: ", args)
+	beego.Info("Command line arguments:", args)
 	cmd := exec.Command(path, args...)
 	err = cmd.Start()
 	return
@@ -390,7 +390,7 @@ func processExists(pid string) (bool, error) {
 func checkPIDAlreadyExists(path string, remove bool) bool {
 	//pid := readPIDFILE(path)
 	if res, err := processExists(OldPid); res && err == nil && OldPid != " " {
-		beego.Info("the main process " + OldPid + " has already exist!")
+		beego.Info("Process " + OldPid + " is already running")
 		return true
 	}
 	if remove {
