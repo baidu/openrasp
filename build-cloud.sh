@@ -113,6 +113,10 @@ function build_vue()
         npm ci --unsafe-perm
     fi
 
+    if [[ ! -z "$USE_TAOBAO_NPM" ]]; then
+        npm config set registry https://registry.npm.taobao.org
+    fi
+
     npm run build
 }
 
