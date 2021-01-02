@@ -281,7 +281,7 @@ func HandleDaemon() {
 func CheckForkStatus(remove bool) {
 	f, ret := newPIDFile(PidFileName, remove)
 	if ret == false && f == nil {
-		beego.Error("create %s error, for details please check the log in " + LogApiPath, PidFileName)
+		beego.Error("create %s error, for details please check the log in "+LogApiPath, PidFileName)
 	}
 }
 
@@ -296,7 +296,7 @@ func fork() (err error) {
 			args = append(args, arg)
 		}
 	}
-	log.Println("args:", args)
+	beego.Info("cli arguments: %s", args)
 	cmd := exec.Command(path, args...)
 	err = cmd.Start()
 	return

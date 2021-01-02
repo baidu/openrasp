@@ -91,7 +91,7 @@ func SearchDependency(appId string, param *SearchDependencyParam) (int64, []map[
 	queryResult, err := es.ElasticClient.Search(index).
 		Query(query).
 		From((param.Page-1)*param.Perpage).
-		Sort("@timestamp", true).
+		Sort("@timestamp", false).
 		Size(param.Perpage).Do(ctx)
 	if err != nil {
 		if queryResult != nil && queryResult.Error != nil {
