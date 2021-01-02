@@ -291,12 +291,12 @@ func fork() (err error) {
 	if len(os.Args) > 1 {
 		for _, arg := range os.Args[1:] {
 			if arg == "-d" {
-				break
+				continue
 			}
 			args = append(args, arg)
 		}
 	}
-	beego.Info("cli arguments: %s", args)
+	beego.Info("cli arguments: ", args)
 	cmd := exec.Command(path, args...)
 	err = cmd.Start()
 	return
