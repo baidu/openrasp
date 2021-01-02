@@ -109,12 +109,12 @@ function build_vue()
 {
     cd rasp-vue
 
-    if [[ -z "$NO_NPM_INSTALL" ]]; then
-        npm ci --unsafe-perm
-    fi
-
     if [[ ! -z "$USE_TAOBAO_NPM" ]]; then
         npm config set registry https://registry.npm.taobao.org
+    fi
+
+    if [[ -z "$NO_NPM_INSTALL" ]]; then
+        npm ci --unsafe-perm
     fi
 
     npm run build
