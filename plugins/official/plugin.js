@@ -1,4 +1,4 @@
-const plugin_version = '2021-0103-1200'
+const plugin_version = '2021-0103-2100'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2958,6 +2958,12 @@ function findFirstIdentityCard(data) {
     const m = regexChineseId.exec(data)
     if (m) {
         const id = m[0]
+
+        // FIXME: 简单处理 springboot 接口误报问题
+        if (id[0] == 0) {
+            return
+        }
+
         let sum = 0;
         for (let i = 0; i < W.length; i++) {
             sum += (id[i] - '0') * W[i];
