@@ -73,7 +73,8 @@
             >
             <span class="custom-switch-indicator" />
             <span class="custom-switch-description">
-              打印「行为日志」，仅用于调试，请勿在线上开启
+              打印「行为日志」，仅用于调试，请勿在线上开启 
+              <a href="https://rasp.baidu.com/doc/setup/log/main.html#log-plugin" target="_blank">[帮助文档]</a>
             </span>
           </label>
         </div>
