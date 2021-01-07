@@ -1,4 +1,4 @@
-const plugin_version = '2021-0103-2100'
+const plugin_version = '2021-0107-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -907,6 +907,7 @@ function validate_stack_java(stacks) {
         'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  "Using LDAP factory service",
         'com.alibaba.fastjson.JSON.parse':                                              "Using fastjson library",
         'com.alibaba.fastjson.JSON.parseObject':                                        "Using fastjson library",
+        'com.alibaba.fastjson.JSON.parseArray':                                         "Using fastjson library",
         'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': "Using SpEL expressions",
         'freemarker.template.utility.Execute.exec':                                     "Using FreeMarker template",
         'org.jboss.el.util.ReflectionUtil.invokeMethod':                                "Using JBoss EL method",
