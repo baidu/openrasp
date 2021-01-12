@@ -22,6 +22,7 @@ import (
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
 	"rasp-cloud/mongo"
+	"strings"
 )
 
 // Operations about plugin
@@ -61,7 +62,7 @@ func (o *PluginController) Upload() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to add plugin", err)
 	}
-	models.AddOperation(appId, models.OperationTypeUploadPlugin, o.Ctx.Input.IP(),
+	models.AddOperation(appId, models.OperationTypeUploadPlugin, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 		"New plugin uploaded: "+latestPlugin.Id)
 	o.Serve(latestPlugin)
 }
@@ -118,7 +119,7 @@ func (o *PluginController) UpdateAppAlgorithmConfig() {
 		o.ServeError(http.StatusBadRequest, "failed to update algorithm config", err)
 	}
 	models.AddOperation(appId, models.OperationTypeUpdateAlgorithmConfig,
-		o.Ctx.Input.IP(), "Algorithm config updated for plugin: "+param.PluginId)
+		strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "Algorithm config updated for plugin: "+param.PluginId)
 	o.ServeWithEmptyData()
 }
 
@@ -134,7 +135,7 @@ func (o *PluginController) RestoreAlgorithmConfig() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to restore the default algorithm config", err)
 	}
-	models.AddOperation(appId, models.OperationTypeRestorePlugin, o.Ctx.Input.IP(),
+	models.AddOperation(appId, models.OperationTypeRestorePlugin, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 		"Restored algorithm config for plugin: "+pluginId)
 	o.ServeWithEmptyData()
 }
@@ -163,7 +164,7 @@ func (o *PluginController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to delete the plugin", err)
 	}
-	models.AddOperation(plugin.AppId, models.OperationTypeDeletePlugin, o.Ctx.Input.IP(),
+	models.AddOperation(plugin.AppId, models.OperationTypeDeletePlugin, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 		"Deleted plugin: "+plugin.Id)
 	o.ServeWithEmptyData()
 }

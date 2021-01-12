@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
+	"strings"
 )
 
 // Operations about strategy
@@ -31,9 +32,9 @@ type StrategyController struct {
 // @router /search [post]
 func (o *StrategyController) Search() {
 	var param struct {
-		Data    *models.Strategy `json:"data" `
-		Page    int          	 `json:"page"`
-		Perpage int          	 `json:"perpage"`
+		Data    *models.Strategy `json:"data"`
+		Page    int              `json:"page"`
+		Perpage int              `json:"perpage"`
 	}
 	o.UnmarshalJson(&param)
 	if param.Data == nil {
@@ -80,7 +81,7 @@ func (o *StrategyController) validateStrategyConfig(config map[string]interface{
 				o.ServeError(http.StatusBadRequest,
 					"the value of config item '"+key+"' can not be less than 0")
 			} else if key == "plugin.timeout.millis" || key == "body.maxbytes" || key == "syslog.reconnect_interval" ||
-				key == "ognl.expression.minlength"{
+				key == "ognl.expression.minlength" {
 				if v == 0 {
 					o.ServeError(http.StatusBadRequest,
 						"the value of config item '"+key+"' must be greater than 0")
@@ -114,7 +115,7 @@ func (o *StrategyController) Post() {
 	var strategy = &models.Strategy{}
 	o.UnmarshalJson(strategy)
 
-	if strategy.AppId == ""{
+	if strategy.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
 	}
 	if strategy.Name == "" {
@@ -131,18 +132,18 @@ func (o *StrategyController) Post() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "create strategy failed", err)
 	}
-	models.AddOperation(strategy.Id, models.OperationTypeAddStrategy, o.Ctx.Input.IP(),
-		"New strategy created with name " + strategy.Name)
+	models.AddOperation(strategy.Id, models.OperationTypeAddStrategy, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
+		"New strategy created with name "+strategy.Name)
 	o.Serve(strategy)
 }
 
 // @router /config [post]
 func (o *StrategyController) ConfigStrategy() {
 	var param struct {
-		StrategyId       string `json:"strategy_id"           bson:"_id"`
-		AppId 			 string `json:"app_id"                bson:"app_id"`
-		Name        	 string `json:"name,omitempty"        bson:"name"`
-		Description 	 string `json:"description,omitempty" bson:"description"`
+		StrategyId  string `json:"strategy_id"           bson:"_id"`
+		AppId       string `json:"app_id"                bson:"app_id"`
+		Name        string `json:"name,omitempty"        bson:"name"`
+		Description string `json:"description,omitempty" bson:"description"`
 	}
 
 	o.UnmarshalJson(&param)
@@ -172,7 +173,7 @@ func (o *StrategyController) ConfigStrategy() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "json Marshal error", err)
 	}
-	models.AddOperation(strategy.Id, models.OperationTypeEditStrategy, o.Ctx.Input.IP(), "Updated strategy info for "+
+	models.AddOperation(strategy.Id, models.OperationTypeEditStrategy, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "Updated strategy info for "+
 		param.StrategyId+": "+string(operationData))
 	o.Serve(strategy)
 }
@@ -180,9 +181,9 @@ func (o *StrategyController) ConfigStrategy() {
 // @router /select [post]
 func (o *StrategyController) Select() {
 	var param struct {
-		StrategyId  string                  `json:"strategy_id"  bson:"_id"`
-		RaspId 		[]string	            `json:"rasp_id"`
-		AppId       string					`json:"app_id"`
+		StrategyId string   `json:"strategy_id"  bson:"_id"`
+		RaspId     []string `json:"rasp_id"`
+		AppId      string   `json:"app_id"`
 	}
 
 	o.UnmarshalJson(&param)
@@ -201,8 +202,8 @@ func (o *StrategyController) Select() {
 	}
 	if exist {
 		for _, raspId := range param.RaspId {
-			models.AddOperation(param.StrategyId, models.OperationTypeSelectStrategy, o.Ctx.Input.IP(),
-				"Select strategy for rasp, id:" + raspId)
+			models.AddOperation(param.StrategyId, models.OperationTypeSelectStrategy, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
+				"Select strategy for rasp, id:"+raspId)
 		}
 		o.ServeWithEmptyData()
 	} else {
@@ -218,7 +219,7 @@ func (o *StrategyController) Delete() {
 	if strategy.Id == "" {
 		o.ServeError(http.StatusBadRequest, "the id cannot be empty")
 	}
-	if strategy.AppId == ""{
+	if strategy.AppId == "" {
 		o.ServeError(http.StatusBadRequest, "the app_id cannot be empty")
 	}
 	mutex.Lock()
@@ -228,7 +229,7 @@ func (o *StrategyController) Delete() {
 		o.ServeError(http.StatusBadRequest, "failed to remove this strategy", err)
 	}
 
-	models.AddOperation(strategy.Id, models.OperationTypeDeleteStrategy, o.Ctx.Input.IP(),
-		"Deleted strategy with name "+ strategy.Name)
+	models.AddOperation(strategy.Id, models.OperationTypeDeleteStrategy, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
+		"Deleted strategy with name "+strategy.Name)
 	o.ServeWithEmptyData()
 }
