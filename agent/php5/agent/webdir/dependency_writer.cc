@@ -19,7 +19,7 @@
 namespace openrasp
 {
 
-void DependencyWriter::write_dependencys(const std::vector<std::string> &keys, const std::vector<DependencyItem> &deps)
+void DependencyWriter::write_dependencys(const std::vector<std::string> &keys, const std::vector<DependencyItem> &deps, const std::string &source)
 {
   json::json_pointer ptr = json::json_pointer(to_json_pointer(keys));
   json array = json::array();
@@ -32,6 +32,7 @@ void DependencyWriter::write_dependencys(const std::vector<std::string> &keys, c
       item["vendor"] = dep.vendor;
       item["product"] = dep.product;
       item["version"] = dep.version;
+      item["source"] = source;
       array.push_back(item);
     }
   }
