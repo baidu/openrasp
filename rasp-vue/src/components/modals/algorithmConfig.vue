@@ -87,6 +87,14 @@
             </div>
           </div>
 
+          <div v-if="key == 'webshell_ld_preload'">
+            <label>需要拦截的环境变量（一行一个）</label>
+            <div class="form-group">
+              <textarea type="text" style="white-space: nowrap" autocorrect="off" rows="5"
+               v-model.trim="webshell_ld_preload_concat" class="form-control"></textarea>
+            </div>
+          </div>
+
           <div v-if="key == 'deserialization_blacklist'">
             <label>反序列化黑名单（一行一个）</label>
             <div class="form-group">
@@ -164,6 +172,7 @@ export default {
       protocol_concat: '',
       error_code_concat: '',
       deserialization_blacklist_concat: '',
+      webshell_ld_preload_concat: '',
       ognl_blacklist_concat: '',
       sql_policy_keys: [
         {
@@ -273,6 +282,10 @@ export default {
 
       if (this.key == 'sql_exception') {
         this.error_code_concat = this.data.mysql.error_code.join(',')
+      }
+
+      if (this.key == 'webshell_ld_preload') {
+        this.webshell_ld_preload_concat = this.data.env.join('\n')
       }
 
       if (this.key == 'deserialization_blacklist') {

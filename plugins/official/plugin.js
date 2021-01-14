@@ -1,4 +1,4 @@
-const plugin_version = '2020-1225-1000'
+const plugin_version = '2021-0107-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -580,7 +580,7 @@ var algorithmConfig = {
         ]
     },
 
-    webshell_env: {
+    webshell_ld_preload: {
         name:   '算法5 - 拦截 PHP putenv 相关后门',
         action: 'block',
         env: [
@@ -905,7 +905,9 @@ function validate_stack_java(stacks) {
         'org.apache.xbean.propertyeditor.JndiConverter':                                "Using JNDI binding class",
         'com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig':                "Using JTA transaction manager",
         'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  "Using LDAP factory service",
+        'com.alibaba.fastjson.JSON.parse':                                              "Using fastjson library",
         'com.alibaba.fastjson.JSON.parseObject':                                        "Using fastjson library",
+        'com.alibaba.fastjson.JSON.parseArray':                                         "Using fastjson library",
         'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': "Using SpEL expressions",
         'freemarker.template.utility.Execute.exec':                                     "Using FreeMarker template",
         'org.jboss.el.util.ReflectionUtil.invokeMethod':                                "Using JBoss EL method",
@@ -2957,6 +2959,12 @@ function findFirstIdentityCard(data) {
     const m = regexChineseId.exec(data)
     if (m) {
         const id = m[0]
+
+        // FIXME: 简单处理 springboot 接口误报问题
+        if (id[0] == 0) {
+            return
+        }
+
         let sum = 0;
         for (let i = 0; i < W.length; i++) {
             sum += (id[i] - '0') * W[i];

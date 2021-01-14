@@ -136,6 +136,7 @@ RUN cd /tmp \
                 <h4>1. 下载 PHP 安装包</h4>
                 <pre style="white-space: inherit; ">curl https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-php-linux.tar.bz2 -o rasp-php-linux.tar.bz2<br>tar -xvf rasp-php-linux.tar.bz2<br>cd rasp-*/</pre>
                 <h4>2. 执行 install.php 进行安装</h4>
+                <p>默认安装路径为 <strong>/opt/rasp</strong>，可替换为其他路径</p>
                 <pre style="white-space: inherit; ">php install.php -d <font color="red">/opt/rasp</font> --heartbeat 90 --app-id {{ current_app.id }} --app-secret {{ current_app.secret }} --backend-url {{ agent_urls[agent_url_id] }}</pre>
                 <h4>3. 重启 PHP-FPM 或者 Apache 服务器</h4>
                 <pre style="white-space: inherit; ">service php-fpm restart</pre>
