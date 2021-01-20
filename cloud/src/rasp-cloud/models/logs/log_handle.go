@@ -16,6 +16,7 @@ package logs
 
 import (
 	"context"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -24,14 +25,13 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"rasp-cloud/conf"
 	"rasp-cloud/es"
+	"rasp-cloud/kafka"
 	"rasp-cloud/tools"
 	"strconv"
-	"time"
-	"rasp-cloud/conf"
 	"strings"
-	"crypto/md5"
-	"rasp-cloud/kafka"
+	"time"
 )
 
 type AggrTimeParam struct {
@@ -52,7 +52,7 @@ type AggrFieldParam struct {
 type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data *struct {
+	Data    *struct {
 		Id             string    `json:"_id,omitempty"`
 		AppId          string    `json:"app_id,omitempty"`
 		StartTime      int64     `json:"start_time"`
@@ -74,7 +74,7 @@ type SearchAttackParam struct {
 type SearchPolicyParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data *struct {
+	Data    *struct {
 		Id        string    `json:"_id,omitempty"`
 		AppId     string    `json:"app_id,omitempty"`
 		StartTime int64     `json:"start_time"`
@@ -90,7 +90,7 @@ type SearchPolicyParam struct {
 type SearchErrorParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data *struct {
+	Data    *struct {
 		Id        string `json:"_id,omitempty"`
 		AppId     string `json:"app_id,omitempty"`
 		StartTime int64  `json:"start_time"`
@@ -105,15 +105,15 @@ type SearchErrorParam struct {
 type SearchCrashParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data *struct {
-		Id             string    `json:"_id,omitempty"`
-		AppId          string    `json:"app_id,omitempty"`
-		StartTime      int64     `json:"start_time"`
-		EndTime        int64     `json:"end_time"`
-		HostName       string    `json:"hostname,omitempty"`
-		Language       *[]string `json:"language,omitempty"`
-		RaspId         string    `json:"rasp_id,omitempty"`
-		CrashMessage   string    `json:"crash_message,omitempty"`
+	Data    *struct {
+		Id           string    `json:"_id,omitempty"`
+		AppId        string    `json:"app_id,omitempty"`
+		StartTime    int64     `json:"start_time"`
+		EndTime      int64     `json:"end_time"`
+		HostName     string    `json:"hostname,omitempty"`
+		Language     *[]string `json:"language,omitempty"`
+		RaspId       string    `json:"rasp_id,omitempty"`
+		CrashMessage string    `json:"crash_message,omitempty"`
 	} `json:"data"`
 }
 
@@ -275,13 +275,13 @@ func AddLogWithES(alarmType string, alarm map[string]interface{}) error {
 	return nil
 }
 
-func getVulnAggr(attackTimeTopHitName string) (*elastic.TermsAggregation) {
+func getVulnAggr(attackTimeTopHitName string) *elastic.TermsAggregation {
 	attackMaxAggrName := "attack_max_aggr"
 	attackTimeTopHitAggr := elastic.NewTopHitsAggregation().
 		Size(1).
 		Sort("event_time", false).
 		DocvalueFields("event_time", "attack_type", "intercept_state", "url",
-		"path", "rasp_id", "attack_source", "plugin_algorithm", "server_ip", "server_hostname")
+			"path", "rasp_id", "attack_source", "plugin_algorithm", "server_ip", "server_hostname")
 	attackTimeMaxAggr := elastic.NewMaxAggregation().Field("event_time")
 	return elastic.NewTermsAggregation().
 		Field("stack_md5").
@@ -346,7 +346,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 		attackAggr := getVulnAggr(attackTimeTopHitName)
 		queryService.Aggregation(attackAggrName, attackAggr).Size(0)
 	} else {
-		queryService.From((page - 1) * perpage).Size(perpage).Sort(sortField, ascending)
+		queryService.From((page-1)*perpage).Size(perpage).Sort(sortField, ascending)
 	}
 
 	queryResult, err := queryService.Do(ctx)
@@ -426,8 +426,8 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 
 func CreateAlarmEsIndex(appId string) (err error) {
 	for _, alarmInfo := range alarmInfos {
-		err = es.CreateEsIndex(alarmInfo.EsIndex + "-" + appId,
-			alarmInfo.EsAliasIndex + "-" + appId, alarmInfo.EsType + "-template")
+		err = es.CreateEsIndex(alarmInfo.EsIndex+"-"+appId,
+			alarmInfo.EsAliasIndex+"-"+appId, alarmInfo.EsType+"-template")
 		if err != nil {
 			return
 		}
