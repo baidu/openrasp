@@ -1,4 +1,4 @@
-const plugin_version = '2020-1127-1930'
+const plugin_version = '2021-0120-1430'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1365,9 +1365,9 @@ function get_all_parameter(context) {
 }
 
 function check_internal_ip(ip, origin_ip) {
-    // origin_ip不为空且不存在非内网地址则跳过检测
-    if (origin_ip && ! origin_ip.some(function(value) {
-            return !internalRegex.test(value)
+    // origin_ip不为空且全部为内网地址则跳过
+    if (origin_ip && origin_ip.every(function(value) {
+            return internalRegex.test(value)
         })){ return }
 
     for (var i=0; i<ip.length; i++) {
