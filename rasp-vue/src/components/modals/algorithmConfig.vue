@@ -211,7 +211,7 @@ export default {
       command_error_keys: [
         {
           key:   'unbalanced_quote_enable',
-          descr: '检查单双反引号的个数，是否为基数'
+          descr: '检查单双反引号的个数，是否为奇数'
         },
         {
           key:   'sensitive_cmd_enable',
