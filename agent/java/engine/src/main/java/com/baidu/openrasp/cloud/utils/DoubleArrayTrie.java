@@ -54,7 +54,7 @@ public class DoubleArrayTrie {
         if (allocSize > 0) {
             System.arraycopy(base, 0, base2, 0, allocSize);
             System.arraycopy(check, 0, check2, 0, allocSize);
-            System.arraycopy(used2, 0, used2, 0, allocSize);
+            System.arraycopy(used, 0, used2, 0, allocSize);
         }
 
         base = base2;
