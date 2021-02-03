@@ -237,7 +237,8 @@ var algorithmConfig = {
             '.tu4.org',
             '.2xss.cc',
             '.bxss.me',
-            '.godns.vip'
+            '.godns.vip',
+            '.pipedream.net' // requestbin 新地址
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
