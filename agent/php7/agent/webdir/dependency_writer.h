@@ -27,7 +27,7 @@ class DependencyWriter : public JsonReader
 {
 
 public:
-  void write_dependencys(const std::vector<std::string> &keys, const std::vector<DependencyItem> &deps);
+  void write_dependencys(const std::vector<std::string> &keys, const std::vector<DependencyItem> &deps, const std::string &source);
 };
 
 } // namespace openrasp

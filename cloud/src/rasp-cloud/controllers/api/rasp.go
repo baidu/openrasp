@@ -15,15 +15,16 @@
 package api
 
 import (
+	"bytes"
+	"encoding/csv"
+	"encoding/json"
+	"fmt"
+	"github.com/astaxie/beego/validation"
 	"math"
 	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
-	"fmt"
-	"encoding/json"
-	"github.com/astaxie/beego/validation"
-	"encoding/csv"
-	"bytes"
+	"strings"
 	"time"
 )
 
@@ -114,15 +115,15 @@ func (o *RaspController) GeneralCsv() {
 	}
 	hostname := o.GetString("hostname")
 	selector := &models.Rasp{AppId: appId}
-	if (!online || !offline) {
+	if !online || !offline {
 		selector.Online = new(bool)
 		*selector.Online = online
 	}
-	if ((!language_java || !language_php) && (language_java || language_php)) {
+	if (!language_java || !language_php) && (language_java || language_php) {
 		if language_java {
 			selector.Language = "java"
 		} else {
-			selector.Language  = "php"
+			selector.Language = "php"
 		}
 	}
 	if hostname != "" {
@@ -131,7 +132,7 @@ func (o *RaspController) GeneralCsv() {
 	if version != "" {
 		selector.Version = version
 	}
-	if (online || offline || (!language_java && !language_php)) {
+	if online || offline || (!language_java && !language_php) {
 		_, rasps, err = models.FindRasp(selector, 0, 0)
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to get rasp", err)
@@ -173,7 +174,7 @@ func (o *RaspController) Delete() {
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to remove rasp by id", err)
 		}
-		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
+		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 			"Deleted RASP agent by id: "+rasp.Id)
 		o.Serve(map[string]interface{}{
 			"count": 1,
@@ -202,7 +203,7 @@ func (o *RaspController) Delete() {
 		if err != nil {
 			o.ServeError(http.StatusBadRequest, "failed to remove rasp by register ip", err)
 		}
-		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
+		models.AddOperation(rasp.AppId, models.OperationTypeDeleteRasp, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 			"Deleted RASP agent by selector: "+fmt.Sprintf("%+v", selector))
 		o.Serve(map[string]interface{}{
 			"count": removedCount,
@@ -266,7 +267,7 @@ func (o *RaspController) BatchDelete() {
 		o.ServeError(http.StatusBadRequest, "failed to remove rasp", err)
 	}
 
-	models.AddOperation(param.AppId, models.OperationTypeDeleteRasp, o.Ctx.Input.IP(),
+	models.AddOperation(param.AppId, models.OperationTypeDeleteRasp, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 		"Batch deleted RASP agent by rasp id: "+fmt.Sprintf("%v", param.Ids))
 	o.Serve(map[string]interface{}{
 		"count": count,

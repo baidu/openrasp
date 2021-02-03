@@ -48,7 +48,7 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         File installDir = new File(getInstallPath(serverRoot));
         BaseStandardInstaller.modifyFolerPermission(installDir.getCanonicalPath());
         if (App.isAttach) {
-            System.out.println("Attach the rasp to process with pid " + App.pid);
+            System.out.println("Will attach rasp.jar to PID " + App.pid);
             new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_UNINSTALL);
         }
         // 找到要修改的启动脚本

@@ -19,6 +19,7 @@ import (
 	"rasp-cloud/conf"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
+	"strings"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -132,7 +133,7 @@ func (o *RaspController) Post() {
 			}
 		}()
 	}
-	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, o.Ctx.Input.IP(),
+	models.AddOperation(rasp.AppId, models.OperationTypeRegisterRasp, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 		"New RASP agent registered from "+rasp.HostName+": "+rasp.Id, "")
 	o.Serve(rasp)
 }

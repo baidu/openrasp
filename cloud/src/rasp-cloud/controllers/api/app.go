@@ -158,7 +158,7 @@ func (o *AppController) RegenerateAppSecret() {
 		o.ServeError(http.StatusBadRequest, "failed to get secret", err)
 	}
 	models.AddOperation(param.AppId, models.OperationTypeRegenerateSecret,
-		o.Ctx.Input.IP(), "Reset AppSecret of "+param.AppId)
+		strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "Reset AppSecret of "+param.AppId)
 	o.Serve(map[string]string{
 		"secret": secret,
 	})
@@ -167,9 +167,9 @@ func (o *AppController) RegenerateAppSecret() {
 // @router /general/config [post]
 func (o *AppController) UpdateAppGeneralConfig() {
 	var param struct {
-		StrategyId	string		           `json:"strategy_id,omitempty"`
-		AppId       string                 `json:"app_id"`
-		Config      map[string]interface{} `json:"config"`
+		StrategyId string                 `json:"strategy_id,omitempty"`
+		AppId      string                 `json:"app_id"`
+		Config     map[string]interface{} `json:"config"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -194,16 +194,16 @@ func (o *AppController) UpdateAppGeneralConfig() {
 	//	o.ServeError(http.StatusBadRequest, "failed to update strategy general config", err)
 	//}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateGenerateConfig,
-		o.Ctx.Input.IP(), "Updated general config of "+param.AppId)
+		strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "Updated general config of "+param.AppId)
 	o.Serve(app)
 }
 
 // @router /whitelist/config [post]
 func (o *AppController) UpdateAppWhiteListConfig() {
 	var param struct {
-		StrategyId	string					     `json:"strategy_id,omitempty"`
-		AppId       string                       `json:"app_id"`
-		Config      []models.WhitelistConfigItem `json:"config"`
+		StrategyId string                       `json:"strategy_id,omitempty"`
+		AppId      string                       `json:"app_id"`
+		Config     []models.WhitelistConfigItem `json:"config"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -224,7 +224,7 @@ func (o *AppController) UpdateAppWhiteListConfig() {
 	//	o.ServeError(http.StatusBadRequest, "failed to update app general config", err)
 	//}
 	models.AddOperation(param.AppId, models.OperationTypeUpdateWhitelistConfig,
-		o.Ctx.Input.IP(), "Updated whitelist config of "+param.AppId)
+		strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "Updated whitelist config of "+param.AppId)
 	o.Serve(app)
 }
 
@@ -291,7 +291,7 @@ func (o *AppController) Post() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "create app failed", err)
 	}
-	models.AddOperation(app.Id, models.OperationTypeAddApp, o.Ctx.Input.IP(), "New app created with name "+app.Name)
+	models.AddOperation(app.Id, models.OperationTypeAddApp, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "New app created with name "+app.Name)
 	o.Serve(app)
 }
 
@@ -343,12 +343,12 @@ func (o *AppController) ConfigApp() {
 		o.ServeError(http.StatusBadRequest, "failed to update app config", err)
 	}
 	operationData, err := json.Marshal(updateData)
-	models.AddOperation(app.Id, models.OperationTypeEditApp, o.Ctx.Input.IP(), "Updated app info for "+param.AppId+": "+string(operationData))
+	models.AddOperation(app.Id, models.OperationTypeEditApp, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "Updated app info for "+param.AppId+": "+string(operationData))
 	o.Serve(app)
 }
 
 // @router /export [get]
-func (o * AppController) ExportApp() {
+func (o *AppController) ExportApp() {
 	fileName := "files/app.json"
 	pathName := "files"
 	apps, err := models.GetAllExportApp()
@@ -548,7 +548,7 @@ func (o *AppController) Delete() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to remove dependency data by app_id", err)
 	}
-	models.AddOperation(app.Id, models.OperationTypeDeleteApp, o.Ctx.Input.IP(), "Deleted app with name "+app.Name)
+	models.AddOperation(app.Id, models.OperationTypeDeleteApp, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0], "Deleted app with name "+app.Name)
 	o.ServeWithEmptyData()
 }
 
@@ -595,7 +595,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 				maxBytes := generalConfigTemplate[key]
 				if len(v) >= maxBytes.(int) {
 					o.ServeError(http.StatusBadRequest,
-						"the value's length of config item '"+key+"' must be less than" + v)
+						"the value's length of config item '"+key+"' must be less than"+v)
 				}
 			}
 		}
@@ -604,12 +604,12 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 		if generalConfigTemplate[key] != nil && value != nil {
 			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
 				if interval, ok := value.(float64); ok {
-					if interval < 60 || interval > 12 * 3600 {
+					if interval < 60 || interval > 12*3600 {
 						o.ServeError(http.StatusBadRequest,
 							"the value's length of config item '"+key+"' must between 60 and 86400")
 					}
 				} else if interval, ok := value.(int); ok {
-					if interval < 60 || interval > 12 * 3600 {
+					if interval < 60 || interval > 12*3600 {
 						o.ServeError(http.StatusBadRequest,
 							"the value's length of config item '"+key+"' must between 60 and 86400")
 					}
@@ -617,7 +617,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 			}
 
 			if key != "security.weak_passwords" {
-				switch reflect.TypeOf(generalConfigTemplate[key]).String(){
+				switch reflect.TypeOf(generalConfigTemplate[key]).String() {
 				case "string":
 					valueStr, ok := value.(string)
 					if !ok {
@@ -625,7 +625,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 							"the type of config key: "+key+"'s value must be send a string")
 					}
 					if key == "block.content_html" || key == "block.content_xml" ||
-						key == "block.content_json" || key == "fileleak_scan.name"{
+						key == "block.content_json" || key == "fileleak_scan.name" {
 						if strings.TrimSpace(valueStr) == "" {
 							returnConfig[key] = v
 						}
@@ -664,7 +664,7 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 						for idx, v := range value.([]interface{}) {
 							if len(v.(string)) > 16 {
 								o.ServeError(http.StatusBadRequest,
-									"the length of value:" + v.(string) + " exceeds max_len 16!")
+									"the length of value:"+v.(string)+" exceeds max_len 16!")
 							}
 							if idx >= 200 {
 								o.ServeError(http.StatusBadRequest,
@@ -708,12 +708,12 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 	return returnConfig
 }
 
-func (o *AppController) RemoveDupWhitelistConfigItem(a []models.WhitelistConfigItem) (ret []models.WhitelistConfigItem){
+func (o *AppController) RemoveDupWhitelistConfigItem(a []models.WhitelistConfigItem) (ret []models.WhitelistConfigItem) {
 	n := len(a)
-	for i:=0; i < n; i++{
+	for i := 0; i < n; i++ {
 		state := false
-		for j := i+1 ; j < n; j++{
-			if (j > 0 && reflect.DeepEqual(a[i],a[j])){
+		for j := i + 1; j < n; j++ {
+			if j > 0 && reflect.DeepEqual(a[i], a[j]) {
 				state = true
 				break
 			}
@@ -814,7 +814,7 @@ func (o *AppController) ConfigAlarm() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to update app", err)
 	}
-	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, o.Ctx.Input.IP(),
+	models.AddOperation(app.Id, models.OperationTypeUpdateAlarmConfig, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 		"Alarm configuration updated for "+param.AppId)
 	o.Serve(app)
 }
@@ -884,7 +884,7 @@ func (o *AppController) SetSelectedPlugin() {
 	if err != nil {
 		o.ServeError(http.StatusBadRequest, "failed to set selected plugin", err)
 	}
-	models.AddOperation(appId, models.OperationTypeSetSelectedPlugin, o.Ctx.Input.IP(),
+	models.AddOperation(appId, models.OperationTypeSetSelectedPlugin, strings.Split(o.Ctx.Request.RemoteAddr, ":")[0],
 		"Deployed plugin "+plugin.Name+": "+plugin.Version+" ["+plugin.Id+"]")
 	o.ServeWithEmptyData()
 }
