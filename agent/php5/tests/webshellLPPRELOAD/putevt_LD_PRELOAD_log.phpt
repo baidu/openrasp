@@ -6,7 +6,12 @@ $dir = __DIR__;
 $plugin = <<<EOF
 RASP.algorithmConfig = {
     webshell_ld_preload: {
-        action: 'log'
+        action: 'log',
+        env: [
+            'LD_PRELOAD',
+            'LD_AUDIT',
+            'GCONV_PATH'
+        ]
     }
 }
 EOF;

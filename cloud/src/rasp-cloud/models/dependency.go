@@ -1,17 +1,17 @@
 package models
 
 import (
+	"context"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/olivere/elastic"
 	"rasp-cloud/es"
 	"rasp-cloud/models/logs"
 	"sort"
-	"time"
-	"github.com/olivere/elastic"
-	"encoding/json"
-	"context"
-	"github.com/astaxie/beego"
 	"strings"
+	"time"
 )
 
 type Dependency struct {
@@ -32,7 +32,7 @@ type Dependency struct {
 type SearchDependencyParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
-	Data *struct {
+	Data    *struct {
 		Id           string `json:"_id,omitempty" valid:"MaxSize(512)"`
 		AppId        string `json:"app_id,omitempty" valid:"Required;MaxSize(512)"`
 		RaspId       string `json:"rasp_id,omitempty" valid:"MaxSize(512)"`
@@ -90,8 +90,8 @@ func SearchDependency(appId string, param *SearchDependencyParam) (int64, []map[
 	index := es.GetIndex(AliasDependencyIndexName, appId)
 	queryResult, err := es.ElasticClient.Search(index).
 		Query(query).
-		From((param.Page - 1) * param.Perpage).
-		Sort("tag", true).
+		From((param.Page-1)*param.Perpage).
+		Sort("@timestamp", false).
 		Size(param.Perpage).Do(ctx)
 	if err != nil {
 		if queryResult != nil && queryResult.Error != nil {
@@ -117,7 +117,7 @@ func SearchDependency(appId string, param *SearchDependencyParam) (int64, []map[
 	return total, result, nil
 }
 
-func getDependencyAggr(dependencyTopHitName string) (*elastic.TermsAggregation) {
+func getDependencyAggr(dependencyTopHitName string) *elastic.TermsAggregation {
 	dependencyMaxAggrName := "dependency_max_aggr"
 	dependencyTopHitAggr := elastic.NewTopHitsAggregation().
 		Size(1).
@@ -217,7 +217,7 @@ func getDependencyQuery(param *SearchDependencyParam) (query *elastic.BoolQuery,
 					queries = append(queries, elastic.NewTermQuery(k, v))
 				}
 			}
-			query.Filter(queries ...)
+			query.Filter(queries...)
 		}
 	}
 	return

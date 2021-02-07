@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         File installDir = new File(getInstallPath(serverRoot));
         BaseStandardInstaller.modifyFolerPermission(installDir.getCanonicalPath());
         if (App.isAttach) {
-            System.out.println("Attach the rasp to process with pid " + App.pid);
+            System.out.println("Will attach rasp.jar to PID " + App.pid);
             new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_UNINSTALL);
         }
         // 找到要修改的启动脚本

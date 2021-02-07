@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookie from 'js-cookie'
 import router from '@/router'
 
-export var rasp_version = '1.3.5'
+export var rasp_version = '1.3.6'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -129,14 +129,14 @@ export var attack_types = {
   ognl: 'OGNL 代码执行',
   webdav: '任意文件上传 (PUT)',
   fileUpload: '任意文件上传',
-  deserialization: 'Transformer 反序列化',
+  deserialization: '反序列化攻击',
   xss_echo: 'Echo XSS 跨站脚本攻击',
   xss_userinput: 'BODY XSS 跨站脚本攻击',
   webshell_callable: 'WebShell - 变形后门',
   webshell_eval: 'WebShell - 中国菜刀',
   webshell_command: 'WebShell - 命令执行',
   webshell_file_put_contents: 'WebShell - 后门上传',
-  webshell_ld_preload: 'WebShell - LD_PRELOAD 后门',
+  webshell_ld_preload: 'WebShell - 环境变量方式',
   response: 'HTTP 响应采样检测',
   request: '请求开始',
   link: '文件链接'

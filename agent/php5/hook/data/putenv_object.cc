@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 
 #include "putenv_object.h"
+#include "agent/shared_config_manager.h"
 
 namespace openrasp
 {
@@ -34,16 +35,16 @@ bool PutenvObject::is_valid() const
 void PutenvObject::fill_json_with_params(JsonReader &j) const
 {
     j.write_string({"attack_params", "env"}, std::string(Z_STRVAL_P(env), Z_STRLEN_P(env)));
-    j.write_string({"plugin_message"}, "WebShell activity - Detected LD_PRELOAD");
+    j.write_string({"plugin_message"}, "WebShell activity - using putenv() method");
 }
 
 OpenRASPCheckType PutenvObject::get_builtin_check_type() const
 {
-    return WEBSHELL_LD_PRELOAD;
+    return WEBSHELL_ENV;
 }
 bool PutenvObject::builtin_check(JsonReader &j) const
 {
-    return strncmp(Z_STRVAL_P(env), "LD_PRELOAD=", sizeof("LD_PRELOAD=") - 1) == 0;
+    return openrasp::scm->filter_env_key(std::string(Z_STRVAL_P(env)));
 }
 
 } // namespace data

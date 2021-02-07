@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class DoubleArrayTrie {
         if (allocSize > 0) {
             System.arraycopy(base, 0, base2, 0, allocSize);
             System.arraycopy(check, 0, check2, 0, allocSize);
-            System.arraycopy(used2, 0, used2, 0, allocSize);
+            System.arraycopy(used, 0, used2, 0, allocSize);
         }
 
         base = base2;

@@ -56,7 +56,8 @@ Detailed plugin development instructions can be found [here](https://rasp.baidu.
 
 Technical support:
 
-* [RASP QQ group #1: 259318664](http://shang.qq.com/wpa/qunwpa?idkey=5016bac5431b23316a79efdcd2c4dadd6ef8b99b231e4ed10f1e265573a66e1c)
+* [RASP QQ group #1 (full): 259318664](http://shang.qq.com/wpa/qunwpa?idkey=5016bac5431b23316a79efdcd2c4dadd6ef8b99b231e4ed10f1e265573a66e1c)
+* [RASP QQ group #2: 595568655](http://shang.qq.com/wpa/qunwpa?idkey=5016bac5431b23316a79efdcd2c4dadd6ef8b99b231e4ed10f1e265573a66e1c)
 * [OpenRASP Google Group](https://groups.google.com/forum/#!forum/openrasp)
 
 Business inquires, comments, concenrs and opinions:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,11 @@ public:
   static const int WHITE_ARRAY_MAX_SIZE = (200 * 200 * (DoubleArrayTrie::unit_size()) * 2);
   static const int WEAK_PASSWORD_ARRAY_MAX_SIZE = (200 * 16 * (DoubleArrayTrie::unit_size()) * 2);
   static const int PG_ERROR_ARRAY_MAX_SIZE = (200 * 5 * (DoubleArrayTrie::unit_size()) * 2);
+  static const int ENV_KEY_ARRAY_MAX_SIZE = (200 * 50 * (DoubleArrayTrie::unit_size()) * 2);
   static const int MYSQL_ERROR_CODE_MAX_SIZE = 100;
   static const int PGSQL_ERROR_CODE_MAX_SIZE = 100;
   static const int SQLITE_ERROR_CODE_MAX_SIZE = 100;
+  static const int WEBSHELL_ENV_KEY_MAX_SIZE = 200;
 
   inline char *get_check_type_white_array()
   {
@@ -205,6 +207,29 @@ public:
     return true;
   }
 
+  /* webshell_env*/
+  inline char *get_env_key_array()
+  {
+    return env_key_array;
+  }
+
+  inline size_t get_env_key_array_size()
+  {
+    return env_key_array_size;
+  }
+
+  inline bool reset_env_key_array(const void *source, size_t num)
+  {
+    if (num > ENV_KEY_ARRAY_MAX_SIZE)
+    {
+      return false;
+    }
+    memset(&env_key_array, 0, sizeof(env_key_array));
+    memcpy((void *)&env_key_array, source, num);
+    env_key_array_size = num;
+    return true;
+  }
+
 private:
   long config_update_time = 0;
   long log_max_backup = 0;
@@ -219,6 +244,9 @@ private:
 
   size_t pg_error_array_size;
   char pg_error_array[PG_ERROR_ARRAY_MAX_SIZE + 1];
+
+  size_t env_key_array_size;
+  char env_key_array[ENV_KEY_ARRAY_MAX_SIZE + 1];
 
   int mysql_error_codes_size = 0;
   long mysql_error_codes[MYSQL_ERROR_CODE_MAX_SIZE] = {0};

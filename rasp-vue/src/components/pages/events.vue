@@ -62,7 +62,7 @@
               <span class="input-icon-addon">
                 <i class="fe fe-search" />
               </span>
-              <input v-model.trim="srcip" type="text" class="form-control w-10" placeholder="攻击来源" @keyup.enter="loadEvents(1)" style="width: 210px">
+              <input v-model.trim="srcip" type="text" class="form-control w-10" placeholder="请求来源" @keyup.enter="loadEvents(1)" style="width: 210px">
             </div>
           </div>
         </div>
@@ -121,13 +121,13 @@
             <thead>
               <tr>
                 <th>
-                  攻击时间
+                  请求时间
                 </th>
                 <th style="min-width: 150px; ">
                   URL
                 </th>
                 <th>
-                  攻击来源
+                  请求来源
                 </th>
                 <th>
                   拦截状态

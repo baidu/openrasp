@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ void WebDirAgent::dependency_check()
 		std::vector<DependencyItem> deps = webdir_detector.dependency_detect();
 		DependencyWriter dep_writer;
 		dep_writer.write_string({"rasp_id"}, scm->get_rasp_id());
-		dep_writer.write_dependencys({"dependency"}, deps);
+		dep_writer.write_dependencys({"dependency"}, deps, "composer");
 
 		std::string url_string = std::string(openrasp_ini.backend_url) + dependency_url_path;
 		std::string dep_body = dep_writer.dump();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.baidu.openrasp.config.Config;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotify;
 import com.fuxi.javaagent.contentobjects.jnotify.JNotifyException;
 import org.apache.commons.io.monitor.FileAlterationListener;
+import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 
 import java.io.File;
@@ -31,11 +32,13 @@ import java.io.File;
 public class FileScanMonitor {
 
     static {
-        if (!Config.getConfig().getCloudSwitch()) {
+        if (!Config.getConfig().getCloudSwitch() && Config.getConfig().getFileMonitorMode().equals("jnotify")) {
             JnotifyWatcher watcher = new JnotifyWatcher();
             JNotify.init(Config.baseDirectory, watcher);
         }
     }
+
+    public FileAlterationMonitor monitor;
 
     /**
      * 增加监视器
@@ -45,16 +48,25 @@ public class FileScanMonitor {
      * @return 监听器的id
      * @throws JNotifyException {@link JNotifyException}
      */
-    public static int addMonitor(String path, FileAlterationListener listener) throws JNotifyException {
+    public static Object addMonitor(String path, FileAlterationListener listener) throws Exception {
         if (!Config.getConfig().getCloudSwitch()) {
-            File file = new File(path);
-            FileAlterationObserver observer = new FileAlterationObserver(file);
-            observer.checkAndNotify();
-            observer.addListener(listener);
-            int mask = JNotify.FILE_CREATED | JNotify.FILE_DELETED
-                    | JNotify.FILE_MODIFIED;
-            return JNotify.addWatch(path, mask, false, new FileEventListener(observer));
+            if ("jnotify".equals(Config.getConfig().getFileMonitorMode())) {
+                File file = new File(path);
+                FileAlterationObserver observer = new FileAlterationObserver(file);
+                observer.checkAndNotify();
+                observer.addListener(listener);
+                int mask = JNotify.FILE_CREATED | JNotify.FILE_DELETED
+                        | JNotify.FILE_MODIFIED;
+                return JNotify.addWatch(path, mask, false, new FileEventListener(observer));
+            } else if ("scan".equals(Config.getConfig().getFileMonitorMode())) {
+                FileAlterationObserver observer = new FileAlterationObserver(path);
+                observer.addListener(listener);
+                FileAlterationMonitor monitor = new FileAlterationMonitor(Config.getConfig().getFileMonitorInterval() * 1000, observer);
+                monitor.start();
+                return monitor;
+            }
         }
+
         return 0;
     }
 
@@ -63,12 +75,22 @@ public class FileScanMonitor {
      *
      * @param watchId 增加文件夹监听的时候返回的监听器id
      */
-    public static void removeMonitor(int watchId) {
+    public static void removeMonitor(Object watchId) {
         if (!Config.getConfig().getCloudSwitch()) {
-            try {
-                JNotify.removeWatch(watchId);
-            } catch (JNotifyException e) {
-                e.printStackTrace();
+            if ("jnotify".equals(Config.getConfig().getFileMonitorMode())
+                    && (watchId instanceof Integer)) {
+                try {
+                    JNotify.removeWatch((Integer) watchId);
+                } catch (JNotifyException e) {
+                    e.printStackTrace();
+                }
+            } else if ("scan".equals(Config.getConfig().getFileMonitorMode())
+                    && watchId instanceof FileAlterationMonitor) {
+                try {
+                    ((FileAlterationMonitor) watchId).stop();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

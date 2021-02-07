@@ -1,6 +1,6 @@
 <template>
   <div id="algorithmConfigModal" class="modal no-fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-md" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -46,6 +46,18 @@
             </div>
           </div>
 
+          <div v-if="key == 'xxe_disable_entity'">
+            <p>将为以下类调用 setFeature() 函数，禁止外部实体加载。开启此选项可能会影响业务，请谨慎选择。</p>
+            <div v-for="row in xxe_disable_entity_keys" :key="row.key">
+              <label class="custom-switch m-0">
+                <input type="checkbox" v-model="data[row.key]" class="custom-switch-input">
+                <span class="custom-switch-indicator"></span>
+                <span class="custom-switch-description">{{row.descr}}</span>              
+              </label>
+              <br>
+            </div>
+          </div>
+
           <div v-if="key.endsWith('_protocol')">
             <label>禁止加载的协议列表，逗号分隔</label>
             <textarea class="form-control" autocomplete="off" autocorrect="off"
@@ -72,6 +84,30 @@
             <label>SQL异常代码（逗号分隔；v1.2.1 之前不支持自定义错误代码）</label>
             <div class="form-group">
               <input type="text" v-model.trim="error_code_concat" class="form-control">
+            </div>
+          </div>
+
+          <div v-if="key == 'webshell_ld_preload'">
+            <label>需要拦截的环境变量（一行一个）</label>
+            <div class="form-group">
+              <textarea type="text" style="white-space: nowrap" autocorrect="off" rows="5"
+               v-model.trim="webshell_ld_preload_concat" class="form-control"></textarea>
+            </div>
+          </div>
+
+          <div v-if="key == 'deserialization_blacklist'">
+            <label>反序列化黑名单（一行一个）</label>
+            <div class="form-group">
+              <textarea type="text" style="white-space: nowrap" autocorrect="off" rows="5"
+               v-model.trim="deserialization_blacklist_concat" class="form-control"></textarea>
+            </div>
+          </div>
+
+          <div v-if="key == 'ognl_blacklist'">
+            <label>OGNL语句黑名单（一行一个）</label>
+            <div class="form-group">
+              <textarea type="text" style="white-space: nowrap" autocorrect="off" rows="5"
+               v-model.trim="ognl_blacklist_concat" class="form-control"></textarea>
             </div>
           </div>
 
@@ -135,6 +171,9 @@ export default {
       eval_regex_error: false,
       protocol_concat: '',
       error_code_concat: '',
+      deserialization_blacklist_concat: '',
+      webshell_ld_preload_concat: '',
+      ognl_blacklist_concat: '',
       sql_policy_keys: [
         {
           key:   'stacked_query',
@@ -172,7 +211,7 @@ export default {
       command_error_keys: [
         {
           key:   'unbalanced_quote_enable',
-          descr: '检查单双反引号的个数，是否为基数'
+          descr: '检查单双反引号的个数，是否为奇数'
         },
         {
           key:   'sensitive_cmd_enable',
@@ -181,6 +220,28 @@ export default {
         {
           key:   'alarm_token_enable',
           descr: '检查恶意的 TOKEN，如 $IFS'
+        }
+      ],
+      xxe_disable_entity_keys: [
+        {
+          key:   'java_dom',
+          descr: 'org.apache.xerces.parsers.DOMParser'
+        },
+        {
+          key:   'java_dom4j',
+          descr: 'org.dom4j.io.SAXReader'
+        },
+        {
+          key:   'java_jdom',
+          descr: 'org.jdom.input.SAXBuilder'
+        },
+        {
+          key:   'java_sax',
+          descr: 'org.apache.xerces.internal.jaxp.SAXParserImpl'
+        },
+        {
+          key:   'java_stax',
+          descr: 'javax.xml.stream.XMLInputFactory'
         }
       ]
     }
@@ -223,6 +284,18 @@ export default {
         this.error_code_concat = this.data.mysql.error_code.join(',')
       }
 
+      if (this.key == 'webshell_ld_preload') {
+        this.webshell_ld_preload_concat = this.data.env.join('\n')
+      }
+
+      if (this.key == 'deserialization_blacklist') {
+        this.deserialization_blacklist_concat = this.data.clazz.join('\n')
+      }
+
+      if (this.key == 'ognl_blacklist') {
+        this.ognl_blacklist_concat = this.data.expression.join('\n')
+      }
+
       $('#algorithmConfigModal').modal({
         // backdrop: 'static',
         // keyboard: false
@@ -231,6 +304,14 @@ export default {
     saveConfig() {
       if (this.key == 'sql_exception') {
         this.data.mysql.error_code = convertToInt(trimSplit(this.error_code_concat, ','))
+      }
+
+      if (this.key == 'deserialization_blacklist') {
+        this.data.clazz = trimSplit(this.deserialization_blacklist_concat, '\n')
+      }
+
+      if (this.key == 'ognl_blacklist') {
+        this.data.expression = trimSplit(this.ognl_blacklist_concat, '\n')
       }
 
       if (this.key.endsWith('_protocol')) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -581,6 +581,18 @@ public enum ConfigItem {
         }
     }),
 
+    DEPENDENCY_ENABLE(new ConfigSetter<String>("dependency_check.enable") {
+        @Override
+        public synchronized void setValue(String enable) {
+            Config.getConfig().dependencyCheckEnable = Boolean.parseBoolean(enable);
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "true";
+        }
+    }),
+
     SECURITY_WEAK_PASSWORDS(new ConfigSetter<List<String>>("security.weak_passwords") {
         @Override
         public synchronized void setValue(List<String> securityWeakPasswords) {
@@ -666,6 +678,44 @@ public enum ConfigItem {
         @Override
         public String getDefaultValue() {
             return "false";
+        }
+    }),
+
+    FILE_MONITOR_MODE(new ConfigSetter<String>("file_monitor.mode") {
+        @Override
+        public synchronized void setValue(String mode) {
+            boolean find = false;
+            for (String m : Config.FILE_MONITOR_MODE) {
+                if (m.equals(mode)) {
+                    find = true;
+                    break;
+                }
+            }
+            if (!find) {
+                throw new ConfigLoadException(itemName + " must be in [ 'jnotify','scan','disable' ]");
+            }
+            Config.getConfig().fileMonitorMode = mode;
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "scan";
+        }
+    }),
+
+    FILE_MONITOR_INTERVAL(new ConfigSetter<String>("file_monitor.interval") {
+        @Override
+        public synchronized void setValue(String interval) {
+            long value = Long.parseLong(interval);
+            if (value <= 0) {
+                throw new ConfigLoadException(itemName + " must be greater than 0");
+            }
+            Config.getConfig().fileMonitorInterval = value;
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "3";
         }
     }),
 

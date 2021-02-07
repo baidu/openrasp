@@ -15,11 +15,11 @@
 package api
 
 import (
+	"gopkg.in/mgo.v2"
+	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/es"
 	"rasp-cloud/models"
-	"net/http"
-	"gopkg.in/mgo.v2"
 	"strings"
 )
 
@@ -78,7 +78,7 @@ func (o *ServerController) PutUrl() {
 
 // @router /clear_logs [post]
 func (o *ServerController) ClearLogs() {
-	docTypeList := []string{"attack-alarm", "report-data", "error-alarm", "policy-alarm", "crash-alarm"}
+	docTypeList := []string{"attack-alarm", "report-data", "error-alarm", "policy-alarm", "crash-alarm", "dependency-data"}
 	var param struct {
 		AppId string `json:"app_id"`
 	}
@@ -88,7 +88,7 @@ func (o *ServerController) ClearLogs() {
 		o.ServeError(http.StatusBadRequest, "app_id can not be empty")
 	}
 
-	for _, docType := range docTypeList{
+	for _, docType := range docTypeList {
 		index := "real-openrasp-" + docType + "-" + param.AppId
 		err := es.DeleteLogs(index)
 		if err != nil {

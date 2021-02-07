@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -438,6 +438,56 @@ bool SharedConfigManager::pg_error_filtered(std::string error)
         return result_pair.value != -1;
     }
     return false;
+}
+
+bool SharedConfigManager::write_env_key_array_to_shm(const void *source, size_t num)
+{
+    if (rwlock != nullptr && rwlock->write_lock())
+    {
+        WriteUnLocker auto_unlocker(rwlock);
+        return shared_config_block->reset_env_key_array(source, num);
+    }
+    return false;
+}
+
+bool SharedConfigManager::build_env_key_array(std::vector<std::string> &env_keys)
+{
+    DoubleArrayTrie dat;
+    std::sort(env_keys.begin(), env_keys.end());
+    dat.build(env_keys.size(), &env_keys, 0, 0);
+    return write_env_key_array_to_shm(dat.array(), dat.total_size());
+}
+
+bool SharedConfigManager::build_env_key_array(Isolate *isolate)
+{
+    if (!isolate)
+    {
+        return false;
+    }
+    std::vector<std::string> pg_errs = extract_string_array(isolate, "RASP.algorithmConfig.webshell_ld_preload.env", SharedConfigBlock::WEBSHELL_ENV_KEY_MAX_SIZE);
+    return build_env_key_array(pg_errs);
+}
+
+bool SharedConfigManager::filter_env_key(const std::string &env)
+{
+    DoubleArrayTrie dat;
+    bool found = false;
+    if (rwlock != nullptr && rwlock->read_lock())
+    {
+        ReadUnLocker auto_unlocker(rwlock);
+        dat.set_array((void *)shared_config_block->get_env_key_array(), shared_config_block->get_env_key_array_size());
+        std::vector<DoubleArrayTrie::result_pair_type> result_pairs = dat.prefix_search(env.c_str());
+        for (DoubleArrayTrie::result_pair_type result_pair : result_pairs)
+        {
+            if (result_pair.value != -1 &&
+                result_pair.length <= env.length() - 1 &&
+                '=' == env[result_pair.length])
+            {
+                found = true;
+            }
+        }
+    }
+    return found;
 }
 
 } // namespace openrasp

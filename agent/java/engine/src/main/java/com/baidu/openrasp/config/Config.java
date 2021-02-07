@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,8 +58,9 @@ public class Config extends FileScanListener {
     static final String CONFIG_DIR_NAME = "conf";
     static final String CONFIG_FILE_NAME = "openrasp.yml";
     public static final Logger LOGGER = Logger.getLogger(Config.class.getName());
+    public static final String[] FILE_MONITOR_MODE = new String[]{"jnotify", "scan", "disable"};
     public static String baseDirectory;
-    static Integer watchId;
+    static Object watchId;
     //全局lru的缓存
     private static boolean isInit = false;
     public static LRUCache<Object, String> commonLRUCache;
@@ -100,6 +101,7 @@ public class Config extends FileScanListener {
     Map<Object, Object> responseHeaders;
     int logMaxBackUp;
     int dependencyCheckInterval;
+    boolean dependencyCheckEnable;
     List<String> securityWeakPasswords;
     boolean disableHooks;
     boolean cpuUsageEnable;
@@ -115,6 +117,8 @@ public class Config extends FileScanListener {
     int responseSamplerInterval;
     int responseSamplerBurst;
     boolean iastEnable;
+    String fileMonitorMode;
+    long fileMonitorInterval;
     static Config instance;
 
 
@@ -282,7 +286,7 @@ public class Config extends FileScanListener {
         }
     }
 
-    private void addConfigFileMonitor() throws JNotifyException {
+    private void addConfigFileMonitor() throws Exception {
         if (watchId != null) {
             FileScanMonitor.removeMonitor(watchId);
         }
@@ -561,6 +565,14 @@ public class Config extends FileScanListener {
         return iastEnable;
     }
 
+    public String getFileMonitorMode() {
+        return fileMonitorMode;
+    }
+
+    public long getFileMonitorInterval() {
+        return fileMonitorInterval;
+    }
+
     /**
      * 获取检测算法配置
      *
@@ -821,6 +833,10 @@ public class Config extends FileScanListener {
      */
     public int getDependencyCheckInterval() {
         return dependencyCheckInterval;
+    }
+
+    public boolean isDependencyCheckEnable() {
+        return dependencyCheckEnable;
     }
 
     public List<String> getSecurityWeakPasswords() {

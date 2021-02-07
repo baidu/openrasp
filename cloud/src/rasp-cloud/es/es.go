@@ -15,19 +15,19 @@
 package es
 
 import (
-	"github.com/olivere/elastic"
-	"time"
 	"context"
-	"github.com/astaxie/beego/logs"
-	"strconv"
-	"github.com/astaxie/beego"
-	"rasp-cloud/tools"
-	"fmt"
-	"strings"
-	"rasp-cloud/conf"
-	"errors"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"github.com/olivere/elastic"
+	"rasp-cloud/conf"
 	"rasp-cloud/environment"
+	"rasp-cloud/tools"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var (
@@ -59,12 +59,12 @@ func init() {
 		beego.Info("ES version: " + Version)
 		if strings.Compare(Version, minEsVersion) < 0 {
 			tools.Panic(tools.ErrCodeESInitFailed, "unable to support the ElasticSearch with a version lower than "+
-				minEsVersion+ ","+ " the current version is "+ Version, nil)
+				minEsVersion+","+" the current version is "+Version, nil)
 		}
 		if strings.Compare(Version, maxEsVersion) >= 0 {
 			tools.Panic(tools.ErrCodeESInitFailed,
 				"unable to support the ElasticSearch with a version greater than or equal to "+
-					maxEsVersion+ ","+ " the current version is "+ Version, nil)
+					maxEsVersion+","+" the current version is "+Version, nil)
 		}
 		ElasticClient = client
 	}
@@ -215,13 +215,20 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
 	defer cancel()
+
 	response, err := bulkService.Do(ctx)
+	if err != nil {
+		beego.Error("ES bulk error: " + fmt.Sprintf("%+v", err))
+		return
+	}
+
 	if response.Errors {
 		errContent, err := json.Marshal(response.Failed())
 		if err == nil {
-			return errors.New("ES bulk has errors: " + string(errContent))
+			err = errors.New("ES bulk has errors: " + string(errContent))
 		}
 	}
+
 	return err
 }
 

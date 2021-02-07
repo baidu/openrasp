@@ -3,15 +3,13 @@
 # 手动编译说明
 # https://rasp.baidu.com/doc/hacking/compile/java.html
 
-##################################
-#                                #
-# 自动编译，并生成OpenRASP安装包 #   
-#                                #
-##################################
-
 set -e
-
 cd "$(dirname "$0")"
+
+# 目前仅支持JDK8编译，Mac下面若安装多个版本JDK，自动为maven选择1.8版本
+if [[ $(uname -s) == "Darwin" ]]; then
+	export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
+fi
 
 BASE_DIR=$(pwd)
 echo "base dir: $BASE_DIR"

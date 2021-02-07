@@ -42,7 +42,7 @@ type PIDFile struct {
 var (
 	UpdateMappingConfig map[string]interface{}
 	StartBeego          = true
-	Version             = "1.3.5"
+	Version             = "1.3.6"
 	LogPath             = beego.AppConfig.DefaultString("LogPath", "/home/openrasp/logs")
 	LogApiPath          = LogPath + "/api"
 	PidFileName         = LogPath + "/pid.file"
@@ -174,7 +174,7 @@ func stop() {
 			log.Println("Stop ok!")
 		}
 	} else {
-		beego.Info("The process id:" + OldPid + " is not exists!")
+		beego.Info("Process " + OldPid + " is not running, rasp-cloud was not shutdown cleanly")
 	}
 	os.Exit(0)
 }
@@ -281,7 +281,7 @@ func HandleDaemon() {
 func CheckForkStatus(remove bool) {
 	f, ret := newPIDFile(PidFileName, remove)
 	if ret == false && f == nil {
-		beego.Error("create %s error, for details please check the log in " + LogApiPath, PidFileName)
+		beego.Error("create %s error, for details please check the log in "+LogApiPath, PidFileName)
 	}
 }
 
@@ -291,12 +291,12 @@ func fork() (err error) {
 	if len(os.Args) > 1 {
 		for _, arg := range os.Args[1:] {
 			if arg == "-d" {
-				break
+				continue
 			}
 			args = append(args, arg)
 		}
 	}
-	log.Println("args:", args)
+	beego.Info("Command line arguments:", args)
 	cmd := exec.Command(path, args...)
 	err = cmd.Start()
 	return
@@ -390,7 +390,7 @@ func processExists(pid string) (bool, error) {
 func checkPIDAlreadyExists(path string, remove bool) bool {
 	//pid := readPIDFILE(path)
 	if res, err := processExists(OldPid); res && err == nil && OldPid != " " {
-		beego.Info("the main process " + OldPid + " has already exist!")
+		beego.Info("Process " + OldPid + " is already running")
 		return true
 	}
 	if remove {

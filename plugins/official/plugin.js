@@ -237,13 +237,14 @@ var algorithmConfig = {
             '.tu4.org',
             '.2xss.cc',
             '.bxss.me',
-            '.godns.vip'
+            '.godns.vip',
+            '.pipedream.net' // requestbin 新地址
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
     ssrf_obfuscate: {
         name:   '算法4 - 拦截混淆地址',
-        action: 'block'
+        action: 'ignore'
     },
     // SSRF - 禁止使用 curl 读取 file:///etc/passwd、php://filter/XXXX 这样的内容
     ssrf_protocol: {
@@ -458,9 +459,26 @@ var algorithmConfig = {
     },    
 
     // OGNL 代码执行漏洞
-    ognl_exec: {
-        name:   '算法1 - 执行异常 OGNL 语句',
-        action: 'block'
+    ognl_blacklist: {
+        name:   '算法1 - OGNL语句黑名单',
+        action: 'block',
+        expression: [
+            'ognl.OgnlContext',
+            'ognl.TypeConverter',
+            'ognl.MemberAccess',
+            '_memberAccess',
+            'ognl.ClassResolver',
+            'java.lang.Runtime',
+            'java.lang.Class',
+            'java.lang.ClassLoader',
+            'java.lang.System',
+            'java.lang.ProcessBuilder',
+            'java.lang.Object',
+            'java.lang.Shutdown',
+            'java.io.File',
+            'javax.script.ScriptEngineManager',
+            'com.opensymphony.xwork2.ActionContext'
+        ]
     },
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
@@ -502,9 +520,20 @@ var algorithmConfig = {
     },
 
     // transformer 反序列化攻击
-    deserialization_transformer: {
-        name:   '算法1 - 拦截 transformer 反序列化攻击',
-        action: 'block'
+    deserialization_blacklist: {
+        name:   '算法1 - 反序列化黑名单过滤',
+        action: 'block',
+		clazz: [
+            'org.apache.commons.collections.functors.ChainedTransformer.transform',
+            'org.apache.commons.collections.functors.InvokerTransformer',
+            'org.apache.commons.collections.functors.InstantiateTransformer',
+            'org.apache.commons.collections4.functors.InvokerTransformer',
+            'org.apache.commons.collections4.functors.InstantiateTransformer',
+            'org.codehaus.groovy.runtime.ConvertedClosure',
+            'org.codehaus.groovy.runtime.MethodClosure',
+            'org.springframework.beans.factory.ObjectFactory',
+            'xalan.internal.xsltc.trax.TemplatesImpl'
+        ]
     },
 
     // xss 用户输入匹配算法
@@ -553,8 +582,13 @@ var algorithmConfig = {
     },
 
     webshell_ld_preload: {
-        name:   '算法5 - 拦截 PHP LD_PRELOAD 机制后门',
-        action: 'block'
+        name:   '算法5 - 拦截 PHP putenv 相关后门',
+        action: 'block',
+        env: [
+            'LD_PRELOAD',
+            'LD_AUDIT',
+            'GCONV_PATH'
+        ]
     },
 
     eval_regex: {
@@ -574,7 +608,7 @@ var algorithmConfig = {
     // },
 
     response_dataLeak: {
-        name:   '算法1 - 检查响应里是否有敏感信息（拦截等于记录日志）',
+        name:   '算法1 - 检查响应里是否有敏感信息',
         action: 'ignore',
 
         // 检查类型
@@ -872,7 +906,9 @@ function validate_stack_java(stacks) {
         'org.apache.xbean.propertyeditor.JndiConverter':                                "Using JNDI binding class",
         'com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig':                "Using JTA transaction manager",
         'com.sun.jndi.url.ldap.ldapURLContext.lookup':                                  "Using LDAP factory service",
+        'com.alibaba.fastjson.JSON.parse':                                              "Using fastjson library",
         'com.alibaba.fastjson.JSON.parseObject':                                        "Using fastjson library",
+        'com.alibaba.fastjson.JSON.parseArray':                                         "Using fastjson library",
         'org.springframework.expression.spel.support.ReflectiveMethodExecutor.execute': "Using SpEL expressions",
         'freemarker.template.utility.Execute.exec':                                     "Using FreeMarker template",
         'org.jboss.el.util.ReflectionUtil.invokeMethod':                                "Using JBoss EL method",
@@ -2875,71 +2911,40 @@ plugin.register('loadLibrary', function(params, context) {
     return clean
 })
 
-if (algorithmConfig.ognl_exec.action != 'ignore')
+if (algorithmConfig.ognl_blacklist.action != 'ignore')
 {
     // 默认情况下，当OGNL表达式长度超过30才会进入检测点，此长度可配置
     plugin.register('ognl', function (params, context) {
-
-        // 常见 struts payload 语句特征
-        var ognlPayloads = [
-            'ognl.OgnlContext',
-            'ognl.TypeConverter',
-            'ognl.MemberAccess',
-            '_memberAccess',
-            'ognl.ClassResolver',
-            'java.lang.Runtime',
-            'java.lang.Class',
-            'java.lang.ClassLoader',
-            'java.lang.System',
-            'java.lang.ProcessBuilder',
-            'java.lang.Object',
-            'java.lang.Shutdown',
-            'java.io.File',
-            'javax.script.ScriptEngineManager',
-            'com.opensymphony.xwork2.ActionContext'
-        ]
-
         var ognlExpression = params.expression
-        for (var index in ognlPayloads)
+        for (var index in algorithmConfig.ognl_blacklist.expression)
         {
-            if (ognlExpression.indexOf(ognlPayloads[index]) > -1)
+            if (ognlExpression.indexOf(algorithmConfig.ognl_blacklist.expression[index]) > -1)
             {
                 return {
-                    action:     algorithmConfig.ognl_exec.action,
+                    action:     algorithmConfig.ognl_blacklist.action,
                     message:    _("OGNL exec - Trying to exploit a OGNL expression vulnerability"),
                     confidence: 100,
-                    algorithm:  'ognl_exec'
+                    algorithm:  'ognl_blacklist'
                 }
             }
 
         }
+
         return clean
     })
 }
 
-if (algorithmConfig.deserialization_transformer.action != 'ignore') {
-
+if (algorithmConfig.deserialization_blacklist.action != 'ignore') 
+{
     plugin.register('deserialization', function (params, context) {
-        var deserializationInvalidClazz = [
-            'org.apache.commons.collections.functors.ChainedTransformer.transform',
-            'org.apache.commons.collections.functors.InvokerTransformer',
-            'org.apache.commons.collections.functors.InstantiateTransformer',
-            'org.apache.commons.collections4.functors.InvokerTransformer',
-            'org.apache.commons.collections4.functors.InstantiateTransformer',
-            'org.codehaus.groovy.runtime.ConvertedClosure',
-            'org.codehaus.groovy.runtime.MethodClosure',
-            'org.springframework.beans.factory.ObjectFactory',
-            'xalan.internal.xsltc.trax.TemplatesImpl'
-        ]
-
         var clazz = params.clazz
-        for (var index in deserializationInvalidClazz) {
-            if (clazz === deserializationInvalidClazz[index]) {
+        for (var index in algorithmConfig.deserialization_blacklist.clazz) {
+            if (clazz === algorithmConfig.deserialization_blacklist.clazz[index]) {
                 return {
-                    action:     algorithmConfig.deserialization_transformer.action,
-                    message:    _("Transformer deserialization - unknown deserialize vulnerability detected"),
+                    action:     algorithmConfig.deserialization_blacklist.action,
+                    message:    _("Deserialization blacklist - blocked " + clazz + " in resolveClass"),
                     confidence: 100,
-                    algorithm:  'deserialization_transformer'
+                    algorithm:  'deserialization_blacklist'
                 }
             }
         }
@@ -2955,6 +2960,12 @@ function findFirstIdentityCard(data) {
     const m = regexChineseId.exec(data)
     if (m) {
         const id = m[0]
+
+        // FIXME: 简单处理 springboot 接口误报问题
+        if (id[0] == 0) {
+            return
+        }
+
         let sum = 0;
         for (let i = 0; i < W.length; i++) {
             sum += (id[i] - '0') * W[i];

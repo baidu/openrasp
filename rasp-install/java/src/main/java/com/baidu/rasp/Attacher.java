@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,13 +43,13 @@ public class Attacher {
             virtualMachine.loadAgent(baseDir + File.separator + "rasp" + File.separator + "rasp.jar", action);
             virtualMachine.detach();
         } catch (Throwable t) {
-            throw new RaspError(RaspError.E10006 + "Failed to attach Rasp.jar to server: " + t.getMessage());
+            throw new RaspError(RaspError.E10006 + "Failed to attach rasp.jar: " + t.getMessage());
         }
 
         if (MODE_UNINSTALL.equals(action)) {
-            System.out.println("Success to uninstall the OpenRASP with Attach mode, the OpenRASP has no effect.");
+            System.out.println("Successfully attached OpenRASP agent");
         } else if (MODE_INSTALL.equals(action)) {
-            System.out.println("Success to install the OpenRASP with Attach mode, the OpenRASP has taken effect");
+            System.out.println("Successfully detached OpenRASP agent");
         }
 
     }

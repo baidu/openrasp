@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ enum OpenRASPCheckType
   WEBSHELL_EVAL,
   WEBSHELL_COMMAND,
   WEBSHELL_FILE_PUT_CONTENTS,
-  WEBSHELL_LD_PRELOAD,
+  WEBSHELL_ENV,
   XSS_ECHO,
   XSS_USER_INPUT,
   REQUEST,

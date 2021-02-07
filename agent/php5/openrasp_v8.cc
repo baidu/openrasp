@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,6 +111,7 @@ PHP_MINIT_FUNCTION(openrasp_v8)
             openrasp::scm->set_mysql_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.mysql.error_code", SharedConfigBlock::MYSQL_ERROR_CODE_MAX_SIZE));
             openrasp::scm->set_sqlite_error_codes(extract_int64_array(isolate, "RASP.algorithmConfig.sql_exception.sqlite.error_code", SharedConfigBlock::SQLITE_ERROR_CODE_MAX_SIZE));
             openrasp::scm->build_pg_error_array(isolate);
+            openrasp::scm->build_env_key_array(isolate);
             isolate->Dispose();
         }
         Platform::Get()->Shutdown();
