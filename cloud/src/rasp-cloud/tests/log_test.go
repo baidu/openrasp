@@ -1,25 +1,25 @@
 package test
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"testing"
+	"github.com/bouk/monkey"
+	"github.com/olivere/elastic"
 	. "github.com/smartystreets/goconvey/convey"
+	"rasp-cloud/models/logs"
 	"rasp-cloud/tests/inits"
 	"rasp-cloud/tests/start"
-	"time"
-	"rasp-cloud/models/logs"
-	"github.com/bouk/monkey"
-	"errors"
 	"reflect"
-	"github.com/olivere/elastic"
-	"context"
+	"testing"
+	"time"
 )
 
 func TestPostLog(t *testing.T) {
 	Convey("Subject: Test Post Log", t, func() {
 		Convey("when log type is attack", func() {
 			r := inits.GetResponse("POST", "/v1/agent/log/attack", `[
-			{"app_id" : "`+ start.TestApp.Id+ `",
+			{"app_id" : "`+start.TestApp.Id+`",
             "attack_location" : {
             "latitude" : 0,
             "location_en" : "-",
@@ -75,7 +75,7 @@ func TestPostLog(t *testing.T) {
 
 		Convey("when log type is policy", func() {
 			r := inits.GetResponse("POST", "/v1/agent/log/policy", `[
-			{ "app_id" : "`+ start.TestApp.Id+ `",
+			{ "app_id" : "`+start.TestApp.Id+`",
 			"server_nic" : [
             {
               "name" : "matrix0",
@@ -87,13 +87,13 @@ func TestPostLog(t *testing.T) {
             }
           ],
           "server_type" : "tomcat",
-          "host" : "nmg01-scloud-siem-admin.nmg01.baidu.com",
+          "host" : "example.com",
           "server_version" : "8.0.50.0",
           "event_type" : "security_policy",
           "message" : "Database security baseline - Connecting to a mysql instance with high privileged account root, connectionString is jdbc:mysql://127.0.0.1:3306/jeecmsv8",
           "event_time" : "1551882976000",
           "type" : "policy-alarm",
-          "server_hostname" : "gzns-scloud-api-db02.gzns.baidu.com",
+          "server_hostname" : "example.com",
           "policy_id" : "3006",
           "rasp_id" : "e68745ffb5715170f4a5871634206bd1",
           "stack_md5" : "0a9eb2096e10383d6f9e53b7332d798c",
@@ -111,18 +111,18 @@ func TestPostLog(t *testing.T) {
 
 		Convey("when log type is error", func() {
 			r := inits.GetResponse("POST", "/v1/agent/log/error", `[
-			{ "app_id" : "`+ start.TestApp.Id+ `",
+			{ "app_id" : "`+start.TestApp.Id+`",
           "@version" : "1",
           "rasp_id" : "68e21b7df62b96bbf327db5b51530df1",
           "stack_trace" : "java.net.URL.<init>(URL.java:600)\njava.net.URL.<init>(URL.java:490)\njava.net.URL.<init>(URL.java:439)\ncom.baidu.openrasp.messaging.LogConfig.syslogManager(LogConfig.java:52)\ncom.baidu.openrasp.cloud.KeepAlive.handleResponse(KeepAlive.java:112)\ncom.baidu.openrasp.cloud.KeepAlive.access$000(KeepAlive.java:36)\ncom.baidu.openrasp.cloud.KeepAlive$KeepAliveThread.run(KeepAlive.java:52)\njava.lang.Thread.run(Thread.java:748)\n",
           "pid" : 7672,
           "message" : "syslog url: tcp://172.24.180.174:8848 parsed error",
           "event_time" : "1551882976000",
-          "host" : "nmg01-scloud-siem-admin.nmg01.baidu.com",
+          "host" : "example.com",
           "error_code" : 20004,
           "path" : "/home/work/openrasp-server-agent/openrasp-logs/error-alarm/error.log",
           "type" : "error-alarm",
-          "server_hostname" : "geyanping-IdeaCentre-B540",
+          "server_hostname" : "my-computer",
           "level" : "WARN",
           "server_nic" : [
             {
