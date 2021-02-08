@@ -1,4 +1,4 @@
-const plugin_version = '2021-0120-1430'
+const plugin_version = '2021-0208-1400'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -238,6 +238,7 @@ var algorithmConfig = {
             '.2xss.cc',
             '.bxss.me',
             '.godns.vip',
+            '.dnslog.cn',
             '.pipedream.net' // requestbin 新地址
         ]
     },
