@@ -30,7 +30,6 @@ url=http://uee.me/cFas3
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
 		curl_setopt($ch, CURLOPT_NOBODY, FALSE); 
-		curl_setopt($ch, CURLOPT_TIMEOUT_MS, 200);
 		$data = curl_exec($ch);
 		if(!empty($data)){
 			if (curl_getinfo($ch, CURLINFO_HTTP_CODE) == '200') {

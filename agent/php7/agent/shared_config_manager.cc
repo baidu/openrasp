@@ -454,7 +454,11 @@ bool SharedConfigManager::build_env_key_array(std::vector<std::string> &env_keys
 {
     DoubleArrayTrie dat;
     std::sort(env_keys.begin(), env_keys.end());
-    dat.build(env_keys.size(), &env_keys, 0, 0);
+    int error = dat.build(env_keys.size(), &env_keys, 0, 0);
+    if (error < 0 || dat.total_size() > SharedConfigBlock::ENV_KEY_ARRAY_MAX_SIZE)
+    {
+        return false;
+    }
     return write_env_key_array_to_shm(dat.array(), dat.total_size());
 }
 
