@@ -24,6 +24,7 @@ matrix:
             - libsslcommon2-dev
             - libcurl4-openssl-dev
             - libpcre3-dev
+            - apache2
     - env: OPENRASP_LANG=php5 CC=gcc-5 CXX=g++-5 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       dist: trusty
       language: php
@@ -39,6 +40,7 @@ matrix:
             - libsslcommon2-dev
             - libcurl4-openssl-dev
             - libpcre3-dev
+            - apache2
     - env: OPENRASP_LANG=php7 CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 7.0
@@ -53,6 +55,7 @@ matrix:
             - libsslcommon2-dev
             - libcurl4-openssl-dev
             - libpcre3-dev
+            - apache2
     - env: OPENRASP_LANG=php7 CC=gcc-5 CXX=g++-5 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 7.1
@@ -67,6 +70,7 @@ matrix:
             - libsslcommon2-dev
             - libcurl4-openssl-dev
             - libpcre3-dev
+            - apache2
     - env: OPENRASP_LANG=php7 CC=gcc-6 CXX=g++-6 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 7.2
@@ -81,6 +85,7 @@ matrix:
             - libsslcommon2-dev
             - libcurl4-openssl-dev
             - libpcre3-dev
+            - apache2
     - env: OPENRASP_LANG=php7 CC=gcc-7 CXX=g++-7 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
       language: php
       php: 7.3
@@ -95,6 +100,22 @@ matrix:
             - libsslcommon2-dev
             - libcurl4-openssl-dev
             - libpcre3-dev
+            - apache2
+    - env: OPENRASP_LANG=php7 CC=gcc-7 CXX=g++-7 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
+      language: php
+      php: 7.4
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - openssl
+            - libssl-dev
+            - libsslcommon2-dev
+            - libcurl4-openssl-dev
+            - libpcre3-dev
+            - apache2
     - env: OPENRASP_LANG=java SERVER=tomcat8
       language: java
       jdk: openjdk8
