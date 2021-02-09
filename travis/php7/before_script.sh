@@ -21,6 +21,15 @@ sudo sed -i 's/#input(type="imtcp" port="514")/input(type="imtcp" port="514")/g'
 sudo service rsyslog restart
 sudo service apache2 restart
 
+ulimit -c
+ulimit -a -S
+ulimit -a -H
+cat /proc/sys/kernel/core_pattern
+cat /etc/default/apport
+
+ulimit -c unlimited -S
+sudo bash -c "echo '/tmp/coredump/core.%p.%E' > /proc/sys/kernel/core_pattern"
+
 #mongo-php-driver
 # git clone https://github.com/mongodb/mongo-php-driver.git
 # pushd mongo-php-driver
