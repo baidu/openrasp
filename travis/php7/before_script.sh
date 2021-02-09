@@ -28,6 +28,7 @@ cat /proc/sys/kernel/core_pattern
 cat /etc/default/apport
 
 ulimit -c unlimited -S
+mkdir -p /tmp/coredump
 sudo bash -c "echo '/tmp/coredump/core.%p.%E' > /proc/sys/kernel/core_pattern"
 
 #mongo-php-driver
