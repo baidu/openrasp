@@ -1,12 +1,3 @@
-cache:
-  yarn: true
-  directories:
-    - $HOME/cache
-    - $HOME/.m2
-services:
-  - mysql
-  - postgresql
-  - mongodb
 matrix:
   include:
     - env: OPENRASP_LANG=php7 CC=gcc-4.9 CXX=g++-4.9 NO_INTERACTION=1 REPORT_EXIT_STATUS=1
@@ -23,13 +14,17 @@ matrix:
             - libsslcommon2-dev
             - libcurl4-openssl-dev
             - libpcre3-dev
-            - apache2
             - gdb
 before_script:
   - bash ./travis/$OPENRASP_LANG/before_script.sh
 script:
-  - travis_retry bash ./travis/$OPENRASP_LANG/script.sh
+  - bash ./travis/$OPENRASP_LANG/script.sh
 after_failure:
+  - which php
+  - ulimit -c
+  - cat /proc/sys/kernel/core_pattern
+  - ll /tmp/openrasp/logs/crash
   - find /tmp/openrasp/logs/crash -type f -exec cat {} +
   - COREFILE=$(find /tmp/coredump -maxdepth 1 -name "core*" | head -n 1) # find core file
+  - echo $COREFILE
   - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" `which php` -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
