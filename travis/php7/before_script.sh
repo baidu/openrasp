@@ -8,8 +8,8 @@ cat /proc/sys/kernel/core_pattern
 cat /etc/default/apport
 
 ulimit -c unlimited -S
-mkdir -p /tmp/coredump
-sudo bash -c "echo '/tmp/coredump/core.%p.%E' > /proc/sys/kernel/core_pattern"
+mkdir -p /tmp/dump
+sudo bash -c "echo '/tmp/dump/core.%p.%E' > /proc/sys/kernel/core_pattern"
 
 #cmake
 wget -N https://cmake.org/files/v3.14/cmake-3.14.5-Linux-x86_64.tar.gz -P $HOME/cache
