@@ -30,5 +30,6 @@ before_script:
 script:
   - travis_retry bash ./travis/$OPENRASP_LANG/script.sh
 after_failure:
-  - cat /tmp/openrasp/logs/crash/*
-  - for i in $(find /tmp/coredump/ -maxdepth 1 -name 'core*' -print); do gdb php /tmp/coredump/core* -ex "thread apply all bt" -ex "set pagination 0" -batch; done;
+  - find /tmp/openrasp/logs/crash -type f -exec cat {} +
+  - COREFILE=$(find /tmp/coredump -maxdepth 1 -name "core*" | head -n 1) # find core file
+  - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" `which php` -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
