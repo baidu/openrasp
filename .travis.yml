@@ -23,7 +23,7 @@ after_failure:
   - which php
   - ulimit -c
   - cat /proc/sys/kernel/core_pattern
-  - ll /tmp/openrasp/logs/crash
+  - ls -l /tmp/openrasp/logs/crash
   - find /tmp/openrasp/logs/crash -type f -exec cat {} +
   - COREFILE=$(find /tmp/coredump -maxdepth 1 -name "core*" | head -n 1) # find core file
   - echo $COREFILE
