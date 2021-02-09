@@ -20,11 +20,12 @@ before_script:
 script:
   - bash ./travis/$OPENRASP_LANG/script.sh
 after_failure:
-  - which php
+  - file `which php` 
+  - php -r 'echo realpath("/proc/self/exe");'
   - ulimit -c
   - cat /proc/sys/kernel/core_pattern
   - ls -l /tmp/openrasp/logs/crash
   - find /tmp/openrasp/logs/crash -type f -exec cat {} +
   - COREFILE=$(find /tmp/dump -maxdepth 1 -name "core*" | head -n 1) # find core file
   - echo $COREFILE
-  - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" `which php` -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
+  - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" `php -r 'echo realpath("/proc/self/exe");'` -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
