@@ -39,7 +39,7 @@ int include_or_eval_handler(zend_execute_data *execute_data)
     zval tmp_inc_filename;
     zval *inc_filename = nullptr;
     ZVAL_NULL(&tmp_inc_filename);
-#if (PHP_MINOR_VERSION < 3)
+#if (PHP_MAJOR_VERSION == 7 && PHP_MINOR_VERSION < 3)
     inc_filename = zend_get_zval_ptr(opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);
 #else
     inc_filename = zend_get_zval_ptr(opline, opline->op1_type, &opline->op1, execute_data, &should_free, BP_VAR_IS);

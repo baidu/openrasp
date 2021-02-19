@@ -96,7 +96,7 @@ static bool verify_syslog_address_format()
             std::string scheme;
             if (resource->scheme)
             {
-#if (PHP_MINOR_VERSION < 3)
+#if (PHP_MAJOR_VERSION == 7 && PHP_MINOR_VERSION < 3)
                 scheme = std::string(resource->scheme);
 #else
                 scheme = std::string(resource->scheme->val, resource->scheme->len);

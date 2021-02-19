@@ -264,7 +264,7 @@ bool openrasp_parse_url(const std::string &origin_url, openrasp::Url &openrasp_u
     {
         if (url->scheme)
         {
-#if (PHP_MINOR_VERSION < 3)
+#if (PHP_MAJOR_VERSION == 7 && PHP_MINOR_VERSION < 3)
             openrasp_url.set_scheme(url->scheme);
 #else
             openrasp_url.set_scheme(std::string(url->scheme->val, url->scheme->len));
@@ -272,7 +272,7 @@ bool openrasp_parse_url(const std::string &origin_url, openrasp::Url &openrasp_u
         }
         if (url->host)
         {
-#if (PHP_MINOR_VERSION < 3)
+#if (PHP_MAJOR_VERSION == 7 && PHP_MINOR_VERSION < 3)
             openrasp_url.set_host(url->host);
 #else
             openrasp_url.set_host(std::string(url->host->val, url->host->len));
@@ -284,7 +284,7 @@ bool openrasp_parse_url(const std::string &origin_url, openrasp::Url &openrasp_u
         }
         if (url->path)
         {
-#if (PHP_MINOR_VERSION < 3)
+#if (PHP_MAJOR_VERSION == 7 && PHP_MINOR_VERSION < 3)
             openrasp_url.set_path(url->path);
 #else
             openrasp_url.set_path(std::string(url->path->val, url->path->len));
@@ -292,7 +292,7 @@ bool openrasp_parse_url(const std::string &origin_url, openrasp::Url &openrasp_u
         }
         if (url->query)
         {
-#if (PHP_MINOR_VERSION < 3)
+#if (PHP_MAJOR_VERSION == 7 && PHP_MINOR_VERSION < 3)
             openrasp_url.set_query(url->query);
 #else
             openrasp_url.set_path(std::string(url->query->val, url->query->len));
