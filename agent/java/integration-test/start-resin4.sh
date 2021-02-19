@@ -2,7 +2,7 @@
 
 set +e
 
-wget -N http://caucho.com/download/resin-4.0.58.tar.gz
+wget --no-check-certificate -N http://caucho.com/download/resin-4.0.58.tar.gz
 
 tar zxf resin-4.0.58.tar.gz
 
