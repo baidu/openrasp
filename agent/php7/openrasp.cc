@@ -250,7 +250,7 @@ PHP_RINIT_FUNCTION(openrasp)
 {
     if (is_initialized)
     {
-        zval *http_server = fetch_http_globals(TRACK_VARS_SERVER TSRMLS_CC);
+        zval *http_server = fetch_http_globals(TRACK_VARS_SERVER);
         OPENRASP_G(request).update_id();
         if (nullptr != http_server && Z_TYPE_P(http_server) == IS_ARRAY)
         {
