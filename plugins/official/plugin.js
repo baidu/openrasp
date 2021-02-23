@@ -2699,7 +2699,7 @@ plugin.register('command', function (params, context) {
         for (var i=0; i<raw_tokens.length; i++) {
             // 敏感token检测
             if (algorithmConfig.command_error.alarm_token_enable) {
-                if (alarm_token == raw_tokens[i].text) {
+                if (alarm_token.indexOf(raw_tokens[i].text) != -1) {
                     if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
                         return {
                             action:     algorithmConfig.command_error.action,
