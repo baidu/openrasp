@@ -1,4 +1,4 @@
-const plugin_version = '2021-0223-1840'
+const plugin_version = '2021-0301-1240'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -520,6 +520,13 @@ var algorithmConfig = {
         name:   '算法5 - 记录或者拦截所有命令执行操作',
         action: 'ignore'
     },
+    // 命令注入 - dnslog
+    command_dnslog: {
+        name:    '算法6 - dnslog类命令',
+        action:  'log',
+        pattern_cmd: '(^|\\W)(curl|ping|wget|nslookup|dig)\\W',
+        pattern_domain: '\\.((ceye|exeye|sslip|nip)\\.io|dnslog\\.cn|(vcap|bxss)\\.me|xip\\.(name|io)|burpcollaborator\\.net|tu4\\.org|2xss\\.cc|request\\.bin|requestbin\\.net|pipedream\\.net)'
+    },
 
     // transformer 反序列化攻击
     deserialization_blacklist: {
@@ -730,6 +737,10 @@ var cmdJavaExploitable = new RegExp(/^[^ ]*sh.{1,12}-c/, 'i')
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
+
+// 命令执行探针 - dnslog命令
+var cmdDNSlogPatternCmd  = new RegExp(algorithmConfig.command_dnslog.pattern_cmd)
+var cmdDNSlogPatternDomain  = new RegExp(algorithmConfig.command_dnslog.pattern_domain, 'i')
 
 // 敏感信息泄露 - Content Type 正则
 var dataLeakContentType = new RegExp(algorithmConfig.response_dataLeak.content_type, 'i')
@@ -2772,6 +2783,22 @@ plugin.register('command', function (params, context) {
             message:    _("Command execution - Logging all command execution by default, command is %1%", [params.command]),
             confidence: 90,
             algorithm:  'command_other'
+        }
+    }
+
+    // 算法6: DNSlog检测
+    if (algorithmConfig.command_dnslog.action != 'ignore') 
+    {
+        var reason = false
+        if (cmdDNSlogPatternCmd.test(params.command))
+        {
+            if (cmdDNSlogPatternDomain.test(params.command))
+            return {
+                action:     algorithmConfig.command_dnslog.action,
+                message:    _("Command injection - Executing dnslog command, command is %1%", [params.command]),
+                confidence: 95,
+                algorithm:  'command_common'
+            }
         }
     }
 
