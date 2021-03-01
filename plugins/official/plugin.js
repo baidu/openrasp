@@ -1,4 +1,4 @@
-const plugin_version = '2021-0301-1240'
+const plugin_version = '2021-0301-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2789,15 +2789,15 @@ plugin.register('command', function (params, context) {
     // 算法6: DNSlog检测
     if (algorithmConfig.command_dnslog.action != 'ignore') 
     {
-        var reason = false
         if (cmdDNSlogPatternCmd.test(params.command))
         {
-            if (cmdDNSlogPatternDomain.test(params.command))
-            return {
-                action:     algorithmConfig.command_dnslog.action,
-                message:    _("Command injection - Executing dnslog command, command is %1%", [params.command]),
-                confidence: 95,
-                algorithm:  'command_common'
+            if (cmdDNSlogPatternDomain.test(params.command)) {
+                return {
+                    action:     algorithmConfig.command_dnslog.action,
+                    message:    _("Command injection - Executing dnslog command, command is %1%", [params.command]),
+                    confidence: 95,
+                    algorithm:  'command_dnslog'
+                }
             }
         }
     }
