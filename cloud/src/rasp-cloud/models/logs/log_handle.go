@@ -309,7 +309,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 				}
 			} else if key == "stack" {
 				filterQueries = append(filterQueries,
-					elastic.NewNestedQuery("stack", elastic.NewTermQuery("attack_params.stack", value)))
+					elastic.NewNestedQuery("attack_params", elastic.NewTermQuery("attack_params.stack", value)))
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
