@@ -34,18 +34,28 @@
                 主机名称
               </div>
               <p>{{ data.server_hostname }}</p>
+
               <div class="h6">
                 服务器 IP
               </div>
               <ul>
                 <li v-for="nic in data.server_nic" :key="nic.name">{{ nic.name }}: {{ nic.ip }}</li>
               </ul>
+
               <div class="h6">
                 RASP 版本
               </div>
               <p>
                 {{ data.rasp_version }}
               </p>
+
+              <div class="h6">
+                RASP ID
+              </div>
+              <p>
+                {{ data.rasp_id }}
+              </p>
+              
               <div class="h6">
                 应用版本
               </div>
