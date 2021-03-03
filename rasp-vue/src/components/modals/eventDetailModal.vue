@@ -173,6 +173,13 @@
                 {{ data.rasp_version }}
               </p>
 
+              <div class="h6">
+                RASP ID
+              </div>
+              <p>
+                {{ data.rasp_id }}
+              </p>
+
               <div v-if="data.server_type">
                 <div class="h6">
                   应用版本

@@ -91,7 +91,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model.trim="stack" type="text" class="form-control w-10" placeholder="堆栈信息" @keyup.enter="loadEvents(1)" style="width: 210px">
+            <input v-model.trim="plugin_algorithm" type="text" class="form-control w-10" placeholder="检测算法" @keyup.enter="loadEvents(1)" style="width: 210px">
           </div>
         </div>
         <div class="page-options d-flex" style="margin-top: 5px;">
@@ -99,7 +99,7 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
-            <input v-model.trim="server_hostname" type="text" class="form-control w-10" placeholder="资产IP/主机名称" @keyup.enter="loadEvents(1)" style="width: 210px">
+            <input v-model.trim="server_hostname" type="text" class="form-control w-10" placeholder="资产IP/主机名/RASP ID" @keyup.enter="loadEvents(1)" style="width: 210px">
           </div>
           <div class="input-icon ml-2">
             <span class="input-icon-addon">
@@ -235,8 +235,12 @@ export default {
       srcip: '',
       url: '',
       request_id: '',
+      request_method: '',
+      body: '',
+      header: '',
       stack: '',
       stack_md5: '',
+      plugin_algorithm: '',
       plugin_message: '',
       server_hostname: '',      
       total: 0,
@@ -294,9 +298,12 @@ export default {
           attack_source: this.srcip,
           app_id: this.current_app.id,
           url: this.url,
+          header: this.header,
           request_id: this.request_id,
+          request_method: this.request_method,
           intercept_state: this.selected_status,
           plugin_message: this.plugin_message,
+          plugin_algorithm: this.plugin_algorithm,
           server_hostname: this.server_hostname,
           stack_md5: this.stack_md5,
           stack: this.stack
