@@ -301,23 +301,20 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 	shouldQueries := make([]elastic.Query, 0, len(query)+1)
 	if query != nil {
 		for key, value := range query {
-			if key == "attack_type" {
+			if key == "attack_type" || key == "intercept_state" || key == "policy_id" || key == "language" {
 				if v, ok := value.([]interface{}); ok {
 					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
 				} else {
 					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 				}
-			} else if key == "intercept_state" || key == "policy_id" || key == "language" {
-				if v, ok := value.([]interface{}); ok {
-					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
-				} else {
-					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
-				}
+			} else if key == "stack" {
+				filterQueries = append(filterQueries,
+					elastic.NewNestedQuery("stack", elastic.NewTermQuery("attack_params.stack", value)))
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
 			} else if key == "attack_source" || key == "url" || key == "crash_message" || key == "hostname" ||
-				key == "message" || key == "plugin_message" || key == "client_ip" {
+				key == "message" || key == "plugin_algorithm" || key == "plugin_message" || key == "client_ip" {
 				realValue := strings.TrimSpace(fmt.Sprint(value))
 				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+realValue+"*"))
 			} else if key == "server_hostname" {

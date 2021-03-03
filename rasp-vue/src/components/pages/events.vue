@@ -91,6 +91,20 @@
             <span class="input-icon-addon">
               <i class="fe fe-search" />
             </span>
+            <input v-model.trim="stack" type="text" class="form-control w-10" placeholder="堆栈信息" @keyup.enter="loadEvents(1)" style="width: 210px">
+          </div>
+        </div>
+        <div class="page-options d-flex" style="margin-top: 5px;">
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
+            <input v-model.trim="server_hostname" type="text" class="form-control w-10" placeholder="资产IP/主机名称" @keyup.enter="loadEvents(1)" style="width: 210px">
+          </div>
+          <div class="input-icon ml-2">
+            <span class="input-icon-addon">
+              <i class="fe fe-search" />
+            </span>
             <input v-model.trim="stack_md5" type="text" class="form-control w-10" placeholder="堆栈 MD5" @keyup.enter="loadEvents(1)" style="width: 210px">
           </div>
         </div>
@@ -221,8 +235,10 @@ export default {
       srcip: '',
       url: '',
       request_id: '',
+      stack: '',
       stack_md5: '',
       plugin_message: '',
+      server_hostname: '',      
       total: 0,
       attack_types,
       status_types,
@@ -280,7 +296,10 @@ export default {
           url: this.url,
           request_id: this.request_id,
           intercept_state: this.selected_status,
-          plugin_message: this.plugin_message
+          plugin_message: this.plugin_message,
+          server_hostname: this.server_hostname,
+          stack_md5: this.stack_md5,
+          stack: this.stack
         },
         page: page,
         perpage: 10
