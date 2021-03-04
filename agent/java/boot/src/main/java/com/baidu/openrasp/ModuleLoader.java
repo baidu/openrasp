@@ -95,10 +95,9 @@ public class ModuleLoader {
                 System.out.println("[OpenRASP] Start to release OpenRASP");
 
                 engineContainer.release(mode);
-
                 engineContainer = null;
             } else {
-                System.out.println("[OpenRASP] The OpenRASP has not be bean initialized");
+                System.out.println("[OpenRASP] Engine is initialized, skipped");
             }
         } catch (Throwable throwable) {
             // ignore
