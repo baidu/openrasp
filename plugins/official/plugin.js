@@ -1,4 +1,4 @@
-const plugin_version = '2021-0301-1500'
+const plugin_version = '2021-0309-0800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -694,7 +694,7 @@ var forcefulBrowsing = {
 var headerInjection = ["user-agent", "referer", "x-forwarded-for"]
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
-var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml|sh|py|pl|rb)\.?$/i
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phar|phtml|sh|py|pl|rb)\.?$/i
 
 // 正常文件
 var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
