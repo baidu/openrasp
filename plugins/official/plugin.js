@@ -1,4 +1,4 @@
-const plugin_version = '2021-0301-1240'
+const plugin_version = '2021-0309-0800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -694,7 +694,7 @@ var forcefulBrowsing = {
 var headerInjection = ["user-agent", "referer", "x-forwarded-for"]
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
-var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml|sh|py|pl|rb)\.?$/i
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phar|phtml|sh|py|pl|rb)\.?$/i
 
 // 正常文件
 var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
@@ -2789,15 +2789,15 @@ plugin.register('command', function (params, context) {
     // 算法6: DNSlog检测
     if (algorithmConfig.command_dnslog.action != 'ignore') 
     {
-        var reason = false
         if (cmdDNSlogPatternCmd.test(params.command))
         {
-            if (cmdDNSlogPatternDomain.test(params.command))
-            return {
-                action:     algorithmConfig.command_dnslog.action,
-                message:    _("Command injection - Executing dnslog command, command is %1%", [params.command]),
-                confidence: 95,
-                algorithm:  'command_common'
+            if (cmdDNSlogPatternDomain.test(params.command)) {
+                return {
+                    action:     algorithmConfig.command_dnslog.action,
+                    message:    _("Command injection - Executing dnslog command, command is %1%", [params.command]),
+                    confidence: 95,
+                    algorithm:  'command_dnslog'
+                }
             }
         }
     }
