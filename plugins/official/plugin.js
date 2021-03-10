@@ -1,4 +1,4 @@
-const plugin_version = '2021-0310-1400'
+const plugin_version = '2021-0310-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -168,16 +168,16 @@ var algorithmConfig = {
         },
         oracle: {
             error_code: [
-                "ORA-00933", // SQL command not properly ended
-                "ORA-29257", // host string unknown
-                "ORA-20000", // Oracle Text error
-                "ORA-00904", // invalid identifier
-                "ORA-19202", // Error occurred in XML processing
-                "ORA-01756", // quoted string not properly terminated
-                "ORA-01740", // missing double quote in identifier
-                "ORA-00920", // invalid relational operator
-                "ORA-00907", // missing right parenthesis
-                "ORA-00911", // invalid character
+                933,   // SQL command not properly ended
+                29257, // host string unknown
+                20000, // Oracle Text error
+                904,   // invalid identifier
+                19202, // Error occurred in XML processing
+                1756,  // quoted string not properly terminated
+                1740,  // missing double quote in identifier
+                920,   // invalid relational operator
+                907,   // missing right parenthesis
+                911,   // invalid character
             ]
         },
         hsql: {
