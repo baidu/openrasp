@@ -63,6 +63,10 @@ int include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS)
         op1 = OPENRASP_OP1_CONSTANT_PTR(opline);
         break;
     }
+    if (nullptr == op1)
+    {
+        return ZEND_USER_OPCODE_DISPATCH;
+    }
     if (op1->type != IS_STRING)
     {
         MAKE_STD_ZVAL(z_param);
