@@ -1,4 +1,4 @@
-const plugin_version = '2021-0309-0800'
+const plugin_version = '2021-0310-1200'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -239,6 +239,7 @@ var algorithmConfig = {
             '.bxss.me',
             '.godns.vip',
             '.dnslog.cn',
+            '.0kee.360.cn',
             '.xn--9tr.com',  // yumusb/DNSLog-Platform-Golang
             '.pipedream.net' // requestbin 新地址
         ]
