@@ -1,4 +1,4 @@
-const plugin_version = '2021-0310-1200'
+const plugin_version = '2021-0310-1400'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -168,6 +168,7 @@ var algorithmConfig = {
         },
         oracle: {
             error_code: [
+                "ORA-00933", // SQL command not properly ended
                 "ORA-29257", // host string unknown
                 "ORA-20000", // Oracle Text error
                 "ORA-00904", // invalid identifier
