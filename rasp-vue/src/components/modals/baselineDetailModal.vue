@@ -67,7 +67,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" data-dismiss="modal">关闭</button>
+          <button class="btn btn-primary mr-auto" @click="exportJSON()">
+            导出
+          </button>
+          <button class="btn btn-primary" data-dismiss="modal">
+            关闭
+          </button>
         </div>
       </div>
     </div>
@@ -76,6 +81,7 @@
 
 <script>
 import moment from 'moment'
+import { download_file } from '../../util'
 import baseline_params from '../pages/baseline_params'
 
 export default {
@@ -87,7 +93,11 @@ export default {
       data: {}
     };
   },
-  methods: {    
+  methods: {   
+    exportJSON() {
+      let data = JSON.stringify(this.data, null, 2)
+      download_file('policy.json', data)
+    }, 
     showModal(data) {
       this.tabIndex = 0
       this.data = data
