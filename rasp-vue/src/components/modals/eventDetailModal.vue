@@ -195,6 +195,10 @@
           </div>
         </div>
         <div class="modal-footer">
+          <button class="btn btn-primary mr-auto" @click="exportJSON()">
+            导出
+          </button>
+
           <button class="btn btn-primary" data-dismiss="modal">
             关闭
           </button>
@@ -205,7 +209,7 @@
 </template>
 
 <script>
-import { attack_type2name } from '../../util'
+import { attack_type2name, download_file } from '../../util'
 import attack_params from '../pages/attack_params'
 import fix_solutions from '../pages/fix_solutions'
 
@@ -231,6 +235,10 @@ export default {
   },
   methods: {
     attack_type2name: attack_type2name,
+    exportJSON() {
+      let data = JSON.stringify(this.data, null, 2)
+      download_file('alarm.json', data)
+    },
     showModal(data) {
       this.tabIndex = 0
       this.data = data

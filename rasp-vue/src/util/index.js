@@ -263,3 +263,11 @@ request.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+export function download_file(name, data) {
+  var blob  = new Blob([data], { type: 'application/octet-stream' })
+  var link  = document.createElement('a')
+  link.href = window.URL.createObjectURL(blob)
+  link.download = name
+  link.click()
+}
