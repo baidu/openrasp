@@ -241,8 +241,9 @@ var algorithmConfig = {
             '.godns.vip',
             '.dnslog.cn',
             '.0kee.360.cn',
-            '.xn--9tr.com',  // yumusb/DNSLog-Platform-Golang
-            '.pipedream.net' // requestbin 新地址
+            '.xn--9tr.com',   // yumusb/DNSLog-Platform-Golang
+            '.pipedream.net', // requestbin 新地址
+            '.vxtrans.com'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
