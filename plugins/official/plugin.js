@@ -1,4 +1,4 @@
-const plugin_version = '2021-0310-1500'
+const plugin_version = '2021-0322-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -244,7 +244,8 @@ var algorithmConfig = {
             '.xn--9tr.com',   // yumusb/DNSLog-Platform-Golang
             '.pipedream.net', // requestbin 新地址
             '.vxtrans.com',
-            '.vxtrans.link'
+            '.vxtrans.link',
+            '.r87.me'
         ]
     },
     // SSRF - 是否允许访问混淆后的IP地址
