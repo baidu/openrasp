@@ -121,7 +121,7 @@ public class OSUtil {
             try {
                 if (!netInterface.isLoopback()) {
                     byte[] mac = netInterface.getHardwareAddress();
-                    if (mac == null)
+                    if (mac == null || mac.length == 0)
                         continue;
                     String macString = "";
                     for (byte b : mac) {
