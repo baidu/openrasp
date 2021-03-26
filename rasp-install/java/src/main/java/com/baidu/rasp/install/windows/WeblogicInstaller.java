@@ -33,7 +33,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
 
     private static String OPENRASP_CONFIG =
             "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP +
-                    "set JAVA_OPTIONS=\"-javaagent:%DOMAIN_HOME%/rasp/rasp.jar %JAVA_OPTIONS%\"" + LINE_SEP +
+                    "set JAVA_OPTIONS=-javaagent:%DOMAIN_HOME%\\rasp\\rasp.jar %JAVA_OPTIONS%" + LINE_SEP +
                     "rem END OPENRASP" + LINE_SEP;
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTIONS.*/rasp/).*");
 
@@ -43,12 +43,12 @@ public class WeblogicInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getInstallPath(String serverRoot) {
-        return serverRoot + "/rasp";
+        return serverRoot + "\\rasp";
     }
 
     @Override
     protected String getScript(String installPath) {
-        return installPath + "/../bin/startWebLogic.cmd";
+        return installPath + "\\..\\bin\\startWebLogic.cmd";
     }
 
     @Override
@@ -58,7 +58,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
         Scanner scanner = new Scanner(content);
         while (scanner.hasNext()) {
             String line = scanner.nextLine();
-            if (line.startsWith("set JAVA_OPTIONS") && line.contains("set JAVA_OPTIONS=\"${SAVE_JAVA_OPTIONS}\"")) {
+            if (line.startsWith("set JAVA_OPTIONS") && line.contains("set JAVA_OPTIONS=%SAVE_JAVA_OPTIONS%")) {
                 modifyConfigState = FOUND;
                 sb.append(line).append("\n");
                 sb.append(OPENRASP_CONFIG);
@@ -71,7 +71,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
             sb.append(line).append("\n");
         }
         if (NOTFOUND == modifyConfigState) {
-            throw new RaspError(E10001 + "set JAVA_OPTIONS=\"${SAVE_JAVA_OPTIONS}\"");
+            throw new RaspError(E10001 + "set JAVA_OPTIONS=%SAVE_JAVA_OPTIONS%");
         }
 
         return sb.toString();
