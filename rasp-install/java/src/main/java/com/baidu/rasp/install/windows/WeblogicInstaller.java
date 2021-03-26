@@ -58,7 +58,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
         Scanner scanner = new Scanner(content);
         while (scanner.hasNext()) {
             String line = scanner.nextLine();
-            if (line.startsWith("set JAVA_OPTIONS") && line.contains("set JAVA_OPTIONS=\"${SAVE_JAVA_OPTIONS}\"")) {
+            if (line.startsWith("set JAVA_OPTIONS") && line.contains("set JAVA_OPTIONS=%SAVE_JAVA_OPTIONS%")) {
                 modifyConfigState = FOUND;
                 sb.append(line).append("\n");
                 sb.append(OPENRASP_CONFIG);
@@ -71,7 +71,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
             sb.append(line).append("\n");
         }
         if (NOTFOUND == modifyConfigState) {
-            throw new RaspError(E10001 + "set JAVA_OPTIONS=\"${SAVE_JAVA_OPTIONS}\"");
+            throw new RaspError(E10001 + "set JAVA_OPTIONS=%SAVE_JAVA_OPTIONS%");
         }
 
         return sb.toString();
