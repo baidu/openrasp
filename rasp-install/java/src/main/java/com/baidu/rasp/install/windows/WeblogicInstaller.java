@@ -33,7 +33,7 @@ public class WeblogicInstaller extends BaseStandardInstaller {
 
     private static String OPENRASP_CONFIG =
             "rem BEGIN OPENRASP - DO NOT MODIFY" + LINE_SEP +
-                    "set JAVA_OPTIONS=\"-javaagent:%DOMAIN_HOME%/rasp/rasp.jar %JAVA_OPTIONS%\"" + LINE_SEP +
+                    "set JAVA_OPTIONS=-javaagent:%DOMAIN_HOME%\\rasp\\rasp.jar %JAVA_OPTIONS%" + LINE_SEP +
                     "rem END OPENRASP" + LINE_SEP;
     private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTIONS.*/rasp/).*");
 
@@ -43,12 +43,12 @@ public class WeblogicInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getInstallPath(String serverRoot) {
-        return serverRoot + "/rasp";
+        return serverRoot + "\\rasp";
     }
 
     @Override
     protected String getScript(String installPath) {
-        return installPath + "/../bin/startWebLogic.cmd";
+        return installPath + "\\..\\bin\\startWebLogic.cmd";
     }
 
     @Override

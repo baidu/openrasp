@@ -16,10 +16,10 @@ public class WindowsWeblogicInstallerTest {
         try {
             Class clazz = com.baidu.rasp.install.windows.WeblogicInstaller.class;
             Constructor constructor = clazz.getConstructor(String.class, String.class);
-            Object installer = constructor.newInstance("Weblogic", "/home/weblogic/wls12213/user_projects/domains/base_domain/");
+            Object installer = constructor.newInstance("Weblogic", "c:\\wls12213\\user_projects\\domains\\base_domain");
             String path = Utils.invokeStringMethod(installer, "getInstallPath", new Class[]{String.class},
-                    "/home/weblogic/wls12213/user_projects/domains/base_domain");
-            assertEquals(path, "/home/weblogic/wls12213/user_projects/domains/base_domain/rasp");
+                    "c:\\wls12213\\user_projects\\domains\\base_domain");
+            assertEquals(path, "c:\\wls12213\\user_projects\\domains\\base_domain\\rasp");
         } catch (Exception e) {
             //
         }
@@ -30,10 +30,10 @@ public class WindowsWeblogicInstallerTest {
         try {
             Class clazz = com.baidu.rasp.install.windows.WeblogicInstaller.class;
             Constructor constructor = clazz.getConstructor(String.class, String.class);
-            Object installer = constructor.newInstance("Weblogic", "/home/weblogic/wls12213/user_projects/domains/base_domain/");
+            Object installer = constructor.newInstance("Weblogic", "c:\\wls12213\\user_projects\\domains\\base_domain");
             String path = Utils.invokeStringMethod(installer, "getScript", new Class[]{String.class},
-                    "/home/weblogic/wls12213/user_projects/domains/base_domain/rasp");
-            assertEquals(path, "/home/weblogic/wls12213/user_projects/domains/base_domain/rasp/../bin/startWebLogic.cmd");
+                    "c:\\wls12213\\user_projects\\domains\\base_domain\\rasp");
+            assertEquals(path, "c:\\wls12213\\user_projects\\domains\\base_domain\\rasp\\..\\bin\\startWebLogic.cmd");
         } catch (Exception e) {
             //
         }
@@ -46,7 +46,7 @@ public class WindowsWeblogicInstallerTest {
             String content = IOUtils.toString(is, "UTF-8");
             Class clazz = com.baidu.rasp.install.windows.WeblogicInstaller.class;
             Constructor constructor = clazz.getConstructor(String.class, String.class);
-            Object installer = constructor.newInstance("Weblogic", "/home/weblogic/wls12213/user_projects/domains/base_domain/");
+            Object installer = constructor.newInstance("Weblogic", "c:\\wls12213\\user_projects\\domains\\base_domain\\rasp");
             Utils.invokeStringMethod(installer, "modifyStartScript", new Class[]{String.class}, content);
         } catch (Exception e) {
             //
