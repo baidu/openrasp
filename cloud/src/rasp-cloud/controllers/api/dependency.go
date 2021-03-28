@@ -27,8 +27,11 @@ type DependencyController struct {
 
 // @router /delete [post]
 func (o *DependencyController) Delete() {
-	param := o.handleSearchParam()
-	if err := models.RemoveExpiredDependency(param.Data.AppId, param.Data.CreateTime); err != nil {
+	var param models.DeleteDependencyParam
+	o.UnmarshalJson(&param)
+	o.ValidParam(&param)
+
+	if err := models.RemoveExpiredDependency(param.AppId, param.Timestamp); err != nil {
 		o.ServeError(http.StatusBadRequest, "Failed to delete expired dependency", err)
 	}
 	o.Serve(map[string]interface{}{})

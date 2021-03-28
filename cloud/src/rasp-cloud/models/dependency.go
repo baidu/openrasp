@@ -40,8 +40,12 @@ type SearchDependencyParam struct {
 		Tag          string `json:"tag,omitempty" valid:"MaxSize(1024)"`
 		KeyWord      string `json:"key_word,omitempty" valid:"MaxSize(1024)"`
 		Source       string `json:"source,omitempty" valid:"MaxSize(1024)"`
-		CreateTime   int    `json:"timestamp,omitempty"`
 	} `json:"data" valid:"Required"`
+}
+
+type DeleteDependencyParam struct {
+	AppId     string `json:"app_id,omitempty" valid:"Required;MaxSize(512)"`
+	Timestamp int    `json:"timestamp,omitempty" valid:"Required"`
 }
 
 var (
