@@ -6,9 +6,13 @@
 set -e
 cd "$(dirname "$0")"
 
-# 目前仅支持JDK8编译，Mac下面若安装多个版本JDK，自动为maven选择1.8版本
+# 目前最高支持JDK8编译，Mac下面若安装多个版本JDK，自动为maven选择1.8版本
 if [[ $(uname -s) == "Darwin" ]]; then
-	export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
+	jdk=(/Library/Java/JavaVirtualMachines/jdk1.8*)
+	if [[ ! -z "$jdk" ]]; then
+	    export JAVA_HOME=${jdk[0]}/Contents/Home
+	    echo Using $JAVA_HOME on Mac
+	fi
 fi
 
 BASE_DIR=$(pwd)
