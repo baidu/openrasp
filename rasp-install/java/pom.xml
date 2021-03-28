@@ -9,6 +9,7 @@
     </properties>
 
     <groupId>com.baidu</groupId>
+    <artifactId>rasp</artifactId>
     <version>1.3.7</version>
     <packaging>jar</packaging>
 
