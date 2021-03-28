@@ -5,7 +5,7 @@ go 1.13
 require (
 	bou.ke/monkey v1.0.2 // indirect
 	github.com/Shopify/sarama v1.24.0
-	github.com/astaxie/beego v1.11.1
+	github.com/astaxie/beego v1.12.3
 	github.com/bouk/monkey v1.0.2-0.20180914095644-e8ac0cba3b42
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/go-resiliency v1.2.1-0.20190716143035-b98ce2825f72 // indirect
@@ -22,13 +22,13 @@ require (
 	github.com/olivere/elastic v6.2.13+incompatible
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/pierrec/lz4 v2.3.1-0.20190907084430-0554902aa74a+incompatible // indirect
-	github.com/pkg/errors v0.8.0
+	github.com/pkg/errors v0.9.1
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
 	github.com/smartystreets/goconvey v1.6.4-0.20181108003508-044398e4856c
-	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	gopkg.in/jcmturner/gokrb5.v7 v7.3.0 // indirect
-	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 )

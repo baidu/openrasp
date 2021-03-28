@@ -74,7 +74,7 @@ function build_cloud()
     export PATH=$PATH:$GOPATH/bin
 
     if [[ -z "$NO_BEE_INSTALL" ]]; then
-        go get github.com/beego/bee
+        go get -v github.com/beego/bee
     fi
 
     cd src/rasp-cloud
@@ -107,6 +107,10 @@ EOF
 
 function build_vue()
 {
+    if [[ ! -z "NO_VUE" ]]; then
+        return
+    fi
+
     cd rasp-vue
 
     if [[ ! -z "$USE_TAOBAO_NPM" ]]; then

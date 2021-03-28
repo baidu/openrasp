@@ -15,14 +15,23 @@
 package api
 
 import (
+	"math"
+	"net/http"
 	"rasp-cloud/controllers"
 	"rasp-cloud/models"
-	"net/http"
-	"math"
 )
 
 type DependencyController struct {
 	controllers.BaseController
+}
+
+// @router /delete [post]
+func (o *DependencyController) Delete() {
+	param := o.handleSearchParam()
+	if err := models.RemoveExpiredDependency(param.Data.AppId, param.Data.CreateTime); err != nil {
+		o.ServeError(http.StatusBadRequest, "Failed to delete expired dependency", err)
+	}
+	o.Serve(map[string]interface{}{})
 }
 
 // @router /search [post]

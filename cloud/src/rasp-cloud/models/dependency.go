@@ -40,6 +40,7 @@ type SearchDependencyParam struct {
 		Tag          string `json:"tag,omitempty" valid:"MaxSize(1024)"`
 		KeyWord      string `json:"key_word,omitempty" valid:"MaxSize(1024)"`
 		Source       string `json:"source,omitempty" valid:"MaxSize(1024)"`
+		CreateTime   int    `json:"timestamp,omitempty"`
 	} `json:"data" valid:"Required"`
 }
 
@@ -221,6 +222,11 @@ func getDependencyQuery(param *SearchDependencyParam) (query *elastic.BoolQuery,
 		}
 	}
 	return
+}
+
+func RemoveExpiredDependency(appId string, timestamp int) error {
+	query := elastic.NewRangeQuery("@timestamp").Lte(timestamp)
+	return es.DeleteByQuery(es.GetIndex(AliasDependencyIndexName, appId), dependencyType, query)
 }
 
 func RemoveDependencyByRasp(appId string, raspId string) error {
