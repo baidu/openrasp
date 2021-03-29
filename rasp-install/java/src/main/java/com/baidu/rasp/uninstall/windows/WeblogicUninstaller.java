@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * @create: 2018/09/06 16:42
  */
 public class WeblogicUninstaller extends BaseStandardUninstaller {
-    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTIONS.*\\rasp\\).*");
+    private static Pattern OPENRASP_REGEX = Pattern.compile(".*(\\s*OPENRASP\\s*|JAVA_OPTIONS.*\\\\rasp\\\\).*");
 
     public WeblogicUninstaller(String serverName, String serverRoot) {
         super(serverName, serverRoot);
