@@ -7,20 +7,21 @@ import (
 	"rasp-cloud/conf"
 	"rasp-cloud/mongo"
 	"strings"
+	"time"
 )
 
 const (
-	kafkaAddrCollectionName   = "kafka"
+	kafkaAddrCollectionName = "kafka"
 )
 
 var config *sarama.Config
 
 type Kafka struct {
-	KafkaAddr   string     `json:"url"          bson:"url"`
-	KafkaUser   string     `json:"user"         bson:"user"`
-	KafkaPwd    string     `json:"pwd"          bson:"pwd"`
-	KafkaEnable bool       `json:"enable"       bson:"enable"`
-	KafkaTopic  string     `json:"topic"        bson:"topic"`
+	KafkaAddr   string `json:"url"          bson:"url"`
+	KafkaUser   string `json:"user"         bson:"user"`
+	KafkaPwd    string `json:"pwd"          bson:"pwd"`
+	KafkaEnable bool   `json:"enable"       bson:"enable"`
+	KafkaTopic  string `json:"topic"        bson:"topic"`
 }
 
 func init() {
@@ -47,13 +48,21 @@ func SendMessage(appId string, key string, val map[string]interface{}) error {
 		}
 		defer producer.Close()
 
+		// 用户反馈: logstash 7.3.2 版本无法解析数字类型的时间戳
+		// https://github.com/baidu/openrasp/issues/240
+		if timestamp_i := val["@timestamp"]; timestamp_i != nil {
+			if timestamp, ok := timestamp_i.(int64); ok {
+				val["@timestamp"] = time.Unix(timestamp, 0).Format("2006-01-02T03:04:05")
+			}
+		}
+
 		var content []byte
 		content, err = json.Marshal(val)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		sContent := string(content)
-		msg := &sarama.ProducerMessage {
+		msg := &sarama.ProducerMessage{
 			Partition: int32(1),
 			Key:       sarama.StringEncoder(key),
 			Value:     sarama.ByteEncoder(sContent),
@@ -88,11 +97,11 @@ func SendMessages(appId string, key string, valMaps []interface{}) error {
 		var content []byte
 		for _, val := range valMaps {
 			content, err = json.Marshal(val)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			sContent := string(content)
-			msg := &sarama.ProducerMessage {
+			msg := &sarama.ProducerMessage{
 				Partition: int32(1),
 				Key:       sarama.StringEncoder(key),
 				Value:     sarama.ByteEncoder(sContent),
