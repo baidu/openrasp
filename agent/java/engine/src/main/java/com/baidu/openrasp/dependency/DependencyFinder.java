@@ -19,6 +19,7 @@ package com.baidu.openrasp.dependency;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.messaging.ErrorType;
 import com.baidu.openrasp.messaging.LogTool;
+import com.baidu.openrasp.tool.FileUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -135,24 +136,58 @@ public class DependencyFinder {
     }
 
     private static Dependency loadDependencyFromJar(JarFile jarFile, String path, String subPath) throws Exception {
-        InputStream in = jarFile.getInputStream(jarFile.getEntry(subPath));
-        File outFile = new File(Config.getConfig().getBaseDirectory() + File.separator + "tmp");
-        OutputStream out = new FileOutputStream(outFile);
-        byte[] buffer = new byte[1024];
-        int i;
-        while ((i = in.read(buffer)) != -1) {
-            out.write(buffer, 0, i);
-        }
-        out.flush();
-        try {
-            out.close();
+        InputStream in        = null;
+        OutputStream out      = null;
+        File tmpFile          = new File(Config.getConfig().getBaseDirectory() + File.separator + "tmp"); // TODO: 随机文件名
+        JarFile tmpJarFile    = null;
+        Dependency dependency = null;
+
+        try
+        {
+            // 复制成临时文件
+            in  = jarFile.getInputStream(jarFile.getEntry(subPath));
+            out = new FileOutputStream(tmpFile);
+
+            FileUtil.copyStream(in, out, 4096);
+
             in.close();
-        } catch (Throwable t) {
-            // ignore
+            in = null;
+
+            out.close();
+            out = null;
+
+            // 解析依赖
+            tmpJarFile = new JarFile(tmpFile);
+            dependency = loadDependencyFromJarFile(tmpJarFile, path);
         }
-        JarFile file = new JarFile(outFile);
-        Dependency dependency = loadDependencyFromJarFile(file, path);
-        file.close();
+        finally
+        {
+            if (in != null)
+            {
+                in.close();
+            }
+
+            if (out != null)
+            {
+                out.close();
+            }
+
+            if (tmpJarFile != null)
+            {
+                tmpJarFile.close();
+            }
+
+            // 删除临时文件
+            try
+            {
+                tmpFile.delete();
+            }
+            catch (Exception e)
+            {
+
+            }
+        }      
+
         return dependency;
     }
 
