@@ -48,13 +48,6 @@
                 {{ data.register_ip }}
               </p>
 
-              <div class="h6">
-                RASP 目录
-              </div>
-              <p style="word-break: break-all; ">
-                {{ data.rasp_home }}
-              </p>
-
               <div v-if="data.environ && Object.keys(data.environ).length != 0">
                 <div class="h6">
                   环境变量
@@ -83,6 +76,13 @@
                 RASP ID
               </div>
               <p>{{ data.id }}</p>
+
+              <div class="h6">
+                RASP 目录
+              </div>
+              <p style="word-break: break-all; ">
+                {{ data.rasp_home }}
+              </p>
             </div>
           </div>
         </div>
