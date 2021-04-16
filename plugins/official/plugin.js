@@ -242,6 +242,7 @@ var algorithmConfig = {
             '.dnslog.cn',
             '.0kee.360.cn',
             '.r87.me',
+            '.ngrok.io',
 
             // yumusb/DNSLog-Platform-Golang
             '.xn--9tr.com', 
