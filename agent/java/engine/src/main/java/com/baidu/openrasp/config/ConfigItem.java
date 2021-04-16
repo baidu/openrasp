@@ -105,19 +105,19 @@ public enum ConfigItem {
         }
     }),
 
-    LOG_PATH(new ConfigSetter<String>("log.path") {
-        @Override
-        public synchronized void setValue(String logPath) {
-            DynamicConfigAppender.updateLog4jPath(true, logPath);
-            DynamicConfigAppender.setLogMaxBackup();
-            DynamicConfigAppender.fileAppenderAddBurstFilter();
-        }
+    // LOG_PATH(new ConfigSetter<String>("log.path") {
+    //     @Override
+    //     public synchronized void setValue(String logPath) {
+    //         DynamicConfigAppender.updateLog4jPath(true, logPath);
+    //         DynamicConfigAppender.setLogMaxBackup();
+    //         DynamicConfigAppender.fileAppenderAddBurstFilter();
+    //     }
 
-        @Override
-        public String getDefaultValue() {
-            return "";
-        }
-    }),
+    //     @Override
+    //     public String getDefaultValue() {
+    //         return "";
+    //     }
+    // }),
 
     LOG_MAX_BACKUP(new ConfigSetter<String>("log.maxbackup") {
         @Override
