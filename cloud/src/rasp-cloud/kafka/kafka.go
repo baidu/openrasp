@@ -52,7 +52,7 @@ func SendMessage(appId string, key string, val map[string]interface{}) error {
 		// https://github.com/baidu/openrasp/issues/240
 		if timestamp_i := val["@timestamp"]; timestamp_i != nil {
 			if timestamp, ok := timestamp_i.(int64); ok {
-				val["@timestamp"] = time.Unix(timestamp, 0).Format("2006-01-02T03:04:05")
+				val["@timestamp"] = time.Unix(timestamp/1000, 0).Format("2006-01-02T03:04:05")
 			}
 		}
 
