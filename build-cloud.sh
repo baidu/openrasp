@@ -107,7 +107,7 @@ EOF
 
 function build_vue()
 {
-    if [[ ! -z "NO_VUE" ]]; then
+    if [[ ! -z "$NO_VUE" ]]; then
         return
     fi
 

@@ -69,6 +69,35 @@ var (
 	HasOfflineHosts       map[string]float64
 	OfflineInterval       int64
 	OfflineIntervalString string
+
+	SeverityMap = map[interface{}]string{
+		"sql":                        "high",
+		"sql_exception":              "low",
+		"eval":                       "critical",
+		"loadLibrary":                "medium",
+		"command":                    "critical",
+		"xxe":                        "high",
+		"directory":                  "medium",
+		"rename":                     "high",
+		"readFile":                   "medium",
+		"deleteFile":                 "medium",
+		"include":                    "high",
+		"writeFile":                  "high",
+		"ssrf":                       "medium",
+		"ognl":                       "critical",
+		"webdav":                     "high",
+		"fileUpload":                 "high",
+		"deserialization":            "critical",
+		"xss_echo":                   "low",
+		"xss_userinput":              "low",
+		"webshell_callable":          "critical",
+		"webshell_eval":              "critical",
+		"webshell_command":           "critical",
+		"webshell_file_put_contents": "critical",
+		"webshell_ld_preload":        "critical",
+		"response":                   "low",
+		"link":                       "文件链接",
+	}
 )
 
 func init() {

@@ -16,6 +16,7 @@ package agent_logs
 
 import (
 	"rasp-cloud/controllers"
+	"rasp-cloud/models"
 	"rasp-cloud/models/logs"
 	"time"
 )
@@ -32,6 +33,13 @@ func (o *AttackAlarmController) Post() {
 
 	count := 0
 	for _, alarm := range alarms {
+		// 增加漏洞级别字段
+		if attack_type, ok := alarm["attack_type"]; ok {
+			if severity_level, ok := models.SeverityMap[attack_type]; ok {
+				alarm["event_level"] = severity_level
+			}
+		}
+
 		alarm["@timestamp"] = time.Now().UnixNano() / 1000000
 		err := logs.AddAttackAlarm(alarm)
 		if err == nil {
