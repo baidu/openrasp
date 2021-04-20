@@ -1,4 +1,4 @@
 package tools
 
-var CommitID = "a6f89be28abc9db0a645cf93e253cbebc9f0dfc5"
-var BuildTime = "2021-04-20 12:35:26"
+var CommitID = "0d95437058a2c42a5f617804fd4021d12285ddc8"
+var BuildTime = "2021-04-20 12:56:16"

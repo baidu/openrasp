@@ -101,8 +101,10 @@ EOF
     repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud.tar.gz
 
     # mac
-    GOOS=darwin bee pack -exr=vendor
-    repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud-mac.tar.gz
+    if [[ -z "$NO_DARWIN" ]]; then
+        GOOS=darwin bee pack -exr=vendor
+        repack rasp-cloud.tar.gz rasp-cloud-$(date +%Y-%m-%d) ../../../rasp-cloud-mac.tar.gz
+    fi
 }
 
 function build_vue()
