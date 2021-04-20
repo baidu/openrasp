@@ -23,6 +23,7 @@ import com.baidu.openrasp.exceptions.ConfigLoadException;
 import com.baidu.openrasp.tool.LRUCache;
 import com.baidu.openrasp.tool.Reflection;
 import com.baidu.openrasp.tool.cpumonitor.CpuMonitorManager;
+import com.baidu.openrasp.cloud.syslog.DynamicConfigAppender;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 
@@ -103,6 +104,20 @@ public enum ConfigItem {
             return "12288";
         }
     }),
+
+    // LOG_PATH(new ConfigSetter<String>("log.path") {
+    //     @Override
+    //     public synchronized void setValue(String logPath) {
+    //         DynamicConfigAppender.updateLog4jPath(true, logPath);
+    //         DynamicConfigAppender.setLogMaxBackup();
+    //         DynamicConfigAppender.fileAppenderAddBurstFilter();
+    //     }
+
+    //     @Override
+    //     public String getDefaultValue() {
+    //         return "";
+    //     }
+    // }),
 
     LOG_MAX_BACKUP(new ConfigSetter<String>("log.maxbackup") {
         @Override

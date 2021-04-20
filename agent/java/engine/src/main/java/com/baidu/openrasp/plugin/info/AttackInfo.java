@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 /**
  * Created by zhuming01 on 7/11/17.
@@ -151,7 +152,10 @@ public class AttackInfo extends EventInfo {
         } else {
             info.put("source_code", "");
         }
-        if (request != null) {
+        if (request == null) {
+            // 请求ID
+            info.put("request_id", UUID.randomUUID().toString().replace("-", ""));
+        } else {
             // 请求ID
             info.put("request_id", request.getRequestId());
             // 攻击来源IP
