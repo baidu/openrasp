@@ -186,6 +186,10 @@
           HTTP 报警推送
         </h3>
       </div>
+      <div class="alert alert-warning" style="margin-bottom: 0">
+        点击「发送测试数据」时，后台会从ES里找出2条最新的报警，并发送到指定的地址
+      </div>
+
       <div class="card-body">
         <div class="form-group">
           <label class="form-label">
