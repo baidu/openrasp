@@ -76,13 +76,13 @@ public class ProcessBuilderHook extends AbstractClassHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (ctClass.getName().contains("ProcessImpl")) {
-            if (ModuleLoader.isModularityJdk()) {
+            if (OSUtil.isWindows() || !ModuleLoader.isModularityJdk()) {
                 String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                        "$1,$2,$4", byte[].class, byte[].class, byte[].class);
+                        "$1,$2", String[].class, String.class);
                 insertBefore(ctClass, "<init>", null, src);
             } else {
                 String src = getInvokeStaticSrc(ProcessBuilderHook.class, "checkCommand",
-                        "$1,$2", String[].class, String.class);
+                        "$1,$2,$4", byte[].class, byte[].class, byte[].class);
                 insertBefore(ctClass, "<init>", null, src);
             }
         } else if (ctClass.getName().contains("UNIXProcess")) {
