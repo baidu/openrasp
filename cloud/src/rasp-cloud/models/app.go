@@ -723,11 +723,12 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 	}
 }
 
-func getTestAlarmData() []map[string]interface{} {
+func getTestAlarmData(app *App) []map[string]interface{} {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
 	defer cancel()
 
-	queryResult, err := es.ElasticClient.Search("openrasp-attack-alarm-*").
+	indexName := fmt.Sprintf("openrasp-attack-alarm-%s", app.Id)
+	queryResult, err := es.ElasticClient.Search(indexName).
 		Sort("@timestamp", false).
 		Size(2).
 		Do(ctx)
@@ -783,7 +784,7 @@ func PushEmailAttackAlarm(app *App, total int64, alarms []map[string]interface{}
 		}
 		if isTest {
 			subject = "【测试邮件】" + subject
-			alarms = getTestAlarmData()
+			alarms = getTestAlarmData(app)
 			total = int64(len(alarms))
 		}
 		head := map[string]string{
@@ -1006,7 +1007,7 @@ func PushHttpAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 		body := make(map[string]interface{})
 		body["app_id"] = app.Id
 		if isTest {
-			body["data"] = getTestAlarmData()
+			body["data"] = getTestAlarmData(app)
 		} else {
 			body["data"] = alarms
 		}
@@ -1111,7 +1112,7 @@ func PushKafkaAttackAlarm(app *App, alarms []map[string]interface{}, isTest bool
 		body := make(map[string]interface{})
 		body["app_id"] = app.Id
 		if isTest {
-			body["data"] = getTestAlarmData()
+			body["data"] = getTestAlarmData(app)
 		} else {
 			body["data"] = alarms
 		}
