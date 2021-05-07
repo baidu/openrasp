@@ -147,7 +147,16 @@ RUN cd /tmp \
                 <h4>1. 下载或者升级 Fuzz 工具</h4>
                 <pre style="white-space: inherit; ">pip3 install --upgrade git+https://github.com/baidu-security/openrasp-iast</pre>
                 <h4>2. 配置 MySQL 服务器 - 使用 MySQL root 账号执行以下命令授权</h4>
-                <pre>DROP DATABASE IF EXISTS openrasp;
+                <pre>
+# 如果是 MySQL 8.X 以及更高版本
+DROP DATABASE IF EXISTS openrasp;
+CREATE DATABASE openrasp default charset utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE user 'rasp'@'%' identified with mysql_native_password by 'rasp123';
+grant all privileges on testdb.* to 'rasp'@'%' with grant option;
+grant all privileges on testdb.* to 'rasp'@'localhost' with grant option;
+
+# 如果是低版本 MySQL
+DROP DATABASE IF EXISTS openrasp;
 CREATE DATABASE openrasp default charset utf8mb4 COLLATE utf8mb4_general_ci;
 grant all privileges on openrasp.* to 'rasp'@'%' identified by 'rasp123';
 grant all privileges on openrasp.* to 'rasp'@'localhost' identified by 'rasp123';
