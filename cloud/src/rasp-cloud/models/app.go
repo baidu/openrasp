@@ -729,7 +729,8 @@ func getTestAlarmData(app *App) []map[string]interface{} {
 
 	indexName := fmt.Sprintf("openrasp-attack-alarm-%s", app.Id)
 	queryResult, err := es.ElasticClient.Search(indexName).
-		Sort("@timestamp", true).
+		Sort("event_time", false).
+		From(0).
 		Size(2).
 		Do(ctx)
 	if err != nil {
