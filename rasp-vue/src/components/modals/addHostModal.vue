@@ -152,8 +152,8 @@ RUN cd /tmp \
 DROP DATABASE IF EXISTS openrasp;
 CREATE DATABASE openrasp default charset utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE user 'rasp'@'%' identified with mysql_native_password by 'rasp123';
-grant all privileges on testdb.* to 'rasp'@'%' with grant option;
-grant all privileges on testdb.* to 'rasp'@'localhost' with grant option;
+grant all privileges on openrasp.* to 'rasp'@'%' with grant option;
+grant all privileges on openrasp.* to 'rasp'@'localhost' with grant option;
 
 # 如果是低版本 MySQL
 DROP DATABASE IF EXISTS openrasp;
