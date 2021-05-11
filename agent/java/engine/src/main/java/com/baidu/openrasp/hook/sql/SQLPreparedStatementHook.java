@@ -40,6 +40,7 @@ public class SQLPreparedStatementHook extends AbstractSqlHook {
         if ("com/mysql/jdbc/PreparedStatement".equals(className)
                 || "com/mysql/cj/jdbc/PreparedStatement".equals(className)
                 || "com/mysql/cj/jdbc/ClientPreparedStatement".equals(className)) {
+            this.className = className;
             this.type = SqlType.MYSQL;
             this.exceptions = new String[]{"java/sql/SQLException"};
             return true;
