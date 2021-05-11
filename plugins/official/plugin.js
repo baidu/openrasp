@@ -1,4 +1,4 @@
-const plugin_version = '2021-0326-1500'
+const plugin_version = '2021-0510-1930'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1286,16 +1286,28 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance,
     }
 
     // 寻找 token 结束点
-    // 需要返回真实distance, 删除 最多需要遍历 distance 个 token  i < start + distance 条件
-    for (var i = start; i < raw_tokens.length; i++)
-    {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length)
+
+    if (raw_tokens[start].stop >= userinput_idx + userinput_length) {
+        // 大部分用户输入都只包含在一个token中，只需一次判定
+        end = start
+    } else {
+        // 不在一个token内，按顺序查找
+        // 这里需要返回真实distance, 删除 最多需要遍历 distance 个 token  i < start + distance 条件
+        for (var i = start + 1; i < raw_tokens.length; i++)
         {
-            end = i
-            break
+            if (raw_tokens[i].stop >= userinput_idx + userinput_length)
+            {
+                if (raw_tokens[i].start >= userinput_idx + userinput_length) {
+                    end = i - 1
+                    break
+                } else {
+                    end = i
+                    break
+                }
+            }
         }
     }
-
+    
     var diff = end - start + 1
     if (diff >= distance) {
         if (is_sql && algorithmConfig.sql_userinput.anti_detect_enable && diff < 10) {
