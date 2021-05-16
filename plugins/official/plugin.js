@@ -1,4 +1,4 @@
-const plugin_version = '2021-0510-1930'
+const plugin_version = '2021-0517-0800'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -559,7 +559,7 @@ var algorithmConfig = {
             'org.codehaus.groovy.runtime.ConvertedClosure',
             'org.codehaus.groovy.runtime.MethodClosure',
             'org.springframework.beans.factory.ObjectFactory',
-            'xalan.internal.xsltc.trax.TemplatesImpl'
+            'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl'
         ]
     },
 
