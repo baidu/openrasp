@@ -42,7 +42,7 @@ public class NioFilesDeleteHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "writeFile";
+        return "deleteFile";
     }
 
     /**
@@ -82,6 +82,9 @@ public class NioFilesDeleteHook extends AbstractClassHook {
             } catch (IOException e) {
                 params.put("realpath", file.getAbsolutePath());
             }
+
+            List<String> stackInfo = StackTrace.getParamStackTraceArray();
+            params.put("stack", stackInfo);
             HookHandler.doCheck(CheckParameter.Type.DELETEFILE, params);
         }
     }
