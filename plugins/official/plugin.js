@@ -1,4 +1,4 @@
-const plugin_version = '2021-0517-0800'
+const plugin_version = '2021-0531-1930'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -447,7 +447,8 @@ var algorithmConfig = {
             'dict',
             'gopher',
             'jar',
-            'netdoc'
+            'netdoc',
+            'mailto'
         ]
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
@@ -2840,7 +2841,7 @@ plugin.register('command', function (params, context) {
 plugin.register('xxe', function (params, context) {
     var server      = context.server
     var is_win      = server.os.indexOf('Windows') != -1
-    var items       = params.entity.split('://')
+    var items       = params.entity.split(':')
     var parameters  = context.parameter || {}
     var header      = context.header || {}
 
@@ -2857,8 +2858,8 @@ plugin.register('xxe', function (params, context) {
     }
 
     if (items.length >= 2) {
-        var protocol = items[0].toLowerCase()
-        var address  = items[1]
+        var protocol = items.shift().toLowerCase()
+        var address  = items.join(":")
 
         // 拒绝特殊协议
         if (algorithmConfig.xxe_protocol.action != 'ignore') {
@@ -2881,28 +2882,42 @@ plugin.register('xxe', function (params, context) {
         // file://xwork.dtd
         if (algorithmConfig.xxe_file.action != 'ignore')
         {
-            if (address.length > 0 && protocol === 'file' && is_absolute_path(address, is_win) )
+            if (address.length > 0 && protocol === 'file')
             {
-                var address_lc = address.toLowerCase()
-                
-                // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
-                try
-                {
-                    var urlObj = new URL(address_lc)
-                    address_lc = urlObj.pathname
+                if (address.startsWith("//")) {
+                    // 去掉file://中的//，两种格式统一逻辑处理
+                    // file:/etc/passwd
+                    // file:///etc/passwd
+                    address = address.substr(2)
                 }
-                catch (e) {}
-                var content_type = header["content-type"] || ""
-                if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
-                    // 过滤掉 xml、dtd
-                    if (! address_lc.endsWith('.xml') &&
-                        ! address_lc.endsWith('.dtd'))
+                var address_lc = address.toLowerCase()
+
+                if (is_absolute_path(address, is_win) || 
+                    address_lc.startsWith("localhost") ||
+                    (is_win && items.length > 2)) {
+                    // 三种情况：
+                    // 一般绝对路径 file:/etc/passwd
+                    // localhost起始路径 file://localhost/c:/windows/win.ini
+                    // 带盘符的windows绝对路径 file:c:/windows/win.ini
+                    // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
+                    try
                     {
-                        return {
-                            action:     algorithmConfig.xxe_file.action,
-                            message:    _("XXE - Accessing file %1%", [address]),
-                            confidence: 90,
-                            algorithm:  'xxe_file'
+                        var urlObj = new URL(address_lc)
+                        address_lc = urlObj.pathname
+                    }
+                    catch (e) {}
+                    var content_type = header["content-type"] || ""
+                    if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
+                        // 过滤掉 xml、dtd
+                        if (! address_lc.endsWith('.xml') &&
+                            ! address_lc.endsWith('.dtd'))
+                        {
+                            return {
+                                action:     algorithmConfig.xxe_file.action,
+                                message:    _("XXE - Accessing file %1%", [address]),
+                                confidence: 90,
+                                algorithm:  'xxe_file'
+                            }
                         }
                     }
                 }
