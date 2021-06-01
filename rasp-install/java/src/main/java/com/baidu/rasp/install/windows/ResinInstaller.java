@@ -18,6 +18,7 @@ package com.baidu.rasp.install.windows;
 
 import com.baidu.rasp.RaspError;
 import com.baidu.rasp.install.BaseStandardInstaller;
+import com.baidu.rasp.Util;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,6 +27,7 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 import static com.baidu.rasp.RaspError.E10001;
+import static com.baidu.rasp.RaspError.E10007;
 
 /**
  * 　　* @Description: resin自动安装
@@ -51,7 +53,7 @@ public class ResinInstaller extends BaseStandardInstaller {
 
     public static int getVersion(String installPath) {
 
-        String command = "java -classpath ./resin.jar com.caucho.Version";
+        String command = Util.getJavaPath() + " -classpath ./resin.jar com.caucho.Version";
         int version = -1;
         try {
             File resinFile = new File(new File(installPath).getParent() + File.separator + "lib");
@@ -78,8 +80,8 @@ public class ResinInstaller extends BaseStandardInstaller {
                 }
             }
             version = Integer.valueOf(sb.reverse().toString());
-
         } catch (Exception e) {
+            System.out.println("Failed to determine Resin server version, unexpected result from: " + command);
             e.printStackTrace();
         }
         return version;
@@ -121,7 +123,9 @@ public class ResinInstaller extends BaseStandardInstaller {
 
     @Override
     protected String getScript(String installPath) {
-        if (getVersion(installPath) == 3) {
+        int resinVersion = getVersion(installPath);
+        System.out.println("Detected Resin server major version: " + resinVersion);
+        if (resinVersion == 3) {
             return new File(installPath).getParent() + File.separator + "conf" + File.separator + "resin.conf";
         } else {
             return new File(installPath).getParent() + File.separator + "conf" + File.separator + "cluster-default.xml";
