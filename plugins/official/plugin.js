@@ -1,4 +1,4 @@
-const plugin_version = '2021-0531-1930'
+const plugin_version = '2021-0609-1430'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2908,8 +2908,9 @@ plugin.register('xxe', function (params, context) {
                     catch (e) {}
                     var content_type = header["content-type"] || ""
                     if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
-                        // 过滤掉 xml、dtd
+                        // 过滤掉 xml、dtd、xsd
                         if (! address_lc.endsWith('.xml') &&
+                            ! address_lc.endsWith('.xsd') &&
                             ! address_lc.endsWith('.dtd'))
                         {
                             return {
