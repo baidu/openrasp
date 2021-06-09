@@ -1,4 +1,4 @@
-const plugin_version = '2021-0609-1430'
+const plugin_version = '2021-0609-1500'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -446,7 +446,7 @@ var algorithmConfig = {
             'ftp',
             'dict',
             'gopher',
-            'jar',
+            // 'jar', // jenkins下存在误报
             'netdoc',
             'mailto'
         ]
