@@ -73,7 +73,7 @@
           </div>          
 
           <div v-if="key == 'sql_regex'">
-            <label>SQL语句正则表达式</label>
+            <label>SQL语句正则表达式 - 在编写正则时，请注意防范ReDos风险</label>
             <div v-bind:class="{'form-group': true, 'has-error': sql_regex_error}">
               <input type="text" v-model.trim="data.regex" class="form-control">
             </div>
