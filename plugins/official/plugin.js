@@ -1,4 +1,4 @@
-const plugin_version = '2021-0609-1500'
+const plugin_version = '2021-0626-0700'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -205,10 +205,11 @@ var algorithmConfig = {
         }
     },
 
+    // 此算法仅用于应急，默认不开启，用户编写时应注意redos风险
     sql_regex: {
         name:      '算法4 - 正则表达式算法',
         action:    'ignore',
-        regex:     'union.*select.*from.*information_schema'
+        regex:     'information_schema'
     },
 
     // SSRF - 来自用户输入，且为内网地址就拦截
