@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const plugin_version = '2021-0626-0700'
+=======
+const plugin_version = '2021-0628-1630'
+>>>>>>> e5ec43d9... [插件]调整xxe file协议检测逻辑
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2893,6 +2897,25 @@ plugin.register('xxe', function (params, context) {
                 }
                 var address_lc = address.toLowerCase()
 
+                if (address_lc.indexOf("../") != -1) {
+                    // 使用 ../ 
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Accessing file %1% with ../", [address]),
+                        confidence: 90,
+                        algorithm:  'xxe_file'
+                    }
+                }
+
+                if (address_lc.indexOf("#") !=-1 || address_lc.indexOf("?") !=-1) {
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Using url comment in file path %1%", [address]),
+                        confidence: 90,
+                        algorithm:  'xxe_file'
+                    }
+                }
+
                 if (is_absolute_path(address, is_win) || 
                     address_lc.startsWith("localhost") ||
                     (is_win && items.length > 2)) {
@@ -2901,18 +2924,16 @@ plugin.register('xxe', function (params, context) {
                     // localhost起始路径 file://localhost/c:/windows/win.ini
                     // 带盘符的windows绝对路径 file:c:/windows/win.ini
                     // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
-                    try
-                    {
-                        var urlObj = new URL(address_lc)
-                        address_lc = urlObj.pathname
-                    }
-                    catch (e) {}
                     var content_type = header["content-type"] || ""
                     if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
                         // 过滤掉 xml、dtd、xsd
                         if (! address_lc.endsWith('.xml') &&
+<<<<<<< HEAD
                             ! address_lc.endsWith('.xsd') &&
                             ! address_lc.endsWith('.dtd'))
+=======
+                                 ! address_lc.endsWith('.dtd'))
+>>>>>>> e5ec43d9... [插件]调整xxe file协议检测逻辑
                         {
                             return {
                                 action:     algorithmConfig.xxe_file.action,
@@ -2925,7 +2946,6 @@ plugin.register('xxe', function (params, context) {
                 }
             }
         }
-
     }
     return clean
 })
