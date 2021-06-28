@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-const plugin_version = '2021-0626-0700'
-=======
-const plugin_version = '2021-0628-1630'
->>>>>>> e5ec43d9... [插件]调整xxe file协议检测逻辑
+const plugin_version = '2021-0628-1710'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2928,12 +2924,8 @@ plugin.register('xxe', function (params, context) {
                     if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
                         // 过滤掉 xml、dtd、xsd
                         if (! address_lc.endsWith('.xml') &&
-<<<<<<< HEAD
                             ! address_lc.endsWith('.xsd') &&
                             ! address_lc.endsWith('.dtd'))
-=======
-                                 ! address_lc.endsWith('.dtd'))
->>>>>>> e5ec43d9... [插件]调整xxe file协议检测逻辑
                         {
                             return {
                                 action:     algorithmConfig.xxe_file.action,
