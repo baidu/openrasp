@@ -56,6 +56,7 @@ public class CatalinaHttpInputHook extends ServerInputHook {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         if (className.equals("org/apache/catalina/connector/InputBuffer")) {
+            //2021.7.1 排查，ok
             String readByteSrc = getInvokeStaticSrc(ServerInputHook.class, "onInputStreamRead",
                     "$_,$0", int.class, Object.class);
             insertAfter(ctClass, "readByte", "()I", readByteSrc);
@@ -63,11 +64,11 @@ public class CatalinaHttpInputHook extends ServerInputHook {
                     "$_,$0,$1,$2", int.class, Object.class, byte[].class, int.class);
             insertAfter(ctClass, "read", "([BII)I", readSrc);
         } else {
-            String src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead",
-                    "$_,$0", int.class, Object.class);
+            String src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead", "$_,$0", int.class, Object.class);
             insertAfter(ctClass, "read", "()I", src);
+            //2021.7.1修改错误
             src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead",
-                    "$_,$0,$1", int.class, Object.class, char[].class, int.class, int.class);
+                    "$_,$0,$1", int.class, Object.class, char[].class);
             insertAfter(ctClass, "read", "([C)I", src);
             src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead",
                     "$_,$0,$1,$2", int.class, Object.class, char[].class, int.class);
