@@ -1,4 +1,4 @@
-const plugin_version = '2021-0628-1710'
+const plugin_version = '2021-0701-1645'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -835,7 +835,11 @@ if (algorithmConfig.eval_regex.action != 'ignore') {
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue, maxLength) {
     if (maxLength === undefined) {
-        maxLength = 4096
+        if (this.length * 2 < 4096) {
+            maxLength = 4096
+        } else {
+            maxLength = this.length * 2
+        }
     }
     // 空值判断，防止死循环
     if (! token || token.length == 0 || this.length > maxLength) {
