@@ -70,6 +70,7 @@ public class CatalinaHttpInputHook extends ServerInputHook {
             src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead",
                     "$_,$0,$1", int.class, Object.class, char[].class);
             insertAfter(ctClass, "read", "([C)I", src);
+
             src = getInvokeStaticSrc(ServerInputHook.class, "onCharRead",
                     "$_,$0,$1,$2", int.class, Object.class, char[].class, int.class);
             insertAfter(ctClass, "read", "([CII)I", src);
