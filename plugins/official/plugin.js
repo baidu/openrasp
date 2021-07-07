@@ -1,4 +1,4 @@
-const plugin_version = '2021-0701-1645'
+const plugin_version = '2021-0707-1645'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1212,23 +1212,6 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
         if (verdict){
             return true
         }
-    })
-    return verdict
-}
-
-// 是否来自用户输入 - 适合任意类型参数
-function is_from_userinput(parameter, target)
-{
-    var verdict = false
-    Object.keys(parameter).some(function (key) {
-        var values = parameter[key]
-        Object.values(values).some(function(value){
-            // 只处理非数组、hash情况
-            if (value == target) {
-                verdict = true
-                return true
-            }
-        })
     })
     return verdict
 }
