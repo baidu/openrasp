@@ -1,4 +1,4 @@
-const plugin_version = '2021-0628-1710'
+const plugin_version = '2021-0707-1645'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -561,6 +561,7 @@ var algorithmConfig = {
             'org.codehaus.groovy.runtime.ConvertedClosure',
             'org.codehaus.groovy.runtime.MethodClosure',
             'org.springframework.beans.factory.ObjectFactory',
+            'org.apache.xalan.xsltc.trax.TemplatesImpl',
             'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl'
         ]
     },
@@ -835,7 +836,11 @@ if (algorithmConfig.eval_regex.action != 'ignore') {
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue, maxLength) {
     if (maxLength === undefined) {
-        maxLength = 4096
+        if (this.length * 2 < 4096) {
+            maxLength = 4096
+        } else {
+            maxLength = this.length * 2
+        }
     }
     // 空值判断，防止死循环
     if (! token || token.length == 0 || this.length > maxLength) {
@@ -1208,23 +1213,6 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
         if (verdict){
             return true
         }
-    })
-    return verdict
-}
-
-// 是否来自用户输入 - 适合任意类型参数
-function is_from_userinput(parameter, target)
-{
-    var verdict = false
-    Object.keys(parameter).some(function (key) {
-        var values = parameter[key]
-        Object.values(values).some(function(value){
-            // 只处理非数组、hash情况
-            if (value == target) {
-                verdict = true
-                return true
-            }
-        })
     })
     return verdict
 }
