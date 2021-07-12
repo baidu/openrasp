@@ -561,6 +561,7 @@ var algorithmConfig = {
             'org.codehaus.groovy.runtime.ConvertedClosure',
             'org.codehaus.groovy.runtime.MethodClosure',
             'org.springframework.beans.factory.ObjectFactory',
+            'org.apache.xalan.xsltc.trax.TemplatesImpl',
             'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl'
         ]
     },
