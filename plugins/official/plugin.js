@@ -2378,7 +2378,9 @@ plugin.register('writeFile', function (params, context) {
     }
 
     if (algorithmConfig.writeFile_reflect.action != 'ignore') {
-        if (context.server.language == 'java' && params.realpath.endsWith(".jsp")) {
+        if (context.server.language == 'java' && 
+            (params.realpath.endsWith(".jsp") || params.realpath.endsWith(".jspx"))
+        ) {
             var message = validate_stack_java(params.stack)
             if (message) {
                 return {
