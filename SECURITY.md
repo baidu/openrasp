@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-For Java/PHP agents, we provide security updates for latest release only:
+For Java/PHP agents and admin dashboard, we provide security updates for latest release only:
 
 | Version | Supported          |
 | ------- | ------------------ |
