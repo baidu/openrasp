@@ -159,9 +159,9 @@ function send_rasp_result(context) {
 
     // 构建 context
     var new_context             = Object.assign({}, context)
-    new_context.json            = new_context.json || {}
-    new_context.parameter       = new_context.parameter || {}
-    new_context.querystring     = new_context.querystring || ""
+    new_context.json            = context.json || {}
+    new_context.parameter       = context.parameter || {}
+    new_context.querystring     = context.querystring || ""
 
     if (context.header["scan-request-id"] === undefined) {
         new_context.body = bufferToHex(context.body).substr(0, 200)
