@@ -1,4 +1,4 @@
-const plugin_version = '2021-0626-0700'
+const plugin_version = '2021-0707-1645'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -561,6 +561,7 @@ var algorithmConfig = {
             'org.codehaus.groovy.runtime.ConvertedClosure',
             'org.codehaus.groovy.runtime.MethodClosure',
             'org.springframework.beans.factory.ObjectFactory',
+            'org.apache.xalan.xsltc.trax.TemplatesImpl',
             'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl'
         ]
     },
@@ -835,7 +836,11 @@ if (algorithmConfig.eval_regex.action != 'ignore') {
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue, maxLength) {
     if (maxLength === undefined) {
-        maxLength = 4096
+        if (this.length * 2 < 4096) {
+            maxLength = 4096
+        } else {
+            maxLength = this.length * 2
+        }
     }
     // 空值判断，防止死循环
     if (! token || token.length == 0 || this.length > maxLength) {
@@ -1208,23 +1213,6 @@ function is_path_containing_userinput(parameter, target, is_windows, is_lcs_sear
         if (verdict){
             return true
         }
-    })
-    return verdict
-}
-
-// 是否来自用户输入 - 适合任意类型参数
-function is_from_userinput(parameter, target)
-{
-    var verdict = false
-    Object.keys(parameter).some(function (key) {
-        var values = parameter[key]
-        Object.values(values).some(function(value){
-            // 只处理非数组、hash情况
-            if (value == target) {
-                verdict = true
-                return true
-            }
-        })
     })
     return verdict
 }
@@ -2390,7 +2378,9 @@ plugin.register('writeFile', function (params, context) {
     }
 
     if (algorithmConfig.writeFile_reflect.action != 'ignore') {
-        if (context.server.language == 'java' && params.realpath.endsWith(".jsp")) {
+        if (context.server.language == 'java' && 
+            (params.realpath.endsWith(".jsp") || params.realpath.endsWith(".jspx"))
+        ) {
             var message = validate_stack_java(params.stack)
             if (message) {
                 return {
@@ -2893,6 +2883,25 @@ plugin.register('xxe', function (params, context) {
                 }
                 var address_lc = address.toLowerCase()
 
+                if (address_lc.indexOf("../") != -1) {
+                    // 使用 ../ 
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Accessing file %1% with ../", [address]),
+                        confidence: 90,
+                        algorithm:  'xxe_file'
+                    }
+                }
+
+                if (address_lc.indexOf("#") !=-1 || address_lc.indexOf("?") !=-1) {
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Using url comment in file path %1%", [address]),
+                        confidence: 90,
+                        algorithm:  'xxe_file'
+                    }
+                }
+
                 if (is_absolute_path(address, is_win) || 
                     address_lc.startsWith("localhost") ||
                     (is_win && items.length > 2)) {
@@ -2901,12 +2910,6 @@ plugin.register('xxe', function (params, context) {
                     // localhost起始路径 file://localhost/c:/windows/win.ini
                     // 带盘符的windows绝对路径 file:c:/windows/win.ini
                     // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
-                    try
-                    {
-                        var urlObj = new URL(address_lc)
-                        address_lc = urlObj.pathname
-                    }
-                    catch (e) {}
                     var content_type = header["content-type"] || ""
                     if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
                         // 过滤掉 xml、dtd、xsd
@@ -2925,7 +2928,6 @@ plugin.register('xxe', function (params, context) {
                 }
             }
         }
-
     }
     return clean
 })
