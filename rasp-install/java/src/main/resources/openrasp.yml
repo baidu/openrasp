@@ -4,6 +4,7 @@
  
 # <general settings>
 # 
+# dependency_check.enable: true
 # plugin.timeout.millis: 100
 # body.maxbytes: 12288
 # plugin.filter: true
