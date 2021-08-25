@@ -35,7 +35,7 @@ public class BESResponseBodyHook extends ServerResponseBodyHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src1 = getInvokeStaticSrc(BESResponseBodyHook.class, "getBuffer", "$0,$1", Object.class);
+        String src1 = getInvokeStaticSrc(BESResponseBodyHook.class, "getBuffer", "$0,$1", Object.class, Object.class);
         insertBefore(ctClass, "realWriteBytes", "(Ljava/nio/ByteBuffer;)V", src1);
     }
 
