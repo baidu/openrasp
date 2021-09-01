@@ -40,7 +40,7 @@ The support of other web application servers will also be soon included in the c
 
 #### 2. Performance impact on application servers
 
-We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server’s performance was only reduced by 1~4%
+We ran multiple intense and long-lasting stress tests prior to release. Even in the worst-case scenario (where the hook point got continuously triggered) the server's performance was only reduced by 1\~4%
 
 #### 3. Integration with existing SIEM or SOC
 
