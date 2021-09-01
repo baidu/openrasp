@@ -15,9 +15,11 @@
 package filter
 
 import (
-	"github.com/astaxie/beego"
-	"rasp-cloud/models"
 	"net/http"
+	"rasp-cloud/models"
+	"strings"
+
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/plugins/cors"
 )
@@ -39,17 +41,36 @@ func init() {
 }
 
 func authAgent(ctx *context.Context) {
-	appId := ctx.Input.Header("X-OpenRASP-AppID")
-	appSecret := ctx.Input.Header("X-OpenRASP-AppSecret")
-	app, err := models.GetAppById(appId)
-	if appId == "" || err != nil || app == nil || appSecret != app.Secret {
+	var (
+		appId     = ctx.Input.Header("X-OpenRASP-AppID")
+		appSecret = ctx.Input.Header("X-OpenRASP-AppSecret")
+		app, err  = models.GetAppById(appId)
+	)
+
+	if appId == "" || app == nil || err != nil {
 		ctx.Output.JSON(map[string]interface{}{
-			"status": http.StatusUnauthorized, "description": http.StatusText(http.StatusUnauthorized)},
+			"status": http.StatusBadRequest, "description": "Invalid X-OpenRASP-AppID value specified"},
 			false, false)
+		return
+	}
+
+	if appSecret != app.Secret {
+		ctx.Output.JSON(map[string]interface{}{
+			"status": http.StatusUnauthorized, "description": "Bad X-OpenRASP-AppSecret value, authentication failed"},
+			false, false)
+		return
 	}
 }
 
 func authApi(ctx *context.Context) {
+	contentType := strings.ToLower(ctx.Input.Header("Content-Type"))
+	if !strings.Contains(contentType, "application/json") {
+		ctx.Output.JSON(map[string]interface{}{
+			"status": http.StatusBadRequest, "description": "Invalid Content-Type specified"},
+			false, false)
+		panic("")
+	}
+
 	cookie := ctx.GetCookie(models.AuthCookieName)
 	if has, err := models.HasCookie(cookie); !has || err != nil {
 		token := ctx.Input.Header(models.AuthTokenName)
