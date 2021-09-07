@@ -543,7 +543,7 @@ public enum ConfigItem {
                     throw new ConfigLoadException("the type of " + itemName +
                             "'s value must be primitive type or String, can not be " + v.getClass().getName());
                 }
-                String key = v.toString();
+                String key = k.toString();
                 String value = v.toString();
                 if (key.length() == 0 || key.length() > 200) {
                     throw new ConfigLoadException("the length of " + itemName +
