@@ -17,7 +17,6 @@ package filter
 import (
 	"net/http"
 	"rasp-cloud/models"
-	"strings"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
@@ -63,13 +62,13 @@ func authAgent(ctx *context.Context) {
 }
 
 func authApi(ctx *context.Context) {
-	contentType := strings.ToLower(ctx.Input.Header("Content-Type"))
-	if !strings.Contains(contentType, "application/json") {
-		ctx.Output.JSON(map[string]interface{}{
-			"status": http.StatusBadRequest, "description": "Invalid Content-Type specified"},
-			false, false)
-		panic("")
-	}
+	// contentType := strings.ToLower(ctx.Input.Header("Content-Type"))
+	// if !strings.Contains(contentType, "application/json") {
+	// 	ctx.Output.JSON(map[string]interface{}{
+	// 		"status": http.StatusBadRequest, "description": "Invalid Content-Type specified"},
+	// 		false, false)
+	// 	panic("")
+	// }
 
 	cookie := ctx.GetCookie(models.AuthCookieName)
 	if has, err := models.HasCookie(cookie); !has || err != nil {
