@@ -1,4 +1,4 @@
-const plugin_version = '2021-0707-1645'
+const plugin_version = '2021-0917-1535'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -562,7 +562,8 @@ var algorithmConfig = {
             'org.codehaus.groovy.runtime.MethodClosure',
             'org.springframework.beans.factory.ObjectFactory',
             'org.apache.xalan.xsltc.trax.TemplatesImpl',
-            'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl'
+            'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl',
+            'com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase'
         ]
     },
 
@@ -953,7 +954,8 @@ function validate_stack_java(stacks) {
         'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     "Using Groovy library",
         'bsh.Reflect.invokeMethod':                                                     "Using BeanShell library",
         'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     "Using Nashorn engine",
-        'org.apache.shiro.io.DefaultSerializer.deserialize':                            "Using Shiro framework (DefaultSerializer)"
+        'org.apache.shiro.io.DefaultSerializer.deserialize':                            "Using Shiro framework (DefaultSerializer)",
+        'com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase.readObject':                 "Using C3p0 library"
     }
 
     var userCode = false, reachedInvoke = false, i = 0, message = undefined
