@@ -38,7 +38,7 @@ var algorithmConfig = {
 
 var byhost_regex
 if (algorithmConfig.iast.byhost_regex.length > 0){
-    byhost_regex = new RegExp(byhost_regex)
+    byhost_regex = new RegExp(algorithmConfig.iast.byhost_regex)
 }
 
 var ip_regex = new RegExp(String.raw`^(\d{1,3}\.){3}\d{1,3}$`)
@@ -177,33 +177,32 @@ function send_rasp_result(context) {
         plugin.log(msg)
         return
     }
+    if (byhost_regex && byhost_regex.test(server_host)) {
+        server_host = server_host.split(":")
+        web_server.host = server_host[0]
+        web_server.port = parseInt(server_host[1]) || default_port
+    }
     else {
-        if (byhost_regex && byhost_regex.test(server_host)) {
-            server_host = server_host.split(":")
-            web_server.host = server_host[0]
-            web_server.port = parseInt(server_host[1]) || default_port
+        server_host = server_host.split(":")
+        for (var i in context.nic) {
+            if (context.nic[i].ip && 
+                ip_regex.test(context.nic[i].ip) && 
+                context.nic[i].ip != "127.0.0.1") 
+            {
+                web_server.host = context.nic[i].ip
+                break
+            }
+        }
+        if (!web_server.host) {
+            msg = "Agent with rasp id:" + context.raspId + " get ip failed! "
+            plugin.log(msg)
+            return
         }
         else {
-            server_host = server_host.split(":")
-            for (var i in context.nic) {
-                if (context.nic[i].ip && 
-                    ip_regex.test(context.nic[i].ip) && 
-                    context.nic[i].ip != "127.0.0.1") 
-                {
-                    web_server.host = context.nic[i].ip
-                    break
-                }
-            }
-            if (!web_server.host) {
-                msg = "Agent with rasp id:" + context.raspId + " get ip failed! "
-                plugin.log(msg)
-                return
-            }
-            else {
-                web_server.port = parseInt(server_host[1]) || default_port
-            }
+            web_server.port = parseInt(server_host[1]) || default_port
         }
     }
+    
 
     // 将hook点信息发送给扫描服务器
     var data = {
