@@ -32,6 +32,7 @@ private:
     std::string id;
     std::string method;
     std::string remote_addr;
+    std::string remote_port;
     std::string document_root;
     std::map<std::string, std::string> header;
     size_t body_len;
@@ -49,6 +50,8 @@ public:
     std::string get_method() const;
     void set_remote_addr(const std::string &remote_addr);
     std::string get_remote_addr() const;
+    void set_remote_port(const std::string &remote_port);
+    std::string get_remote_port() const;
     void set_document_root(const std::string &document_root);
     std::string get_document_root() const;
     void set_header(const std::map<std::string, std::string> &header);
