@@ -1522,8 +1522,9 @@ function check_ssrf(params, context, is_redirect) {
     // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
     if (algorithmConfig.ssrf_aws.action != 'ignore')
     {
-        if (ip == '169.254.169.254' || ip == '100.100.100.200'
-            || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
+        if (ip == '169.254.169.254' || ip == '100.100.100.200' || ip == '168.63.129.16'
+            || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == '168.63.129.16' 
+            || hostname == 'metadata.google.internal')
         {
             return {
                 action:     algorithmConfig.ssrf_aws.action,
