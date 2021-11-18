@@ -16,6 +16,7 @@
 
 #include "v8_detector.h"
 #include "openrasp_v8.h"
+#include <setjmp.h>
 
 namespace openrasp
 {
@@ -37,11 +38,21 @@ bool V8Detector::pretreat() const
 
 CheckResult V8Detector::check()
 {
-    v8::HandleScope handle_scope(isolate);
-    auto context = isolate->GetCurrentContext();
-    auto params = v8::Object::New(isolate);
-    v8_material.fill_object_2b_checked(isolate, params);
-    CheckResult check_result = Check(isolate, openrasp::NewV8String(isolate, CheckTypeTransfer::instance().type_to_name(v8_material.get_v8_check_type())), params, timeout);
+    CheckResult check_result = kNoCache;
+    openrasp_try
+    {
+        v8::HandleScope handle_scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto params = v8::Object::New(isolate);
+        v8_material.fill_object_2b_checked(isolate, params);
+        check_result = Check(isolate, openrasp::NewV8String(isolate, CheckTypeTransfer::instance().type_to_name(v8_material.get_v8_check_type())), params, timeout);
+    }
+    openrasp_catch
+    {
+        // trap unexpected signal, ignore corresponding check type
+        ignore_check_type(this->v8_material.get_v8_check_type());
+    }
+    openrasp_finally();
     return check_result;
 }
 
