@@ -315,5 +315,6 @@ void reset_response();
 
 OpenRASPActionType string_to_action(std::string action_string);
 void plugin_ssrf_check(zval *file, const std::string &funtion_name);
+void ignore_check_type(OpenRASPCheckType check_type);
 
 #endif
