@@ -52,6 +52,7 @@ extern "C"
 ZEND_BEGIN_MODULE_GLOBALS(openrasp)
 openrasp::ConfigHolder config;
 openrasp::request::Request request;
+sigjmp_buf *jb = nullptr;
 ZEND_END_MODULE_GLOBALS(openrasp)
 
 ZEND_EXTERN_MODULE_GLOBALS(openrasp)
@@ -82,5 +83,28 @@ struct OpenRASPInfo
 {
 	static const char *PHP_OPENRASP_VERSION; /* Replace with version number for your extension */
 };
+
+void openrasp_signal_handle_hook();
+
+// orig_jb must be saved cuz of nested sigsetjmp case
+#define openrasp_try                          \
+	{                                         \
+		sigjmp_buf *orig_jb = OPENRASP_G(jb); \
+		sigjmp_buf jb;                        \
+                                              \
+		OPENRASP_G(jb) = &jb;                 \
+		if (sigsetjmp(jb, 1) == 0)            \
+		{
+
+#define openrasp_catch \
+	}                  \
+	else               \
+	{                  \
+		OPENRASP_G(jb) = orig_jb;
+
+#define openrasp_finally()    \
+	}                         \
+	OPENRASP_G(jb) = orig_jb; \
+	}
 
 #endif
