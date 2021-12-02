@@ -105,34 +105,39 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
     zval *val;
     zend_string *key;
     zend_ulong idx;
-    ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(global), idx, key, val)
+    openrasp_try
     {
-        if (_gpc_parameter_filter(val))
+        ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(global), idx, key, val)
         {
-            if (++count > OUTPUT_G(max_detection_num))
+            if (_gpc_parameter_filter(val))
             {
-                continue;
-            }
-            if (NULL != strstr(param, Z_STRVAL_P(val)))
-            {
-                std::string name;
-                if (key != nullptr)
+                if (++count > OUTPUT_G(max_detection_num))
                 {
-                    name = std::string(ZSTR_VAL(key));
+                    continue;
                 }
-                else
+                if (NULL != strstr(param, Z_STRVAL_P(val)))
                 {
-                    zend_long actual = idx;
-                    name = std::to_string(actual);
+                    std::string name;
+                    if (key != nullptr)
+                    {
+                        name = std::string(ZSTR_VAL(key));
+                    }
+                    else
+                    {
+                        zend_long actual = idx;
+                        name = std::to_string(actual);
+                    }
+                    openrasp::data::XssUserInputObject xss_obj(name, val);
+                    openrasp::checker::BuiltinDetector builtin_detector(xss_obj);
+                    builtin_detector.run();
+                    return SUCCESS;
                 }
-                openrasp::data::XssUserInputObject xss_obj(name, val);
-                openrasp::checker::BuiltinDetector builtin_detector(xss_obj);
-                builtin_detector.run();
-                return SUCCESS;
             }
         }
+        ZEND_HASH_FOREACH_END();
     }
-    ZEND_HASH_FOREACH_END();
+    openrasp_finally();
+
     return status;
 }
 
