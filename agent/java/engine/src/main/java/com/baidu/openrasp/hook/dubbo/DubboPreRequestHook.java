@@ -40,7 +40,7 @@ public class DubboPreRequestHook extends AbstractClassHook {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "com/alibaba/dubbo/rpc/filter/GenericFilter".equals(className) || "com/apache/dubbo/rpc/filter/GenericFilter".equals(className);
+        return "com/alibaba/dubbo/rpc/filter/GenericFilter".equals(className) || "org/apache/dubbo/rpc/filter/GenericFilter".equals(className);
     }
 
     @Override
