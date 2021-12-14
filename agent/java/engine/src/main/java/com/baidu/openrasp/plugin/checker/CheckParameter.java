@@ -63,6 +63,8 @@ public class CheckParameter {
         RESPONSE("response", new V8AttackChecker(false), 1 << 23),
         LINK("link", new V8AttackChecker(), 1 << 24),
         JNDI("jndi", new V8AttackChecker(), 1 << 25),
+        DNS("dns", new V8AttackChecker(), 1 << 26),
+
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),

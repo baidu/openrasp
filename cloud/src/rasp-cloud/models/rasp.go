@@ -98,6 +98,7 @@ var (
 		"response":                   "low",
 		"link":                       "medium",
 		"jndi":                       "critical",
+		"dns":                        "critical",
 	}
 )
 

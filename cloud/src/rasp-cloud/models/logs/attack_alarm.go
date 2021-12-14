@@ -69,6 +69,7 @@ var (
 		"response":                   "HTTP 响应采样检测",
 		"link":                       "文件链接",
 		"jndi":                       "JNDI远程加载",
+		"dns":                        "DNS请求",
 	}
 
 	AttackInterceptMap = map[interface{}]string{

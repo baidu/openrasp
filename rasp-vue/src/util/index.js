@@ -140,7 +140,8 @@ export var attack_types = {
   response: 'HTTP 响应采样检测',
   request: '请求开始',
   link: '文件链接',
-  jndi: 'JNDI请求'
+  jndi: 'JNDI请求',
+  dns:  'DNS请求'
 }
 
 export var status_types = {
