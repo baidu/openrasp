@@ -15,19 +15,19 @@
 package logs
 
 import (
-	"net/url"
-	"rasp-cloud/es"
-	"github.com/olivere/elastic"
-	"time"
 	"context"
-	"github.com/oschwald/geoip2-golang"
-	"github.com/astaxie/beego"
-	"net"
-	"rasp-cloud/tools"
-	"encoding/json"
-	"rasp-cloud/conf"
-	"fmt"
 	"crypto/md5"
+	"encoding/json"
+	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/olivere/elastic"
+	"github.com/oschwald/geoip2-golang"
+	"net"
+	"net/url"
+	"rasp-cloud/conf"
+	"rasp-cloud/es"
+	"rasp-cloud/tools"
+	"time"
 )
 
 var (
@@ -68,6 +68,7 @@ var (
 		"webshell_ld_preload":        "WebShell - LD_PRELOAD 后门",
 		"response":                   "HTTP 响应采样检测",
 		"link":                       "文件链接",
+		"jndi":                       "JNDI远程加载",
 	}
 
 	AttackInterceptMap = map[interface{}]string{
@@ -147,7 +148,7 @@ func AggregationAttackWithTime(startTime int64, endTime int64, interval string, 
 	interceptAggr := elastic.NewTermsAggregation().Field("intercept_state")
 	timeAggr.SubAggregation(interceptAggrName, interceptAggr)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
-	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).
+	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex+"-"+appId).
 		Query(elastic.NewBoolQuery().Must(timeQuery)).
 		Aggregation(timeAggrName, timeAggr).
 		Size(0).
@@ -199,7 +200,7 @@ func AggregationAttackWithUserAgent(startTime int64, endTime int64, size int,
 	uaAggr := elastic.NewTermsAggregation().Field("header.user-agent.keyword").Size(size).OrderByCount(false)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
 	aggrName := "aggr_ua"
-	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).
+	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex+"-"+appId).
 		Query(timeQuery).
 		Aggregation(aggrName, uaAggr).
 		Size(0).
@@ -234,7 +235,7 @@ func AggregationAttackWithType(startTime int64, endTime int64, size int,
 	typeAggr := elastic.NewTermsAggregation().Field("attack_type").Size(size).OrderByCount(false)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)
 	aggrName := "aggr_type"
-	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex + "-" + appId).
+	aggrResult, err := es.ElasticClient.Search(AttackAlarmInfo.EsAliasIndex+"-"+appId).
 		Query(timeQuery).
 		Aggregation(aggrName, typeAggr).
 		Size(0).

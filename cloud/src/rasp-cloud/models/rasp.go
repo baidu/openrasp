@@ -96,7 +96,8 @@ var (
 		"webshell_file_put_contents": "critical",
 		"webshell_ld_preload":        "critical",
 		"response":                   "low",
-		"link":                       "文件链接",
+		"link":                       "medium",
+		"jndi":                       "critical",
 	}
 )
 
