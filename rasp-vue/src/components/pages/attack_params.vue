@@ -261,6 +261,15 @@
             </p>            
         </div>
 
+        <div v-if="data.attack_type == 'jndi'">
+            <div class="h6">
+                JNDI加载路径
+            </div>
+            <p>
+                {{ data.attack_params.name }}
+            </p>
+        </div>
+
         <div v-if="data.attack_type == 'response' && data.plugin_algorithm == 'response_dataLeak'">
             <div class="h6">
                 泄露的敏感信息样例
