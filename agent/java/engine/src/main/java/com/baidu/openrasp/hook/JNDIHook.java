@@ -59,8 +59,8 @@ public class JNDIHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(JNDIHook.class, "checkJNDILookup", "$_", String.class);
-        insertAfter(ctClass, "lookup", null, src);
+        String src = getInvokeStaticSrc(JNDIHook.class, "checkJNDILookup", "$0", String.class);
+        insertBefore(ctClass, "lookup", "(Ljava/lang/String;)Ljava/lang/Object;", src);
     }
 
     /**
