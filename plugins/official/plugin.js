@@ -3031,7 +3031,7 @@ if (algorithmConfig.jndi_disable_all.action != 'ignore')
         let name = params.name
         return {
             action:     algorithmConfig.jndi_disable_all.action,
-            message:    _("JNDI blacklist - blocked " + name + " in resolveClass"),
+            message:    _("JNDI blacklist - blocked jndi lookup of " + name),
             confidence: 100,
             algorithm:  'jndi_disable_all'
         }
