@@ -1,4 +1,4 @@
-const plugin_version = '2021-0917-1535'
+const plugin_version = '2021-1214-1730'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -565,6 +565,11 @@ var algorithmConfig = {
             'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl',
             'com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase'
         ]
+    },
+
+    jndi_disable_all: {
+        name:   '算法1 - 阻断所有JNDI调用',
+        action: 'block'
     },
 
     // xss 用户输入匹配算法
@@ -1671,6 +1676,11 @@ if (algorithmConfig.meta.log_event) {
         plugin.log('SQL query: ' + params.query)
         return clean
     })
+
+    plugin.register('jndi', function (params, context) {
+        plugin.log('JNDI lookup: ' + params.name, params.stack)
+        return clean
+    })    
 }
 
 
@@ -3012,6 +3022,19 @@ if (algorithmConfig.ognl_blacklist.action != 'ignore')
         }
 
         return clean
+    })
+}
+
+if (algorithmConfig.jndi_disable_all.action != 'ignore') 
+{
+    plugin.register('jndi', function (params, context) {
+        let name = params.name
+        return {
+            action:     algorithmConfig.jndi_disable_all.action,
+            message:    _("JNDI blacklist - blocked " + name + " in resolveClass"),
+            confidence: 100,
+            algorithm:  'jndi_disable_all'
+        }
     })
 }
 
