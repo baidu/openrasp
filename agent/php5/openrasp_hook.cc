@@ -485,3 +485,8 @@ void update_zend_ref_items(TSRMLS_D)
         }
     }
 }
+
+void ignore_check_type(OpenRASPCheckType check_type TSRMLS_DC)
+{
+    OPENRASP_HOOK_G(check_type_white_bit_mask) |= (1 << check_type);
+}
