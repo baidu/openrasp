@@ -59,8 +59,7 @@ public class DNSHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(JNDIHook.class, "checkDNSLookup", "$1", String.class);
-        insertBefore(ctClass, "getByName",    "(Ljava/lang/String;)Ljava/net/InetAddress;", src);
+        String src = getInvokeStaticSrc(DNSHook.class, "checkDNSLookup", "$1", String.class);
         insertBefore(ctClass, "getAllByName", "(Ljava/lang/String;)[Ljava/net/InetAddress;", src);
     }
 
