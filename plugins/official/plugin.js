@@ -1,4 +1,4 @@
-const plugin_version = '2021-1215-1600'
+const plugin_version = '2021-1215-1930'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -568,7 +568,12 @@ var algorithmConfig = {
     },
 
     jndi_disable_all: {
-        name:   '算法1 - 阻断所有JNDI调用',
+        name:   '算法1 - 拦截所有JNDI调用',
+        action: 'block'
+    },
+
+    dns_blacklist: {
+        name:   '算法1 - 拦截DNS黑名单查询(比如DNSLog)',
         action: 'block'
     },
 
@@ -576,7 +581,7 @@ var algorithmConfig = {
     // 1. 当用户输入长度超过15，匹配上标签正则，且出现在响应里，直接拦截
     // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截（v1.1.2 之后废弃）
     xss_userinput: {
-        name:   '算法2 - 拦截输出在响应里的反射 XSS',
+        name:   '算法2 - 拦截输出在响应里的反射XSS',
         action: 'ignore',
 
         filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]",
@@ -588,29 +593,29 @@ var algorithmConfig = {
 
     // php 专有算法
     xss_echo: {
-        name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
+        name:   '算法1 - PHP: 禁止直接输出GPC参数',
         action: 'log',
 
         filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]"
     },    
 
     webshell_eval: {
-        name:   '算法1 - 拦截简单的 PHP 中国菜刀后门',
+        name:   '算法1 - 拦截简单的PHP中国菜刀后门',
         action: 'block'
     },
 
     webshell_command: {
-        name:   '算法2 - 拦截简单的 PHP 命令执行后门',
+        name:   '算法2 - 拦截简单的PHP命令执行后门',
         action: 'block'
     },
 
     webshell_file_put_contents: {
-        name:   '算法3 - 拦截简单的 PHP 文件上传后门',
+        name:   '算法3 - 拦截简单的PHP文件上传后门',
         action: 'block'
     },
 
     webshell_callable: {
-        name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
+        name:   '算法4 - 拦截简单的PHP array_map/walk/filter 后门',
         action: 'block',
         functions: [
             'system', 'exec', 'passthru', 'proc_open', 'shell_exec', 'popen', 'pcntl_exec', 'assert'
@@ -618,7 +623,7 @@ var algorithmConfig = {
     },
 
     webshell_ld_preload: {
-        name:   '算法5 - 拦截 PHP putenv 相关后门',
+        name:   '算法5 - 拦截PHP putenv 相关后门',
         action: 'block',
         env: [
             'LD_PRELOAD',
@@ -1683,7 +1688,7 @@ if (algorithmConfig.meta.log_event) {
     })
 
     plugin.register('dns', function (params, context) {
-        plugin.log('dns lookup: ' + params.name, params.stack)
+        plugin.log('dns lookup: ' + params.host, params.stack)
         return clean
     })    
 }
@@ -3040,6 +3045,14 @@ if (algorithmConfig.jndi_disable_all.action != 'ignore')
             confidence: 100,
             algorithm:  'jndi_disable_all'
         }
+    })
+}
+
+if (algorithmConfig.dns_blacklist.action != 'ignore') 
+{
+    plugin.register('dns', function (params, context) {
+        let host = params.host
+        return clean
     })
 }
 
