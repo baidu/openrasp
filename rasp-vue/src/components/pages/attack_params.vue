@@ -270,6 +270,15 @@
             </p>
         </div>
 
+        <div v-if="data.attack_type == 'dns'">
+            <div class="h6">
+                要解析的DNS域名
+            </div>
+            <p>
+                {{ data.attack_params.host }}
+            </p>
+        </div>
+
         <div v-if="data.attack_type == 'response' && data.plugin_algorithm == 'response_dataLeak'">
             <div class="h6">
                 泄露的敏感信息样例
