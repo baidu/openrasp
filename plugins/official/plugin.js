@@ -1,4 +1,4 @@
-const plugin_version = '2021-1214-1730'
+const plugin_version = '2021-1215-1600'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1679,6 +1679,11 @@ if (algorithmConfig.meta.log_event) {
 
     plugin.register('jndi', function (params, context) {
         plugin.log('JNDI lookup: ' + params.name, params.stack)
+        return clean
+    })
+
+    plugin.register('dns', function (params, context) {
+        plugin.log('dns lookup: ' + params.name, params.stack)
         return clean
     })    
 }
