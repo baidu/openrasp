@@ -1,4 +1,4 @@
-const plugin_version = '2021-1215-1930'
+const plugin_version = '2021-1215-2050'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -225,42 +225,7 @@ var algorithmConfig = {
     // SSRF - 是否允许访问 dnslog 地址
     ssrf_common: {
         name:    '算法3 - 拦截常见 dnslog 地址',
-        action:  'block',
-        domains: [
-        	'.vuleye.pw',
-            '.ceye.io',
-            '.exeye.io',
-            '.vcap.me',
-            '.xip.name',
-            '.xip.io',
-            '.sslip.io',
-            '.nip.io',
-            '.burpcollaborator.net',
-            '.tu4.org',
-            '.2xss.cc',
-            '.bxss.me',
-            '.godns.vip',
-            '.dnslog.cn',
-            '.0kee.360.cn',
-            '.r87.me',
-            '.ngrok.io',
-
-            // yumusb/DNSLog-Platform-Golang
-            '.xn--9tr.com', 
-
-            // requestbin 新地址
-            '.pipedream.net',
-
-            // 端口转发工具
-            '.vxtrans.com',
-            '.vxtrans.link',
-
-            // 免费DDNS厂商
-            '.hopto.org',
-            '.zapto.org',
-            '.sytes.net',
-            '.ddns.net'
-        ]
+        action:  'block'
     },
     // SSRF - 是否允许访问混淆后的IP地址
     ssrf_obfuscate: {
@@ -752,6 +717,18 @@ var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
 // ssrf白名单主机名
 var whiteHostName   = /\.bcebos\.com$|(^|\.)oss-[\d\w\-]{0,30}\.aliyuncs\.com$/
 
+var dnsLogDomains   = ['.vuleye.pw', '.ceye.io', '.exeye.io', '.vcap.me', '.xip.name', '.xip.io', '.sslip.io', '.nip.io',
+    '.burpcollaborator.net', '.tu4.org', '.2xss.cc', '.bxss.me', '.godns.vip', '.dnslog.cn', '.0kee.360.cn', '.r87.me','.ngrok.io',
+    // yumusb/DNSLog-Platform-Golang
+    '.xn--9tr.com', 
+    // requestbin 新地址
+    '.pipedream.net',
+    // 端口转发工具
+    '.vxtrans.com', '.vxtrans.link',
+    // 免费DDNS厂商
+    '.hopto.org', '.zapto.org', '.sytes.net', '.ddns.net'
+]
+
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
@@ -906,16 +883,9 @@ function param_has_traversal (param) {
 }
 
 function is_hostname_dnslog(hostname) {
-    var domains = algorithmConfig.ssrf_common.domains
-
-    if (hostname == 'requestb.in' || hostname == 'transfer.sh')
+    for (var i = 0; i < dnsLogDomains.length; i ++)
     {
-        return true
-    }
-
-    for (var i = 0; i < domains.length; i ++)
-    {
-        if (hostname.endsWith(domains[i]))
+        if (hostname.toLowerCase().endsWith(dnsLogDomains[i]))
         {
             return true
         }
@@ -1518,7 +1488,7 @@ function check_ssrf(params, context, is_redirect) {
     // 算法2 - 检查常见探测域名
     if (algorithmConfig.ssrf_common.action != 'ignore')
     {
-        if (is_hostname_dnslog(hostname))
+        if (is_hostname_dnslog(hostname) || ['requestb.in', 'transfer.sh'].includes(hostname.toLowerCase()))
         {
             return {
                 action:     algorithmConfig.ssrf_common.action,
@@ -3052,9 +3022,17 @@ if (algorithmConfig.dns_blacklist.action != 'ignore')
 {
     plugin.register('dns', function (params, context) {
         let host = params.host
-        return clean
+        if (is_hostname_dnslog(host)) {
+            return {
+                action:     algorithmConfig.dns_blacklist.action,
+                message:    _("DNS blacklist - blocked dnslog domain" + host),
+                confidence: 100,
+                algorithm:  'dns_blacklist'
+            }
+        }
     })
 }
+
 
 if (algorithmConfig.deserialization_blacklist.action != 'ignore') 
 {
