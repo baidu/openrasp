@@ -177,7 +177,10 @@ public abstract class BaseStandardInstaller implements Installer {
 
             // 配置云控
             setCloudConf();
-            // 配置其它选项
+            // 配置其它选项            
+            if (App.debuglevel > 0) {
+                setRaspConfItem("debug.level", App.debuglevel, "# debug level");
+            }
             if (App.raspId != null) {
                 setRaspConfItem("rasp.id", App.raspId, "# <rasp id>");
             }
@@ -189,7 +192,7 @@ public abstract class BaseStandardInstaller implements Installer {
 
     }
 
-    private void setRaspConfItem(String key, String value, String comment) {
+    private void setRaspConfItem(String key, Object value, String comment) {
         Map<String, Object> ymlData = new HashMap<String, Object>();
         ymlData.put(key, value);
         setRaspConf(ymlData, comment);
@@ -246,11 +249,11 @@ public abstract class BaseStandardInstaller implements Installer {
             cloudData.put("cloud.backend_url", App.url);
             cloudData.put("cloud.app_id", App.appId);
             cloudData.put("cloud.app_secret", App.appSecret);
-            if (App.noDependencyCheck) {
-                cloudData.put("dependency_check.enable", false);
-            }
             if (App.heartbeatInterval != null) {
                 cloudData.put("cloud.heartbeat_interval", App.heartbeatInterval);
+            }
+            if (App.noDependencyCheck) {
+                cloudData.put("dependency_check.enable", false);
             }
             setRaspConf(cloudData, "# <remote management>");
         }
