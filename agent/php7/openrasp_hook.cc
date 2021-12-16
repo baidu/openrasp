@@ -449,8 +449,3 @@ void update_zend_ref_items()
         ZEND_HASH_FOREACH_END();
     }
 }
-
-void ignore_check_type(OpenRASPCheckType check_type)
-{
-    OPENRASP_HOOK_G(check_type_white_bit_mask) |= (1 << check_type);
-}
