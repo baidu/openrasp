@@ -1,4 +1,4 @@
-const plugin_version = '2021-1215-2050'
+const plugin_version = '2021-1217-2000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -3012,7 +3012,7 @@ if (algorithmConfig.jndi_disable_all.action != 'ignore')
         let name = params.name
         return {
             action:     algorithmConfig.jndi_disable_all.action,
-            message:    _("JNDI blacklist - blocked jndi lookup of " + name),
+            message:    _("JNDI blacklist - blocked jndi lookup: " + name),
             confidence: 100,
             algorithm:  'jndi_disable_all'
         }
@@ -3026,7 +3026,7 @@ if (algorithmConfig.dns_blacklist.action != 'ignore')
         if (is_hostname_dnslog(host)) {
             return {
                 action:     algorithmConfig.dns_blacklist.action,
-                message:    _("DNS blacklist - blocked dnslog domain" + host),
+                message:    _("DNS blacklist - blocked dnslog domain: " + host),
                 confidence: 100,
                 algorithm:  'dns_blacklist'
             }
