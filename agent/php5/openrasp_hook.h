@@ -310,6 +310,5 @@ std::string openrasp_real_path(const char *filename, int filename_len, bool use_
 
 OpenRASPActionType string_to_action(std::string action_string);
 void plugin_ssrf_check(zval *file, const std::string &funtion_name TSRMLS_DC);
-void ignore_check_type(OpenRASPCheckType check_type TSRMLS_DC);
 
 #endif

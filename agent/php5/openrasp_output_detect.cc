@@ -130,52 +130,48 @@ static int _detect_param_occur_in_html_output(const char *param, OpenRASPActionT
     }
     HashTable *ht = Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_GET]);
     int count = 0;
-    openrasp_try
+    for (zend_hash_internal_pointer_reset(ht);
+         zend_hash_has_more_elements(ht) == SUCCESS;
+         zend_hash_move_forward(ht))
     {
-        for (zend_hash_internal_pointer_reset(ht);
-             zend_hash_has_more_elements(ht) == SUCCESS;
-             zend_hash_move_forward(ht))
+        char *key;
+        ulong idx;
+        int type;
+        type = zend_hash_get_current_key(ht, &key, &idx, 0);
+        if (type == HASH_KEY_NON_EXISTENT)
         {
-            char *key;
-            ulong idx;
-            int type;
-            type = zend_hash_get_current_key(ht, &key, &idx, 0);
-            if (type == HASH_KEY_NON_EXISTENT)
+            continue;
+        }
+        zval **ele_value;
+        if (zend_hash_get_current_data(ht, (void **)&ele_value) != SUCCESS)
+        {
+            continue;
+        }
+        if (_gpc_parameter_filter(*ele_value TSRMLS_CC))
+        {
+            if (++count > OUTPUT_G(max_detection_num))
             {
                 continue;
             }
-            zval **ele_value;
-            if (zend_hash_get_current_data(ht, (void **)&ele_value) != SUCCESS)
+            if (NULL != strstr(param, Z_STRVAL_PP(ele_value)))
             {
-                continue;
-            }
-            if (_gpc_parameter_filter(*ele_value TSRMLS_CC))
-            {
-                if (++count > OUTPUT_G(max_detection_num))
+                std::string name;
+                if (type == HASH_KEY_IS_STRING)
                 {
-                    continue;
+                    name = std::string(key);
                 }
-                if (NULL != strstr(param, Z_STRVAL_PP(ele_value)))
+                else if (type == HASH_KEY_IS_LONG)
                 {
-                    std::string name;
-                    if (type == HASH_KEY_IS_STRING)
-                    {
-                        name = std::string(key);
-                    }
-                    else if (type == HASH_KEY_IS_LONG)
-                    {
-                        long actual = idx;
-                        name = std::to_string(actual);
-                    }
-                    openrasp::data::XssUserInputObject xss_obj(name, *ele_value);
-                    openrasp::checker::BuiltinDetector builtin_detector(xss_obj);
-                    builtin_detector.run();
-                    return SUCCESS;
+                    long actual = idx;
+                    name = std::to_string(actual);
                 }
+                openrasp::data::XssUserInputObject xss_obj(name, *ele_value);
+                openrasp::checker::BuiltinDetector builtin_detector(xss_obj);
+                builtin_detector.run();
+                return SUCCESS;
             }
         }
     }
-    openrasp_finally();
     return status;
 }
 

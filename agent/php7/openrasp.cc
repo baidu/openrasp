@@ -56,7 +56,6 @@ ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.3.7";
 bool is_initialized = false;
 bool remote_active = false;
-bool enable_signal_handle_hook = false;
 std::string openrasp_status = "Protected";
 static std::string get_complete_config_content(ConfigHolder::FromType type);
 static void hook_without_params(OpenRASPCheckType check_type);
@@ -111,8 +110,6 @@ PHP_MINIT_FUNCTION(openrasp)
         openrasp_status = "Unprotected (unsupported SAPI)";
         return SUCCESS;
     }
-    // just restore saved stack in cgi-fcgi and fpm-fcgi SAPI
-    enable_signal_handle_hook = (0 == strcmp(sapi_module.name, "cgi-fcgi") || 0 == strcmp(sapi_module.name, "fpm-fcgi"));
     if (!make_openrasp_root_dir(openrasp_ini.root_dir))
     {
         openrasp_status = "Unprotected ('openrasp.root_dir' initialization failed)";
@@ -418,15 +415,4 @@ static void hook_without_params(OpenRASPCheckType check_type)
     openrasp::data::NoParamsObject no_params_obj(check_type);
     openrasp::checker::V8Detector v8_detector(no_params_obj, OPENRASP_HOOK_G(lru), OPENRASP_V8_G(isolate), OPENRASP_CONFIG(plugin.timeout.millis));
     v8_detector.run();
-}
-
-void openrasp_signal_handle_hook()
-{
-    if (enable_signal_handle_hook)
-    {
-        if (nullptr != OPENRASP_G(jb))
-        {
-            siglongjmp(*OPENRASP_G(jb), 1);
-        }
-    }
 }

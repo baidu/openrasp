@@ -167,7 +167,6 @@ void call_old_signal_handler(struct sigaction *old_act, int sig, siginfo_t *info
 void signal_handler(int sig, siginfo_t *info, void *ctx)
 {
     report_crash_log(sig);
-    openrasp_signal_handle_hook();
     call_old_signal_handler(&old_acts[sig], sig, info, ctx);
 }
 
@@ -177,7 +176,7 @@ int set_signal_handler(int sig, sa_sigaction_t handler)
     sigfillset(&(act.sa_mask));
     act.sa_handler = SIG_DFL;
     act.sa_sigaction = handler;
-    act.sa_flags = SA_SIGINFO;
+    act.sa_flags = SA_SIGINFO | SA_RESETHAND;
     return sigaction(sig, &act, &old_acts[sig]);
 }
 

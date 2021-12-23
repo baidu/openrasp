@@ -71,7 +71,7 @@ public class DNSHook extends AbstractClassHook {
         if (host != null) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("host", host);
-            HookHandler.doCheck(CheckParameter.Type.DNS, params);
+            HookHandler.doCheckWithoutRequest(CheckParameter.Type.DNS, params);
         }
     }
 

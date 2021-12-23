@@ -66,7 +66,7 @@ public class Register {
                         this.registerFlag = true;
                         Config.getConfig().setHookWhiteAll("false");
                         System.out.println("[OpenRASP] RASP agent successfully registered, enabling remote management, please refer to rasp logs for details");
-                        CloudManager.LOGGER.info("[OpenRASP] RASP agent successfully registered,registration details are as follows: \n" + content);
+                        CloudManager.LOGGER.info("[OpenRASP] RASP agent successfully registered, registration details are as follows: \n" + content);
                         callback.call();
                     } else {
                         System.out.println("[OpenRASP] Failed to register RASP agent, please refer to rasp logs for details");

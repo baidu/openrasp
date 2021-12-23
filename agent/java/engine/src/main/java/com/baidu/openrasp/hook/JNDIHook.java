@@ -71,7 +71,7 @@ public class JNDIHook extends AbstractClassHook {
         if (name != null) {
             HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("name", name);
-            HookHandler.doCheck(CheckParameter.Type.JNDI, params);
+            HookHandler.doCheckWithoutRequest(CheckParameter.Type.JNDI, params);
         }
     }
 
