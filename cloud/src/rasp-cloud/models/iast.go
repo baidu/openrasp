@@ -58,7 +58,7 @@ func (iast IastRegister) SetIastRegister(k string, v uint8) {
 
 func (iastApp IastAppId) GetIastAppId(k string) bool {
 	iastApp.Lock.RLock()
-	defer iastApp.Lock.RLock()
+	defer iastApp.Lock.RUnlock()
 	return iastApp.Data[k]
 }
 
