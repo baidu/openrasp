@@ -68,7 +68,7 @@ public class WebsphereResponseBodyHook extends ServerResponseBodyHook {
                     }
                 }
             } catch (Exception e) {
-                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detection failed: " +
                         e.getMessage(), e);
             }
             if (!params.isEmpty()) {

@@ -81,7 +81,7 @@ public class CatalinaResponseBodyHook extends ServerResponseBodyHook {
                     checkBody(params, isCheckXss, isCheckSensitive);
                 }
             } catch (Exception e) {
-                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detection failed: " +
                         e.getMessage(), e);
             } finally {
                 HookHandler.enableBodyXssHook();

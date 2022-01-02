@@ -52,7 +52,7 @@ public class Tongweb7ResponseBodyHook extends ServerResponseBodyHook {
                         params.put("content_type", res.getContentType());
                     }
                 } catch (Exception e) {
-                    LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                    LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detection failed: " +
                             e.getMessage(), e);
                 }
                 if (HookHandler.requestCache.get() != null && !params.isEmpty()) {
