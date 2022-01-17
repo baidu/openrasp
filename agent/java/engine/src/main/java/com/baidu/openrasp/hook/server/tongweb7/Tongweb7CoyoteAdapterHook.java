@@ -12,7 +12,11 @@ import javassist.NotFoundException;
  * @create: 2022-01-01
  */
 @HookAnnotation
-public class Tongweb7PreRequestHook extends ServerPreRequestHook {
+public class Tongweb7CoyoteAdapterHook extends ServerPreRequestHook {
+
+    public Tongweb7CoyoteAdapterHook() {
+        couldIgnore=false;
+    }
 
     /**
      * (none-javadoc)

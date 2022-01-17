@@ -14,7 +14,7 @@ import java.io.IOException;
  * @create: 2022-01-01
  */
 @HookAnnotation
-public class Tongweb7FilterHook extends ServerRequestHook {
+public class Tongweb7ApplicationFilterHook extends ServerRequestHook {
 
 	/**
 	 * (none-javadoc)

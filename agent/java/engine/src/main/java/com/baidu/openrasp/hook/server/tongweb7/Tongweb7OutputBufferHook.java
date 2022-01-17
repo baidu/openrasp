@@ -7,27 +7,21 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 /**
- * @description: 插入Tongweb服务器应答处理hook
+ * @description: 输出流关闭 hook 点
  * @author: zxl
  * @create: 2022-01-01
  */
 @HookAnnotation
-public class Tongweb7HttpResponseHook extends ServerOutputCloseHook {
-
-    public static String clazzName = null;
+public class Tongweb7OutputBufferHook extends ServerOutputCloseHook {
 
 	@Override
 	public boolean isClassMatched(String className) {
-        if ("com/tongweb/catalina/connector/Response".equals(className)) {
-            clazzName = className;
-            return true;
-        }
-        return false;	
+        return "com/tongweb/catalina/connector/OutputBuffer".equals(className);
     }
     
 	@Override
 	protected void hookMethod(CtClass ctClass, String src) throws NotFoundException, CannotCompileException {
-        insertBefore(ctClass, "finishResponse", "()V", src);
+        insertBefore(ctClass, "close", "()V", src);
 	}
 
 }
