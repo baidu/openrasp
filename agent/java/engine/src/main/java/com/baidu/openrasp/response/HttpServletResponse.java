@@ -20,6 +20,7 @@ import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.server.bes.BESResponseBodyHook;
 import com.baidu.openrasp.hook.server.catalina.CatalinaResponseBodyHook;
+import com.baidu.openrasp.hook.server.tongweb7.Tongweb7ResponseBodyHook;
 import com.baidu.openrasp.messaging.LogTool;
 import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.baidu.openrasp.tool.Reflection;
@@ -189,6 +190,8 @@ public class HttpServletResponse {
                         CatalinaResponseBodyHook.handleXssBlockBuffer(parameter, script);
                     } else if ("bes".equals(ApplicationModel.getServerName())) {
                         BESResponseBodyHook.handleXssBlockBuffer(parameter, script);
+                    } else if("tongweb".equals(ApplicationModel.getServerName())){
+                        Tongweb7ResponseBodyHook.handleXssBlockBuffer(parameter, script);
                     }
                 }else {
                     if (!isCommitted) {
