@@ -48,6 +48,7 @@ public class App {
     public static String baseDir;
     public static String url;
     public static int pid;
+    public static int debuglevel;
     public static boolean isAttach = false;
     public static boolean keepConfig = false;
     public static boolean noDetect = false;
@@ -96,6 +97,7 @@ public class App {
                 "useful for standalone Java servers like SpringBoot");
         options.addOption("nodep", false, "Disable parsing of Jar dependency");
         options.addOption("prepend", false, "Prepend the origin java options");
+        options.addOption("debuglevel", true, "Set debug level to enable verbose output in RASP agent");
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
@@ -123,6 +125,10 @@ public class App {
                     isAttach = true;
                     pid = getIntegerParam(cmd, "pid");
                 }
+            }
+
+            if (cmd.hasOption("debuglevel")) {
+                debuglevel = getIntegerParam(cmd, "debuglevel");
             }
 
             keepConfig = cmd.hasOption("keepconf");

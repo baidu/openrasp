@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-#include "webdir_utils.h"
-#include "utils/json_reader.h"
+package com.baidu.rasp;
 
-namespace openrasp
-{
-void sensitive_files_policy_alarm(std::map<std::string, std::vector<std::string>> &sensitive_file_map)
-{
-    for (auto &it : sensitive_file_map)
-    {
-        openrasp::JsonReader j;
-        j.write_int64({"policy_id"}, 3009);
-        j.write_string({"policy_params", "webroot"}, it.first);
-        j.write_vector({"policy_params", "files"}, it.second);
-        j.write_string({"message"}, "Multiple sensitive files found in " + it.first);
-        LOG_G(policy_logger).log(LEVEL_INFO, j);
+import java.io.File;
+
+public class Util {
+    public static String getJavaPath() {
+        return System.getProperty("java.home") + "/bin/java";
     }
 }
 
-} // namespace openrasp

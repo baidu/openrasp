@@ -32,7 +32,7 @@ namespace openrasp
 void builtin_alarm_info(openrasp::JsonReader &base_json)
 {
     TSRMLS_FETCH();
-    LOG_G(alarm_logger).log(LEVEL_INFO, base_json TSRMLS_CC);
+    LOG_G(alarm_logger).log(LEVEL_INFO, base_json);
 }
 
 void builtin_policy_info(openrasp::JsonReader &base_json, ulong hash)
@@ -49,7 +49,7 @@ void builtin_policy_info(openrasp::JsonReader &base_json, ulong hash)
     }
     if (!skip)
     {
-        LOG_G(policy_logger).log(LEVEL_INFO, base_json TSRMLS_CC);
+        LOG_G(policy_logger).log(LEVEL_INFO, base_json);
     }
 #ifdef HAVE_LINE_COVERAGE
     __gcov_flush();

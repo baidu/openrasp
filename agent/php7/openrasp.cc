@@ -53,7 +53,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
-const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.3.6";
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.3.7";
 bool is_initialized = false;
 bool remote_active = false;
 std::string openrasp_status = "Protected";
@@ -250,7 +250,7 @@ PHP_RINIT_FUNCTION(openrasp)
 {
     if (is_initialized)
     {
-        zval *http_server = fetch_http_globals(TRACK_VARS_SERVER TSRMLS_CC);
+        zval *http_server = fetch_http_globals(TRACK_VARS_SERVER);
         OPENRASP_G(request).update_id();
         if (nullptr != http_server && Z_TYPE_P(http_server) == IS_ARRAY)
         {

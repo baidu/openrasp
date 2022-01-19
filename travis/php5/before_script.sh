@@ -16,6 +16,12 @@ mongod --replSet rs0 --port 27018 --bind_ip localhost --dbpath /tmp/mongodb/rs0-
 mongod --replSet rs0 --port 27019 --bind_ip localhost --dbpath /tmp/mongodb/rs0-1 --smallfiles --oplogSize 128 --fork --syslog
 mongo --port 27018 --eval 'rs.initiate({_id: "rs0",members: [{_id: 0,host: "localhost:27018"},{_id: 1,host: "localhost:27019"}]})'
 
+sudo sed -i 's/#\$ModLoad imtcp/\$ModLoad imtcp/g' /etc/rsyslog.conf
+sudo sed -i 's/#\$InputTCPServerRun 514/\$InputTCPServerRun 514/g' /etc/rsyslog.conf
+sudo service rsyslog restart
+sudo service apache2 restart
+
+
 #mongo-php-driver-legacy
 # git clone https://github.com/mongodb/mongo-php-driver-legacy.git
 # pushd mongo-php-driver-legacy

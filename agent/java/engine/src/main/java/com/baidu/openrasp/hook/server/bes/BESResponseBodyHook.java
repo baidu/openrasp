@@ -35,7 +35,7 @@ public class BESResponseBodyHook extends ServerResponseBodyHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src1 = getInvokeStaticSrc(BESResponseBodyHook.class, "getBuffer", "$0,$1", Object.class);
+        String src1 = getInvokeStaticSrc(BESResponseBodyHook.class, "getBuffer", "$0,$1", Object.class, Object.class);
         insertBefore(ctClass, "realWriteBytes", "(Ljava/nio/ByteBuffer;)V", src1);
     }
 
@@ -67,7 +67,7 @@ public class BESResponseBodyHook extends ServerResponseBodyHook {
                     checkBody(params, isCheckXss, isCheckSensitive);
                 }
             } catch (Exception e) {
-                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detection failed: " +
                         e.getMessage(), e);
             } finally {
                 HookHandler.enableBodyXssHook();

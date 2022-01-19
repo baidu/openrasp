@@ -126,17 +126,17 @@ public class CloudUtils {
             String cloudAppSecret = Config.getConfig().getCloudAppSecret();
             if (cloudAddress == null || cloudAddress.trim().isEmpty()) {
                 LogTool.warn(ErrorType.CONFIG_ERROR,
-                        "Cloud control configuration error: cloud.address is not configured");
+                        "Invalid cloud control configuration: param cloud.address is not configured or empty");
                 return false;
             }
             if (cloudAppId == null || cloudAppId.trim().isEmpty()) {
                 LogTool.warn(ErrorType.CONFIG_ERROR,
-                        "Cloud control configuration error: cloud.appid is not configured");
+                        "Invalid cloud control configuration: param cloud.appid is not configured or empty");
                 return false;
             }
             if (cloudAppSecret == null || cloudAppSecret.trim().isEmpty()) {
                 LogTool.warn(ErrorType.CONFIG_ERROR,
-                        "Cloud control configuration error: cloud.appsecret is not configured");
+                        "Invalid cloud control configuration: param cloud.appsecret is not configured or empty");
                 return false;
             }
             return true;
@@ -190,7 +190,7 @@ public class CloudUtils {
         if (message.isEmpty()) {
             return errorType.toString();
         }
-        return errorType.toString() + "," + message;
+        return errorType.toString() + ", " + message;
     }
 
     private static String getFormattedMessage(Integer code, String message) {

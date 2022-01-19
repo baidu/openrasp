@@ -361,7 +361,7 @@ PHP_MINIT_FUNCTION(openrasp_hook)
     {
         for (size_t j = 0; j < global_hook_handlers_len[i]; ++j)
         {
-            global_hook_handlers[i][j](TSRMLS_C);
+            global_hook_handlers[i][j]();
         }
     }
 

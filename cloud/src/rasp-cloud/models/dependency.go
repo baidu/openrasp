@@ -43,6 +43,11 @@ type SearchDependencyParam struct {
 	} `json:"data" valid:"Required"`
 }
 
+type DeleteDependencyParam struct {
+	AppId     string `json:"app_id,omitempty" valid:"Required;MaxSize(512)"`
+	Timestamp int    `json:"timestamp,omitempty" valid:"Required"`
+}
+
 var (
 	DependencyIndexName      = "openrasp-dependency-data"
 	AliasDependencyIndexName = "real-openrasp-dependency-data"
@@ -221,6 +226,11 @@ func getDependencyQuery(param *SearchDependencyParam) (query *elastic.BoolQuery,
 		}
 	}
 	return
+}
+
+func RemoveExpiredDependency(appId string, timestamp int) error {
+	query := elastic.NewRangeQuery("@timestamp").Lte(timestamp)
+	return es.DeleteByQuery(es.GetIndex(AliasDependencyIndexName, appId), dependencyType, query)
 }
 
 func RemoveDependencyByRasp(appId string, raspId string) error {

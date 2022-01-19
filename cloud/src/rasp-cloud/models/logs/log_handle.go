@@ -53,21 +53,25 @@ type SearchAttackParam struct {
 	Page    int `json:"page"`
 	Perpage int `json:"perpage"`
 	Data    *struct {
-		Id             string    `json:"_id,omitempty"`
-		AppId          string    `json:"app_id,omitempty"`
-		StartTime      int64     `json:"start_time"`
-		EndTime        int64     `json:"end_time"`
-		RaspId         string    `json:"rasp_id,omitempty"`
-		HostName       string    `json:"server_hostname,omitempty"`
-		AttackSource   string    `json:"attack_source,omitempty"`
-		AttackUrl      string    `json:"url,omitempty"`
-		LocalIp        string    `json:"local_ip,omitempty"`
-		ClientIp       string    `json:"client_ip,omitempty"`
-		StackMd5       string    `json:"stack_md5,omitempty"`
-		RequestId      string    `json:"request_id,omitempty"`
-		PluginMessage  string    `json:"plugin_message,omitempty"`
-		AttackType     *[]string `json:"attack_type,omitempty"`
-		InterceptState *[]string `json:"intercept_state,omitempty"`
+		Id              string    `json:"_id,omitempty"`
+		AppId           string    `json:"app_id,omitempty"`
+		StartTime       int64     `json:"start_time"`
+		EndTime         int64     `json:"end_time"`
+		RaspId          string    `json:"rasp_id,omitempty"`
+		HostName        string    `json:"server_hostname,omitempty"`
+		AttackSource    string    `json:"attack_source,omitempty"`
+		AttackUrl       string    `json:"url,omitempty"`
+		LocalIp         string    `json:"local_ip,omitempty"`
+		ClientIp        string    `json:"client_ip,omitempty"`
+		Stack           string    `json:"stack,omitempty"`
+		StackMd5        string    `json:"stack_md5,omitempty"`
+		Header          string    `json:"header,omitempty"`
+		RequestId       string    `json:"request_id,omitempty"`
+		RequestMethod   string    `json:"request_method,omitempty"`
+		PluginMessage   string    `json:"plugin_message,omitempty"`
+		PluginAlgorithm string    `json:"plugin_algorithm,omitempty"`
+		AttackType      *[]string `json:"attack_type,omitempty"`
+		InterceptState  *[]string `json:"intercept_state,omitempty"`
 	} `json:"data"`
 }
 
@@ -301,27 +305,27 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 	shouldQueries := make([]elastic.Query, 0, len(query)+1)
 	if query != nil {
 		for key, value := range query {
-			if key == "attack_type" {
+			if key == "attack_type" || key == "intercept_state" || key == "policy_id" || key == "language" {
 				if v, ok := value.([]interface{}); ok {
 					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
 				} else {
 					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
 				}
-			} else if key == "intercept_state" || key == "policy_id" || key == "language" {
-				if v, ok := value.([]interface{}); ok {
-					filterQueries = append(filterQueries, elastic.NewTermsQuery(key, v...))
-				} else {
-					filterQueries = append(filterQueries, elastic.NewTermQuery(key, value))
-				}
+			} else if key == "stack" {
+				realValue := strings.TrimSpace(fmt.Sprint(value))
+				filterQueries = append(filterQueries,
+					elastic.NewNestedQuery("attack_params", elastic.NewMatchPhraseQuery("attack_params.stack", "*"+realValue+"*")))
 			} else if key == "local_ip" {
 				filterQueries = append(filterQueries,
 					elastic.NewNestedQuery("server_nic", elastic.NewTermQuery("server_nic.ip", value)))
 			} else if key == "attack_source" || key == "url" || key == "crash_message" || key == "hostname" ||
-				key == "message" || key == "plugin_message" || key == "client_ip" {
+				key == "message" || key == "plugin_algorithm" || key == "plugin_message" || key == "client_ip" {
 				realValue := strings.TrimSpace(fmt.Sprint(value))
 				filterQueries = append(filterQueries, elastic.NewWildcardQuery(key, "*"+realValue+"*"))
 			} else if key == "server_hostname" {
 				realValue := strings.TrimSpace(fmt.Sprint(value))
+				shouldQueries = append(shouldQueries,
+					elastic.NewWildcardQuery("rasp_id", "*"+realValue+"*"))
 				shouldQueries = append(shouldQueries,
 					elastic.NewWildcardQuery("server_hostname", "*"+realValue+"*"))
 				shouldQueries = append(shouldQueries,

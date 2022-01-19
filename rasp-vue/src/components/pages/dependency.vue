@@ -31,6 +31,9 @@
           <button class="btn btn-primary ml-2" @click="fetchData(1)">
             搜索
           </button>
+          <button class="btn btn-primary ml-2" @click="deleteExpiredData()">
+            清理
+          </button>
         </div>
       </div>
       <div class="card">
@@ -80,6 +83,7 @@ import DependencyDetailModal from '@/components/modals/dependencyDetailModal'
 import DatePicker from '@/components/DatePicker'
 import { mapGetters } from 'vuex'
 import isIp from 'is-ip'
+import moment from 'moment'
 
 export default {
   name: 'Dependency',
@@ -119,6 +123,21 @@ export default {
   },
   methods: {
     ceil: Math.ceil,
+    deleteExpiredData() {
+      if (! confirm('依赖库默认每隔6小时上报一次，后台不会清理超时数据。是否清理3天以前的依赖库数据?')) {
+        return
+      }
+
+      const body = {
+        app_id: this.current_app.id,
+        timestamp: moment().subtract(3, 'days').unix() * 1000
+      }
+      return this.request.post('v1/api/dependency/delete', body)
+        .then(res => {
+          alert('过期数据清理完成，预计3秒后生效。点击确定刷新')
+          this.fetchData(1)
+        })
+    },
     fetchData(page) {
       const body = {
         data: {

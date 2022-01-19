@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookie from 'js-cookie'
 import router from '@/router'
 
-export var rasp_version = '1.3.6'
+export var rasp_version = '1.3.7'
 
 // 起始 type_id: 1001
 export var audit_types = {
@@ -139,7 +139,9 @@ export var attack_types = {
   webshell_ld_preload: 'WebShell - 环境变量方式',
   response: 'HTTP 响应采样检测',
   request: '请求开始',
-  link: '文件链接'
+  link: '文件链接',
+  jndi: 'JNDI请求',
+  dns:  'DNS请求'
 }
 
 export var status_types = {
@@ -263,3 +265,11 @@ request.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+export function download_file(name, data) {
+  var blob  = new Blob([data], { type: 'application/octet-stream' })
+  var link  = document.createElement('a')
+  link.href = window.URL.createObjectURL(blob)
+  link.download = name
+  link.click()
+}

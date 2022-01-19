@@ -59,7 +59,7 @@ void openrasp_error(int type, openrasp_error_code code, const char *format, ...)
         json_reader.write_string({"message"}, message);
         std::string error_content = json_reader.dump();
         TSRMLS_FETCH();
-        LOG_G(rasp_logger).log((severity_level)type, error_content.c_str(), error_content.length() TSRMLS_CC, true, false);
+        LOG_G(rasp_logger).log((severity_level)type, error_content.c_str(), error_content.length(), true, false);
     }
     else
     {

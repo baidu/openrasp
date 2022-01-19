@@ -54,7 +54,7 @@ using openrasp::ConfigHolder;
 
 ZEND_DECLARE_MODULE_GLOBALS(openrasp);
 
-const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.3.6";
+const char *OpenRASPInfo::PHP_OPENRASP_VERSION = "1.3.7";
 bool is_initialized = false;
 bool remote_active = false;
 std::string openrasp_status = "Protected";

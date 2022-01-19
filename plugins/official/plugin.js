@@ -1,9 +1,9 @@
-const plugin_version = '2021-0107-1500'
+const plugin_version = '2021-1217-2000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
 /*
- * Copyright 2017-2019 Baidu Inc.
+ * Copyright 2017-2021 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -168,15 +168,16 @@ var algorithmConfig = {
         },
         oracle: {
             error_code: [
-                "ORA-29257", // host string unknown
-                "ORA-20000", // Oracle Text error
-                "ORA-00904", // invalid identifier
-                "ORA-19202", // Error occurred in XML processing
-                "ORA-01756", // quoted string not properly terminated
-                "ORA-01740", // missing double quote in identifier
-                "ORA-00920", // invalid relational operator
-                "ORA-00907", // missing right parenthesis
-                "ORA-00911", // invalid character
+                933,   // SQL command not properly ended
+                29257, // host string unknown
+                20000, // Oracle Text error
+                904,   // invalid identifier
+                19202, // Error occurred in XML processing
+                1756,  // quoted string not properly terminated
+                1740,  // missing double quote in identifier
+                920,   // invalid relational operator
+                907,   // missing right parenthesis
+                911,   // invalid character
             ]
         },
         hsql: {
@@ -204,10 +205,11 @@ var algorithmConfig = {
         }
     },
 
+    // 此算法仅用于应急，默认不开启，用户编写时应注意redos风险
     sql_regex: {
         name:      '算法4 - 正则表达式算法',
         action:    'ignore',
-        regex:     'union.*select.*from.*information_schema'
+        regex:     'information_schema'
     },
 
     // SSRF - 来自用户输入，且为内网地址就拦截
@@ -223,23 +225,7 @@ var algorithmConfig = {
     // SSRF - 是否允许访问 dnslog 地址
     ssrf_common: {
         name:    '算法3 - 拦截常见 dnslog 地址',
-        action:  'block',
-        domains: [
-        	'.vuleye.pw',
-            '.ceye.io',
-            '.exeye.io',
-            '.vcap.me',
-            '.xip.name',
-            '.xip.io',
-            '.sslip.io',
-            '.nip.io',
-            '.burpcollaborator.net',
-            '.tu4.org',
-            '.2xss.cc',
-            '.bxss.me',
-            '.godns.vip',
-            '.pipedream.net' // requestbin 新地址
-        ]
+        action:  'block'
     },
     // SSRF - 是否允许访问混淆后的IP地址
     ssrf_obfuscate: {
@@ -426,8 +412,9 @@ var algorithmConfig = {
             'ftp',
             'dict',
             'gopher',
-            'jar',
-            'netdoc'
+            // 'jar', // jenkins下存在误报
+            'netdoc',
+            'mailto'
         ]
     },
     // XXE - 使用 file 协议读取内容，可能误报，默认 log
@@ -518,6 +505,13 @@ var algorithmConfig = {
         name:   '算法5 - 记录或者拦截所有命令执行操作',
         action: 'ignore'
     },
+    // 命令注入 - dnslog
+    command_dnslog: {
+        name:    '算法6 - dnslog类命令',
+        action:  'log',
+        pattern_cmd: '(^|\\W)(curl|ping|wget|nslookup|dig)\\W',
+        pattern_domain: '\\.((ceye|exeye|sslip|nip)\\.io|dnslog\\.cn|(vcap|bxss)\\.me|xip\\.(name|io)|burpcollaborator\\.net|tu4\\.org|2xss\\.cc|request\\.bin|requestbin\\.net|pipedream\\.net)'
+    },
 
     // transformer 反序列化攻击
     deserialization_blacklist: {
@@ -532,15 +526,27 @@ var algorithmConfig = {
             'org.codehaus.groovy.runtime.ConvertedClosure',
             'org.codehaus.groovy.runtime.MethodClosure',
             'org.springframework.beans.factory.ObjectFactory',
-            'xalan.internal.xsltc.trax.TemplatesImpl'
+            'org.apache.xalan.xsltc.trax.TemplatesImpl',
+            'com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl',
+            'com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase'
         ]
+    },
+
+    jndi_disable_all: {
+        name:   '算法1 - 拦截所有JNDI调用',
+        action: 'block'
+    },
+
+    dns_blacklist: {
+        name:   '算法1 - 拦截DNS黑名单查询(比如DNSLog)',
+        action: 'block'
     },
 
     // xss 用户输入匹配算法
     // 1. 当用户输入长度超过15，匹配上标签正则，且出现在响应里，直接拦截
     // 2. 当用户输入长度超过15，匹配上标签正则这样的参数个数超过 10，判定为扫描攻击，直接拦截（v1.1.2 之后废弃）
     xss_userinput: {
-        name:   '算法2 - 拦截输出在响应里的反射 XSS',
+        name:   '算法2 - 拦截输出在响应里的反射XSS',
         action: 'ignore',
 
         filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]",
@@ -552,29 +558,29 @@ var algorithmConfig = {
 
     // php 专有算法
     xss_echo: {
-        name:   '算法1 - PHP: 禁止直接输出 GPC 参数',
+        name:   '算法1 - PHP: 禁止直接输出GPC参数',
         action: 'log',
 
         filter_regex: "<![\\-\\[A-Za-z]|<([A-Za-z]{1,12})[\\/>\\x00-\\x20]"
     },    
 
     webshell_eval: {
-        name:   '算法1 - 拦截简单的 PHP 中国菜刀后门',
+        name:   '算法1 - 拦截简单的PHP中国菜刀后门',
         action: 'block'
     },
 
     webshell_command: {
-        name:   '算法2 - 拦截简单的 PHP 命令执行后门',
+        name:   '算法2 - 拦截简单的PHP命令执行后门',
         action: 'block'
     },
 
     webshell_file_put_contents: {
-        name:   '算法3 - 拦截简单的 PHP 文件上传后门',
+        name:   '算法3 - 拦截简单的PHP文件上传后门',
         action: 'block'
     },
 
     webshell_callable: {
-        name:   '算法4 - 拦截简单的 PHP array_map/walk/filter 后门',
+        name:   '算法4 - 拦截简单的PHP array_map/walk/filter 后门',
         action: 'block',
         functions: [
             'system', 'exec', 'passthru', 'proc_open', 'shell_exec', 'popen', 'pcntl_exec', 'assert'
@@ -582,7 +588,7 @@ var algorithmConfig = {
     },
 
     webshell_ld_preload: {
-        name:   '算法5 - 拦截 PHP putenv 相关后门',
+        name:   '算法5 - 拦截PHP putenv 相关后门',
         action: 'block',
         env: [
             'LD_PRELOAD',
@@ -685,7 +691,7 @@ var forcefulBrowsing = {
 var headerInjection = ["user-agent", "referer", "x-forwarded-for"]
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
-var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phtml|sh|py|pl|rb)\.?$/i
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phar|phtml|sh|py|pl|rb)\.?$/i
 
 // 正常文件
 var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
@@ -711,6 +717,19 @@ var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
 // ssrf白名单主机名
 var whiteHostName   = /\.bcebos\.com$|(^|\.)oss-[\d\w\-]{0,30}\.aliyuncs\.com$/
 
+var dnsLogDomains   = [
+    '.vuleye.pw', '.ceye.io', '.exeye.io', '.vcap.me', '.xip.name', '.xip.io', '.sslip.io', '.nip.io',
+    '.burpcollaborator.net', '.tu4.org', '.2xss.cc', '.bxss.me', '.godns.vip', '.dnslog.cn', '.0kee.360.cn', '.r87.me','.ngrok.io',
+    // yumusb/DNSLog-Platform-Golang
+    '.xn--9tr.com', 
+    // requestbin 新地址
+    '.pipedream.net',
+    // 端口转发工具
+    '.vxtrans.com', '.vxtrans.link',
+    // 免费DDNS厂商
+    '.hopto.org', '.zapto.org', '.sytes.net', '.ddns.net'
+]
+
 // SQL注入算法1 - 预过滤正则
 var sqliPrefilter1  = new RegExp(algorithmConfig.sql_userinput.pre_filter, 'i')
 
@@ -728,6 +747,10 @@ var cmdJavaExploitable = new RegExp(/^[^ ]*sh.{1,12}-c/, 'i')
 
 // 命令执行探针 - 常用渗透命令
 var cmdPostPattern  = new RegExp(algorithmConfig.command_common.pattern, 'i')
+
+// 命令执行探针 - dnslog命令
+var cmdDNSlogPatternCmd  = new RegExp(algorithmConfig.command_dnslog.pattern_cmd)
+var cmdDNSlogPatternDomain  = new RegExp(algorithmConfig.command_dnslog.pattern_domain, 'i')
 
 // 敏感信息泄露 - Content Type 正则
 var dataLeakContentType = new RegExp(algorithmConfig.response_dataLeak.content_type, 'i')
@@ -802,7 +825,11 @@ if (algorithmConfig.eval_regex.action != 'ignore') {
 // 常用函数
 String.prototype.replaceAll = function(token, tokenValue, maxLength) {
     if (maxLength === undefined) {
-        maxLength = 4096
+        if (this.length * 2 < 4096) {
+            maxLength = 4096
+        } else {
+            maxLength = this.length * 2
+        }
     }
     // 空值判断，防止死循环
     if (! token || token.length == 0 || this.length > maxLength) {
@@ -857,16 +884,9 @@ function param_has_traversal (param) {
 }
 
 function is_hostname_dnslog(hostname) {
-    var domains = algorithmConfig.ssrf_common.domains
-
-    if (hostname == 'requestb.in' || hostname == 'transfer.sh')
+    for (var i = 0; i < dnsLogDomains.length; i ++)
     {
-        return true
-    }
-
-    for (var i = 0; i < domains.length; i ++)
-    {
-        if (hostname.endsWith(domains[i]))
+        if (hostname.toLowerCase().endsWith(dnsLogDomains[i]))
         {
             return true
         }
@@ -915,7 +935,8 @@ function validate_stack_java(stacks) {
         'org.codehaus.groovy.runtime.ProcessGroovyMethods.execute':                     "Using Groovy library",
         'bsh.Reflect.invokeMethod':                                                     "Using BeanShell library",
         'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     "Using Nashorn engine",
-        'org.apache.shiro.io.DefaultSerializer.deserialize':                            "Using Shiro framework (DefaultSerializer)"
+        'org.apache.shiro.io.DefaultSerializer.deserialize':                            "Using Shiro framework (DefaultSerializer)",
+        'com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase.readObject':                 "Using C3p0 library"
     }
 
     var userCode = false, reachedInvoke = false, i = 0, message = undefined
@@ -1196,23 +1217,6 @@ function is_from_userinput(parameter, target)
     return verdict
 }
 
-// 是否来自用户输入 - 适合任意类型参数
-function is_from_userinput(parameter, target)
-{
-    var verdict = false
-    Object.keys(parameter).some(function (key) {
-        var values = parameter[key]
-        Object.values(values).some(function(value){
-            // 只处理非数组、hash情况
-            if (value == target) {
-                verdict = true
-                return true
-            }
-        })
-    })
-    return verdict
-}
-
 // 是否包含于用户输入 - 适合任意类型参数
 function is_include_in_userinput(parameter, target)
 {
@@ -1255,16 +1259,28 @@ function is_token_changed(raw_tokens, userinput_idx, userinput_length, distance,
     }
 
     // 寻找 token 结束点
-    // 需要返回真实distance, 删除 最多需要遍历 distance 个 token  i < start + distance 条件
-    for (var i = start; i < raw_tokens.length; i++)
-    {
-        if (raw_tokens[i].stop >= userinput_idx + userinput_length)
+
+    if (raw_tokens[start].stop >= userinput_idx + userinput_length) {
+        // 大部分用户输入都只包含在一个token中，只需一次判定
+        end = start
+    } else {
+        // 不在一个token内，按顺序查找
+        // 这里需要返回真实distance, 删除 最多需要遍历 distance 个 token  i < start + distance 条件
+        for (var i = start + 1; i < raw_tokens.length; i++)
         {
-            end = i
-            break
+            if (raw_tokens[i].stop >= userinput_idx + userinput_length)
+            {
+                if (raw_tokens[i].start >= userinput_idx + userinput_length) {
+                    end = i - 1
+                    break
+                } else {
+                    end = i
+                    break
+                }
+            }
         }
     }
-
+    
     var diff = end - start + 1
     if (diff >= distance) {
         if (is_sql && algorithmConfig.sql_userinput.anti_detect_enable && diff < 10) {
@@ -1401,9 +1417,9 @@ function get_all_parameter(context) {
 }
 
 function check_internal_ip(ip, origin_ip) {
-    // origin_ip不为空且不存在非内网地址则跳过检测
-    if (origin_ip && ! origin_ip.some(function(value) {
-            return !internalRegex.test(value)
+    // origin_ip不为空且全部为内网地址则跳过
+    if (origin_ip && origin_ip.every(function(value) {
+            return internalRegex.test(value)
         })){ return }
 
     for (var i=0; i<ip.length; i++) {
@@ -1473,7 +1489,7 @@ function check_ssrf(params, context, is_redirect) {
     // 算法2 - 检查常见探测域名
     if (algorithmConfig.ssrf_common.action != 'ignore')
     {
-        if (is_hostname_dnslog(hostname))
+        if (is_hostname_dnslog(hostname) || ['requestb.in', 'transfer.sh'].includes(hostname.toLowerCase()))
         {
             return {
                 action:     algorithmConfig.ssrf_common.action,
@@ -1487,8 +1503,9 @@ function check_ssrf(params, context, is_redirect) {
     // 算法3 - 检测 AWS/Aliyun/GoogleCloud 私有地址: 拦截IP访问、绑定域名访问两种方式
     if (algorithmConfig.ssrf_aws.action != 'ignore')
     {
-        if (ip == '169.254.169.254' || ip == '100.100.100.200'
-            || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == 'metadata.google.internal')
+        if (ip == '169.254.169.254' || ip == '100.100.100.200' || ip == '168.63.129.16'
+            || hostname == '169.254.169.254' || hostname == '100.100.100.200' || hostname == '168.63.129.16' 
+            || hostname == 'metadata.google.internal')
         {
             return {
                 action:     algorithmConfig.ssrf_aws.action,
@@ -1635,6 +1652,16 @@ if (algorithmConfig.meta.log_event) {
         plugin.log('SQL query: ' + params.query)
         return clean
     })
+
+    plugin.register('jndi', function (params, context) {
+        plugin.log('JNDI lookup: ' + params.name, params.stack)
+        return clean
+    })
+
+    plugin.register('dns', function (params, context) {
+        plugin.log('dns lookup: ' + params.host, params.stack)
+        return clean
+    })    
 }
 
 
@@ -2345,7 +2372,9 @@ plugin.register('writeFile', function (params, context) {
     }
 
     if (algorithmConfig.writeFile_reflect.action != 'ignore') {
-        if (context.server.language == 'java' && params.realpath.endsWith(".jsp")) {
+        if (context.server.language == 'java' && 
+            (params.realpath.endsWith(".jsp") || params.realpath.endsWith(".jspx"))
+        ) {
             var message = validate_stack_java(params.stack)
             if (message) {
                 return {
@@ -2697,7 +2726,7 @@ plugin.register('command', function (params, context) {
         for (var i=0; i<raw_tokens.length; i++) {
             // 敏感token检测
             if (algorithmConfig.command_error.alarm_token_enable) {
-                if (alarm_token == raw_tokens[i].text) {
+                if (alarm_token.indexOf(raw_tokens[i].text) != -1) {
                     if ( !(i > 0 && i < raw_tokens.length-1 && raw_tokens[i-1].text == '"' && raw_tokens[i+1].text == '"')) {
                         return {
                             action:     algorithmConfig.command_error.action,
@@ -2773,6 +2802,22 @@ plugin.register('command', function (params, context) {
         }
     }
 
+    // 算法6: DNSlog检测
+    if (algorithmConfig.command_dnslog.action != 'ignore') 
+    {
+        if (cmdDNSlogPatternCmd.test(params.command))
+        {
+            if (cmdDNSlogPatternDomain.test(params.command)) {
+                return {
+                    action:     algorithmConfig.command_dnslog.action,
+                    message:    _("Command injection - Executing dnslog command, command is %1%", [params.command]),
+                    confidence: 95,
+                    algorithm:  'command_dnslog'
+                }
+            }
+        }
+    }
+
     return clean
 })
 
@@ -2781,7 +2826,7 @@ plugin.register('command', function (params, context) {
 plugin.register('xxe', function (params, context) {
     var server      = context.server
     var is_win      = server.os.indexOf('Windows') != -1
-    var items       = params.entity.split('://')
+    var items       = params.entity.split(':')
     var parameters  = context.parameter || {}
     var header      = context.header || {}
 
@@ -2798,8 +2843,8 @@ plugin.register('xxe', function (params, context) {
     }
 
     if (items.length >= 2) {
-        var protocol = items[0].toLowerCase()
-        var address  = items[1]
+        var protocol = items.shift().toLowerCase()
+        var address  = items.join(":")
 
         // 拒绝特殊协议
         if (algorithmConfig.xxe_protocol.action != 'ignore') {
@@ -2822,34 +2867,61 @@ plugin.register('xxe', function (params, context) {
         // file://xwork.dtd
         if (algorithmConfig.xxe_file.action != 'ignore')
         {
-            if (address.length > 0 && protocol === 'file' && is_absolute_path(address, is_win) )
+            if (address.length > 0 && protocol === 'file')
             {
-                var address_lc = address.toLowerCase()
-                
-                // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
-                try
-                {
-                    var urlObj = new URL(address_lc)
-                    address_lc = urlObj.pathname
+                if (address.startsWith("//")) {
+                    // 去掉file://中的//，两种格式统一逻辑处理
+                    // file:/etc/passwd
+                    // file:///etc/passwd
+                    address = address.substr(2)
                 }
-                catch (e) {}
-                var content_type = header["content-type"] || ""
-                if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
-                    // 过滤掉 xml、dtd
-                    if (! address_lc.endsWith('.xml') &&
-                        ! address_lc.endsWith('.dtd'))
-                    {
-                        return {
-                            action:     algorithmConfig.xxe_file.action,
-                            message:    _("XXE - Accessing file %1%", [address]),
-                            confidence: 90,
-                            algorithm:  'xxe_file'
+                var address_lc = address.toLowerCase()
+
+                if (address_lc.indexOf("../") != -1) {
+                    // 使用 ../ 
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Accessing file %1% with ../", [address]),
+                        confidence: 90,
+                        algorithm:  'xxe_file'
+                    }
+                }
+
+                if (address_lc.indexOf("#") !=-1 || address_lc.indexOf("?") !=-1) {
+                    return {
+                        action:     algorithmConfig.xxe_file.action,
+                        message:    _("XXE - Using url comment in file path %1%", [address]),
+                        confidence: 90,
+                        algorithm:  'xxe_file'
+                    }
+                }
+
+                if (is_absolute_path(address, is_win) || 
+                    address_lc.startsWith("localhost") ||
+                    (is_win && items.length > 2)) {
+                    // 三种情况：
+                    // 一般绝对路径 file:/etc/passwd
+                    // localhost起始路径 file://localhost/c:/windows/win.ini
+                    // 带盘符的windows绝对路径 file:c:/windows/win.ini
+                    // 1.0 Rhino 引擎不支持URL对象，考虑到 1.0 用户不多，先简单处理下
+                    var content_type = header["content-type"] || ""
+                    if (content_type.indexOf("xml") != -1 || is_include_in_userinput(parameters, address)) {
+                        // 过滤掉 xml、dtd、xsd
+                        if (! address_lc.endsWith('.xml') &&
+                            ! address_lc.endsWith('.xsd') &&
+                            ! address_lc.endsWith('.dtd'))
+                        {
+                            return {
+                                action:     algorithmConfig.xxe_file.action,
+                                message:    _("XXE - Accessing file %1%", [address]),
+                                confidence: 90,
+                                algorithm:  'xxe_file'
+                            }
                         }
                     }
                 }
             }
         }
-
     }
     return clean
 })
@@ -2933,6 +3005,35 @@ if (algorithmConfig.ognl_blacklist.action != 'ignore')
         return clean
     })
 }
+
+if (algorithmConfig.jndi_disable_all.action != 'ignore') 
+{
+    plugin.register('jndi', function (params, context) {
+        let name = params.name
+        return {
+            action:     algorithmConfig.jndi_disable_all.action,
+            message:    _("JNDI blacklist - blocked jndi lookup: " + name),
+            confidence: 100,
+            algorithm:  'jndi_disable_all'
+        }
+    })
+}
+
+if (algorithmConfig.dns_blacklist.action != 'ignore') 
+{
+    plugin.register('dns', function (params, context) {
+        let host = params.host
+        if (is_hostname_dnslog(host)) {
+            return {
+                action:     algorithmConfig.dns_blacklist.action,
+                message:    _("DNS blacklist - blocked dnslog domain: " + host),
+                confidence: 100,
+                algorithm:  'dns_blacklist'
+            }
+        }
+    })
+}
+
 
 if (algorithmConfig.deserialization_blacklist.action != 'ignore') 
 {

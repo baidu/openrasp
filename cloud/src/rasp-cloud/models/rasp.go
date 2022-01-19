@@ -15,24 +15,24 @@
 package models
 
 import (
+	"errors"
+	"fmt"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/httplib"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"rasp-cloud/conf"
 	"rasp-cloud/mongo"
 	"rasp-cloud/tools"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-	"time"
 	"strconv"
-	"errors"
-	"github.com/astaxie/beego/httplib"
 	"strings"
-	"fmt"
-	"github.com/astaxie/beego"
+	"time"
 )
 
 type Rasp struct {
 	Id                string            `json:"id" bson:"_id,omitempty"`
 	AppId             string            `json:"app_id" bson:"app_id,omitempty"`
-	StrategyId		  string			`json:"strategy_id" bson:"strategy_id,omitempty"`
+	StrategyId        string            `json:"strategy_id" bson:"strategy_id,omitempty"`
 	Version           string            `json:"version" bson:"version,omitempty"`
 	Os                string            `json:"os" bson:"os,omitempty"`
 	HostName          string            `json:"hostname" bson:"hostname,omitempty"`
@@ -56,12 +56,12 @@ type Rasp struct {
 }
 
 type RecordCount struct {
-	Id                string            `json:"version" bson:"_id"`
-	Count             int64    			`json:"count" bson:"count"`
+	Id    string `json:"version" bson:"_id"`
+	Count int64  `json:"count" bson:"count"`
 }
 
 const (
-	raspCollectionName = "rasp"
+	raspCollectionName     = "rasp"
 	defaultOfflineInterval = 180
 )
 
@@ -69,6 +69,37 @@ var (
 	HasOfflineHosts       map[string]float64
 	OfflineInterval       int64
 	OfflineIntervalString string
+
+	SeverityMap = map[interface{}]string{
+		"sql":                        "high",
+		"sql_exception":              "low",
+		"eval":                       "critical",
+		"loadLibrary":                "medium",
+		"command":                    "critical",
+		"xxe":                        "high",
+		"directory":                  "medium",
+		"rename":                     "high",
+		"readFile":                   "medium",
+		"deleteFile":                 "medium",
+		"include":                    "high",
+		"writeFile":                  "high",
+		"ssrf":                       "medium",
+		"ognl":                       "critical",
+		"webdav":                     "high",
+		"fileUpload":                 "high",
+		"deserialization":            "critical",
+		"xss_echo":                   "low",
+		"xss_userinput":              "low",
+		"webshell_callable":          "critical",
+		"webshell_eval":              "critical",
+		"webshell_command":           "critical",
+		"webshell_file_put_contents": "critical",
+		"webshell_ld_preload":        "critical",
+		"response":                   "low",
+		"link":                       "medium",
+		"jndi":                       "critical",
+		"dns":                        "critical",
+	}
 )
 
 func init() {
@@ -83,6 +114,7 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed,
 			"failed to create app_id index for rasp collection", err)
 	}
+
 	index = &mgo.Index{
 		Key:        []string{"register_time"},
 		Unique:     false,
@@ -94,6 +126,19 @@ func init() {
 		tools.Panic(tools.ErrCodeMongoInitFailed,
 			"failed to create register_time index for rasp collection", err)
 	}
+
+	index = &mgo.Index{
+		Key:        []string{"last_heartbeat_time"},
+		Unique:     false,
+		Background: true,
+		Name:       "last_heartbeat_time",
+	}
+	err = mongo.CreateIndex(raspCollectionName, index)
+	if err != nil {
+		tools.Panic(tools.ErrCodeMongoInitFailed,
+			"failed to create last_heartbeat_time index for rasp collection", err)
+	}
+
 	// read offline interval
 	OfflineInterval = conf.AppConfig.OffLineInterval
 	// check offline Interval valid
@@ -104,7 +149,7 @@ func init() {
 	OfflineIntervalString = strconv.FormatInt(OfflineInterval, 10)
 }
 
-func UpsertRaspById(id string, rasp *Rasp) (error) {
+func UpsertRaspById(id string, rasp *Rasp) error {
 	return mongo.UpsertId(raspCollectionName, id, rasp)
 }
 
@@ -183,30 +228,40 @@ func FindRasp(selector *Rasp, page int, perpage int) (count int, result []*Rasp,
 		delete(bsonModel, "hostname")
 		realHostnameList := selector.HostNameList
 		bsonModel["hostname"] = bson.M{
-			"$in":   realHostnameList,
+			"$in": realHostnameList,
 		}
 		delete(bsonModel, "hostname_list")
 	}
 
 	if selector.Online != nil {
 		delete(bsonModel, "online")
+
+		// 暂时写死心跳超时时间: 360s
+		expire_at := time.Now().Unix() - 360
 		if *selector.Online {
-			bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+" + OfflineIntervalString + " >= " +
-				strconv.FormatInt(time.Now().Unix(), 10)
+			bsonModel["last_heartbeat_time"] = bson.M{"$gte": expire_at}
 		} else {
-			bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+" + OfflineIntervalString + " < " +
-				strconv.FormatInt(time.Now().Unix(), 10)
+			bsonModel["last_heartbeat_time"] = bson.M{"$lt": expire_at}
 		}
+
+		// if *selector.Online {
+		// 	bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+" + OfflineIntervalString + " >= " +
+		// 		strconv.FormatInt(time.Now().Unix(), 10)
+		// } else {
+		// 	bsonModel["$where"] = "this.last_heartbeat_time+this.heartbeat_interval+" + OfflineIntervalString + " < " +
+		// 		strconv.FormatInt(time.Now().Unix(), 10)
+		// }
 	}
 	count, err = mongo.FindAllBySort(raspCollectionName, bsonModel, perpage*(page-1), perpage,
 		&result, "-register_time")
 	if err == nil {
 		for _, rasp := range result {
-			if selector.Online != nil {
-				rasp.Online = selector.Online
-			} else {
-				HandleRasp(rasp)
-			}
+			HandleRasp(rasp)
+			// if selector.Online != nil {
+			// 	rasp.Online = selector.Online
+			// } else {
+			// 	HandleRasp(rasp)
+			// }
 		}
 	}
 	return
@@ -250,15 +305,15 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 			and = append(and, bson.M{"language": language})
 			matchCase["$and"] = and
 		}
-		Operations := []bson.M {
+		Operations := []bson.M{
 			{
-				"$project": bson.M {
-					"app_id": 1,
-					"version": 1,
-					"language": 1,
+				"$project": bson.M{
+					"app_id":              1,
+					"version":             1,
+					"language":            1,
 					"last_heartbeat_time": 1,
-					"heartbeat_interval": 1,
-					"onlineTime": bson.M {
+					"heartbeat_interval":  1,
+					"onlineTime": bson.M{
 						"$add": []string{"$last_heartbeat_time", "$heartbeat_interval"}}},
 			},
 			{
@@ -272,7 +327,7 @@ func FindRaspVersion(selector *Rasp) (result []*RecordCount, err error) {
 			},
 			{
 				"$match": bson.M{
-					"count": bson.M{"$gt": 0 }},
+					"count": bson.M{"$gt": 0}},
 			},
 			{
 				"$sort": bson.M{
@@ -341,7 +396,7 @@ func RemoveRaspBySelector(selector map[string]interface{}, appId string) (int, e
 	offlineWhere := ""
 	if _, ok := selector["expire_time"]; ok {
 		expireTime := strconv.FormatInt(int64(selector["expire_time"].(float64)), 10)
-		offlineWhere = "this.last_heartbeat_time+this.heartbeat_interval+" + OfflineIntervalString+ "+" + expireTime + "<" +
+		offlineWhere = "this.last_heartbeat_time+this.heartbeat_interval+" + OfflineIntervalString + "+" + expireTime + "<" +
 			strconv.FormatInt(time.Now().Unix(), 10)
 	} else {
 		offlineWhere = "this.last_heartbeat_time+this.heartbeat_interval+" + OfflineIntervalString + "< " +

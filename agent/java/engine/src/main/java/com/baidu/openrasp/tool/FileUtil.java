@@ -20,6 +20,8 @@ import com.baidu.openrasp.EngineBoot;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -76,5 +78,14 @@ public class FileUtil {
         }
         return baseDir;
     }
+
+    public static void copyStream(InputStream in, OutputStream out, int bufferSize) throws Exception {
+        byte[] buffer = new byte[bufferSize];
+        int len = 0;
+
+        while ((len = in.read(buffer)) > 0) {
+            out.write(buffer, 0, len);
+        }
+    } 
 
 }

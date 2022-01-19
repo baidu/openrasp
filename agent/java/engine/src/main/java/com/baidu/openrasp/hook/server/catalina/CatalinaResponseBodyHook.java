@@ -48,7 +48,7 @@ public class CatalinaResponseBodyHook extends ServerResponseBodyHook {
 
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(CatalinaResponseBodyHook.class, "getBuffer", "$0,$1", Object.class);
+        String src = getInvokeStaticSrc(CatalinaResponseBodyHook.class, "getBuffer", "$0,$1", Object.class, Object.class);
         insertBefore(ctClass, "doWrite", "(Lorg/apache/tomcat/util/buf/ByteChunk;)V", src);
         insertBefore(ctClass, "doWrite", "(Ljava/nio/ByteBuffer;)V", src);
     }
@@ -81,7 +81,7 @@ public class CatalinaResponseBodyHook extends ServerResponseBodyHook {
                     checkBody(params, isCheckXss, isCheckSensitive);
                 }
             } catch (Exception e) {
-                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detectde failed: " +
+                LogTool.traceHookWarn(ApplicationModel.getServerName() + " xss detection failed: " +
                         e.getMessage(), e);
             } finally {
                 HookHandler.enableBodyXssHook();
