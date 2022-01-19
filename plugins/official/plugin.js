@@ -1,4 +1,4 @@
-const plugin_version = '2021-1217-2000'
+const plugin_version = '2022-0119-1745'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -518,7 +518,7 @@ var algorithmConfig = {
         name:   '算法1 - 反序列化黑名单过滤',
         action: 'block',
 		clazz: [
-            'org.apache.commons.collections.functors.ChainedTransformer.transform',
+            'org.apache.commons.collections.functors.ChainedTransformer',
             'org.apache.commons.collections.functors.InvokerTransformer',
             'org.apache.commons.collections.functors.InstantiateTransformer',
             'org.apache.commons.collections4.functors.InvokerTransformer',
