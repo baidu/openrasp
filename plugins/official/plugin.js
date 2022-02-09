@@ -2067,7 +2067,7 @@ plugin.register('sql_exception', function(params, context) {
             }
         }
     }
-    else if (params.server = 'sqlite') {
+    else if (params.server == 'sqlite') {
         if (error_code == 1) {
             // 忽略大小写匹配
             if ( !/syntax/i.test(params.error_msg) && !  /malformed MATCH/i.test(params.error_msg)) {
