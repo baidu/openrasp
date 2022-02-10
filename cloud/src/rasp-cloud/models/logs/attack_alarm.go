@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego"
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 	"github.com/oschwald/geoip2-golang"
 	"net"
 	"net/url"
@@ -145,7 +145,7 @@ func AggregationAttackWithTime(startTime int64, endTime int64, interval string, 
 	timeAggrName := "aggr_time"
 	interceptAggrName := "request_sum"
 	timeAggr := elastic.NewDateHistogramAggregation().Field("event_time").TimeZone(timeZone).
-		Interval(interval).ExtendedBounds(startTime, endTime)
+		CalendarInterval(interval).ExtendedBounds(startTime, endTime)
 	interceptAggr := elastic.NewTermsAggregation().Field("intercept_state")
 	timeAggr.SubAggregation(interceptAggrName, interceptAggr)
 	timeQuery := elastic.NewRangeQuery("event_time").Gte(startTime).Lte(endTime)

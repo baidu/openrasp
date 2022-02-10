@@ -15,14 +15,14 @@
 package main
 
 import (
-	_ "rasp-cloud/environment"
-	_ "rasp-cloud/models"
-	_ "rasp-cloud/filter"
-	_ "rasp-cloud/controllers"
 	"github.com/astaxie/beego"
 	"rasp-cloud/controllers"
-	"rasp-cloud/routers"
+	_ "rasp-cloud/controllers"
 	"rasp-cloud/environment"
+	_ "rasp-cloud/environment"
+	_ "rasp-cloud/filter"
+	_ "rasp-cloud/models"
+	"rasp-cloud/routers"
 )
 
 func main() {

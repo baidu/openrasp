@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bouk/monkey"
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 	. "github.com/smartystreets/goconvey/convey"
 	"rasp-cloud/models/logs"
 	"rasp-cloud/tests/inits"

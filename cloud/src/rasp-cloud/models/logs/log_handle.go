@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 	"net/url"
 	"os"
 	"path"
@@ -365,12 +365,12 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 	if !isAttachAggr {
 		if queryResult != nil && queryResult.Hits != nil && queryResult.Hits.Hits != nil {
 			hits := queryResult.Hits.Hits
-			total = queryResult.Hits.TotalHits
+			total = queryResult.Hits.TotalHits.Value
 			result = make([]map[string]interface{}, len(hits))
 			for index, item := range hits {
 				result[index] = make(map[string]interface{})
 				var filterId string
-				err := json.Unmarshal(*item.Source, &result[index])
+				err := json.Unmarshal(item.Source, &result[index])
 				if err != nil {
 					return 0, nil, err
 				}
@@ -410,7 +410,7 @@ func SearchLogs(startTime int64, endTime int64, isAttachAggr bool, query map[str
 						topHit.Hits != nil && topHit.Hits.Hits != nil {
 						hits := topHit.Hits.Hits
 						if len(hits) > 0 {
-							err := json.Unmarshal(*hits[0].Source, &value)
+							err := json.Unmarshal(hits[0].Source, &value)
 							if err != nil {
 								return 0, nil, err
 							}
