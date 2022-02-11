@@ -34,7 +34,7 @@ var (
 	ElasticClient *elastic.Client
 	Version       string
 	ttlIndexes    = make(chan map[string]time.Duration, 1)
-	minEsVersion  = "5.6.0"
+	minEsVersion  = "7.0.0"
 	maxEsVersion  = "7.11.0"
 )
 
