@@ -287,7 +287,7 @@ func UpdateMapping(destIndex string, alias string, template string, ctx context.
 	}
 
 	if len(res.IndicesByAlias(alias)) == 0 {
-		return errors.New("alias: " + alias + "is not exist!")
+		return fmt.Errorf("alias: %s is not exist", alias)
 	}
 	if len(res.IndicesByAlias(alias)) > 2 {
 		return errors.New("find duplicate alias:" + fmt.Sprintf("%s", res.IndicesByAlias(alias)))
