@@ -35,7 +35,7 @@ var (
 	Version       string
 	ttlIndexes    = make(chan map[string]time.Duration, 1)
 	minEsVersion  = "7.0.0"
-	maxEsVersion  = "7.11.0"
+	maxEsVersion  = "9.0.0"
 )
 
 func init() {

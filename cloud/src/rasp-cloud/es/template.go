@@ -21,7 +21,7 @@ import (
 
 var attackAlarmTemplate = `
 		{
-			"template": "openrasp-attack-alarm-*",
+			"index_patterns": ["openrasp-attack-alarm-*"],
 			"aliases": {
 				"real-{index}": {}
 			},
@@ -202,7 +202,7 @@ var attackAlarmTemplate = `
 	`
 var policyAlarmTemplate = `
 		{
-			"template": "openrasp-policy-alarm-*",
+			"index_patterns": ["openrasp-policy-alarm-*"],
 			"aliases": {
 				"real-{index}": {}
 			},
@@ -281,7 +281,7 @@ var policyAlarmTemplate = `
 		}
 		`
 var errorAlarmTemplate = `{
-			"template": "openrasp-error-alarm-*",
+			"index_patterns": ["openrasp-error-alarm-*"],
 			"aliases": {
 				"real-{index}": {}
 			},
@@ -351,7 +351,7 @@ var errorAlarmTemplate = `{
 		}`
 var reportDataTemplate = `
 		{
-			"template": "openrasp-report-data-*",
+			"index_patterns": ["openrasp-report-data-*"],
 			"aliases": {
 				"real-{index}": {}
 			},
@@ -377,7 +377,7 @@ var reportDataTemplate = `
 
 var dependencyDataTemplate = `
 		{
-			"template": "openrasp-dependency-data-*",
+			"index_patterns": ["openrasp-dependency-data-*"],
 			"aliases": {
 				"real-{index}": {}
 			},
@@ -453,7 +453,7 @@ var dependencyDataTemplate = `
 
 var crashDataTemplate = `
 		{
-			"template": "openrasp-crash-alarm-*",
+			"index_patterns": ["openrasp-crash-alarm-*"],
 			"aliases": {
 				"real-{index}": {}
 			},
