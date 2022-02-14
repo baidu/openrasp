@@ -116,7 +116,7 @@ function build_vue()
     cd rasp-vue
 
     if [[ ! -z "$USE_TAOBAO_NPM" ]]; then
-        npm config set registry https://registry.npm.taobao.org
+        npm config set registry https://registry.npmmirror.com
     fi
 
     if [[ -z "$NO_NPM_INSTALL" ]]; then
