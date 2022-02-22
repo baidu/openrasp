@@ -606,12 +606,12 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 				if interval, ok := value.(float64); ok {
 					if interval < 60 || interval > 12*3600 {
 						o.ServeError(http.StatusBadRequest,
-							"the value's length of config item '"+key+"' must between 60 and 86400")
+							"the value's length of config item '"+key+"' must between 60 and 43200")
 					}
 				} else if interval, ok := value.(int); ok {
 					if interval < 60 || interval > 12*3600 {
 						o.ServeError(http.StatusBadRequest,
-							"the value's length of config item '"+key+"' must between 60 and 86400")
+							"the value's length of config item '"+key+"' must between 60 and 43200")
 					}
 				}
 			}
