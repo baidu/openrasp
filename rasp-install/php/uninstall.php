@@ -189,5 +189,5 @@ if (rmdir($root_dir)) {
 }
 
 
-major_tips('Uninstallation completed without errors, please restart PHP server to take effect.', TRUE); 
+major_tips('Uninstallation completed successfully, please restart PHP server to take effect.', TRUE); 
 ?>

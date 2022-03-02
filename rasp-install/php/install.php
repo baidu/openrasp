@@ -799,5 +799,5 @@ foreach ($openrasp_work_sub_folders as $key => $value) {
 	}
 }
 
-major_tips("Installation completed without errors, please restart PHP server to take effect.", TRUE);
+major_tips("Installation completed successfully, please restart PHP server to take effect.", TRUE);
 ?>

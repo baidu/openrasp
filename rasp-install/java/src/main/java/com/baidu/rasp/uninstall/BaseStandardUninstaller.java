@@ -67,7 +67,7 @@ public abstract class BaseStandardUninstaller implements Uninstaller {
         delRaspFolder(getInstallPath(serverRoot));
 
         if (!App.isAttach) {
-            System.out.println("\nUninstallation completed without errors.\nPlease restart application server to take effect.");
+            System.out.println("\nUninstallation completed successfully.\nPlease restart application server to take effect.");
         }
     }
 

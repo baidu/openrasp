@@ -122,7 +122,7 @@ public abstract class BaseStandardInstaller implements Installer {
                 new Attacher(App.pid + "", App.baseDir).doAttach(Attacher.MODE_INSTALL);
             }
 
-            System.out.println("\nInstallation completed without errors.");
+            System.out.println("\nInstallation completed successfully.");
             if (!App.isAttach) {
                 System.out.println("Please restart application server to take effect.");
             }
