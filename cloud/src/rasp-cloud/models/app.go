@@ -24,10 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/httplib"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"html/template"
 	"io/ioutil"
 	"math/rand"
@@ -45,6 +41,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/httplib"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type App struct {
@@ -62,6 +63,7 @@ type App struct {
 	AttackTypeAlarmConf *map[string][]string   `json:"attack_type_alarm_conf" bson:"attack_type_alarm_conf"`
 	EmailAlarmConf      EmailAlarmConf         `json:"email_alarm_conf" bson:"email_alarm_conf"`
 	DingAlarmConf       DingAlarmConf          `json:"ding_alarm_conf" bson:"ding_alarm_conf"`
+	DingRobotAlarmConf  DingRobotAlarmConf     `json:"ding_robot_alarm_conf" bson:"ding_robot_alarm_conf"`
 	HttpAlarmConf       HttpAlarmConf          `json:"http_alarm_conf" bson:"http_alarm_conf"`
 	AlgorithmConfig     map[string]interface{} `json:"algorithm_config"`
 	GeneralAlarmConf    GeneralAlarmConf       `json:"general_alarm_conf" bson:"general_alarm_conf"`
@@ -104,6 +106,11 @@ type DingAlarmConf struct {
 	CorpSecret string   `json:"corp_secret" bson:"corp_secret"`
 	RecvUser   []string `json:"recv_user" bson:"recv_user"`
 	RecvParty  []string `json:"recv_party" bson:"recv_party"`
+}
+
+type DingRobotAlarmConf struct {
+	Enable      bool   `json:"enable" bson:"enable"`
+	AccessToken string `json:"access_token" bson:"access_token"`
 }
 
 type HttpAlarmConf struct {
@@ -714,6 +721,9 @@ func PushAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isT
 		if (len(alarmType) == 0 || alarmType[0] == "ding") && app.DingAlarmConf.Enable {
 			PushDingAttackAlarm(app, total, alarms, isTest)
 		}
+		if (len(alarmType) == 0 || alarmType[0] == "ding") && app.DingRobotAlarmConf.Enable {
+			PushDingRobotAttackAlarm(app, total, alarms, isTest)
+		}
 		if (len(alarmType) == 0 || alarmType[0] == "email") && app.EmailAlarmConf.Enable {
 			PushEmailAttackAlarm(app, total, alarms, isTest)
 		}
@@ -1106,6 +1116,69 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 	return nil
 }
 
+func PushDingRobotAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {
+	var dingCong = app.DingRobotAlarmConf
+	if dingCong.AccessToken != "" {
+		// request := httplib.Get("https://oapi.dingtalk.com/gettoken")
+		// request.SetTimeout(10*time.Second, 10*time.Second)
+		// request.Param("corpid", dingCong.CorpId)
+		// request.Param("corpsecret", dingCong.CorpSecret)
+		// response, err := request.Response()
+		// errMsg := "failed to get ding ding token with corp id: " + dingCong.CorpId
+		// if err != nil {
+		// 	return handleError(errMsg + ", with error: " + err.Error())
+		// }
+		// if response.StatusCode != 200 {
+		// 	return handleError(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
+		// }
+		// var result dingResponse
+		// err = request.ToJSON(&result)
+		// if err != nil {
+		// 	return handleError(errMsg + ", with error: " + err.Error())
+		// }
+		// if result.ErrCode != 0 {
+		// 	return handleError(errMsg + ", with errmsg: " + result.ErrMsg)
+		// }
+		token := dingCong.AccessToken
+		body := make(map[string]interface{})
+		dingText := ""
+		if isTest {
+			dingText = "OpenRASP test message from app: " + app.Name + ", time: " + time.Now().Format(time.RFC3339)
+		} else {
+			panelUrl, _ := getPanelServerUrl()
+			if len(panelUrl) == 0 {
+				panelUrl = "http://127.0.0.1"
+			}
+			dingText = "时间：" + time.Now().Format(time.RFC3339) + "， 来自 OpenRAS 的报警\n共有 " +
+				strconv.FormatInt(total, 10) + " 条报警信息来自 APP：" + app.Name + "，详细信息：" +
+				panelUrl + "/#/events/" + app.Id
+		}
+		body["msgtype"] = "text"
+		body["text"] = map[string]string{"content": dingText}
+		request := httplib.Post("https://oapi.dingtalk.com/robot/send?access_token=" + token)
+		request.JSONBody(body)
+		request.SetTimeout(10*time.Second, 10*time.Second)
+		response, err := request.Response()
+		errMsg := "failed to push ding ding robot alarms "
+		if err != nil {
+			return handleError(errMsg + ", with error: " + err.Error())
+		}
+		if response.StatusCode != 200 {
+			return handleError(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
+		}
+		// err = request.ToJSON(&result)
+		// if err != nil {
+		// 	return handleError(errMsg + ", with error: " + err.Error())
+		// }
+		// if result.ErrCode != 0 {
+		// 	return handleError(errMsg + ", with errmsg: " + result.ErrMsg)
+		// }
+	} else {
+		return handleError("failed to send ding ding alarm: invalid ding ding alarm conf")
+	}
+	beego.Debug("succeed in pushing ding ding alarm for app: " + app.Name)
+	return nil
+}
 func PushKafkaAttackAlarm(app *App, alarms []map[string]interface{}, isTest bool) error {
 	var kafkaConf = app.KafkaConf
 	addrs := strings.Split(kafkaConf.KafkaAddr, ",")

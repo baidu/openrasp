@@ -217,6 +217,40 @@
       </div>
     </div>
 
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          钉钉机器人
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">
+            Access Token 
+          </label>
+          <input v-model.trim="data.ding_robot_alarm_conf.access_token" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="custom-switch">
+            <input v-model="data.ding_robot_alarm_conf.enable" type="checkbox" checked="data.ding_robot_alarm_conf.enable" class="custom-switch-input">
+            <span class="custom-switch-indicator" />
+            <span class="custom-switch-description">
+              开启钉钉机器人推送
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="submit" class="btn btn-primary" @click="saveSettings('dingrobot')">
+          保存
+        </button>
+        <button type="submit" class="btn btn-info pull-right" @click="testSettings('dingrobot')">
+          发送测试数据
+        </button>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
@@ -441,7 +475,7 @@ export default {
           self.sendMethods[name] = {}
         }
         
-        ['email', 'ding', 'http'].forEach(function (key) {
+        ['email', 'ding','dingrobot', 'http'].forEach(function (key) {
           self.sendMethods[name][key] = value
         })
       })
@@ -513,6 +547,10 @@ export default {
             body.ding_alarm_conf.recv_party = body.ding_alarm_conf.recv_party.split(/\s*[,;]\s*/).filter(item => !!item)
           }
 
+          msg = '钉钉报警设置保存成功'
+          break
+        case 'dingrobot':
+          body['ding_robot_alarm_conf'] = this.data.ding_robot_alarm_conf
           msg = '钉钉报警设置保存成功'
           break
         case 'http':
