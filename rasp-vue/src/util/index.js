@@ -151,8 +151,15 @@ export var status_types = {
 }
 
 // 去除空格、换行，按照指定的分隔符分隔，最后删掉 null/undefined/空字符串
+// 去除空格、换行，按照指定的分隔符分隔，最后删掉 null/undefined/空字符串
 export function trimSplit(data, sep) {
-  var tmp = data.replace(/\s/g, '').split(sep)
+  let tmp
+  if (sep === '\n') { // 对于使用换行符进行分割的字符串，需要先 split，再去除空格
+    tmp = data.split(sep).map(i => i.replace(/\s/g, ''))
+  } else {
+    tmp = data.replace(/\s/g, '').split(sep)
+  }
+
   return tmp.filter(a => a)
 }
 
@@ -182,7 +189,7 @@ export function getDefaultConfig() {
       recv_addr: []
     },
     kafka_alarm_conf: {
-      
+
     },
     general_alarm_conf: {
 
