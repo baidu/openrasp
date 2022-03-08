@@ -1119,26 +1119,6 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
 func PushDingRobotAttackAlarm(app *App, total int64, alarms []map[string]interface{}, isTest bool) error {
 	var dingCong = app.DingRobotAlarmConf
 	if dingCong.AccessToken != "" {
-		// request := httplib.Get("https://oapi.dingtalk.com/gettoken")
-		// request.SetTimeout(10*time.Second, 10*time.Second)
-		// request.Param("corpid", dingCong.CorpId)
-		// request.Param("corpsecret", dingCong.CorpSecret)
-		// response, err := request.Response()
-		// errMsg := "failed to get ding ding token with corp id: " + dingCong.CorpId
-		// if err != nil {
-		// 	return handleError(errMsg + ", with error: " + err.Error())
-		// }
-		// if response.StatusCode != 200 {
-		// 	return handleError(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
-		// }
-		// var result dingResponse
-		// err = request.ToJSON(&result)
-		// if err != nil {
-		// 	return handleError(errMsg + ", with error: " + err.Error())
-		// }
-		// if result.ErrCode != 0 {
-		// 	return handleError(errMsg + ", with errmsg: " + result.ErrMsg)
-		// }
 		token := dingCong.AccessToken
 		body := make(map[string]interface{})
 		dingText := ""
@@ -1166,13 +1146,6 @@ func PushDingRobotAttackAlarm(app *App, total int64, alarms []map[string]interfa
 		if response.StatusCode != 200 {
 			return handleError(errMsg + ", with status code: " + strconv.Itoa(response.StatusCode))
 		}
-		// err = request.ToJSON(&result)
-		// if err != nil {
-		// 	return handleError(errMsg + ", with error: " + err.Error())
-		// }
-		// if result.ErrCode != 0 {
-		// 	return handleError(errMsg + ", with errmsg: " + result.ErrMsg)
-		// }
 	} else {
 		return handleError("failed to send ding ding alarm: invalid ding ding alarm conf")
 	}
