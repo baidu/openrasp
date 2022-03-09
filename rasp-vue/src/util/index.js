@@ -150,17 +150,10 @@ export var status_types = {
   // ignore: '忽略放行'
 }
 
-// 去除空格、换行，按照指定的分隔符分隔，最后删掉 null/undefined/空字符串
-// 去除空格、换行，按照指定的分隔符分隔，最后删掉 null/undefined/空字符串
+// 按照指定的分隔符分隔，最后删掉 null/undefined/空字符串
 export function trimSplit(data, sep) {
-  let tmp
-  if (sep === '\n') { // 对于使用换行符进行分割的字符串，需要先 split，再去除空格
-    tmp = data.split(sep).map(i => i.replace(/\s/g, ''))
-  } else {
-    tmp = data.replace(/\s/g, '').split(sep)
-  }
-
-  return tmp.filter(a => a)
+  let tmp = data.split(sep)
+  return tmp.filter(a => a.trim())
 }
 
 export function convertToInt(data) {
