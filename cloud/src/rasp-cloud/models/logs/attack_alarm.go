@@ -56,6 +56,7 @@ var (
 		"writeFile":                  "任意文件写入",
 		"ssrf":                       "SSRF 服务端请求伪造",
 		"ognl":                       "OGNL 代码执行",
+		"spel":                       "SPEL 代码执行",
 		"webdav":                     "任意文件上传 (PUT)",
 		"fileUpload":                 "任意文件上传",
 		"deserialization":            "Transformer 反序列化",

@@ -219,7 +219,16 @@
             <p>
                 {{ data.attack_params.expression }}
             </p>
-        </div>   
+        </div>
+
+        <div v-if="data.attack_type == 'spel'">
+            <div class="h6">
+                要执行的SPEL表达式
+            </div>
+            <p>
+                {{ data.attack_params.expression }}
+            </p>
+        </div>
 
         <div v-if="data.attack_type == 'deserialization'">
             <div class="h6">
