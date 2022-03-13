@@ -203,6 +203,22 @@ public enum ConfigItem {
         }
     }),
 
+    SPEL_EXPRESSION_MIN_LENGTH(new ConfigSetter<String>("spel.expression.minlength") {
+        @Override
+        public synchronized void setValue(String spelMinLength) {
+            int value = Integer.parseInt(spelMinLength);
+            if (value <= 0) {
+                throw new ConfigLoadException(itemName + " must be greater than 0");
+            }
+            Config.getConfig().spelMinLength = value;
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "30";
+        }
+    }),
+
     SQL_SLOW_QUERY_MIN_ROWS(new ConfigSetter<String>("sql.slowquery.min_rows") {
         @Override
         public synchronized void setValue(String sqlSlowQueryMinCount) {

@@ -76,6 +76,7 @@ public class Config extends FileScanListener {
     String injectUrlPrefix;
     String requestParamEncoding;
     int ognlMinLength;
+    int spelMinLength;
     int blockStatusCode;
     int debugLevel;
     JsonObject algorithmConfig;
@@ -508,6 +509,15 @@ public class Config extends FileScanListener {
      */
     public int getOgnlMinLength() {
         return ognlMinLength;
+    }
+
+    /**
+     * 获取允许传入插件的spel表达式的最短长度
+     *
+     * @return spel表达式最短长度
+     */
+    public int getSpelMinLength() {
+        return spelMinLength;
     }
 
     /**
