@@ -3,7 +3,7 @@ const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
 /*
- * Copyright 2017-2021 Baidu Inc.
+ * Copyright 2017-2022 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
