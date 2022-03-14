@@ -604,12 +604,12 @@ func (o *AppController) validateAppConfig(config map[string]interface{}) map[str
 		if generalConfigTemplate[key] != nil && value != nil {
 			if key == "dependency_check.interval" || key == "fileleak_scan.interval" {
 				if interval, ok := value.(float64); ok {
-					if interval < 60 || interval > 12*3600 {
+					if interval < 60 || interval > 24*3600 {
 						o.ServeError(http.StatusBadRequest,
 							"the value's length of config item '"+key+"' must between 60 and 86400")
 					}
 				} else if interval, ok := value.(int); ok {
-					if interval < 60 || interval > 12*3600 {
+					if interval < 60 || interval > 24*3600 {
 						o.ServeError(http.StatusBadRequest,
 							"the value's length of config item '"+key+"' must between 60 and 86400")
 					}
