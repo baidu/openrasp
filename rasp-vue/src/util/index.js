@@ -127,6 +127,7 @@ export var attack_types = {
   ssrf: 'SSRF 请求伪造',
   ssrfRedirect: 'SSRF 请求伪造(重定向后)',
   ognl: 'OGNL 代码执行',
+  spel: 'SPEL 代码执行',
   webdav: '任意文件上传 (PUT)',
   fileUpload: '任意文件上传',
   deserialization: '反序列化攻击',

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 Baidu Inc.
+ * Copyright 2017-2022 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -195,6 +195,22 @@ public enum ConfigItem {
                 throw new ConfigLoadException(itemName + " must be greater than 0");
             }
             Config.getConfig().ognlMinLength = value;
+        }
+
+        @Override
+        public String getDefaultValue() {
+            return "30";
+        }
+    }),
+
+    SPEL_EXPRESSION_MIN_LENGTH(new ConfigSetter<String>("spel.expression.minlength") {
+        @Override
+        public synchronized void setValue(String spelMinLength) {
+            int value = Integer.parseInt(spelMinLength);
+            if (value <= 0) {
+                throw new ConfigLoadException(itemName + " must be greater than 0");
+            }
+            Config.getConfig().spelMinLength = value;
         }
 
         @Override

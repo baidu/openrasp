@@ -111,6 +111,14 @@
             </div>
           </div>
 
+          <div v-if="key == 'spel_blacklist'">
+            <label>SPEL语句黑名单（一行一个）</label>
+            <div class="form-group">
+              <textarea type="text" style="white-space: nowrap" autocorrect="off" rows="5"
+               v-model.trim="spel_blacklist_concat" class="form-control"></textarea>
+            </div>
+          </div>
+
           <div v-if="key == 'command_common'">
             <label>渗透命令探针 - 正则表达式</label>
             <div v-bind:class="{'form-group': true, 'has-error': command_common_error}">
@@ -174,6 +182,7 @@ export default {
       deserialization_blacklist_concat: '',
       webshell_ld_preload_concat: '',
       ognl_blacklist_concat: '',
+      spel_blacklist_concat: '',
       sql_policy_keys: [
         {
           key:   'stacked_query',
@@ -296,6 +305,10 @@ export default {
         this.ognl_blacklist_concat = this.data.expression.join('\n')
       }
 
+      if (this.key == 'spel_blacklist') {
+        this.spel_blacklist_concat = this.data.expression.join('\n')
+      }
+
       $('#algorithmConfigModal').modal({
         // backdrop: 'static',
         // keyboard: false
@@ -312,6 +325,10 @@ export default {
 
       if (this.key == 'ognl_blacklist') {
         this.data.expression = trimSplit(this.ognl_blacklist_concat, '\n')
+      }
+
+      if (this.key == 'spel_blacklist') {
+        this.data.expression = trimSplit(this.spel_blacklist_concat, '\n')
       }
 
       if (this.key.endsWith('_protocol')) {

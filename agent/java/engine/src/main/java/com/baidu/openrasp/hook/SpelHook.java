@@ -27,11 +27,8 @@ import java.util.HashMap;
 
 import java.io.IOException;
 
-/**
- * Created by tyy on 6/21/17.
- */
 @HookAnnotation
-public class JNDIHook extends AbstractClassHook {
+public class SpelHook extends AbstractClassHook {
     /**
      * (none-javadoc)
      *
@@ -39,7 +36,7 @@ public class JNDIHook extends AbstractClassHook {
      */
     @Override
     public String getType() {
-        return "jndi";
+        return "spel";
     }
 
     /**
@@ -49,7 +46,7 @@ public class JNDIHook extends AbstractClassHook {
      */
     @Override
     public boolean isClassMatched(String className) {
-        return "com/sun/jndi/toolkit/url/GenericURLContext".equals(className);
+        return "org/springframework/expression/spel/standard/SpelExpressionParser".equals(className);
     }
 
     /**
@@ -59,19 +56,22 @@ public class JNDIHook extends AbstractClassHook {
      */
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
-        String src = getInvokeStaticSrc(JNDIHook.class, "checkJNDILookup", "$1", String.class);
-        insertBefore(ctClass, "lookup", "(Ljava/lang/String;)Ljava/lang/Object;", src);
+        String src = getInvokeStaticSrc(SpelHook.class, "checkSpelExpression", "$1", String.class);
+        insertAfter(ctClass, "doParseExpression", "(Ljava/lang/String;Lorg/springframework/expression/ParserContext;)Lorg/springframework/expression/spel/standard/SpelExpression;", src);
     }
 
     /**
+     * spring框架spel语句解析hook点，解析失败的spel语句不会进入检测点
      *
-     * @param name jndi连接地址
+     * @param object spel语句
      */
-    public static void checkJNDILookup(String name) {
-        if (name != null) {
-            HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("name", name);
-            HookHandler.doCheckWithoutRequest(CheckParameter.Type.JNDI, params);
+    public static void checkSpelExpression(String expression) {
+        if (expression != null) {
+            if (expression.length() >= Config.getConfig().getSpelMinLength()) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                params.put("expression", expression);
+                HookHandler.doCheck(CheckParameter.Type.SPEL, params);
+            }
         }
     }
 

@@ -85,6 +85,7 @@ var (
 		"writeFile":                  "high",
 		"ssrf":                       "medium",
 		"ognl":                       "critical",
+		"spel":                       "critical",
 		"webdav":                     "high",
 		"fileUpload":                 "high",
 		"deserialization":            "critical",

@@ -1,19 +1,19 @@
 package test
 
 import (
-	"testing"
-	_ "rasp-cloud/tests/start"
-	"rasp-cloud/models"
-	"time"
-	"rasp-cloud/tests/inits"
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/bouk/monkey"
 	"github.com/pkg/errors"
-	"rasp-cloud/tests/start"
-	"rasp-cloud/mongo"
+	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/mgo.v2"
-	"rasp-cloud/models/logs"
 	"gopkg.in/mgo.v2/bson"
+	"rasp-cloud/models"
+	"rasp-cloud/models/logs"
+	"rasp-cloud/mongo"
+	"rasp-cloud/tests/inits"
+	"rasp-cloud/tests/start"
+	_ "rasp-cloud/tests/start"
+	"testing"
+	"time"
 )
 
 func getValidApp() map[string]interface{} {
@@ -46,14 +46,14 @@ func getValidApp() map[string]interface{} {
 			"recv_addr": []string{"http://172.23.22.14:8088/upload"},
 		},
 		"attack_type_alarm_conf": map[string]interface{}{
-			"sql":[]string{"email","ding","http"},
-			"xxe":[]string{"email"},
+			"sql": []string{"email", "ding", "http"},
+			"xxe": []string{"email"},
 		},
 		"kafka_conf": map[string]interface{}{
-			"kafka_addr":[]string{"127.0.0.1:8090"},
-			"kafka_user":"",
-			"kafka_pwd":"",
-			"kafka_enable":true,
+			"kafka_addr":   []string{"127.0.0.1:8090"},
+			"kafka_user":   "",
+			"kafka_pwd":    "",
+			"kafka_enable": true,
 		},
 	}
 }
@@ -72,7 +72,7 @@ func TestHandleApp(t *testing.T) {
 		Convey("app name can not be empty", func() {
 			app := getValidApp()
 			app["attack_type_alarm_conf"] = map[string]interface{}{
-				"":[]string{"email","ding","http"},
+				"": []string{"email", "ding", "http"},
 			}
 			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
 			So(r.Status, ShouldBeGreaterThan, 0)
@@ -81,7 +81,7 @@ func TestHandleApp(t *testing.T) {
 		Convey("when the length of attack type can not be greater than 128", func() {
 			app := getValidApp()
 			app["attack_type_alarm_conf"] = map[string]interface{}{
-				inits.GetLongString(129): []string{"email","ding","http"},
+				inits.GetLongString(129): []string{"email", "ding", "http"},
 			}
 			r := inits.GetResponse("POST", "/v1/api/app", inits.GetJson(app))
 			So(r.Status, ShouldBeGreaterThan, 0)
@@ -400,17 +400,18 @@ func TestConfigGenerate(t *testing.T) {
 			r := inits.GetResponse("POST", "/v1/api/app/general/config", inits.GetJson(map[string]interface{}{
 				"app_id": start.TestApp.Id,
 				"config": map[string]interface{}{
-					"clientip.header": "ClientIP",
-					"block.status_code": 403,
-					"body.maxbytes": 4096,
+					"clientip.header":           "ClientIP",
+					"block.status_code":         403,
+					"body.maxbytes":             4096,
 					"ognl.expression.minlength": 30,
-					"plugin.filter": true,
-					"plugin.maxstack": 100,
-					"plugin.timeout.millis": 100,
-					"syslog.tag":    "OpenRASP",
-					"syslog.url":     "",
-					"syslog.facility":  1,
-					"syslog.enable":  false,
+					"spel.expression.minlength": 30,
+					"plugin.filter":             true,
+					"plugin.maxstack":           100,
+					"plugin.timeout.millis":     100,
+					"syslog.tag":                "OpenRASP",
+					"syslog.url":                "",
+					"syslog.facility":           1,
+					"syslog.enable":             false,
 				},
 			}))
 			So(r.Status, ShouldEqual, 0)
@@ -526,19 +527,19 @@ func TestConfigWhitelist(t *testing.T) {
 						},
 					},
 					{
-						"url":"rasp.baidu.com/phpmyadmin/",
+						"url": "rasp.baidu.com/phpmyadmin/",
 						"hook": map[string]bool{
-							"ognl":true,
-							"readFile":true,
-							"writeFile":true,
+							"ognl":      true,
+							"readFile":  true,
+							"writeFile": true,
 						},
 					},
 					{
-						"url":"rasp.baidu.com/phpmyadmin/",
+						"url": "rasp.baidu.com/phpmyadmin/",
 						"hook": map[string]bool{
-							"ognl":true,
-							"readFile":true,
-							"writeFile":true,
+							"ognl":      true,
+							"readFile":  true,
+							"writeFile": true,
 						},
 					},
 				},
@@ -681,8 +682,8 @@ func TestConfigAlarm(t *testing.T) {
 					"recv_addr": []string{"http://172.23.22.14:8088/upload"},
 				},
 				"attack_type_alarm_conf": map[string]interface{}{
-					"sql":[]string{"email","ding","http"},
-					"xxe":[]string{"email"},
+					"sql": []string{"email", "ding", "http"},
+					"xxe": []string{"email"},
 				},
 			}))
 			So(r.Status, ShouldEqual, 0)
@@ -1658,9 +1659,9 @@ func TestUpgradeApp(t *testing.T) {
 	Convey("Subject: Test App Upgrade Api\n", t, func() {
 		apps := make([]*models.App, 0)
 		apps = append(apps, &models.App{
-			Id:                   start.TestApp.Id,
-			GeneralConfig:        map[string]interface{}{
-				"body.maxbytes":             4096,
+			Id: start.TestApp.Id,
+			GeneralConfig: map[string]interface{}{
+				"body.maxbytes": 4096,
 			},
 		})
 		Convey("when param is valid", func() {

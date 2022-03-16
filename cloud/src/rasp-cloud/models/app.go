@@ -157,6 +157,7 @@ var (
 		"lru.compare_enable":        false,
 		"plugin.maxstack":           100,
 		"ognl.expression.minlength": 30,
+		"spel.expression.minlength": 30,
 		"log.maxstack":              50,
 		"log.maxburst":              100,
 		"log.maxbackup":             30,

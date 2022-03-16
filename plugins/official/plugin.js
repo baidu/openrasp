@@ -1,9 +1,9 @@
-const plugin_version = '2022-0119-1745'
+const plugin_version = '2022-0313-2100'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
 /*
- * Copyright 2017-2021 Baidu Inc.
+ * Copyright 2017-2022 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -465,6 +465,17 @@ var algorithmConfig = {
             'java.io.File',
             'javax.script.ScriptEngineManager',
             'com.opensymphony.xwork2.ActionContext'
+        ]
+    },
+
+    // SPEL 代码执行漏洞
+    spel_blacklist: {
+        name:   '算法1 - SPEL语句黑名单',
+        action: 'block',
+        expression: [
+            'java.lang.Runtime',
+            'java.lang.ProcessBuilder',
+            'javax.script.ScriptEngineManager',
         ]
     },
 
@@ -1615,6 +1626,11 @@ if (algorithmConfig.meta.log_event) {
 
     plugin.register('ognl', function (params, context) {
         plugin.log('Evaluating OGNL expression: ' + params.expression)
+        return clean
+    })
+
+    plugin.register('spel', function (params, context) {
+        plugin.log('Evaluating SPEL expression: ' + params.expression)
         return clean
     })
 
@@ -2997,6 +3013,29 @@ if (algorithmConfig.ognl_blacklist.action != 'ignore')
                     message:    _("OGNL exec - Trying to exploit a OGNL expression vulnerability"),
                     confidence: 100,
                     algorithm:  'ognl_blacklist'
+                }
+            }
+
+        }
+
+        return clean
+    })
+}
+
+if (algorithmConfig.spel_blacklist.action != 'ignore')
+{
+    // 默认情况下，当SPEL表达式长度超过30才会进入检测点，此长度可配置
+    plugin.register('spel', function (params, context) {
+        var spelExpression = params.expression
+        for (var index in algorithmConfig.spel_blacklist.expression)
+        {
+            if (spelExpression.indexOf(algorithmConfig.spel_blacklist.expression[index]) > -1)
+            {
+                return {
+                    action:     algorithmConfig.spel_blacklist.action,
+                    message:    _("SPEL exec - Trying to exploit a SPEL expression vulnerability"),
+                    confidence: 100,
+                    algorithm:  'spel_blacklist'
                 }
             }
 

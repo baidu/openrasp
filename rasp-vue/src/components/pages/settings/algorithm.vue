@@ -228,6 +228,7 @@ export default {
         'xxe_disable_entity': true,
         'deserialization_blacklist': true,
         'ognl_blacklist': true,
+        'spel_blacklist': true,
         'webshell_ld_preload': true
       },
       browser_headers: browser_headers

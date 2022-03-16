@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 Baidu Inc.
+ * Copyright 2017-2022 Baidu Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ public class CheckParameter {
         LINK("link", new V8AttackChecker(), 1 << 24),
         JNDI("jndi", new V8AttackChecker(), 1 << 25),
         DNS("dns", new V8AttackChecker(), 1 << 26),
-
+        SPEL("spel", new V8AttackChecker(), 1 << 27),
 
         // java本地检测
         XSS_USERINPUT("xss_userinput", new XssChecker(), 1 << 16),
