@@ -65,10 +65,10 @@ static void handle_mongo_options(HashTable *ht, openrasp::data::SqlConnectionObj
 
 static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    char *uri_string = NULL;
+    char *uri_string = nullptr;
     size_t uri_string_len = 0;
-    zval *options = NULL;
-    zval *driverOptions = NULL;
+    zval *options = nullptr;
+    zval *driverOptions = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s!a/!a/!", &uri_string, &uri_string_len, &options, &driverOptions) == FAILURE)
     {
@@ -128,7 +128,7 @@ static void mongodb_plugin_check(zval *query, const std::string &classname, cons
 
 void pre_mongodb_0_driver_0_bulkwrite_delete_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *zquery, *zoptions = NULL;
+    zval *zquery = nullptr, *zoptions = nullptr;
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "A|a!", &zquery, &zoptions) == FAILURE)
     {
         return;
@@ -138,7 +138,7 @@ void pre_mongodb_0_driver_0_bulkwrite_delete_MONGO(OPENRASP_INTERNAL_FUNCTION_PA
 
 void pre_mongodb_0_driver_0_bulkwrite_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *zquery, *zupdate, *zoptions = NULL;
+    zval *zquery = nullptr, *zupdate = nullptr, *zoptions = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "AA|a!", &zquery, &zupdate, &zoptions) == FAILURE)
     {
@@ -150,8 +150,8 @@ void pre_mongodb_0_driver_0_bulkwrite_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PA
 
 void pre_mongodb_0_driver_0_query___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *filter;
-    zval *options = NULL;
+    zval *filter = nullptr;
+    zval *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "A|a!", &filter, &options) == FAILURE)
     {
@@ -162,8 +162,8 @@ void pre_mongodb_0_driver_0_query___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_P
 
 void pre_mongodb_0_driver_0_command___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *document;
-    zval *options = NULL;
+    zval *document = nullptr;
+    zval *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "A|a!", &document, &options) == FAILURE)
     {
