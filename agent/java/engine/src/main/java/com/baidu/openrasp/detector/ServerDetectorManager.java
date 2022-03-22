@@ -46,7 +46,9 @@ public class ServerDetectorManager {
         detectors.add(new TongWebDetector());
         detectors.add(new TongWeb7Detector());
         detectors.add(new BESDetector());
-
+        // add by codff start
+        detectors.add(new InforSuiteASDetector());
+        // add by codff end
     }
 
     public static ServerDetectorManager getInstance() {

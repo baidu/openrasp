@@ -111,6 +111,11 @@ public abstract class ServerDetector {
             } else if ("bes".equals(serverName)) {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_BES, CheckParameter.EMPTY_MAP);
             }
+            // add by codff start
+            else if ("inforsuiteas".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_INFORSUITEAS, CheckParameter.EMPTY_MAP);
+            }
+            // add by codff end
         } catch (Throwable t) {
             LogTool.warn(ErrorType.HOOK_ERROR, "failed to do server policy checking: " + t.getMessage(), t);
         }
