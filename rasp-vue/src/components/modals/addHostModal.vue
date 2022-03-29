@@ -92,10 +92,11 @@ openrasp.heartbeat_interval=90</pre>
                   文档
                 </div>
                 <h4>Java Tomcat 容器示例</h4>
+                <p>这里假设tomcat安装路径为/tomcat，请注意修正Dockerfile</p>
                 <pre>ADD https://packages.baidu.com/app/openrasp/release/{{rasp_version}}/rasp-java.tar.gz /tmp
 RUN cd /tmp \
     && tar -xf rasp-java.tar.* \
-    && /jdk/bin/java -jar rasp-*/RaspInstall.jar -install /tomcat/ -heartbeat 90 -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} \
+    && /jdk/bin/java -jar rasp-*/RaspInstall.jar -install <font color="red">/tomcat</font> -heartbeat 90 -appid {{ current_app.id }} -appsecret {{ current_app.secret }} -backendurl {{ agent_urls[agent_url_id] }} \
     && rm -rf rasp-*
 # 对于Alpine Linux容器，需要安装系统依赖
 # RUN apk add --no-cache libcurl libstdc++</pre>
