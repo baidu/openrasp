@@ -936,7 +936,8 @@ function validate_stack_java(stacks) {
         'bsh.Reflect.invokeMethod':                                                     "Using BeanShell library",
         'jdk.scripting.nashorn/jdk.nashorn.internal.runtime.ScriptFunction.invoke':     "Using Nashorn engine",
         'org.apache.shiro.io.DefaultSerializer.deserialize':                            "Using Shiro framework (DefaultSerializer)",
-        'com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase.readObject':                 "Using C3p0 library"
+        'com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase.readObject':                 "Using C3p0 library",
+        'org.springframework.util.SerializationUtils.deserialize':                      "Using springframework deserialize"
     }
 
     var userCode = false, reachedInvoke = false, i = 0, message = undefined
