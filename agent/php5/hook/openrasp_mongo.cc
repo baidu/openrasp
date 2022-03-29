@@ -73,7 +73,7 @@ static bool init_mongo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::
     char *server = 0;
     int server_len = 0;
     zval *options = 0;
-    zval *zdoptions = NULL;
+    zval *zdoptions = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!a!/a!/", &server, &server_len, &options, &zdoptions) == FAILURE)
     {
@@ -93,10 +93,10 @@ static bool init_mongo_connection_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::
 
 static bool init_mongodb_connection_entry(INTERNAL_FUNCTION_PARAMETERS, openrasp::data::SqlConnectionObject &sql_connection_obj)
 {
-    char *uri_string = NULL;
+    char *uri_string = nullptr;
     int uri_string_len = 0;
-    zval *options = NULL;
-    zval *driverOptions = NULL;
+    zval *options = nullptr;
+    zval *driverOptions = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!a/!a/!", &uri_string, &uri_string_len, &options, &driverOptions) == FAILURE)
     {
@@ -121,16 +121,16 @@ static void mongo_plugin_check(const std::string &query_str, const std::string &
 //for mongo extension
 static void mongo_plugin_check(zval *query, const std::string &classname, const std::string &method TSRMLS_DC)
 {
-    std::string query_json;
+    if (nullptr == query)
+    {
+        return;
+    }
+    // 当前仅处理array
     if (Z_TYPE_P(query) == IS_ARRAY)
     {
-        query_json = json_encode_from_zval(query TSRMLS_CC);
+        std::string query_json = json_encode_from_zval(query TSRMLS_CC);
+        mongo_plugin_check(query_json, classname, method TSRMLS_CC);
     }
-    else if (Z_TYPE_P(query) == IS_STRING)
-    {
-        query_json = std::string(Z_STRVAL_P(query));
-    }
-    mongo_plugin_check(query_json, classname, method TSRMLS_CC);
 }
 
 //for mongodb extension
@@ -176,7 +176,7 @@ static void mongodb_plugin_check(zval *query, const std::string &classname, cons
 
 void pre_mongocollection_find_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *query = 0, *fields = 0;
+    zval *query = nullptr, *fields = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zz", &query, &fields) == FAILURE)
     {
@@ -188,7 +188,7 @@ void pre_mongocollection_find_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_mongocollection_findone_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *query = NULL, *fields = NULL, *options = NULL;
+    zval *query = nullptr, *fields = nullptr, *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zza", &query, &fields, &options) == FAILURE)
     {
@@ -200,7 +200,7 @@ void pre_mongocollection_findone_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_mongocollection_findandmodify_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *query = NULL, *update = NULL, *fields = NULL, *options = NULL;
+    zval *query = nullptr, *update = nullptr, *fields = nullptr, *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|zza", &query, &update, &fields, &options) == FAILURE)
     {
@@ -212,7 +212,7 @@ void pre_mongocollection_findandmodify_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETE
 
 void pre_mongocollection_remove_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *criteria = 0, *options = 0;
+    zval *criteria = nullptr, *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|za/", &criteria, &options) == FAILURE)
     {
@@ -224,7 +224,7 @@ void pre_mongocollection_remove_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_mongocollection_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *criteria, *newobj, *options = 0;
+    zval *criteria = nullptr, *newobj = nullptr, *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz|a/", &criteria, &newobj, &options) == FAILURE)
     {
@@ -236,7 +236,7 @@ void pre_mongocollection_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_mongodb_execute_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *code = NULL, *args = NULL, *options = NULL;
+    zval *code = nullptr, *args = nullptr, *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|aa", &code, &args, &options) == FAILURE)
     {
@@ -251,9 +251,9 @@ void pre_mongodb_execute_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_mongocode___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    char *code;
+    char *code = nullptr;
     int code_len;
-    zval *zcope = NULL;
+    zval *zcope = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|a/", &code, &code_len, &zcope) == FAILURE)
     {
@@ -268,7 +268,7 @@ void pre_mongocode___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 
 void pre_mongodb_0_driver_0_bulkwrite_delete_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *zquery, *zoptions = NULL;
+    zval *zquery = nullptr, *zoptions = nullptr;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "A|a!", &zquery, &zoptions) == FAILURE)
     {
         return;
@@ -278,7 +278,7 @@ void pre_mongodb_0_driver_0_bulkwrite_delete_MONGO(OPENRASP_INTERNAL_FUNCTION_PA
 
 void pre_mongodb_0_driver_0_bulkwrite_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *zquery, *zupdate, *zoptions = NULL;
+    zval *zquery = nullptr, *zupdate = nullptr, *zoptions = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "AA|a!", &zquery, &zupdate, &zoptions) == FAILURE)
     {
@@ -291,7 +291,7 @@ void pre_mongodb_0_driver_0_bulkwrite_update_MONGO(OPENRASP_INTERNAL_FUNCTION_PA
 void pre_mongodb_0_driver_0_query___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
     zval *filter;
-    zval *options = NULL;
+    zval *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "A|a!", &filter, &options) == FAILURE)
     {
@@ -302,8 +302,8 @@ void pre_mongodb_0_driver_0_query___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_P
 
 void pre_mongodb_0_driver_0_command___construct_MONGO(OPENRASP_INTERNAL_FUNCTION_PARAMETERS)
 {
-    zval *document;
-    zval *options = NULL;
+    zval *document= nullptr;
+    zval *options = nullptr;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "A|a!", &document, &options) == FAILURE)
     {
