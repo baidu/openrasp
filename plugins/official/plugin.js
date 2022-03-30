@@ -1,4 +1,4 @@
-const plugin_version = '2022-0313-2100'
+const plugin_version = '2022-0330-2000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1605,17 +1605,17 @@ if (algorithmConfig.meta.log_event) {
     })
 
     plugin.register('fileUpload', function (params, context) {
-        plugin.log('File upload: ' + params.filename)
+        plugin.log('File upload: ' + params.filename, params.stack)
         return clean
     })
 
     plugin.register('rename', function (params, context) {
-        plugin.log('Rename file - From ' + params.source + ' to ' + params.dest)  
+        plugin.log('Rename file - From ' + params.source + ' to ' + params.dest, params.stack)
         return clean
     })
 
     plugin.register('ssrf', function (params, context) {
-        plugin.log('SSRF requesting ' + params.url + ' (IP: ' + params.ip + ')')
+        plugin.log('SSRF requesting ' + params.url + ' (IP: ' + params.ip + ')', params.stack)
         return clean
     })
 
@@ -1625,47 +1625,47 @@ if (algorithmConfig.meta.log_event) {
     })
 
     plugin.register('ognl', function (params, context) {
-        plugin.log('Evaluating OGNL expression: ' + params.expression)
+        plugin.log('Evaluating OGNL expression: ' + params.expression, params.stack)
         return clean
     })
 
     plugin.register('spel', function (params, context) {
-        plugin.log('Evaluating SPEL expression: ' + params.expression)
+        plugin.log('Evaluating SPEL expression: ' + params.expression, params.stack)
         return clean
     })
 
     plugin.register('xxe', function (params, context) {
-        plugin.log('Loading XML entity: ' + params.entity)
+        plugin.log('Loading XML entity: ' + params.entity, params.stack)
         return clean
     })
 
     plugin.register('eval', function (params, context) {
-        plugin.log('Evaluating code: ' + params.code)
+        plugin.log('Evaluating code: ' + params.code, params.stack)
         return clean
     })
 
     plugin.register('loadLibrary', function (params, context) {
-        plugin.log('Loading library: ' + params.path)
+        plugin.log('Loading library: ' + params.path, params.stack)
         return clean
     })
 
     plugin.register('include', function (params, context) {
-        plugin.log('Include file: ' + params.url)
+        plugin.log('Include file: ' + params.url, params.stack)
         return clean
     })
 
     plugin.register('readFile', function (params, context) {
-        plugin.log('Read file: ' + params.realpath)
+        plugin.log('Read file: ' + params.realpath, params.stack)
         return clean
     })
 
     plugin.register('writeFile', function (params, context) {
-        plugin.log('Write file: ' + params.realpath)
+        plugin.log('Write file: ' + params.realpath, params.stack)
         return clean
     })
 
     plugin.register('sql', function (params, context) {
-        plugin.log('SQL query: ' + params.query)
+        plugin.log('SQL query: ' + params.query, params.stack)
         return clean
     })
 
