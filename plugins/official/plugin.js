@@ -1,4 +1,4 @@
-const plugin_version = '2022-0119-1745'
+const plugin_version = '2022-0329-1745'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -484,7 +484,7 @@ var algorithmConfig = {
     command_common: {
         name:    '算法3 - 识别常用渗透命令（探针）',
         action:  'log',
-        pattern: 'cat.{1,5}/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh'
+        pattern: 'cat.{1,5}/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh|\\{echo,.{10,400}{base64,-d}'
     },
     // 命令执行 - 语法错误和敏感操作
     command_error: {
