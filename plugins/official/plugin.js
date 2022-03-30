@@ -479,6 +479,23 @@ var algorithmConfig = {
         ]
     },
 
+    // SPEL检测关键字
+    spel_userinput: {
+        "name": "算法2 - SPEL用户输入匹配",
+        action: 'block',
+        min_length: 30,
+        danger_words: [
+            '#',
+            'T(',
+            'T\x00',
+            'new',
+            'class',
+            'Class',
+            'invoke',
+            'forName'
+        ]
+    },
+
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
         name:   '算法1 - 通过反射执行命令，比如反序列化、加密后门',
@@ -1383,11 +1400,17 @@ function get_cookies(cookie_str) {
 // 合并context.parameter中 header、cookie、parameter、json参数， header、cookie的key会被重命名
 function get_all_parameter(context) {
     if (context.get_all_parameter !== undefined) {
-        return context.parameter || {}
+        return context.all_parameter || {}
     }
     context.get_all_parameter = true
     var key_num = 0
-    var parameter = context.parameter || {}
+    var parameter = {}
+    context.all_parameter = parameter
+
+    Object.keys(context.parameter).forEach(function(key) {
+        parameter[key] = context.parameter[key]
+    })
+
     if (context.header != null) {
         for (name in context.header) {
             if (name.toLowerCase() == "cookie") {
@@ -1820,7 +1843,6 @@ if (! algorithmConfig.meta.is_dev && RASP.get_jsengine() !== 'v8') {
                     
                 })
             }
-
             // 匹配json参数
             if (reason == false && Object.keys(json_parameters).length > 0) {
                 var jsons = [ [json_parameters, "input_json"] ]
@@ -3027,6 +3049,8 @@ if (algorithmConfig.spel_blacklist.action != 'ignore')
     // 默认情况下，当SPEL表达式长度超过30才会进入检测点，此长度可配置
     plugin.register('spel', function (params, context) {
         var spelExpression = params.expression
+
+        // 拦截spel高危语句
         for (var index in algorithmConfig.spel_blacklist.expression)
         {
             if (spelExpression.indexOf(algorithmConfig.spel_blacklist.expression[index]) > -1)
@@ -3038,7 +3062,108 @@ if (algorithmConfig.spel_blacklist.action != 'ignore')
                     algorithm:  'spel_blacklist'
                 }
             }
+        }
 
+    })
+}
+
+if (algorithmConfig.spel_userinput.action != 'ignore')
+{
+    // 默认情况下，当SPEL表达式长度超过30才会进入检测点，此长度可配置
+    plugin.register('spel', function (params, context) {
+        var spelExpression = params.expression
+
+        var danger_words = algorithmConfig.spel_userinput.danger_words
+        var min_length = algorithmConfig.spel_userinput.danger_words.min_length
+
+        if (spelExpression.length < min_length) {
+            return clean
+        }
+
+        var index = 0
+        while(index < danger_words.length) {
+            if (spelExpression.indexOf(danger_words[index]) > -1) {
+                break
+            }
+            index++
+        }
+
+        if (index == danger_words.length) {
+            return clean
+        }
+
+        function _is_quoted_str(str, start, end) {
+            // 判断字符串某一段内容是否在双引号内, 不能识别不闭合的引号
+            var index = 0
+            var in_quote = false
+            var escape_char = false
+            while (index < end && index < str.length) {
+                if (index == start && !in_quote) {
+                    return false
+                }
+
+                if (str[index] == '"' && !escape_char) {
+                    in_quote = !in_quote
+                    if (index >= start) {
+                        return false
+                    }
+                } else if (str[index] == "\\") {
+                    escape_char = !escape_char
+                }
+                index++
+            }
+            return in_quote
+        }
+
+        // 检查命令逻辑是否被用户参数所修改
+        function _check_value(value)
+        {
+            if (value.length <= min_length) {
+                return false
+            }
+
+            if (value.length > spelExpression.length) {
+                // 参数比较长，检查表达式是否在参数中
+                if (value.indexOf(spelExpression) != -1) {
+                    return true
+                }
+
+            } else {
+                // 用户输入比较长，检查用户输入是否存在于表达式中
+                var start_pos = spelExpression.indexOf(value)
+                if (start_pos != -1) {
+                    end_pos = start_pos + value.length
+                    if (! _is_quoted_str(spelExpression, start_pos, end_pos)) {
+                        // 用户输入不在引号内
+                        return true
+                    }
+                }
+            }
+
+            return false
+        }
+
+        var all_parameter = get_all_parameter(context)
+        for (var name in all_parameter) {
+            if (_check_value(all_parameter[name])) {
+                return {
+                    action:     algorithmConfig.spel_userinput.action,
+                    message:    _("SPEL exec - Spel controled by user input, parameter name: %1%, value: %2%", [name, all_parameter[name]]),
+                    confidence: 90,
+                    algorithm:  'spel_userinput'
+                }
+            }
+        }
+
+        for (var name in context.parameter) {
+            if (_check_value(name)) {
+                return {
+                    action:     algorithmConfig.spel_userinput.action,
+                    message:    _("SPEL exec - Spel controled by user parameter key: %1%", [name]),
+                    confidence: 90,
+                    algorithm:  'spel_userinput'
+                }
+            }
         }
 
         return clean
