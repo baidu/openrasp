@@ -17,9 +17,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego/validation"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"io"
 	"io/ioutil"
 	"math"
@@ -34,6 +31,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/validation"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Operations about app
@@ -447,6 +448,16 @@ func (o *AppController) validDingConf(conf *models.DingAlarmConf) {
 	conf.RecvParty = o.validAppArrayParam(conf.RecvParty, "ding recv_party", nil)
 }
 
+func (o *AppController) validDingRobotConf(conf *models.DingRobotAlarmConf) {
+	if conf.AccessToken == "" {
+		o.ServeError(http.StatusBadRequest, "the ding ding accesstoken cannot be empty")
+	}
+	if len(conf.AccessToken) > 128 {
+		o.ServeError(http.StatusBadRequest, "the ding ding accesstoken cannot be greater than 128")
+	}
+
+}
+
 func (o *AppController) validHttpAlarm(conf *models.HttpAlarmConf) {
 	if len(conf.RecvAddr) == 0 {
 		o.ServeError(http.StatusBadRequest, "the http recv_addr cannot be empty")
@@ -752,13 +763,14 @@ func (o *AppController) validateWhiteListConfig(config []models.WhitelistConfigI
 // @router /alarm/config [post]
 func (o *AppController) ConfigAlarm() {
 	var param struct {
-		AppId               string                   `json:"app_id"`
-		AttackTypeAlarmConf *map[string][]string     `json:"attack_type_alarm_conf,omitempty"`
-		EmailAlarmConf      *models.EmailAlarmConf   `json:"email_alarm_conf,omitempty"`
-		DingAlarmConf       *models.DingAlarmConf    `json:"ding_alarm_conf,omitempty"`
-		HttpAlarmConf       *models.HttpAlarmConf    `json:"http_alarm_conf,omitempty"`
-		KafkaConf           *kafka.Kafka             `json:"kafka_alarm_conf,omitempty"`
-		GeneralAlarmConf    *models.GeneralAlarmConf `json:"general_alarm_conf"`
+		AppId               string                     `json:"app_id"`
+		AttackTypeAlarmConf *map[string][]string       `json:"attack_type_alarm_conf,omitempty"`
+		EmailAlarmConf      *models.EmailAlarmConf     `json:"email_alarm_conf,omitempty"`
+		DingAlarmConf       *models.DingAlarmConf      `json:"ding_alarm_conf,omitempty"`
+		DingRobotAlarmConf  *models.DingRobotAlarmConf `json:"ding_robot_alarm_conf,omitempty"`
+		HttpAlarmConf       *models.HttpAlarmConf      `json:"http_alarm_conf,omitempty"`
+		KafkaConf           *kafka.Kafka               `json:"kafka_alarm_conf,omitempty"`
+		GeneralAlarmConf    *models.GeneralAlarmConf   `json:"general_alarm_conf"`
 	}
 	o.UnmarshalJson(&param)
 
@@ -784,6 +796,9 @@ func (o *AppController) ConfigAlarm() {
 			param.DingAlarmConf.CorpSecret = app.DingAlarmConf.CorpSecret
 		}
 		o.validDingConf(param.DingAlarmConf)
+	}
+	if param.DingRobotAlarmConf != nil {
+		o.validDingRobotConf(param.DingRobotAlarmConf)
 	}
 	if param.AttackTypeAlarmConf != nil {
 		o.validAttackTypeAlarmConf(param.AttackTypeAlarmConf)
@@ -934,6 +949,27 @@ func (o *AppController) TestDing() {
 	o.ServeWithEmptyData()
 }
 
+// @router /dingrobot/test [post]
+func (o *AppController) TestDingRobot() {
+	var param map[string]string
+	o.UnmarshalJson(&param)
+	appId := param["app_id"]
+	if appId == "" {
+		o.ServeError(http.StatusBadRequest, "app_id cannot be empty")
+	}
+	app, err := models.GetAppByIdWithoutMask(appId)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "can not find the app", err)
+	}
+	if !app.DingRobotAlarmConf.Enable {
+		o.ServeError(http.StatusBadRequest, "please enable the ding ding robot alarm first")
+	}
+	err = models.PushDingRobotAttackAlarm(app, 0, nil, true)
+	if err != nil {
+		o.ServeError(http.StatusBadRequest, "failed to test ding ding robot alarm", err)
+	}
+	o.ServeWithEmptyData()
+}
 // @router /http/test [post]
 func (o *AppController) TestHttp() {
 	var param map[string]string

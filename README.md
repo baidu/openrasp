@@ -9,6 +9,8 @@ Unlike perimeter control solutions like WAF, OpenRASP directly integrates its pr
 
 When an attack happens, WAF matches the malicious request with its signatures and blocks it. OpenRASP takes a different approach by hooking sensitive functions and examines/blocks the inputs fed into them. As a result, this examination is context-aware and in-place. It brings in the following benefits:
 
+
+
 1.	Only successful attacks can trigger alarms, resulting in lower false positive and higher detection rate;
 2.	Detailed stack trace is logged, which makes the forensic analysis easier;
 3.	Insusceptible to malformed protocol.
