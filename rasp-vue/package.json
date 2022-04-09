@@ -26,7 +26,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.mergewith": "^4.6.2",
     "mem": "^5.1.1",
-    "moment": "^2.22.2",
+    "moment": "^2.29.2",
     "vue": "^2.6.11",
     "vue-c3": "^1.2.11",
     "vue-clipboard2": "^0.3.1",
