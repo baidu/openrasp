@@ -464,6 +464,9 @@ var algorithmConfig = {
             'java.lang.Shutdown',
             'java.io.File',
             'javax.script.ScriptEngineManager',
+            'excludedClasses',
+            'excludedPackageNamePatterns',
+            'excludedPackageNames',
             'com.opensymphony.xwork2.ActionContext'
         ]
     },
