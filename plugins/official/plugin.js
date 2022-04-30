@@ -703,7 +703,7 @@ var readFileWhiteExt = new RegExp(/\.(do[c|t][x|m|]?|xl[s|t][x|m|b]?|pp[t|s|a][x
 var htmlFileRegex   = /\.(htm|html|js)$/i
 
 // 匹配 EXE/DLL 等可以执行的文件
-var exeFileRegex    = /\.(exe|dll|scr|vbs|cmd|bat)$/i
+var exeFileRegex    = /\.(exe|so|dll|dylib|scr|vbs|cmd|bat)$/i
 
 // 其他的 stream 都没啥用
 var ntfsRegex       = /::\$(DATA|INDEX)$/
