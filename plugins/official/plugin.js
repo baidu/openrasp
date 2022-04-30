@@ -1,4 +1,4 @@
-const plugin_version = '2022-0330-2000'
+const plugin_version = '2022-0430-0930'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -464,6 +464,9 @@ var algorithmConfig = {
             'java.lang.Shutdown',
             'java.io.File',
             'javax.script.ScriptEngineManager',
+            'excludedClasses',
+            'excludedPackageNamePatterns',
+            'excludedPackageNames',
             'com.opensymphony.xwork2.ActionContext'
         ]
     },
@@ -512,7 +515,7 @@ var algorithmConfig = {
     command_common: {
         name:    '算法3 - 识别常用渗透命令（探针）',
         action:  'log',
-        pattern: 'cat.{1,5}/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh'
+        pattern: 'cat.{1,5}/etc/passwd|nc.{1,30}-e.{1,100}/bin/(?:ba)?sh|bash\\s-.{0,4}i.{1,20}/dev/tcp/|subprocess.call\\(.{0,6}/bin/(?:ba)?sh|fsockopen\\(.{1,50}/bin/(?:ba)?sh|perl.{1,80}socket.{1,120}open.{1,80}exec\\(.{1,5}/bin/(?:ba)?sh|\\{echo,.{10,400}{base64,-d}'
     },
     // 命令执行 - 语法错误和敏感操作
     command_error: {
@@ -719,7 +722,7 @@ var forcefulBrowsing = {
 var headerInjection = ["user-agent", "referer", "x-forwarded-for"]
 
 // 如果你配置了非常规的扩展名映射，比如让 .abc 当做PHP脚本执行，那你可能需要增加更多扩展名
-var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phar|phtml|sh|py|pl|rb)\.?$/i
+var scriptFileRegex = /\.(aspx?|jspx?|php[345]?|phar|phtml|sh|py|pl|rb|so|dll|dylib)\.?$/i
 
 // 正常文件
 var cleanFileRegex  = /\.(jpg|jpeg|png|gif|bmp|txt|rar|zip)$/i
@@ -746,7 +749,7 @@ var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
 var whiteHostName   = /\.bcebos\.com$|(^|\.)oss-[\d\w\-]{0,30}\.aliyuncs\.com$/
 
 var dnsLogDomains   = [
-    '.vuleye.pw', '.ceye.io', '.exeye.io', '.vcap.me', '.xip.name', '.xip.io', '.sslip.io', '.nip.io',
+    '.vuleye.pw', '.ceye.io', '.exeye.io', '.vcap.me', '.xip.name', '.xip.io', '.sslip.io', '.nip.io', '.oastify.com',
     '.burpcollaborator.net', '.tu4.org', '.2xss.cc', '.bxss.me', '.godns.vip', '.dnslog.cn', '.0kee.360.cn', '.r87.me','.ngrok.io',
     // yumusb/DNSLog-Platform-Golang
     '.xn--9tr.com', 
