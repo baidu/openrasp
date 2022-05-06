@@ -36,7 +36,7 @@ public class Context extends com.baidu.openrasp.v8.Context {
     public AbstractRequest request = null;
 
     public static void setKeys() {
-        setStringKeys(new String[]{"path", "method", "url", "querystring", "protocol", "remoteAddr", "appBasePath",
+        setStringKeys(new String[]{"path", "method", "url", "querystring", "protocol", "remoteAddr", "remotePort", "appBasePath",
                 "requestId", "appId", "raspId", "hostname", "source", "target", "clientIp"});
         setObjectKeys(new String[]{"json", "server", "parameter", "header", "nic"});
         setBufferKeys(new String[]{"body"});
@@ -61,6 +61,8 @@ public class Context extends com.baidu.openrasp.v8.Context {
             return getProtocol();
         if (key.equals("remoteAddr"))
             return getRemoteAddr();
+        if (key.equals("remotePort"))
+            return getRemotePort();
         if (key.equals("requestId"))
             return getRequestId();
         if (key.equals("appId"))
@@ -149,6 +151,14 @@ public class Context extends com.baidu.openrasp.v8.Context {
     public String getRemoteAddr() {
         try {
             return request.getRemoteAddr().toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String getRemotePort() {
+        try {
+            return request.getRemotePort().toString();
         } catch (Exception e) {
             return "";
         }

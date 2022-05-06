@@ -59,6 +59,18 @@ public class Reflection {
     }
 
     /**
+     * 反射调用方法，并把返回值进行强制转换为Integer
+     *
+     * @return 被调用函数返回的Integer
+     * @see #invokeMethod(Object, String, Class[], Object...)
+     */
+    public static Integer invokeIntegerMethod(Object object, String methodName, Class[] paramTypes, Object... parameters) {
+        Object ret = invokeMethod(object, methodName, paramTypes, parameters);
+
+        return ret instanceof Integer ? Integer.parseInt(ret.toString()) : null;
+    }
+
+    /**
      * 反射获取对象的字段包括私有的
      *
      * @param object    被提取字段的对象

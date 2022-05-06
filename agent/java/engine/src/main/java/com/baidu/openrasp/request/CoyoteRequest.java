@@ -49,6 +49,16 @@ public class CoyoteRequest extends AbstractRequest {
     }
 
     /**
+     * 把 message bytes 字节类型信息数据转化成整型数据
+     *
+     * @param messageBytes 字节类型的信息数据
+     * @return 转化之后的字符串类型的信息数据
+     */
+    private Integer mb2Integer(Object messageBytes) {
+        return Reflection.invokeIntegerMethod(messageBytes, "toString", EMPTY_CLASS);
+    }
+
+    /**
      * (none-javadoc)
      *
      * @see AbstractRequest#getLocalAddr()
@@ -106,6 +116,16 @@ public class CoyoteRequest extends AbstractRequest {
     @Override
     public String getRemoteAddr() {
         return mb2string(Reflection.invokeMethod(request, "remoteAddr", EMPTY_CLASS));
+    }
+
+    /**
+     * (none-javadoc)
+     *
+     * @see AbstractRequest#getRemotePort()
+     */
+    @Override
+    public Integer getRemotePort() {
+        return mb2Integer(Reflection.invokeMethod(request, "remotePort", EMPTY_CLASS));
     }
 
     /**

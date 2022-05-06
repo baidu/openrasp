@@ -58,6 +58,11 @@ public class EmptyRequest extends AbstractRequest {
     }
 
     @Override
+    public Integer getRemotePort() {
+        return 0;
+    }
+
+    @Override
     public String getRequestURI() {
         return null;
     }

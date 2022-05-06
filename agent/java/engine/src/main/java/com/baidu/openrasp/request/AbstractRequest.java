@@ -171,6 +171,13 @@ public abstract class AbstractRequest {
     public abstract String getRemoteAddr();
 
     /**
+     * 获取访问客户端的端口
+     *
+     * @return 客户端端口
+     */
+    public abstract Integer getRemotePort();
+
+    /**
      * 获取请求的uri
      *
      * @return 请求uri
