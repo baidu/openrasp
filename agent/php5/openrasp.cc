@@ -284,7 +284,6 @@ PHP_RINIT_FUNCTION(openrasp)
 
             OPENRASP_G(request).set_method(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REQUEST_METHOD"));
             OPENRASP_G(request).set_remote_addr(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REMOTE_ADDR"));
-            OPENRASP_G(request).set_remote_port(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "REMOTE_PORT"));
             OPENRASP_G(request).set_document_root(fetch_outmost_string_from_ht(Z_ARRVAL_P(http_server), "DOCUMENT_ROOT"));
 
             std::map<std::string, std::string> header;

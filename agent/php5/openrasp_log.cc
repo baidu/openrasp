@@ -565,7 +565,6 @@ bool RaspLoggerEntry::log(severity_level level_int, openrasp::JsonReader &base_j
         j.write_string({"path"}, OPENRASP_G(request).url.get_path());
         j.write_string({"url"}, OPENRASP_G(request).url.get_complete_url());
         j.write_string({"attack_source"}, OPENRASP_G(request).get_remote_addr());
-        j.write_string({"attack_port"}, OPENRASP_G(request).get_remote_port());
         j.write_map({"header"}, OPENRASP_G(request).get_header());
         std::string clientip_header = OPENRASP_CONFIG(clientip.header);
         std::transform(clientip_header.begin(), clientip_header.end(), clientip_header.begin(), ::tolower);

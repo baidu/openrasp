@@ -66,12 +66,6 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_addr());
     info.GetReturnValue().Set(obj);
 }
-static void remotePort_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
-{
-    info.GetReturnValue().SetEmptyString();
-    auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_port());
-    info.GetReturnValue().Set(obj);
-}
 static void path_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
@@ -366,7 +360,6 @@ v8::Local<v8::ObjectTemplate> openrasp::CreateRequestContextTemplate(Isolate *is
     obj_templ->SetLazyDataProperty(NewV8String(isolate, "method"), method_getter);
     obj_templ->SetLazyDataProperty(NewV8String(isolate, "protocol"), protocol_getter);
     obj_templ->SetLazyDataProperty(NewV8String(isolate, "remoteAddr"), remoteAddr_getter);
-    obj_templ->SetLazyDataProperty(NewV8String(isolate, "remotePort"), remotePort_getter);
     obj_templ->SetLazyDataProperty(NewV8String(isolate, "appBasePath"), appBasePath_getter);
     obj_templ->SetLazyDataProperty(NewV8String(isolate, "body"), body_getter);
     obj_templ->SetLazyDataProperty(NewV8String(isolate, "server"), server_getter);

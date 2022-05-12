@@ -71,16 +71,6 @@ std::string Request::get_remote_addr() const
     return remote_addr;
 }
 
-void Request::set_remote_port(const std::string &remote_port)
-{
-    this->remote_port = remote_port;
-}
-
-std::string Request::get_remote_port() const
-{
-    return remote_port;
-}
-
 void Request::set_document_root(const std::string &document_root)
 {
     this->document_root = document_root;
