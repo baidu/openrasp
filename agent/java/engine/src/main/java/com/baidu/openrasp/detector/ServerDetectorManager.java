@@ -45,6 +45,7 @@ public class ServerDetectorManager {
         detectors.add(new SpringbootDetector());
         detectors.add(new TongWebDetector());
         detectors.add(new TongWeb7Detector());
+        detectors.add(new TWDetector());
         detectors.add(new BESDetector());
 
     }
