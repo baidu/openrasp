@@ -69,6 +69,7 @@ static void remoteAddr_getter(v8::Local<v8::Name> name, const v8::PropertyCallba
 static void remotePort_getter(v8::Local<v8::Name> name, const v8::PropertyCallbackInfo<v8::Value> &info)
 {
     info.GetReturnValue().SetEmptyString();
+    TSRMLS_FETCH();
     auto obj = NewV8String(info.GetIsolate(), OPENRASP_G(request).get_remote_port());
     info.GetReturnValue().Set(obj);
 }
