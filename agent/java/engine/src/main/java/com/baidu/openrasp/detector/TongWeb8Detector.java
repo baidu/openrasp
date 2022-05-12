@@ -27,10 +27,10 @@ public class TongWeb8Detector extends ServerDetector {
                 version = (String) Reflection.invokeMethod(null, clazz, "getServerNumber", new Class[]{});
             }
         } catch (Throwable t) {
-            logDetectError("handle TW startup failed", t);
+            logDetectError("handle TongWeb8 startup failed", t);
         }
         if (!isJboss(classLoader)) {
-            ApplicationModel.setServerInfo("TW", version);
+            ApplicationModel.setServerInfo("TongWeb8", version);
             return true;
         }
         return false;

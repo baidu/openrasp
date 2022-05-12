@@ -110,7 +110,7 @@ public abstract class ServerDetector {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TONGWEB, CheckParameter.EMPTY_MAP);
             } else if ("bes".equals(serverName)) {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_BES, CheckParameter.EMPTY_MAP);
-            }else if ("TW".equals(serverName)) {
+            }else if ("TongWeb8".equals(serverName)) {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TW, CheckParameter.EMPTY_MAP);
             }
         } catch (Throwable t) {

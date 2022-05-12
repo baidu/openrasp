@@ -19,7 +19,7 @@ import java.util.Map;
  * tongweb8
  */
 public class TongWeb8SecurityChecker extends ServerPolicyChecker {
-    private static final String TW_CHECK_ERROR_LOG_CHANNEL = "TW_security_check_error";
+    private static final String TongWeb8_CHECK_ERROR_LOG_CHANNEL = "TongWeb8_security_check_error";
     private static final String APP = "app";
     private static final String APP_ID = "appId";
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";
@@ -34,16 +34,16 @@ public class TongWeb8SecurityChecker extends ServerPolicyChecker {
 
     @Override
     public void checkServer(CheckParameter checkParameter, List<EventInfo> infos) {
-        if ("TW".equals(ApplicationModel.getServerName())) {
+        if ("TongWeb8".equals(ApplicationModel.getServerName())) {
             String tongwebBaseDir = System.getProperty("tongweb.base");
             try {
                 if (tongwebBaseDir != null) {
                     checkHttpOnlyIsOpen(tongwebBaseDir, infos);
                     checkDirectoryListing(tongwebBaseDir, infos);
-                    System.out.println("[OpenRASP] TW security baseline - inspection completed");
+                    System.out.println("[OpenRASP] TongWeb8 security baseline - inspection completed");
                 } else {
-                    LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TW_CHECK_ERROR_LOG_CHANNEL,
-                            "Unable to locate TW base directory: failed to read system property \"tongweb.base\""));
+                    LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TongWeb8_CHECK_ERROR_LOG_CHANNEL,
+                            "Unable to locate TongWeb8 base directory: failed to read system property \"tongweb.base\""));
                 }
             } catch (Exception e) {
                 handleException(e);
@@ -57,13 +57,13 @@ public class TongWeb8SecurityChecker extends ServerPolicyChecker {
     private void checkHttpOnlyIsOpen(String tongWebBaseDir, List<EventInfo> infos) {
         File contextFile = new File(tongWebBaseDir + File.separator + "conf/applications.xml");
         if (!contextFile.exists()) {
-            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TW_CHECK_ERROR_LOG_CHANNEL,
+            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TongWeb8_CHECK_ERROR_LOG_CHANNEL,
                     "Unable to load conf/applications.xml: no such file, ignored"));
             return;
         }
 
         if (!contextFile.canRead()) {
-            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TW_CHECK_ERROR_LOG_CHANNEL,
+            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TongWeb8_CHECK_ERROR_LOG_CHANNEL,
                     "Unable to load conf/applications.xml: file is not readable, ignored"));
             return;
         }
@@ -87,7 +87,7 @@ public class TongWeb8SecurityChecker extends ServerPolicyChecker {
                     params.put("config_file", contextFile.getAbsolutePath());
                     params.put("appId", appIdNamedItem.getNodeValue());
                     infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.COOKIE_HTTP_ONLY,
-                            "TW security baseline - httpOnly should be enabled in " + contextFile.getAbsolutePath(), true, params));
+                            "TongWeb8 security baseline - httpOnly should be enabled in " + contextFile.getAbsolutePath(), true, params));
                 }
             }
         }
@@ -97,7 +97,7 @@ public class TongWeb8SecurityChecker extends ServerPolicyChecker {
     private void checkDirectoryListing(String tongWebBaseDir, List<EventInfo> infos) {
         File webFile = new File(tongWebBaseDir + File.separator + "conf/default-web.xml");
         if (!(webFile.exists() && webFile.canRead())) {
-            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TW_CHECK_ERROR_LOG_CHANNEL,
+            LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TongWeb8_CHECK_ERROR_LOG_CHANNEL,
                     "can not load file conf/default-web.xml: no such file or file is not readable"));
             return;
         }
@@ -124,7 +124,7 @@ public class TongWeb8SecurityChecker extends ServerPolicyChecker {
                                     Map<String, Object> params = new HashMap<String, Object>();
                                     params.put("config_file", webFile.getAbsolutePath());
                                     infos.add(new SecurityPolicyInfo(SecurityPolicyInfo.Type.DIRECTORY_LISTING,
-                                            "TW security baseline - detected open Directory Listing in conf/default-web.xml", true, params));
+                                            "TongWeb8 security baseline - detected open Directory Listing in conf/default-web.xml", true, params));
                                     return;
                                 }
                             }
@@ -179,7 +179,7 @@ public class TongWeb8SecurityChecker extends ServerPolicyChecker {
 
 
     private void handleException(Exception e) {
-        LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TW_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
+        LogTool.warn(ErrorType.PLUGIN_ERROR, getFormattedMessage(TongWeb8_CHECK_ERROR_LOG_CHANNEL, e.getMessage()), e);
     }
 
     private String getFormattedMessage(String title, String message) {
