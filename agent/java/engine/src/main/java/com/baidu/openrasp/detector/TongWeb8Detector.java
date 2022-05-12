@@ -9,7 +9,7 @@ import java.security.ProtectionDomain;
 /**
  * tongweb8
  */
-public class TWDetector extends ServerDetector {
+public class TongWeb8Detector extends ServerDetector {
     @Override
     public boolean isClassMatched(String className) {
         return "com/tongweb/server/Server".equals(className);

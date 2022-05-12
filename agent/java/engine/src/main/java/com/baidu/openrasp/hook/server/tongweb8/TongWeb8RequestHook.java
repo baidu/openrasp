@@ -7,7 +7,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 @HookAnnotation
-public class TWRequestHook extends ServerParamHook {
+public class TongWeb8RequestHook extends ServerParamHook {
     @Override
     public boolean isClassMatched(String className) {
         return "com/tongweb/server/connector/Request".equals(className);

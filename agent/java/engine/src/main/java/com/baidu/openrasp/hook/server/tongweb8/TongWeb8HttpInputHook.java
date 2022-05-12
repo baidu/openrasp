@@ -10,7 +10,7 @@ import javassist.NotFoundException;
 import java.io.IOException;
 
 @HookAnnotation
-public class TWHttpInputHook extends ServerRequestHook {
+public class TongWeb8HttpInputHook extends ServerRequestHook {
     private String className;
 
     @Override

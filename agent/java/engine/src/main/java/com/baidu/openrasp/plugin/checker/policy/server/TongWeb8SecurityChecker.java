@@ -18,17 +18,17 @@ import java.util.Map;
 /**
  * tongweb8
  */
-public class TWSecurityChecker extends ServerPolicyChecker {
+public class TongWeb8SecurityChecker extends ServerPolicyChecker {
     private static final String TW_CHECK_ERROR_LOG_CHANNEL = "TW_security_check_error";
     private static final String APP = "app";
     private static final String APP_ID = "appId";
     private static final String HTTP_ONLY_ATTRIBUTE_NAME = "useHttpOnly";
 
-    public TWSecurityChecker() {
+    public TongWeb8SecurityChecker() {
         super();
     }
 
-    public TWSecurityChecker(boolean canBlock) {
+    public TongWeb8SecurityChecker(boolean canBlock) {
         super(canBlock);
     }
 
