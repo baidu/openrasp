@@ -110,6 +110,8 @@ public abstract class ServerDetector {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TONGWEB, CheckParameter.EMPTY_MAP);
             } else if ("bes".equals(serverName)) {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_BES, CheckParameter.EMPTY_MAP);
+            } else if ("TongWeb8".equals(serverName)) {
+                HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TONGWEB8, CheckParameter.EMPTY_MAP);
             }
         } catch (Throwable t) {
             LogTool.warn(ErrorType.HOOK_ERROR, "failed to do server policy checking: " + t.getMessage(), t);
