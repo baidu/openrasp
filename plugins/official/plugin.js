@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 const plugin_version = '2022-0430-0930'
+=======
+const plugin_version = '2022-0518-1115'
+>>>>>>> Stashed changes
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -916,6 +920,20 @@ function is_hostname_dnslog(hostname) {
 
 //     return false
 // }
+
+function is_method_from_rasp(stack) {
+    // 检查栈顶 -> rasp堆栈之间，是否包含用户代码，即非 JDK相关的函数
+    for (; i < stacks.length; i ++) {
+        var method = stacks[i]                
+        if (! method.startsWith('java.') 
+            && !method.startsWith('sun.') 
+            && !method.startsWith('com.sun.'))
+        {
+            return false
+        }
+    }
+    return true
+}
 
 function validate_stack_java(stacks) {
     var known    = {
@@ -2106,8 +2124,9 @@ plugin.register('directory', function (params, context) {
                 algorithm:  'directory_reflect'
             }
         }
-        else if (language == 'java' && validate_stack_java(params.stack))
+        else if (language == 'java' && validate_stack_java(params.stack) && !is_method_from_rasp(params.stack))
         {
+            console.log("Java webshell:",validate_stack_java(params.stack))
             return {
                 action:     algorithmConfig.directory_reflect.action,
                 message:    _("WebShell activity - Using file manager function with Java WebShell"),
