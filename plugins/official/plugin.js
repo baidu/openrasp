@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-const plugin_version = '2022-0430-0930'
-=======
-const plugin_version = '2022-0518-1115'
->>>>>>> Stashed changes
+const plugin_version = '2022-0519-0955'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -2126,7 +2122,6 @@ plugin.register('directory', function (params, context) {
         }
         else if (language == 'java' && validate_stack_java(params.stack) && !is_method_from_rasp(params.stack))
         {
-            console.log("Java webshell:",validate_stack_java(params.stack))
             return {
                 action:     algorithmConfig.directory_reflect.action,
                 message:    _("WebShell activity - Using file manager function with Java WebShell"),
