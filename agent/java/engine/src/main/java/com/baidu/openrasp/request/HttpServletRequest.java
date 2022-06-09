@@ -128,6 +128,16 @@ public final class HttpServletRequest extends AbstractRequest {
     /**
      * (none-javadoc)
      *
+     * @see AbstractRequest#getRemotePort()
+     */
+    @Override
+    public Integer getRemotePort() {
+        return Reflection.invokeIntegerMethod(request, "getRemotePort", EMPTY_CLASS);
+    }
+
+    /**
+     * (none-javadoc)
+     *
      * @see AbstractRequest#getRequestURI()
      */
     @Override

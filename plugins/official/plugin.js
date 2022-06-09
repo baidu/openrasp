@@ -1,4 +1,4 @@
-const plugin_version = '2022-0430-0930'
+const plugin_version = '2022-0519-0955'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -749,7 +749,7 @@ var internalRegex   = /^(0\.0\.0|127|10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\./
 var whiteHostName   = /\.bcebos\.com$|(^|\.)oss-[\d\w\-]{0,30}\.aliyuncs\.com$/
 
 var dnsLogDomains   = [
-    '.vuleye.pw', '.ceye.io', '.exeye.io', '.vcap.me', '.xip.name', '.xip.io', '.sslip.io', '.nip.io', '.oastify.com',
+    '.vuleye.pw', '.ceye.io', '.exeye.io', '.vcap.me', '.xip.name', '.xip.io', '.sslip.io', '.nip.io', '.oastify.com', '.eyes.sh',
     '.burpcollaborator.net', '.tu4.org', '.2xss.cc', '.bxss.me', '.godns.vip', '.dnslog.cn', '.0kee.360.cn', '.r87.me','.ngrok.io',
     // yumusb/DNSLog-Platform-Golang
     '.xn--9tr.com', 
@@ -944,6 +944,20 @@ function is_hostname_dnslog(hostname) {
 
 //     return false
 // }
+
+function is_method_from_rasp(stack) {
+    // 检查栈顶 -> rasp堆栈之间，是否包含用户代码，即非 JDK相关的函数
+    for (; i < stacks.length; i ++) {
+        var method = stacks[i]                
+        if (! method.startsWith('java.') 
+            && !method.startsWith('sun.') 
+            && !method.startsWith('com.sun.'))
+        {
+            return false
+        }
+    }
+    return true
+}
 
 function validate_stack_java(stacks) {
     var known    = {
@@ -2144,7 +2158,7 @@ plugin.register('directory', function (params, context) {
                 algorithm:  'directory_reflect'
             }
         }
-        else if (language == 'java' && validate_stack_java(params.stack))
+        else if (language == 'java' && validate_stack_java(params.stack) && !is_method_from_rasp(params.stack))
         {
             return {
                 action:     algorithmConfig.directory_reflect.action,

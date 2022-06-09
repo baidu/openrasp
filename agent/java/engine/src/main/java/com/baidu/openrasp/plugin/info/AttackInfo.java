@@ -160,6 +160,8 @@ public class AttackInfo extends EventInfo {
             info.put("request_id", request.getRequestId());
             // 攻击来源IP
             info.put("attack_source", request.getRemoteAddr());
+            // 攻击来源端口
+            info.put("attack_port", request.getRemotePort());
             // 攻击真实IP
             info.put("client_ip", request.getClientIp());
             // 被攻击目标域名
