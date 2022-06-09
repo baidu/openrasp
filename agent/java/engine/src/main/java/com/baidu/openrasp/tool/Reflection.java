@@ -67,7 +67,7 @@ public class Reflection {
     public static Integer invokeIntegerMethod(Object object, String methodName, Class[] paramTypes, Object... parameters) {
         Object ret = invokeMethod(object, methodName, paramTypes, parameters);
 
-        return ret instanceof Integer ? Integer.parseInt(ret.toString()) : null;
+        return Integer.parseInt(ret.toString());
     }
 
     /**
