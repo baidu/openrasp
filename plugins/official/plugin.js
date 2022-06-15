@@ -470,6 +470,12 @@ var algorithmConfig = {
             'com.opensymphony.xwork2.ActionContext'
         ]
     },
+    // OGNL 表达式长度限制
+    ognl_length_limit: {
+        name: '算法2 - OGNL表达式长度限制',
+        action: 'log',
+        max_length: 400
+    },
 
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
@@ -3000,10 +3006,12 @@ plugin.register('loadLibrary', function(params, context) {
     return clean
 })
 
-if (algorithmConfig.ognl_blacklist.action != 'ignore')
-{
-    // 默认情况下，当OGNL表达式长度超过30才会进入检测点，此长度可配置
-    plugin.register('ognl', function (params, context) {
+// 默认情况下，当OGNL表达式长度超过30才会进入检测点，此长度可配置
+plugin.register('ognl', function (params, context) {
+
+    // 算法1: OGNL语句黑名单
+    if (algorithmConfig.ognl_blacklist.action != 'ignore')
+    {
         var ognlExpression = params.expression
         for (var index in algorithmConfig.ognl_blacklist.expression)
         {
@@ -3018,10 +3026,25 @@ if (algorithmConfig.ognl_blacklist.action != 'ignore')
             }
 
         }
+    }
 
-        return clean
-    })
-}
+    // 算法2: OGNL表达式长度限制
+    if (algorithmConfig.ognl_length_limit.action != 'ignore')
+    {
+        var ognlLength = params.expression.length
+        if (ognlLength > algorithmConfig.ognl_length_limit.max_length)
+        {
+            return {
+                action:     algorithmConfig.ognl_length_limit.action,
+                message:    _("OGNL exec - Trying to execute a OGNL expression of unusual length: " + ognlLength),
+                confidence: 100,
+                algorithm:  'ognl_length_limit'
+            }
+        }
+    }
+
+    return clean
+})
 
 if (algorithmConfig.jndi_disable_all.action != 'ignore') 
 {
