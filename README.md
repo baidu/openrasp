@@ -34,7 +34,7 @@ We've fully tested OpenRASP on the following application servers for Linux platf
   * IBM WebSphpere 8.5, 9.0
   * WebLogic 10.3.6, 12.2.1
 * PHP
-  * 5.3-5.6, 7.0-7.3
+  * 5.3-5.6, 7.0-7.4
 
 The support of other web application servers will also be soon included in the coming releases.
 

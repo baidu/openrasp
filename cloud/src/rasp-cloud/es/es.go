@@ -223,7 +223,8 @@ func BulkInsertAlarm(docType string, docs []map[string]interface{}) (err error) 
 	}
 
 	if response.Errors {
-		errContent, err := json.Marshal(response.Failed())
+		var errContent []byte
+		errContent, err = json.Marshal(response.Failed())
 		if err == nil {
 			err = errors.New("ES bulk has errors: " + string(errContent))
 		}
