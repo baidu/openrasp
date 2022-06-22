@@ -1,4 +1,4 @@
-const plugin_version = '2022-0616-0730'
+const plugin_version = '2022-0621-1530'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -1023,6 +1023,11 @@ function validate_stack_java(stacks) {
 
         if (method.startsWith('ysoserial.Pwner')) {
             message = "Using YsoSerial tool"
+            break
+        }
+
+        if (method.startsWith('org.su18')) {
+            message = "Using ysuserial tool"
             break
         }
 
