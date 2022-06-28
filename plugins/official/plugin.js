@@ -1,4 +1,4 @@
-const plugin_version = '2022-0621-1530'
+const plugin_version = '2022-0628-1000'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -141,15 +141,15 @@ var algorithmConfig = {
 
         // error_code 最多允许 100 个，超过直接清空
         mysql: {
-	        error_code: [
-	            // 1045, // Access denied for user 'bae'@'10.10.1.1'
+            error_code: [
+                // 1045, // Access denied for user 'bae'@'10.10.1.1'
                 // 1690, // DOUBLE value is out of range in 'exp(~((select 'root@localhost' from dual)))'
-	            1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
-	            1062, // Duplicate entry '::root@localhost::1' for key 'group_key'
-	            1064, // You have an error in your SQL syntax
-	            1105, // XPATH syntax error: '~root@localhost~'
-	            1367  // Illegal non geometric 'user()' value found during parsing
-	        ]
+                1060, // Duplicate column name '5.5.60-0ubuntu0.14.04.1'
+                1062, // Duplicate entry '::root@localhost::1' for key 'group_key'
+                1064, // You have an error in your SQL syntax
+                1105, // XPATH syntax error: '~root@localhost~'
+                1367  // Illegal non geometric 'user()' value found during parsing
+            ]
         },
         pgsql: {
             error_code: [
@@ -560,7 +560,7 @@ var algorithmConfig = {
     deserialization_blacklist: {
         name:   '算法1 - 反序列化黑名单过滤',
         action: 'block',
-		clazz: [
+        clazz: [
             'org.apache.commons.collections.functors.ChainedTransformer',
             'org.apache.commons.collections.functors.InvokerTransformer',
             'org.apache.commons.collections.functors.InstantiateTransformer',
@@ -718,7 +718,7 @@ var forcefulBrowsing = {
 
     // 文件探针 - webshell 查看频次最高的文件
     absolutePaths: [
-	    '/etc/issue',
+        '/etc/issue',
         '/etc/shadow',
         '/etc/passwd',
         // '/etc/hosts',
@@ -3001,18 +3001,18 @@ plugin.register('xxe', function (params, context) {
 
 if (algorithmConfig.eval_regex.action != 'ignore')
 {
-	// 算法1: 正则表达式
+    // 算法1: 正则表达式
     plugin.register('eval', function(params, context) {
         var regex_filter = new RegExp(algorithmConfig.eval_regex.regex, 'i')
             
         if (regex_filter.test(params.code)) {
 
-        	// 避免 message 太长
-        	var code = params.code.substr(0, 50)
-        	if (params.code.length > 50)
-        	{
-        		code = code + ' ...'
-        	}
+            // 避免 message 太长
+            var code = params.code.substr(0, 50)
+            if (params.code.length > 50)
+            {
+                code = code + ' ...'
+            }
 
             return {
                 action:     algorithmConfig.eval_regex.action,
@@ -3226,15 +3226,15 @@ if (algorithmConfig.spel_length_limit.action != 'ignore')
     plugin.register('spel', function (params, context) {
         var spelLength = params.expression.length
 
-	if (spelLength > algorithmConfig.spel_length_limit.max_length)
-	{
-		return {
-                    action:     algorithmConfig.spel_length_limit.action,
-                    message:    _("SPEL exec - Trying to execute a SPEL expression of unusual length: " + spelLength),
-                    confidence: 100,
-                    algorithm:  'spel_length_limit'
-                }
-	}
+    if (spelLength > algorithmConfig.spel_length_limit.max_length)
+    {
+        return {
+            action:     algorithmConfig.spel_length_limit.action,
+            message:    _("SPEL exec - Trying to execute a SPEL expression of unusual length: " + spelLength),
+            confidence: 100,
+            algorithm:  'spel_length_limit'
+        }
+    }
 
     })
 }
