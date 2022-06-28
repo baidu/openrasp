@@ -485,6 +485,9 @@ var algorithmConfig = {
             'java.lang.Runtime',
             'java.lang.ProcessBuilder',
             'javax.script.ScriptEngineManager',
+            'org.springframework.cglib.core.ReflectUtils',
+            'java.lang.System',
+            'javax.management.remote.rmi.RMIConnector'
         ]
     },
 
