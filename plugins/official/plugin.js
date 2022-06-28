@@ -505,6 +505,12 @@ var algorithmConfig = {
         ]
     },
 
+    spel_length_limit: {
+        "name": "算法3 - SPEL表达式长度限制",
+        action: 'log',
+        max_length: 200
+    },
+
     // 命令执行 - java 反射、反序列化，php eval 等方式
     command_reflect: {
         name:   '算法1 - 通过反射执行命令，比如反序列化、加密后门',
@@ -3212,6 +3218,24 @@ if (algorithmConfig.spel_userinput.action != 'ignore')
         }
 
         return clean
+    })
+}
+
+if (algorithmConfig.spel_length_limit.action != 'ignore')
+{
+    plugin.register('spel', function (params, context) {
+        var spelLength = params.expression.length
+
+	if (spelLength > algorithmConfig.spel_length_limit.max_length)
+	{
+		return {
+                    action:     algorithmConfig.spel_length_limit.action,
+                    message:    _("SPEL exec - Trying to execute a SPEL expression of unusual length: " + spelLength),
+                    confidence: 100,
+                    algorithm:  'spel_length_limit'
+                }
+	}
+
     })
 }
 
