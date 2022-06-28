@@ -103,7 +103,11 @@ public class OSUtil {
         MessageDigest md5 = MessageDigest.getInstance("md5");
         md5.update((macString + Config.getConfig().getBaseDirectory() + getHostName()).getBytes());
         BigInteger bigInt = new BigInteger(1, md5.digest());
-        return bigInt.toString(16);
+        String hashtext = bigInt.toString(16);
+        while(hashtext.length() < 32 ){
+            hashtext = "0" + hashtext;
+        }
+        return hashtext;
     }
 
     private static LinkedList<String> getMacAddress() throws SocketException {
