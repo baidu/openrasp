@@ -72,7 +72,13 @@ public class XssChecker extends ConfigurableChecker {
                             boolean isMatch = matcher.find();
                             if (value.length() >= xssParameterLength && isMatch) {
                                 count++;
-                                if (content.contains(value)) {
+                                boolean reflected;
+                                if (getBooleanElement(config, "meta", "is_dev")) {
+                                    reflected = getLCSLength(content, value) > xssParameterLength;
+                                } else {
+                                    reflected = content.contains(value);
+                                }
+                                if (reflected) {
                                     if ("websphere".equals(ApplicationModel.getServerName())) {
                                         Reflection.invokeMethod(HookHandler.responseCache.get(), "resetBuffer", new Class[]{});
                                     }
@@ -89,6 +95,42 @@ public class XssChecker extends ConfigurableChecker {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private static int getLCSLength(String str1, String str2) {
+        int len1;
+        int len2;
+        try {
+            len1 = str1.length();
+            len2 = str2.length();
+        } catch (NullPointerException e) {
+            len1 = 0;
+            len2 = 0;
+        }
+        int[] dpArr = new int[len2];
+        int result = 0;
+
+        for (int i = 0; i < len1; i++) {
+            for (int j = len2 - 1; j > -1; j--) {
+                if (i == 0 || j == 0) {
+                    if (str1.charAt(i) == str2.charAt(j)) {
+                        dpArr[j] = 1;
+                    } else {
+                        dpArr[j] = 0;
+                    }
+                } else {
+                    if (str1.charAt(i) == str2.charAt(j)) {
+                        dpArr[j] = dpArr[j - 1] + 1;
+                        if (dpArr[j] > result) {
+                            result = dpArr[j];
+                        }
+                    } else {
+                        dpArr[j] = 0;
                     }
                 }
             }

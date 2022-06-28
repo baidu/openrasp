@@ -101,6 +101,18 @@ public abstract class ConfigurableChecker extends AttackChecker {
         return null;
     }
 
+    public static boolean getBooleanElement(JsonObject config, String key, String subKey) {
+        try {
+            JsonElement value = getElement(config, key, subKey);
+            if (value != null) {
+                return value.getAsBoolean();
+            }
+        } catch (Exception e) {
+            logJsonError(e);
+        }
+        return false;
+    }
+
     public static JsonElement getElement(JsonObject config, String key, String subKey) {
         if (config != null) {
             JsonElement jsonElement = config.get(key);
