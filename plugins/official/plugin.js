@@ -1,4 +1,4 @@
-const plugin_version = '2022-0629-1330'
+const plugin_version = '2022-0629-1340'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -961,17 +961,23 @@ function is_hostname_dnslog(hostname) {
 // }
 
 function is_method_from_rasp(stack) {
-    // 检查栈顶 -> rasp堆栈之间，是否包含用户代码，即非 JDK相关的函数
-    for (; i < stacks.length; i ++) {
-        var method = stacks[i]                
+    // 检查栈顶 -> rasp堆栈之间，是否包含用户代码，即非JDK相关的函数
+    for (; i < stack.length; i ++) {
+        var method = stack[i]
+
+        if (method.startsWith('com.baidu.openrasp.')) {
+            return true
+        }
+
         if (! method.startsWith('java.') 
-            && !method.startsWith('sun.') 
-            && !method.startsWith('com.sun.'))
+            && ! method.startsWith('sun.') 
+            && ! method.startsWith('com.sun.'))
         {
             return false
         }
     }
-    return true
+
+    return false
 }
 
 function validate_stack_java(stacks) {
