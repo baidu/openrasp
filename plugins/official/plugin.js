@@ -1,4 +1,4 @@
-const plugin_version = '2022-0628-1000'
+const plugin_version = '2022-0629-1330'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -3199,7 +3199,7 @@ if (algorithmConfig.spel_userinput.action != 'ignore')
 
         var all_parameter = get_all_parameter(context)
         for (var name in all_parameter) {
-            if (_check_value(all_parameter[name])) {
+            if (_check_value(all_parameter[name][0])) {
                 return {
                     action:     algorithmConfig.spel_userinput.action,
                     message:    _("SPEL exec - Spel controled by user input, parameter name: %1%, value: %2%", [name, all_parameter[name]]),
