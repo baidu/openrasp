@@ -47,7 +47,7 @@ public class ServerDetectorManager {
         detectors.add(new TongWeb7Detector());
         detectors.add(new TongWeb8Detector());
         detectors.add(new BESDetector());
-
+        detectors.add(new InforSuiteDetector());
     }
 
     public static ServerDetectorManager getInstance() {
@@ -61,10 +61,16 @@ public class ServerDetectorManager {
      * @param classLoader 该类的加载器
      */
     public void detectServer(String className, ClassLoader classLoader, ProtectionDomain domain) {
-        try {
+    	try {
             for (ServerDetector detector : detectors) {
                 if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {
-                    HookHandler.LOGGER.info("detect server class: " + className);
+                    if(className.equals("com/cvicse/loong/enterprise/inforsuite/bootstrap/ASMain")){
+                        detectors.subList(0,13).clear();
+                        HookHandler.LOGGER.info("detect server class: " + className);
+                        break;
+                    }else{    	
+                    	HookHandler.LOGGER.info("detect server class: " + className);
+                    }
                 }
             }
         } catch (Throwable e) {
