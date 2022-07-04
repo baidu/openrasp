@@ -90,7 +90,7 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                     Object outputStream = Reflection.getField(output, "outputStream");
                     int flag = (Integer) Reflection.getField(outputStream, "state");
                     isClosed = flag == 1;
-                }else if("com/cvicse/inforsuite/grizzly/http/io/OutputBuffer".equals(InforSuiteHttpResponseHook.clazzName)){
+                } else if ("com/cvicse/inforsuite/grizzly/http/io/OutputBuffer".equals(InforSuiteHttpResponseHook.clazzName)) {
                 	isClosed = (Boolean) Reflection.getSuperField(output, "closed");
                 } else {
                     if (serverName.equals("tomcat") && ApplicationModel.getVersion().compareTo("6") < 0) {
