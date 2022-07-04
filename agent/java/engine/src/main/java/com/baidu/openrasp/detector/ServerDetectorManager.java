@@ -64,11 +64,11 @@ public class ServerDetectorManager {
     	try {
             for (ServerDetector detector : detectors) {
                 if (detector.isClassMatched(className) && detector.handleServer(className, classLoader, domain)) {
-                    if(className.equals("com/cvicse/loong/enterprise/inforsuite/bootstrap/ASMain")){
-                        detectors.subList(0,13).clear();
+                    if (className.equals("com/cvicse/loong/enterprise/inforsuite/bootstrap/ASMain")) {
+                        detectors.subList(0,detectors.size()-1).clear();
                         HookHandler.LOGGER.info("detect server class: " + className);
                         break;
-                    }else{    	
+                    } else {    	
                     	HookHandler.LOGGER.info("detect server class: " + className);
                     }
                 }
