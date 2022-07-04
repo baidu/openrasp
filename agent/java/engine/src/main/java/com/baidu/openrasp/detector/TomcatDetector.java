@@ -46,7 +46,7 @@ public class TomcatDetector extends ServerDetector {
         } catch (Throwable t) {
             logDetectError("handle tomcat startup failed", t);
         }
-        if (!isJboss(classLoader)) {
+        if (!isJboss(classLoader) && version != null) {
             ApplicationModel.setServerInfo("tomcat", version);
             return true;
         }
