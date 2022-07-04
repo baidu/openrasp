@@ -112,7 +112,7 @@ public abstract class ServerDetector {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_BES, CheckParameter.EMPTY_MAP);
             } else if ("TongWeb8".equals(serverName)) {
                 HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_TONGWEB8, CheckParameter.EMPTY_MAP);
-            }else if ("inforsuite".equals(serverName)){
+            } else if ("inforsuite".equals(serverName)) {
             	HookHandler.doRealCheckWithoutRequest(CheckParameter.Type.POLICY_SERVER_INFORSUITE,CheckParameter.EMPTY_MAP);
             }
             
