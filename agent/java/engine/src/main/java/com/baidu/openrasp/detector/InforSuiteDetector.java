@@ -36,9 +36,6 @@ public class InforSuiteDetector extends ServerDetector {
     public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String version = "";
         try {
-//            if (classLoader == null) {
-//                classLoader = ClassLoader.getSystemClassLoader();
-//            }
             classLoader = Thread.currentThread().getContextClassLoader();
             Class clazz = classLoader.loadClass("com.cvicse.loong.appserv.server.util.Version");
             if (!isJboss(classLoader)) {
@@ -48,7 +45,7 @@ public class InforSuiteDetector extends ServerDetector {
             logDetectError("handle inforsuite startup failed", t);
         }
         if (!isJboss(classLoader)) {
-            if(version != null){
+            if (version != null) {
                 ApplicationModel.setServerInfo("inforsuite", version);
                 return true;
             }
