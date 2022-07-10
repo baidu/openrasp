@@ -464,6 +464,7 @@ var algorithmConfig = {
             'java.lang.Shutdown',
             'java.io.File',
             'javax.script.ScriptEngineManager',
+            'Class.forName',
             'excludedClasses',
             'excludedPackageNamePatterns',
             'excludedPackageNames',
