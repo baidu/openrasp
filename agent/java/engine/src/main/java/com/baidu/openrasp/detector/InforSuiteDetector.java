@@ -23,32 +23,33 @@ import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 
 /**
- * Created by tyy on 19-2-12.
+ * Created by inforsuite on 22-2-12.
  */
-public class TomcatDetector extends ServerDetector {
+public class InforSuiteDetector extends ServerDetector {
 
     @Override
     public boolean isClassMatched(String className) {
-        return "org/apache/catalina/Server".equals(className);
+        return "com/cvicse/loong/enterprise/inforsuite/bootstrap/ASMain".equals(className);
     }
 
     @Override
     public boolean handleServerInfo(ClassLoader classLoader, ProtectionDomain domain) {
         String version = "";
         try {
-            if (classLoader == null) {
-                classLoader = ClassLoader.getSystemClassLoader();
-            }
-            Class clazz = classLoader.loadClass("org.apache.catalina.util.ServerInfo");
+            classLoader = Thread.currentThread().getContextClassLoader();
+            Class clazz = classLoader.loadClass("com.cvicse.loong.appserv.server.util.Version");
             if (!isJboss(classLoader)) {
-                version = (String) Reflection.invokeMethod(null, clazz, "getServerNumber", new Class[]{});
+                version = (String) Reflection.invokeMethod(null, clazz, "getFullVersion", new Class[]{});
             }
         } catch (Throwable t) {
-            logDetectError("handle tomcat startup failed", t);
+            logDetectError("handle inforsuite startup failed", t);
         }
-        if (!isJboss(classLoader) && version != null) {
-            ApplicationModel.setServerInfo("tomcat", version);
-            return true;
+        if (!isJboss(classLoader)) {
+            if (version != null) {
+                ApplicationModel.setServerInfo("inforsuite", version);
+                return true;
+            }
+            return false;
         }
         return false;
     }

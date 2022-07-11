@@ -84,8 +84,9 @@ public class CheckParameter {
         POLICY_SERVER_WILDFLY("wildflyServer", new WildflySecurityChecker(false), 0),
         POLICY_SERVER_TONGWEB("tongwebServer", new TongwebSecurityChecker(false), 0),
         POLICY_SERVER_TONGWEB8("TongWeb8Server", new TongWeb8SecurityChecker(false), 0),
-        POLICY_SERVER_BES("bes", new BESSecurityChecker(false), 0);
-
+        POLICY_SERVER_BES("bes", new BESSecurityChecker(false), 0),
+    	POLICY_SERVER_INFORSUITE("inforsuite", new InforSuiteSecurityChecker(false), 0);
+    	
         String name;
         Checker checker;
         Integer code;

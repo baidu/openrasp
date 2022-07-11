@@ -19,6 +19,7 @@ package com.baidu.openrasp.hook.server;
 import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.config.Config;
 import com.baidu.openrasp.hook.AbstractClassHook;
+import com.baidu.openrasp.hook.server.inforsuite.InforSuiteHttpResponseHook;
 import com.baidu.openrasp.hook.server.weblogic.WeblogicHttpOutputHook;
 import com.baidu.openrasp.hook.server.websphere.WebsphereHttpOutputHook;
 import com.baidu.openrasp.messaging.LogTool;
@@ -89,6 +90,8 @@ public abstract class ServerOutputCloseHook extends AbstractClassHook {
                     Object outputStream = Reflection.getField(output, "outputStream");
                     int flag = (Integer) Reflection.getField(outputStream, "state");
                     isClosed = flag == 1;
+                } else if ("com/cvicse/inforsuite/grizzly/http/io/OutputBuffer".equals(InforSuiteHttpResponseHook.clazzName)) {
+                	isClosed = (Boolean) Reflection.getSuperField(output, "closed");
                 } else {
                     if (serverName.equals("tomcat") && ApplicationModel.getVersion().compareTo("6") < 0) {
                         isClosed = (Boolean) Reflection.getField(output, "closed");
