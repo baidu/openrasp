@@ -15,10 +15,10 @@
 package models
 
 import (
+	"context"
+	"github.com/olivere/elastic/v7"
 	"rasp-cloud/es"
 	"time"
-	"github.com/olivere/elastic"
-	"context"
 )
 
 type ReportData struct {
@@ -39,18 +39,18 @@ func init() {
 }
 
 func CreateReportDataEsIndex(appId string) error {
-	return es.CreateEsIndex(ReportIndexName + "-" + appId,
-		AliasReportIndexName + "-" + appId, reportType + "-template")
+	return es.CreateEsIndex(ReportIndexName+"-"+appId,
+		AliasReportIndexName+"-"+appId, reportType+"-template")
 }
 
 func CreateDependencyEsIndex(appId string) error {
-	return es.CreateEsIndex(DependencyIndexName + "-" + appId,
-		AliasDependencyIndexName + "-" + appId,"dependency-data-template")
+	return es.CreateEsIndex(DependencyIndexName+"-"+appId,
+		AliasDependencyIndexName+"-"+appId, "dependency-data-template")
 }
 
 func AddReportData(reportData *ReportData, appId string) error {
 	reportData.InsertTime = time.Now().Unix() * 1000
-	return es.Insert(AliasReportIndexName+"-"+appId, reportType, reportData)
+	return es.Insert(AliasReportIndexName+"-"+appId, reportData)
 }
 
 func GetHistoryRequestSum(startTime int64, endTime int64, interval string, timeZone string,
@@ -60,11 +60,11 @@ func GetHistoryRequestSum(startTime int64, endTime int64, interval string, timeZ
 	timeAggrName := "aggr_time"
 	sumAggrName := "request_sum"
 	timeAggr := elastic.NewDateHistogramAggregation().Field("time").TimeZone(timeZone).
-		Interval(interval).ExtendedBounds(startTime, endTime)
+		CalendarInterval(interval).ExtendedBounds(startTime, endTime)
 	requestSumAggr := elastic.NewSumAggregation().Field("request_sum")
 	timeAggr.SubAggregation(sumAggrName, requestSumAggr)
 	timeQuery := elastic.NewRangeQuery("time").Gte(startTime).Lte(endTime)
-	aggrResult, err := es.ElasticClient.Search(AliasReportIndexName + "-" + appId).
+	aggrResult, err := es.ElasticClient.Search(AliasReportIndexName+"-"+appId).
 		Query(timeQuery).
 		Aggregation(timeAggrName, timeAggr).
 		Size(0).

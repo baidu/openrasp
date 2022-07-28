@@ -762,7 +762,7 @@ func getTestAlarmData(app *App) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(hits))
 	for index, item := range hits {
 		result[index] = make(map[string]interface{})
-		if err := json.Unmarshal(*item.Source, &result[index]); err != nil {
+		if err := json.Unmarshal(item.Source, &result[index]); err != nil {
 			beego.Error(err)
 		}
 	}
