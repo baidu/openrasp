@@ -1,4 +1,4 @@
-const plugin_version = '2022-0621-1530'
+const plugin_version = '2022-0908-1700'
 const plugin_name    = 'official'
 const plugin_desc    = '官方插件'
 
@@ -736,7 +736,9 @@ var dnsLogDomains   = [
     // 端口转发工具
     '.vxtrans.com', '.vxtrans.link',
     // 免费DDNS厂商
-    '.hopto.org', '.zapto.org', '.sytes.net', '.ddns.net'
+    '.hopto.org', '.zapto.org', '.sytes.net', '.ddns.net',
+    // 其他
+    '.canarytokens.com'
 ]
 
 // SQL注入算法1 - 预过滤正则
