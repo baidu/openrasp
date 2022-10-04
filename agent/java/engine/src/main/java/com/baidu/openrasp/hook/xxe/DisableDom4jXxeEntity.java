@@ -41,7 +41,7 @@ public class DisableDom4jXxeEntity extends DisableXxeEntity {
     @Override
     protected void hookMethod(CtClass ctClass) throws IOException, CannotCompileException, NotFoundException {
         String src = getInvokeStaticSrc(DisableDom4jXxeEntity.class, "setFeature", "$0", Object.class);
-        insertBefore(ctClass, "read", null, src);
+        insertBefore(ctClass, "read", "(Lorg/xml/sax/InputSource;)Lorg/dom4j/Document;" , src);
     }
 
     public static void setFeature(Object reader) {
