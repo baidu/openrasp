@@ -44,7 +44,7 @@ We ran multiple intense and long-lasting stress tests prior to release. Even in 
 
 #### 3. Integration with existing SIEM or SOC
 
-OpenRASP logs alarms in JSON format, which can be easily picked up by LogStash, rsyslog or Flume.
+OpenRASP logs alarms in JSON format, which can be easily picked up by Logstash, rsyslog or Flume.
 
 #### 4. How to develop a new plugin?
 
@@ -63,7 +63,6 @@ Technical support:
 Business inquires, comments and security reports:
 
 * General email: `openrasp-support # baidu.com`
-
 
 
 
