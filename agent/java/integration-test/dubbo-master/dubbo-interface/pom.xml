@@ -35,7 +35,7 @@
         <compiler.target>1.7</compiler.target>
         <junit.version>4.12</junit.version>
         <!-- spring版本号 -->
-        <spring.version>4.0.2.RELEASE</spring.version>
+        <spring.version>6.0.0</spring.version>
         <!-- mybatis版本号 -->
         <mybatis.version>3.2.6</mybatis.version>
     </properties>
