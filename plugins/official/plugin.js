@@ -3189,7 +3189,7 @@ if (algorithmConfig.response_dataLeak.action != 'ignore') {
         var items = [], parts = []
 
         // content-type 过滤
-        if ( ! content_type && ! dataLeakContentType.test(content_type)) {
+        if ( ! content_type || ! dataLeakContentType.test(content_type)) {
             return clean
         }
 
