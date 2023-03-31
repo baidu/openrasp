@@ -604,7 +604,7 @@ public enum ConfigItem {
 
         @Override
         public String getDefaultValue() {
-            return "true";
+            return "false";
         }
     }),
 
