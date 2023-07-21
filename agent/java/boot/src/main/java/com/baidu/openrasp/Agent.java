@@ -17,10 +17,10 @@
 package com.baidu.openrasp;
 
 import org.apache.commons.cli.*;
-// import sun.management.FileSystem;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -37,6 +37,7 @@ public class Agent {
     public static String projectVersion;
     public static String buildTime;
     public static String gitCommit;
+    public static int pid;
 
     public static void main(String[] args) {
         try {
@@ -112,6 +113,14 @@ public class Agent {
         projectVersion = (projectVersion == null ? "UNKNOWN" : projectVersion);
         buildTime = (buildTime == null ? "UNKNOWN" : buildTime);
         gitCommit = (gitCommit == null ? "UNKNOWN" : gitCommit);
+
+        // [死锁导致应用启动异常 #435]前置获取PID，解决死锁导致启动异常的问题
+        try {
+            pid = Integer.parseInt(ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
+        } catch (Throwable e) {
+            pid = -1;
+        }
+
     }
 
 }
