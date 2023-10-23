@@ -20,6 +20,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-json</artifactId>
+            <version>5.7.8</version>
+        </dependency>
+        <dependency>
             <groupId>com.baidu.openrasp</groupId>
             <artifactId>rasp-boot</artifactId>
             <scope>provided</scope>
