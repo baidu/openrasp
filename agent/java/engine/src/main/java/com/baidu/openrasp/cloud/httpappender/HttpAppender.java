@@ -16,7 +16,6 @@
 
 package com.baidu.openrasp.cloud.httpappender;
 
-import com.baidu.openrasp.Agent;
 import com.baidu.openrasp.cloud.CloudHttp;
 import com.baidu.openrasp.cloud.ThreadPool;
 import com.baidu.openrasp.cloud.model.AppenderCache;
@@ -34,6 +33,7 @@ import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.ThrowableInformation;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -168,8 +168,17 @@ public class HttpAppender extends AppenderSkeleton {
         ThrowableInformation information = loggingEvent.getThrowableInformation();
         Throwable t = information != null ? information.getThrowable() : null;
         StackTraceElement[] traceElements = t != null ? t.getStackTrace() : new StackTraceElement[]{};
-        ExceptInfo info = new ExceptInfo(level, message, errorCode, Agent.pid, traceElements);
+        ExceptInfo info = new ExceptInfo(level, message, errorCode, getProcessID(), traceElements);
         return new Gson().toJson(info.getInfo());
+    }
+
+    private int getProcessID() {
+        try {
+            String[] pids = ManagementFactory.getRuntimeMXBean().getName().split("@");
+            return Integer.parseInt(pids[0]);
+        } catch (Throwable e) {
+            return -1;
+        }
     }
 
     @Override
