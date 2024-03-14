@@ -72,12 +72,16 @@ export default {
         // ignored
       })
     },
+    validateRedirect(urlstring) {
+      let url = new URL(urlstring)
+      return url.protocol == location.protocol && url.host == location.host && url.port == location.port
+    },
     doLogin: function() {
       return request.post('v1/user/login', {
         username: this.username,
         password: this.password
       }).then(res => {
-        if (this.$route.query.redirect) {
+        if (this.$route.query.redirect && this.validateRedirect(this.$route.query.redirect)) {
           location.href = this.$route.query.redirect
         } else {
           this.$router.replace({
