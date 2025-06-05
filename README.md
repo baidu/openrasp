@@ -19,6 +19,11 @@ See detailed installation instructions [here](https://github.com/baidu/openrasp/
 
 We also provide a few test cases that are corresponding to OWASP TOP 10 attacks, [download here](https://rasp.baidu.com/doc/install/testcase.html)
 
+### GitBook Documentation
+
+This is a backup of the original documents from rasp.baidu.com, provided in case the site is unavailable.
+Access it here: https://test-730.gitbook.io/openrasp-documents-old
+
 ### FAQ
 
 #### 1. List of supported web application servers
