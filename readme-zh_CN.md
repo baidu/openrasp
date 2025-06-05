@@ -26,6 +26,8 @@ RASP 技术以探针的形式，将保护引擎注入到应用服务中，能够
 
 另外，为了方便你对软件进行测试，我们提供了一组测试用例，包含OWASP常见安全漏洞，[点击这里查看](https://rasp.baidu.com/doc/install/testcase.html)
 
+备份文档地址: https://test-730.gitbook.io/openrasp-documents-old
+
 ### 常见问题
 
 ##### 1. OpenRASP 都支持哪些应用服务器?
