@@ -657,6 +657,13 @@ if (extension_loaded('openrasp') && array_key_exists("keep-ini", $options)) {
 				array_push($ini_files_2b_updated, $wamp_apache_ini);
 			}
 		}
+		$first_ini_file_path = $ini_files_2b_updated[0];
+		$file_name = basename($first_ini_file_path);
+		$dir_name = dirname($first_ini_file_path);
+		$php_ini_file_path = $dir_name . DIRECTORY_SEPARATOR . 'php.ini';
+		if ($file_name != 'php.ini' && file_exists($php_ini_file_path)) {
+			array_push($ini_files_2b_updated, $php_ini_file_path);
+		}
 		foreach ($ini_files_2b_updated as $key => $ini_file) {
 			if (!is_writable($ini_file)) {
 				log_tips(ERROR, $ini_file . ' is not writable, make sure you have write permissions');
