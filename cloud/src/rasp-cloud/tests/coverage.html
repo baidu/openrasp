@@ -1,172 +1,263 @@
-
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<style>
-			body {
-				background: black;
-				color: rgb(80, 80, 80);
-			}
-			body, pre, #legend span {
-				font-family: Menlo, monospace;
-				font-weight: bold;
-			}
-			#topbar {
-				background: black;
-				position: fixed;
-				top: 0; left: 0; right: 0;
-				height: 42px;
-				border-bottom: 1px solid rgb(80, 80, 80);
-			}
-			#content {
-				margin-top: 50px;
-			}
-			#nav, #legend {
-				float: left;
-				margin-left: 10px;
-			}
-			#legend {
-				margin-top: 12px;
-			}
-			#nav {
-				margin-top: 10px;
-			}
-			#legend span {
-				margin: 0 5px;
-			}
-			.cov0 { color: rgb(192, 0, 0) }
-.cov1 { color: rgb(128, 128, 128) }
-.cov2 { color: rgb(116, 140, 131) }
-.cov3 { color: rgb(104, 152, 134) }
-.cov4 { color: rgb(92, 164, 137) }
-.cov5 { color: rgb(80, 176, 140) }
-.cov6 { color: rgb(68, 188, 143) }
-.cov7 { color: rgb(56, 200, 146) }
-.cov8 { color: rgb(44, 212, 149) }
-.cov9 { color: rgb(32, 224, 152) }
-.cov10 { color: rgb(20, 236, 155) }
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+      body {
+        background: black;
+        color: rgb(80, 80, 80);
+      }
+      body,
+      pre,
+      #legend span {
+        font-family: Menlo, monospace;
+        font-weight: bold;
+      }
+      #topbar {
+        background: black;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 42px;
+        border-bottom: 1px solid rgb(80, 80, 80);
+      }
+      #content {
+        margin-top: 50px;
+      }
+      #nav,
+      #legend {
+        float: left;
+        margin-left: 10px;
+      }
+      #legend {
+        margin-top: 12px;
+      }
+      #nav {
+        margin-top: 10px;
+      }
+      #legend span {
+        margin: 0 5px;
+      }
+      .cov0 {
+        color: rgb(192, 0, 0);
+      }
+      .cov1 {
+        color: rgb(128, 128, 128);
+      }
+      .cov2 {
+        color: rgb(116, 140, 131);
+      }
+      .cov3 {
+        color: rgb(104, 152, 134);
+      }
+      .cov4 {
+        color: rgb(92, 164, 137);
+      }
+      .cov5 {
+        color: rgb(80, 176, 140);
+      }
+      .cov6 {
+        color: rgb(68, 188, 143);
+      }
+      .cov7 {
+        color: rgb(56, 200, 146);
+      }
+      .cov8 {
+        color: rgb(44, 212, 149);
+      }
+      .cov9 {
+        color: rgb(32, 224, 152);
+      }
+      .cov10 {
+        color: rgb(20, 236, 155);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="topbar">
+      <div id="nav">
+        <select id="files">
+          <option value="file0">rasp-cloud/conf/config.go (100.0%)</option>
 
-		</style>
-	</head>
-	<body>
-		<div id="topbar">
-			<div id="nav">
-				<select id="files">
-				
-				<option value="file0">rasp-cloud/conf/config.go (100.0%)</option>
-				
-				<option value="file1">rasp-cloud/controllers/agent/agent_logs/attack_alarm.go (100.0%)</option>
-				
-				<option value="file2">rasp-cloud/controllers/agent/agent_logs/error_alarm.go (100.0%)</option>
-				
-				<option value="file3">rasp-cloud/controllers/agent/agent_logs/policy_alarm.go (100.0%)</option>
-				
-				<option value="file4">rasp-cloud/controllers/agent/heartbeat.go (100.0%)</option>
-				
-				<option value="file5">rasp-cloud/controllers/agent/rasp.go (100.0%)</option>
-				
-				<option value="file6">rasp-cloud/controllers/agent/report.go (100.0%)</option>
-				
-				<option value="file7">rasp-cloud/controllers/api/app.go (99.4%)</option>
-				
-				<option value="file8">rasp-cloud/controllers/api/fore_logs/attack_alarm.go (97.9%)</option>
-				
-				<option value="file9">rasp-cloud/controllers/api/fore_logs/error_alarm.go (93.3%)</option>
-				
-				<option value="file10">rasp-cloud/controllers/api/fore_logs/policy_alarm.go (93.3%)</option>
-				
-				<option value="file11">rasp-cloud/controllers/api/operation.go (100.0%)</option>
-				
-				<option value="file12">rasp-cloud/controllers/api/plugin.go (98.8%)</option>
-				
-				<option value="file13">rasp-cloud/controllers/api/rasp.go (95.5%)</option>
-				
-				<option value="file14">rasp-cloud/controllers/api/report.go (100.0%)</option>
-				
-				<option value="file15">rasp-cloud/controllers/api/server.go (100.0%)</option>
-				
-				<option value="file16">rasp-cloud/controllers/api/token.go (100.0%)</option>
-				
-				<option value="file17">rasp-cloud/controllers/api/user.go (97.1%)</option>
-				
-				<option value="file18">rasp-cloud/controllers/base.go (95.7%)</option>
-				
-				<option value="file19">rasp-cloud/controllers/error.go (100.0%)</option>
-				
-				<option value="file20">rasp-cloud/controllers/ping.go (100.0%)</option>
-				
-				<option value="file21">rasp-cloud/environment/environment.go (73.8%)</option>
-				
-				<option value="file22">rasp-cloud/es/es.go (81.2%)</option>
-				
-				<option value="file23">rasp-cloud/es/template.go (83.3%)</option>
-				
-				<option value="file24">rasp-cloud/models/app.go (87.6%)</option>
-				
-				<option value="file25">rasp-cloud/models/cookie.go (92.3%)</option>
-				
-				<option value="file26">rasp-cloud/models/logs/attack_alarm.go (92.2%)</option>
-				
-				<option value="file27">rasp-cloud/models/logs/error_alarm.go (80.0%)</option>
-				
-				<option value="file28">rasp-cloud/models/logs/log_handle.go (79.2%)</option>
-				
-				<option value="file29">rasp-cloud/models/logs/policy_alarm.go (88.0%)</option>
-				
-				<option value="file30">rasp-cloud/models/operation.go (94.9%)</option>
-				
-				<option value="file31">rasp-cloud/models/plugin.go (88.3%)</option>
-				
-				<option value="file32">rasp-cloud/models/rasp.go (79.8%)</option>
-				
-				<option value="file33">rasp-cloud/models/report.go (92.3%)</option>
-				
-				<option value="file34">rasp-cloud/models/server.go (80.0%)</option>
-				
-				<option value="file35">rasp-cloud/models/token.go (100.0%)</option>
-				
-				<option value="file36">rasp-cloud/models/user.go (75.7%)</option>
-				
-				<option value="file37">rasp-cloud/mongo/mongo.go (94.4%)</option>
-				
-				<option value="file38">rasp-cloud/routers/commentsRouter_controllers.go (100.0%)</option>
-				
-				<option value="file39">rasp-cloud/routers/commentsRouter_controllers_agent.go (100.0%)</option>
-				
-				<option value="file40">rasp-cloud/routers/commentsRouter_controllers_agent_agent_logs.go (100.0%)</option>
-				
-				<option value="file41">rasp-cloud/routers/commentsRouter_controllers_api.go (100.0%)</option>
-				
-				<option value="file42">rasp-cloud/routers/commentsRouter_controllers_api_fore_logs.go (100.0%)</option>
-				
-				<option value="file43">rasp-cloud/routers/router.go (82.4%)</option>
-				
-				<option value="file44">rasp-cloud/tests/inits/inits.go (100.0%)</option>
-				
-				<option value="file45">rasp-cloud/tests/start/start.go (90.0%)</option>
-				
-				<option value="file46">rasp-cloud/tools/email.go (14.3%)</option>
-				
-				<option value="file47">rasp-cloud/tools/error.go (100.0%)</option>
-				
-				<option value="file48">rasp-cloud/tools/file.go (72.7%)</option>
-				
-				<option value="file49">rasp-cloud/tools/file_logger.go (77.0%)</option>
-				
-				</select>
-			</div>
-			<div id="legend">
-				<span>not tracked</span>
-			
-				<span class="cov0">not covered</span>
-				<span class="cov8">covered</span>
-			
-			</div>
-		</div>
-		<div id="content">
-		
-		<pre class="file" id="file0" style="display: none">//Copyright 2017-2020 Baidu Inc.
+          <option value="file1">
+            rasp-cloud/controllers/agent/agent_logs/attack_alarm.go (100.0%)
+          </option>
+
+          <option value="file2">
+            rasp-cloud/controllers/agent/agent_logs/error_alarm.go (100.0%)
+          </option>
+
+          <option value="file3">
+            rasp-cloud/controllers/agent/agent_logs/policy_alarm.go (100.0%)
+          </option>
+
+          <option value="file4">
+            rasp-cloud/controllers/agent/heartbeat.go (100.0%)
+          </option>
+
+          <option value="file5">
+            rasp-cloud/controllers/agent/rasp.go (100.0%)
+          </option>
+
+          <option value="file6">
+            rasp-cloud/controllers/agent/report.go (100.0%)
+          </option>
+
+          <option value="file7">
+            rasp-cloud/controllers/api/app.go (99.4%)
+          </option>
+
+          <option value="file8">
+            rasp-cloud/controllers/api/fore_logs/attack_alarm.go (97.9%)
+          </option>
+
+          <option value="file9">
+            rasp-cloud/controllers/api/fore_logs/error_alarm.go (93.3%)
+          </option>
+
+          <option value="file10">
+            rasp-cloud/controllers/api/fore_logs/policy_alarm.go (93.3%)
+          </option>
+
+          <option value="file11">
+            rasp-cloud/controllers/api/operation.go (100.0%)
+          </option>
+
+          <option value="file12">
+            rasp-cloud/controllers/api/plugin.go (98.8%)
+          </option>
+
+          <option value="file13">
+            rasp-cloud/controllers/api/rasp.go (95.5%)
+          </option>
+
+          <option value="file14">
+            rasp-cloud/controllers/api/report.go (100.0%)
+          </option>
+
+          <option value="file15">
+            rasp-cloud/controllers/api/server.go (100.0%)
+          </option>
+
+          <option value="file16">
+            rasp-cloud/controllers/api/token.go (100.0%)
+          </option>
+
+          <option value="file17">
+            rasp-cloud/controllers/api/user.go (97.1%)
+          </option>
+
+          <option value="file18">rasp-cloud/controllers/base.go (95.7%)</option>
+
+          <option value="file19">
+            rasp-cloud/controllers/error.go (100.0%)
+          </option>
+
+          <option value="file20">
+            rasp-cloud/controllers/ping.go (100.0%)
+          </option>
+
+          <option value="file21">
+            rasp-cloud/environment/environment.go (73.8%)
+          </option>
+
+          <option value="file22">rasp-cloud/es/es.go (81.2%)</option>
+
+          <option value="file23">rasp-cloud/es/template.go (83.3%)</option>
+
+          <option value="file24">rasp-cloud/models/app.go (87.6%)</option>
+
+          <option value="file25">rasp-cloud/models/cookie.go (92.3%)</option>
+
+          <option value="file26">
+            rasp-cloud/models/logs/attack_alarm.go (92.2%)
+          </option>
+
+          <option value="file27">
+            rasp-cloud/models/logs/error_alarm.go (80.0%)
+          </option>
+
+          <option value="file28">
+            rasp-cloud/models/logs/log_handle.go (79.2%)
+          </option>
+
+          <option value="file29">
+            rasp-cloud/models/logs/policy_alarm.go (88.0%)
+          </option>
+
+          <option value="file30">rasp-cloud/models/operation.go (94.9%)</option>
+
+          <option value="file31">rasp-cloud/models/plugin.go (88.3%)</option>
+
+          <option value="file32">rasp-cloud/models/rasp.go (79.8%)</option>
+
+          <option value="file33">rasp-cloud/models/report.go (92.3%)</option>
+
+          <option value="file34">rasp-cloud/models/server.go (80.0%)</option>
+
+          <option value="file35">rasp-cloud/models/token.go (100.0%)</option>
+
+          <option value="file36">rasp-cloud/models/user.go (75.7%)</option>
+
+          <option value="file37">rasp-cloud/mongo/mongo.go (94.4%)</option>
+
+          <option value="file38">
+            rasp-cloud/routers/commentsRouter_controllers.go (100.0%)
+          </option>
+
+          <option value="file39">
+            rasp-cloud/routers/commentsRouter_controllers_agent.go (100.0%)
+          </option>
+
+          <option value="file40">
+            rasp-cloud/routers/commentsRouter_controllers_agent_agent_logs.go
+            (100.0%)
+          </option>
+
+          <option value="file41">
+            rasp-cloud/routers/commentsRouter_controllers_api.go (100.0%)
+          </option>
+
+          <option value="file42">
+            rasp-cloud/routers/commentsRouter_controllers_api_fore_logs.go
+            (100.0%)
+          </option>
+
+          <option value="file43">rasp-cloud/routers/router.go (82.4%)</option>
+
+          <option value="file44">
+            rasp-cloud/tests/inits/inits.go (100.0%)
+          </option>
+
+          <option value="file45">
+            rasp-cloud/tests/start/start.go (90.0%)
+          </option>
+
+          <option value="file46">rasp-cloud/tools/email.go (14.3%)</option>
+
+          <option value="file47">rasp-cloud/tools/error.go (100.0%)</option>
+
+          <option value="file48">rasp-cloud/tools/file.go (72.7%)</option>
+
+          <option value="file49">
+            rasp-cloud/tools/file_logger.go (77.0%)
+          </option>
+        </select>
+      </div>
+      <div id="legend">
+        <span>not tracked</span>
+
+        <span class="cov0">not covered</span>
+        <span class="cov8">covered</span>
+      </div>
+    </div>
+    <div id="content">
+      <pre
+        class="file"
+        id="file0"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -287,8 +378,12 @@ func failLoadConfig(msg string) <span class="cov8" title="1">{
         tools.Panic(tools.ErrCodeConfigInitFailed, msg, nil)
 }</span>
 </pre>
-		
-		<pre class="file" id="file1" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file1"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -331,8 +426,12 @@ func (o *AttackAlarmController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">o.Serve(map[string]uint64{"count": uint64(count)})</span>
 }
 </pre>
-		
-		<pre class="file" id="file2" style="display: none">//Copyright 2017-2018 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file2"
+        style="display: none"
+      >//Copyright 2017-2018 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -373,8 +472,12 @@ func (o *ErrorController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">o.Serve(map[string]uint64{"count": uint64(count)})</span>
 }
 </pre>
-		
-		<pre class="file" id="file3" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file3"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -416,8 +519,12 @@ func (o *PolicyAlarmController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">o.Serve(map[string]uint64{"count": uint64(count)})</span>
 }
 </pre>
-		
-		<pre class="file" id="file4" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file4"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -510,8 +617,12 @@ func (o *HeartbeatController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">o.Serve(result)</span>
 }
 </pre>
-		
-		<pre class="file" id="file5" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file5"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -627,8 +738,12 @@ func (o *RaspController) Post() <span class="cov8" title="1">{
         o.Serve(rasp)</span>
 }
 </pre>
-		
-		<pre class="file" id="file6" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file6"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -678,8 +793,12 @@ func (o *ReportController) Post() <span class="cov8" title="1">{
         <span class="cov8" title="1">o.Serve(reportData)</span>
 }
 </pre>
-		
-		<pre class="file" id="file7" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file7"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -1336,8 +1455,12 @@ func (o *AppController) TestHttp(config map[string]interface{}) <span class="cov
         <span class="cov8" title="1">o.ServeWithEmptyData()</span>
 }
 </pre>
-		
-		<pre class="file" id="file8" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file8"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -1541,8 +1664,12 @@ func (o *AttackAlarmController) validFieldAggrParam(param *logs.AggrFieldParam) 
         }</span>
 }
 </pre>
-		
-		<pre class="file" id="file9" style="display: none">//Copyright 2017-2018 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file9"
+        style="display: none"
+      >//Copyright 2017-2018 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -1622,8 +1749,12 @@ func (o *ErrorController) Search() <span class="cov8" title="1">{
         })</span>
 }
 </pre>
-		
-		<pre class="file" id="file10" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file10"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -1704,8 +1835,12 @@ func (o *PolicyAlarmController) Search() <span class="cov8" title="1">{
         })</span>
 }
 </pre>
-		
-		<pre class="file" id="file11" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file11"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -1769,8 +1904,12 @@ func (o *OperationController) Search() <span class="cov8" title="1">{
         o.Serve(result)</span>
 }
 </pre>
-		
-		<pre class="file" id="file12" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file12"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -1940,8 +2079,12 @@ func (o *PluginController) Delete() <span class="cov8" title="1">{
         o.ServeWithEmptyData()</span>
 }
 </pre>
-		
-		<pre class="file" id="file13" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file13"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2051,8 +2194,12 @@ func (o *RaspController) Delete() <span class="cov8" title="1">{
         }
 }
 </pre>
-		
-		<pre class="file" id="file14" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file14"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2154,8 +2301,12 @@ func (o *ReportController) Search() <span class="cov8" title="1">{
 
 }
 </pre>
-		
-		<pre class="file" id="file15" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file15"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2236,8 +2387,12 @@ func validHttpUrl(url string) bool <span class="cov8" title="1">{
         return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
 }</span>
 </pre>
-		
-		<pre class="file" id="file16" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file16"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2320,8 +2475,12 @@ func (o *TokenController) Delete() <span class="cov8" title="1">{
         <span class="cov8" title="1">o.Serve(token)</span>
 }
 </pre>
-		
-		<pre class="file" id="file17" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file17"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2415,8 +2574,12 @@ func (o *UserController) Logout() <span class="cov8" title="1">{
         o.ServeWithEmptyData()
 }</span>
 </pre>
-		
-		<pre class="file" id="file18" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file18"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2491,8 +2654,12 @@ func (o *BaseController) ValidPage(page int, perpage int) <span class="cov8" tit
         }</span>
 }
 </pre>
-		
-		<pre class="file" id="file19" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file19"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2528,8 +2695,8 @@ func (o *ErrorController) Error502() <span class="cov8" title="1">{
         o.ServeStatusCode(502)
 }</span>
 </pre>
-		
-		<pre class="file" id="file20" style="display: none">package controllers
+
+      <pre class="file" id="file20" style="display: none">package controllers
 
 type PingController struct {
         BaseController
@@ -2540,8 +2707,12 @@ func (o *PingController) Ping() <span class="cov8" title="1">{
         o.ServeWithEmptyData()
 }</span>
 </pre>
-		
-		<pre class="file" id="file21" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file21"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2688,8 +2859,12 @@ func initEnvConf() <span class="cov8" title="1">{
         }</span>
 }
 </pre>
-		
-		<pre class="file" id="file22" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file22"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -2874,8 +3049,12 @@ func BulkInsert(docType string, docs []map[string]interface{}) (err error) <span
         return err</span>
 }
 </pre>
-		
-		<pre class="file" id="file23" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file23"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -3270,8 +3449,12 @@ func init() <span class="cov8" title="1">{
         }
 }
 </pre>
-		
-		<pre class="file" id="file24" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file24"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -3615,8 +3798,7 @@ func generateSecret(app *App) string <span class="cov8" title="1">{
         random := "openrasp_app" + app.Name + app.Id +
                 strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.Itoa(rand.Intn(10000))
         sha256Data := sha256.Sum256([]byte(random))
-        base64Data := base64.NewEncoding("OPQRSTYZabcdefgABCDEFGHIJKLMNhijklmnopqrUVWXstuvwxyz01234567891q").
-                EncodeToString(sha256Data[0:])
+        base64Data := base64.StdEncoding.EncodeToString(sha256Data[0:])
         return base64Data[0 : len(base64Data)-1]
 }</span>
 
@@ -4087,8 +4269,12 @@ func PushDingAttackAlarm(app *App, total int64, alarms []map[string]interface{},
         return nil</span>
 }
 </pre>
-		
-		<pre class="file" id="file25" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file25"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -4158,8 +4344,12 @@ func RemoveAllCookie() error <span class="cov8" title="1">{
         return err
 }</span>
 </pre>
-		
-		<pre class="file" id="file26" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file26"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -4405,8 +4595,8 @@ func AggregationAttackWithType(startTime int64, endTime int64, size int,
         <span class="cov8" title="1">return result, nil</span>
 }
 </pre>
-		
-		<pre class="file" id="file27" style="display: none">package logs
+
+      <pre class="file" id="file27" style="display: none">package logs
 
 import (
         "github.com/astaxie/beego"
@@ -4438,8 +4628,12 @@ func AddErrorAlarm(alarm map[string]interface{}) error <span class="cov8" title=
         <span class="cov8" title="1">return AddAlarmFunc(ErrorAlarmInfo.EsType, alarm)</span>
 }
 </pre>
-		
-		<pre class="file" id="file28" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file28"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -4812,8 +5006,12 @@ func CreateAlarmEsIndex(appId string) (err error) <span class="cov8" title="1">{
         <span class="cov8" title="1">return</span>
 }
 </pre>
-		
-		<pre class="file" id="file29" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file29"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -4886,8 +5084,12 @@ func AddPolicyAlarm(alarm map[string]interface{}) error <span class="cov8" title
         return AddAlarmFunc(PolicyAlarmInfo.EsType, alarm)</span>
 }
 </pre>
-		
-		<pre class="file" id="file30" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file30"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -5034,8 +5236,12 @@ func FindOperation(data *Operation, startTime int64, endTime int64,
         <span class="cov8" title="1">return</span>
 }
 </pre>
-		
-		<pre class="file" id="file31" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file31"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -5346,8 +5552,12 @@ func RemovePluginByAppId(appId string) error <span class="cov8" title="1">{
         return err
 }</span>
 </pre>
-		
-		<pre class="file" id="file32" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file32"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -5575,8 +5785,12 @@ func RegisterCallback(url string, token string, rasp *Rasp) error <span class="c
         <span class="cov0" title="0">return nil</span>
 }
 </pre>
-		
-		<pre class="file" id="file33" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file33"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -5662,8 +5876,12 @@ func GetHistoryRequestSum(startTime int64, endTime int64, interval string, timeZ
         <span class="cov8" title="1">return nil, result</span>
 }
 </pre>
-		
-		<pre class="file" id="file34" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file34"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -5704,8 +5922,12 @@ func PutServerUrl(serverUrl *ServerUrl) (error) <span class="cov8" title="1">{
         return mongo.UpsertId(serverUrlCollectionName, serverUrlId, &amp;serverUrl)
 }</span>
 </pre>
-		
-		<pre class="file" id="file35" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file35"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -5766,8 +5988,12 @@ func RemoveToken(tokenId string) (token *Token, err error) <span class="cov8" ti
         <span class="cov8" title="1">return token, mongo.RemoveId(tokenCollectionName, tokenId)</span>
 }
 </pre>
-		
-		<pre class="file" id="file36" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file36"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -5952,8 +6178,12 @@ func UpdatePassword(oldPwd string, newPwd string) error <span class="cov8" title
         return err</span>
 }
 </pre>
-		
-		<pre class="file" id="file37" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file37"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -6133,8 +6363,8 @@ func GenerateObjectId() string <span class="cov8" title="1">{
         return fmt.Sprintf("%x", sha1.Sum([]byte(random)))
 }</span>
 </pre>
-		
-		<pre class="file" id="file38" style="display: none">package routers
+
+      <pre class="file" id="file38" style="display: none">package routers
 
 import (
         "github.com/astaxie/beego"
@@ -6154,8 +6384,8 @@ func init() <span class="cov8" title="1">{
 
 }</span>
 </pre>
-		
-		<pre class="file" id="file39" style="display: none">package routers
+
+      <pre class="file" id="file39" style="display: none">package routers
 
 import (
         "github.com/astaxie/beego"
@@ -6193,8 +6423,8 @@ func init() <span class="cov8" title="1">{
 
 }</span>
 </pre>
-		
-		<pre class="file" id="file40" style="display: none">package routers
+
+      <pre class="file" id="file40" style="display: none">package routers
 
 import (
         "github.com/astaxie/beego"
@@ -6232,8 +6462,8 @@ func init() <span class="cov8" title="1">{
 
 }</span>
 </pre>
-		
-		<pre class="file" id="file41" style="display: none">package routers
+
+      <pre class="file" id="file41" style="display: none">package routers
 
 import (
         "github.com/astaxie/beego"
@@ -6563,8 +6793,8 @@ func init() <span class="cov8" title="1">{
 
 }</span>
 </pre>
-		
-		<pre class="file" id="file42" style="display: none">package routers
+
+      <pre class="file" id="file42" style="display: none">package routers
 
 import (
         "github.com/astaxie/beego"
@@ -6638,8 +6868,12 @@ func init() <span class="cov8" title="1">{
 
 }</span>
 </pre>
-		
-		<pre class="file" id="file43" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file43"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -6776,8 +7010,8 @@ func InitRouter() <span class="cov8" title="1">{
         <span class="cov8" title="1">beego.AddNamespace(ns)</span>
 }
 </pre>
-		
-		<pre class="file" id="file44" style="display: none">package inits
+
+      <pre class="file" id="file44" style="display: none">package inits
 
 import (
         "fmt"
@@ -6847,8 +7081,8 @@ func GetLongStringArray(length int) []string <span class="cov8" title="1">{
         <span class="cov8" title="1">return result</span>
 }
 </pre>
-		
-		<pre class="file" id="file45" style="display: none">package start
+
+      <pre class="file" id="file45" style="display: none">package start
 
 import (
         _ "rasp-cloud/tests/inits"
@@ -6903,8 +7137,8 @@ func init() <span class="cov8" title="1">{
         models.UpsertRaspById(TestRasp.Id, TestRasp)</span>
 }
 </pre>
-		
-		<pre class="file" id="file46" style="display: none">package tools
+
+      <pre class="file" id="file46" style="display: none">package tools
 
 import "net/smtp"
 
@@ -6932,8 +7166,12 @@ func (auth *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) <span 
         <span class="cov0" title="0">return nil, nil</span>
 }
 </pre>
-		
-		<pre class="file" id="file47" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file47"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -6977,8 +7215,12 @@ func Panic(errCode int, message string, err error) <span class="cov8" title="1">
         os.Exit(errCode)</span>
 }
 </pre>
-		
-		<pre class="file" id="file48" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file48"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -7040,8 +7282,12 @@ func PathExists(path string) (bool, error) <span class="cov8" title="1">{
         <span class="cov0" title="0">return false, err</span>
 }
 </pre>
-		
-		<pre class="file" id="file49" style="display: none">//Copyright 2017-2020 Baidu Inc.
+
+      <pre
+        class="file"
+        id="file49"
+        style="display: none"
+      >//Copyright 2017-2020 Baidu Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -7391,34 +7637,31 @@ func init() <span class="cov8" title="1">{
         logs.Register(AdapterAlarmFile, NewFileWriter)
 }</span>
 </pre>
-		
-		</div>
-	</body>
-	<script>
-	(function() {
-		var files = document.getElementById('files');
-		var visible;
-		files.addEventListener('change', onChange, false);
-		function select(part) {
-			if (visible)
-				visible.style.display = 'none';
-			visible = document.getElementById(part);
-			if (!visible)
-				return;
-			files.value = part;
-			visible.style.display = 'block';
-			location.hash = part;
-		}
-		function onChange() {
-			select(files.value);
-			window.scrollTo(0, 0);
-		}
-		if (location.hash != "") {
-			select(location.hash.substr(1));
-		}
-		if (!visible) {
-			select("file0");
-		}
-	})();
-	</script>
+    </div>
+  </body>
+  <script>
+    (function () {
+      var files = document.getElementById("files");
+      var visible;
+      files.addEventListener("change", onChange, false);
+      function select(part) {
+        if (visible) visible.style.display = "none";
+        visible = document.getElementById(part);
+        if (!visible) return;
+        files.value = part;
+        visible.style.display = "block";
+        location.hash = part;
+      }
+      function onChange() {
+        select(files.value);
+        window.scrollTo(0, 0);
+      }
+      if (location.hash != "") {
+        select(location.hash.substr(1));
+      }
+      if (!visible) {
+        select("file0");
+      }
+    })();
+  </script>
 </html>

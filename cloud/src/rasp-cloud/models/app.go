@@ -24,10 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/httplib"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"html/template"
 	"io/ioutil"
 	"math/rand"
@@ -45,6 +41,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/httplib"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type App struct {
@@ -469,8 +470,7 @@ func generateSecret(app *App) string {
 	random := "openrasp_app" + app.Name + app.Id +
 		strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.Itoa(rand.Intn(10000))
 	sha256Data := sha256.Sum256([]byte(random))
-	base64Data := base64.NewEncoding("OPQRSTYZabcdefgABCDEFGHIJKLMNhijklmnopqrUVWXstuvwxyz01234567891q").
-		EncodeToString(sha256Data[0:])
+	base64Data := base64.StdEncoding.EncodeToString(sha256Data[0:])
 	return base64Data[0 : len(base64Data)-1]
 }
 
