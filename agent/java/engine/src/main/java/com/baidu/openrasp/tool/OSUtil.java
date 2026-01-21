@@ -38,6 +38,7 @@ public class OSUtil {
     public static String getHostName() {
         InetAddress inetAddress;
         try {
+            //getLocalHost这个函数很危险，最好static缓存下来。在某些情况超时5秒时，降雪崩导致所有情况阻塞
             inetAddress = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             inetAddress = null;
